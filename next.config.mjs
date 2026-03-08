@@ -9,11 +9,15 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         pathname: '/**',
       },
-
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '8080',
+        pathname: '/api/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'afrochow-backendnew-production.up.railway.app',
         pathname: '/api/images/**',
       },
       {
