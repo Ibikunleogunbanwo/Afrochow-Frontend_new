@@ -62,7 +62,6 @@ export const AuthAPI = {
     })
   },
 
-
   registerVendor: async (data) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/register/vendor`, {
       method: 'POST',
@@ -91,7 +90,6 @@ export const AuthAPI = {
     });
   },
 
-
   getCustomerProfile: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/customer/profile`, {
       method: 'GET',
@@ -113,7 +111,6 @@ export const AuthAPI = {
     })
   },
 
-
   addAddress: async (addressData) => {
     return fetchWithCredentials(`${API_BASE_URL}/customer/addresses`, {
       method: 'POST',
@@ -133,7 +130,6 @@ export const AuthAPI = {
       method: 'DELETE',
     });
   },
-
 
   setDefaultAddress: async (publicAddressId) => {
     return fetchWithCredentials(`${API_BASE_URL}/customer/addresses/${publicAddressId}/set-default`, {
@@ -195,8 +191,6 @@ export const AuthAPI = {
     });
   },
 
-
-
   getAllVendorProducts: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/vendor/products`, {
       method: 'GET',
@@ -235,7 +229,6 @@ export const AuthAPI = {
     })
   },
 
-
   createProducts: async (productData) => {
     return fetchWithCredentials(`${API_BASE_URL}/vendor/products`, {
       method: 'POST',
@@ -262,7 +255,6 @@ export const AuthAPI = {
 
     return json;
   },
-
 
   // ================= SEARCH ENDPOINTS =================
 
@@ -308,48 +300,20 @@ export const AuthAPI = {
     })
   },
 
-  // Vendor Details
   getVendorDetails: async (publicVendorId) => {
     return fetchWithCredentials(`${API_BASE_URL}/search/vendors/${publicVendorId}`, {
       method: 'GET',
     })
   },
 
-  // Vendor Products
   getVendorProducts: async (publicVendorId, page = 0, size = 20) => {
     return fetchWithCredentials(`${API_BASE_URL}/products/vendor/${publicVendorId}?page=${page}&size=${size}`, {
       method: 'GET',
     })
   },
 
-  // Vendor Reviews
-  getVendorReviews: async (vendorPublicId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/vendors/${vendorPublicId}/reviews`, {
-      method: 'GET',
-    })
-  },
-
-  getVendorRating: async (vendorPublicId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/vendors/${vendorPublicId}/rating`, {
-      method: 'GET',
-    })
-  },
-
   filterVendorReviews: async (vendorPublicId, minRating) => {
     return fetchWithCredentials(`${API_BASE_URL}/vendors/${vendorPublicId}/reviews/filter?minRating=${minRating}`, {
-      method: 'GET',
-    })
-  },
-
-  // Product Reviews
-  getProductReviews: async (productPublicId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/products/${productPublicId}/reviews`, {
-      method: 'GET',
-    })
-  },
-
-  getProductRating: async (productPublicId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/products/${productPublicId}/rating`, {
       method: 'GET',
     })
   },
@@ -363,7 +327,6 @@ export const AuthAPI = {
   searchProductsAdvanced: async (filters = {}) => {
     const params = new URLSearchParams();
 
-    // Add all available filters as request params
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, value);
@@ -381,7 +344,6 @@ export const AuthAPI = {
   searchProducts: async (filters = {}) => {
     const params = new URLSearchParams();
 
-    // Add all available filters as request params
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, value);
@@ -402,12 +364,11 @@ export const AuthAPI = {
     });
   },
 
-  getAllCategories: async (name) => {
+  getAllCategories: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/categories`, {
       method: 'GET',
     });
   },
-
 
   // ================= PRODUCT REVIEWS ENDPOINTS =================
 
@@ -426,7 +387,7 @@ export const AuthAPI = {
   // ================= VENDOR REVIEWS ENDPOINTS =================
 
   // Public endpoint - get reviews for any vendor
-  getVendorReviews: async (vendorPublicId) => {
+  getVendorsReviews: async (vendorPublicId) => {
     return fetchWithCredentials(`${API_BASE_URL}/vendors/${vendorPublicId}/reviews`, {
       method: 'GET',
     })

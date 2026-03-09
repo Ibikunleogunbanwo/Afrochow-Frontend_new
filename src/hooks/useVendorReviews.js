@@ -47,7 +47,7 @@ export const useVendorReviews = ({
 
                     if (publicId) {
                         const [reviewsResponse, ratingResponse] = await Promise.all([
-                            AuthAPI.getVendorReviews(publicId),
+                            AuthAPI.getVendorsReviews(publicId),
                             AuthAPI.getVendorAverageRating(publicId)
                         ]);
 
@@ -67,7 +67,7 @@ export const useVendorReviews = ({
                 }
 
                 const [reviewsResponse, ratingResponse] = await Promise.all([
-                    AuthAPI.getVendorReviews(vendorPublicId),
+                    AuthAPI.getVendorsReviews(vendorPublicId),
                     AuthAPI.getVendorAverageRating(vendorPublicId)
                 ]);
 

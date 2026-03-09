@@ -75,7 +75,7 @@ const VendorProfilePage = () => {
         try {
             const response = minRating > 0
                 ? await AuthAPI.filterVendorReviews(publicVendorId, minRating)
-                : await AuthAPI.getVendorReviews(publicVendorId);
+                : await AuthAPI.getVendorsReviews(publicVendorId);
 
             if (response?.success && response?.data) {
                 setReviews(response.data);
