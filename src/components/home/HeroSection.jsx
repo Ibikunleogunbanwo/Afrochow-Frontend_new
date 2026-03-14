@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Search, MapPin, ArrowRight, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { AuthAPI } from '@/lib/api/auth';
+import { SearchAPI } from '@/lib/api/search.api';
 
 const HeroSection = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,7 +27,7 @@ const HeroSection = () => {
             setLoadingPopular(true);
             setError(null);
 
-            const response = await AuthAPI.getPopularProductNames(10);
+            const response = await SearchAPI.getPopularProductNames(10);
 
             let productNames = [];
 
@@ -52,7 +52,7 @@ const HeroSection = () => {
 
     const fetchStats = async () => {
         try {
-            const response = await AuthAPI.getStats();
+            const response = await SearchAPI.getStats();
             if (response?.success && response?.data) {
                 setStats(response.data);
             }

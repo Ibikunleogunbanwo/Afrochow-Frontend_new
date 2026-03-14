@@ -18,7 +18,7 @@ import {
     RefreshCw,
     ChevronDown
 } from 'lucide-react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
 
 const VendorReportsPage = () => {
     const [loading, setLoading] = useState(true);

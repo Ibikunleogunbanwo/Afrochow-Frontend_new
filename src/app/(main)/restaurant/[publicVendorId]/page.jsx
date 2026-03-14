@@ -14,7 +14,8 @@ import {
     Filter,
     X
 } from 'lucide-react';
-import { AuthAPI } from '@/lib/api/auth';
+import { SearchAPI } from '@/lib/api/search.api';
+import { ReviewsAPI } from '@/lib/api/reviews.api';
 
 const VendorProfilePage = () => {
     const params = useParams();
@@ -40,7 +41,7 @@ const VendorProfilePage = () => {
     const fetchVendorDetails = async () => {
         try {
             setLoading(true);
-            const response = await AuthAPI.getVendorDetails(publicVendorId);
+            const response = await SearchAPI.getVendorDetails(publicVendorId);
 
             console.log('Vendor data:', response);
             if (response?.success && response?.data) {
@@ -56,7 +57,7 @@ const VendorProfilePage = () => {
     const fetchVendorProducts = async (page = 0) => {
         try {
             setProductsLoading(true);
-            const response = await AuthAPI.getVendorProducts(publicVendorId, page, 20);
+            const response = await SearchAPI.getVendorProducts(publicVendorId, page, 20);
 
             if (response?.success && response?.data) {
                 setProducts(response.data);
@@ -74,8 +75,8 @@ const VendorProfilePage = () => {
     const fetchVendorReviews = async (minRating = 0) => {
         try {
             const response = minRating > 0
-                ? await AuthAPI.filterVendorReviews(publicVendorId, minRating)
-                : await AuthAPI.getVendorsReviews(publicVendorId);
+                ? await ReviewsAPI.filterVendorReviews(publicVendorId, minRating)
+                : await ReviewsAPI.getVendorsReviews(publicVendorId);
 
             if (response?.success && response?.data) {
                 setReviews(response.data);
@@ -90,7 +91,7 @@ const VendorProfilePage = () => {
 
     const fetchProductReviews = async (productPublicId) => {
         try {
-            const response = await AuthAPI.getProductReviews(productPublicId);
+            const response = await ReviewsAPI.getProductReviews(productPublicId);
 
             if (response?.success && response?.data) {
                 setReviews(response.data);

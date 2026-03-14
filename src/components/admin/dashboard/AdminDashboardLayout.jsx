@@ -2,7 +2,8 @@
 import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {AuthAPI as AdminAPI, AuthAPI} from '@/lib/api/auth';
+import { AdminAPI } from '@/lib/api/admin.api';
+import { AuthAPI } from '@/lib/api/auth.api';
 import {
     LayoutDashboard,
     Users,

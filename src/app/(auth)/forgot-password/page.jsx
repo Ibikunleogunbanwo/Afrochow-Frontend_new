@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AuthAPI } from '@/lib/api/auth';
+import { AuthAPI } from '@/lib/api/auth.api';
 import { toast } from '@/components/ui/toast';
 import {
   Mail,

@@ -10,7 +10,7 @@ import ProfileImageSection from "@/components/register/admin/admin sections/Prof
 import AdminConfigSection from "@/components/register/admin/admin sections/AdminConfigSection";
 import PermissionsSection from "@/components/register/admin/admin sections/PermissionsSection";
 import { ImageUploadAPI } from "@/lib/api/imageUpload";
-import { AuthAPI } from "@/lib/api/auth";
+import { RegistrationAPI } from "@/lib/api/registration.api";
 import { toast } from "@/components/ui/toast";
 import { Loader2 } from "lucide-react";
 
@@ -190,7 +190,7 @@ export default function AdminRegistrationPage() {
         canResolveDisputes: formData.canResolveDisputes,
       };
 
-      const data = await AuthAPI.registerAdmin(payload);
+      const data = await RegistrationAPI.registerAdmin(payload);
 
       if (!data.success) {
         toast.error("Registration Failed", data.message || "Please try again");

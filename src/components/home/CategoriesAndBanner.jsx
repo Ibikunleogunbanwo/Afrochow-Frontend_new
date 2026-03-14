@@ -4,7 +4,7 @@ import React, {useEffect, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {ArrowRight, Cake, ChefHat, Croissant, Leaf, Sparkles, Store, TrendingUp, Utensils} from "lucide-react";
-import {AuthAPI} from "@/lib/api/auth";
+import {SearchAPI} from "@/lib/api/search.api";
 
 
 const CategoriesAndBanner = () => {
@@ -38,7 +38,7 @@ const CategoriesAndBanner = () => {
         try {
             setLoadingCategories(true);
 
-            const responseCat = await AuthAPI.getAllCategories();
+            const responseCat = await SearchAPI.getAllCategories();
 
             if (responseCat?.success && responseCat?.data) {
                 return responseCat.data.map((category, index) => ({
@@ -74,7 +74,7 @@ const CategoriesAndBanner = () => {
         const loadFeaturedProduct = async () => {
             try {
                 setLoadingFeatured(true);
-                const response = await AuthAPI.getChefSpecials(1);
+                const response = await SearchAPI.getChefSpecials(1);
 
                 if (response?.success && response?.data && response.data.length > 0) {
                     setFeaturedProduct(response.data[0]);
@@ -185,7 +185,7 @@ const CategoriesAndBanner = () => {
                                         </div>
 
                                         {/* Text Content */}
-                                        <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-300 text-center">
+                                        <h3 className=" text-sm md:text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-300 text-center">
                                             {item.label}
                                         </h3>
                                     </div>

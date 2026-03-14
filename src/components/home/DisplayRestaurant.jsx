@@ -5,7 +5,7 @@ import {useRouter, useSearchParams} from 'next/navigation';
 import {HiArrowLeft, HiSearch} from 'react-icons/hi';
 import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
-import {AuthAPI} from '@/lib/api/auth';
+import {SearchAPI} from '@/lib/api/search.api';
 
 const DisplayRestaurant = () => {
     const router = useRouter();
@@ -39,7 +39,7 @@ const DisplayRestaurant = () => {
                 // Determine which API to use:
                 if (urlCategoryId || urlSearchQuery) {
                     // Use searchProductsAdvanced for categoryId or search query
-                    response = await AuthAPI.searchProductsAdvanced({
+                    response = await SearchAPI.searchProductsAdvanced({
                         ...(urlSearchQuery && { query: urlSearchQuery }),
                         ...(urlCity && { city: urlCity }),
                         ...(urlCategoryId && { categoryId: urlCategoryId }),
@@ -48,7 +48,7 @@ const DisplayRestaurant = () => {
                     });
                 } else if (urlCity || urlCategory) {
                     // Use searchProducts for category name or city query params only
-                    response = await AuthAPI.searchProducts({
+                    response = await SearchAPI.searchProducts({
                         ...(urlCity && { city: urlCity }),
                         ...(urlCategory && { category: urlCategory }),
                         page: currentPage,
@@ -56,7 +56,7 @@ const DisplayRestaurant = () => {
                     });
                 } else {
                     // No filters - show all products using advanced search with no filters
-                    response = await AuthAPI.searchProductsAdvanced({
+                    response = await SearchAPI.searchProductsAdvanced({
                         page: currentPage,
                         size: pageSize
                     });

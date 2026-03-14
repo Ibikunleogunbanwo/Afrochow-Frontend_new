@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AuthAPI } from '@/lib/api/auth';
+import { ReviewsAPI } from '@/lib/api/reviews.api';
 import { getVendorProducts } from '@/lib/api/vendorProducts';
 import { toast } from '@/components/ui/toast';
 
@@ -23,8 +23,8 @@ export const useProductReviews = ({
 
     const fetchSingleProductReviews = async (productId) => {
         const [reviewsResponse, ratingResponse] = await Promise.all([
-            AuthAPI.getProductReviews(productId),
-            AuthAPI.getProductAverageRating(productId)
+            ReviewsAPI.getProductReviews(productId),
+            ReviewsAPI.getProductAverageRating(productId)
         ]);
 
         return {
@@ -45,12 +45,12 @@ export const useProductReviews = ({
 
         // Fetch reviews and ratings for each product
         const reviewPromises = products.map(product =>
-            AuthAPI.getProductReviews(product.publicProductId)
+            ReviewsAPI.getProductReviews(product.publicProductId)
                 .catch(() => ({ success: false, data: [] }))
         );
 
         const ratingPromises = products.map(product =>
-            AuthAPI.getProductAverageRating(product.publicProductId)
+            ReviewsAPI.getProductAverageRating(product.publicProductId)
                 .catch(() => ({ success: false, data: 0 }))
         );
 

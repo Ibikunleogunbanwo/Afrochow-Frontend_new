@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import {
     Clock,
     Package,
@@ -50,7 +50,7 @@ const VendorOrdersPage = () => {
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const response = await AuthAPI.getVendorOrders();
+            const response = await VendorOrdersAPI.getVendorOrders();
             if (response?.success) {
                 setOrders(response.data || []);
             }
@@ -85,22 +85,22 @@ const VendorOrdersPage = () => {
 
             switch (action) {
                 case 'accept':
-                    response = await AuthAPI.acceptOrder(orderId);
+                    response = await VendorOrdersAPI.acceptOrder(orderId);
                     break;
                 case 'reject':
-                    response = await AuthAPI.rejectOrder(orderId);
+                    response = await VendorOrdersAPI.rejectOrder(orderId);
                     break;
                 case 'preparing':
-                    response = await AuthAPI.startPreparingOrder(orderId);
+                    response = await VendorOrdersAPI.startPreparingOrder(orderId);
                     break;
                 case 'ready':
-                    response = await AuthAPI.markOrderReady(orderId);
+                    response = await VendorOrdersAPI.markOrderReady(orderId);
                     break;
                 case 'out-for-delivery':
-                    response = await AuthAPI.markOrderOutForDelivery(orderId);
+                    response = await VendorOrdersAPI.markOrderOutForDelivery(orderId);
                     break;
                 case 'delivered':
-                    response = await AuthAPI.markOrderDelivered(orderId);
+                    response = await VendorOrdersAPI.markOrderDelivered(orderId);
                     break;
                 default:
                     return;
@@ -109,7 +109,7 @@ const VendorOrdersPage = () => {
             if (response?.success) {
                 await fetchOrders();
                 if (selectedOrder?.publicOrderId === orderId) {
-                    const updatedOrderResponse = await AuthAPI.getVendorOrderById(orderId);
+                    const updatedOrderResponse = await VendorOrdersAPI.getVendorOrderById(orderId);
                     if (updatedOrderResponse?.success) {
                         setSelectedOrder(updatedOrderResponse.data);
                     }
@@ -125,7 +125,7 @@ const VendorOrdersPage = () => {
 
     const viewOrderDetails = async (orderId) => {
         try {
-            const response = await AuthAPI.getVendorOrderById(orderId);
+            const response = await VendorOrdersAPI.getVendorOrderById(orderId);
             if (response?.success) {
                 setSelectedOrder(response.data);
                 setShowDetailModal(true);

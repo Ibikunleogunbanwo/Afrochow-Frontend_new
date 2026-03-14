@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { setAuth, clearAuth, setLoading, setError } from "@/redux-store/authSlice";
-import { AuthAPI } from "@/lib/api/auth";
+import { AuthAPI } from "@/lib/api/auth.api";
 
 const PUBLIC_ROUTES = [
     '/login',

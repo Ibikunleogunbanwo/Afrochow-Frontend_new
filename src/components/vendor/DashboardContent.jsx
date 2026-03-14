@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, Users, Star, Calendar, ChevronDown, Clock, MapPin, Package, Eye, MoreVertical, Phone } from 'lucide-react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 
 const DashboardContent = () => {
     // Date filter state
@@ -42,9 +42,9 @@ const DashboardContent = () => {
             let response;
 
             if (dateRange === 'today') {
-                response = await AuthAPI.getTodayOrders();
+                response = await VendorOrdersAPI.getTodayOrders();
             } else {
-                response = await AuthAPI.getVendorOrders();
+                response = await VendorOrdersAPI.getVendorOrders();
             }
 
             if (response?.success) {
@@ -59,7 +59,7 @@ const DashboardContent = () => {
 
     const fetchRevenue = async () => {
         try {
-            const response = await AuthAPI.getOrdersRevenue();
+            const response = await VendorOrdersAPI.getOrdersRevenue();
             if (response?.success && response.data) {
                 setStats(prev => ({
                     ...prev,
@@ -78,22 +78,22 @@ const DashboardContent = () => {
             let response;
             switch (action) {
                 case 'accept':
-                    response = await AuthAPI.acceptOrder(orderId);
+                    response = await VendorOrdersAPI.acceptOrder(orderId);
                     break;
                 case 'reject':
-                    response = await AuthAPI.rejectOrder(orderId);
+                    response = await VendorOrdersAPI.rejectOrder(orderId);
                     break;
                 case 'preparing':
-                    response = await AuthAPI.startPreparingOrder(orderId);
+                    response = await VendorOrdersAPI.startPreparingOrder(orderId);
                     break;
                 case 'ready':
-                    response = await AuthAPI.markOrderReady(orderId);
+                    response = await VendorOrdersAPI.markOrderReady(orderId);
                     break;
                 case 'out-for-delivery':
-                    response = await AuthAPI.markOrderOutForDelivery(orderId);
+                    response = await VendorOrdersAPI.markOrderOutForDelivery(orderId);
                     break;
                 case 'delivered':
-                    response = await AuthAPI.markOrderDelivered(orderId);
+                    response = await VendorOrdersAPI.markOrderDelivered(orderId);
                     break;
                 default:
                     return;

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorReviewsAPI } from '@/lib/api/vendor/reviews.api';
+import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
+import { ReviewsAPI } from '@/lib/api/reviews.api';
 import { toast } from '@/components/ui/toast';
 
 /**
@@ -29,8 +31,8 @@ export const useVendorReviews = ({
                 try {
                     // Try authenticated endpoints first
                     const [reviewsResponse, statsResponse] = await Promise.all([
-                        AuthAPI.getMyVendorReviews(),
-                        AuthAPI.getMyVendorReviewStats()
+                        VendorReviewsAPI.getMyVendorReviews(),
+                        VendorReviewsAPI.getMyVendorReviewStats()
                     ]);
 
                     if (reviewsResponse?.success) {
@@ -42,13 +44,13 @@ export const useVendorReviews = ({
                     }
                 } catch (authError) {
                     // If authenticated endpoints fail (500), fall back to getting vendor profile and using public endpoints
-                    const profileResponse = await AuthAPI.getVendorProfile();
+                    const profileResponse = await VendorProfileAPI.getVendorProfile();
                     const publicId = profileResponse?.data?.publicUserId || profileResponse?.data?.publicVendorId;
 
                     if (publicId) {
                         const [reviewsResponse, ratingResponse] = await Promise.all([
-                            AuthAPI.getVendorsReviews(publicId),
-                            AuthAPI.getVendorAverageRating(publicId)
+                            ReviewsAPI.getVendorsReviews(publicId),
+                            ReviewsAPI.getVendorAverageRating(publicId)
                         ]);
 
                         if (reviewsResponse?.success) {
@@ -67,8 +69,8 @@ export const useVendorReviews = ({
                 }
 
                 const [reviewsResponse, ratingResponse] = await Promise.all([
-                    AuthAPI.getVendorsReviews(vendorPublicId),
-                    AuthAPI.getVendorAverageRating(vendorPublicId)
+                    ReviewsAPI.getVendorsReviews(vendorPublicId),
+                    ReviewsAPI.getVendorAverageRating(vendorPublicId)
                 ]);
 
                 if (reviewsResponse?.success) {

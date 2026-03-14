@@ -16,7 +16,9 @@ import {
     setError,
     setLoading,
 } from "@/redux-store/authSlice";
-import { AuthAPI } from "@/lib/api/auth";
+import { AuthAPI } from "@/lib/api/auth.api";
+import { RegistrationAPI } from "@/lib/api/registration.api";
+import { CustomerAPI } from "@/lib/api/customer.api";
 
 export const useAuth = () => {
     const dispatch = useDispatch();
@@ -87,7 +89,7 @@ export const useAuth = () => {
 
     const registerCustomer = async (data) => {
         try {
-            return await AuthAPI.registerCustomer(data);
+            return await RegistrationAPI.registerCustomer(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Registration failed';
             dispatch(setError(errorMessage));
@@ -99,7 +101,7 @@ export const useAuth = () => {
 
     const registerVendor = async (data) => {
         try {
-            return await AuthAPI.registerVendor(data);
+            return await RegistrationAPI.registerVendor(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Registration failed';
             dispatch(setError(errorMessage));
@@ -109,7 +111,7 @@ export const useAuth = () => {
 
     const getCustomerProfile = async () => {
         try {
-            return await AuthAPI.getCustomerProfile();
+            return await CustomerAPI.getCustomerProfile();
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
             dispatch(setError(errorMessage));
@@ -119,7 +121,7 @@ export const useAuth = () => {
 
     const updateCustomerProfile = async (data) => {
         try {
-            return await AuthAPI.updateCustomerProfile(data);
+            return await CustomerAPI.updateCustomerProfile(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
             dispatch(setError(errorMessage));
@@ -129,7 +131,7 @@ export const useAuth = () => {
 
     const addAddress = async (addressData) => {
         try {
-            return await AuthAPI.addAddress(addressData);
+            return await CustomerAPI.addAddress(addressData);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to add address';
             dispatch(setError(errorMessage));
@@ -139,7 +141,7 @@ export const useAuth = () => {
 
     const updateAddress = async (publicAddressId, addressData) => {
         try {
-            return await AuthAPI.updateAddress(publicAddressId, addressData);
+            return await CustomerAPI.updateAddress(publicAddressId, addressData);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update address';
             dispatch(setError(errorMessage));
@@ -149,7 +151,7 @@ export const useAuth = () => {
 
     const deleteAddress = async (publicAddressId) => {
         try {
-            return await AuthAPI.deleteAddress(publicAddressId);
+            return await CustomerAPI.deleteAddress(publicAddressId);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to delete address';
             dispatch(setError(errorMessage));
@@ -159,7 +161,7 @@ export const useAuth = () => {
 
     const setDefaultAddress = async (publicAddressId) => {
         try {
-            return await AuthAPI.setDefaultAddress(publicAddressId);
+            return await CustomerAPI.setDefaultAddress(publicAddressId);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to set default address';
             dispatch(setError(errorMessage));
@@ -179,7 +181,7 @@ export const useAuth = () => {
 
     const getSavedAddresses = async () => {
         try {
-            return await AuthAPI.savedAddress();
+            return await CustomerAPI.savedAddress();
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load addresses';
             dispatch(setError(errorMessage));

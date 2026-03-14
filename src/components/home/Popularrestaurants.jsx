@@ -4,7 +4,7 @@ import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { Star } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
-import { AuthAPI } from '@/lib/api/auth';
+import { SearchAPI } from '@/lib/api/search.api';
 
 const PopularRestaurants = () => {
     const [popularStores, setPopularStores] = useState([]);
@@ -15,7 +15,7 @@ const PopularRestaurants = () => {
         const fetchMonthlyPopular = async () => {
             try {
                 setLoading(true);
-                const response = await AuthAPI.getMonthlyPopularProducts(city);
+                const response = await SearchAPI.getMonthlyPopularProducts(city);
 
                 if (response?.success && response?.data) {
                     const transformedProducts = response.data.map(product => ({

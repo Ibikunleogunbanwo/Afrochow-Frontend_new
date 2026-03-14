@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AuthAPI } from "@/lib/api/auth";
+import { RegistrationAPI } from "@/lib/api/registration.api";
 import { toast } from "@/components/ui/toast";
 import { INITIAL_FORM_DATA } from "@/lib/constants/customerformData";
 import {
@@ -146,7 +146,7 @@ export default function CustomerRegistration() {
         },
       };
 
-      await AuthAPI.registerCustomer(payload);
+      await RegistrationAPI.registerCustomer(payload);
 
       setUserEmail(formData.email);
       setShowSuccess(true);
@@ -164,7 +164,7 @@ export default function CustomerRegistration() {
     setResendLoading(true);
 
     try {
-      await AuthAPI.resendVerificationEmail(email);
+      await RegistrationAPI.resendVerificationEmail(email);
 
       toast.success('Email Resent!', 'Check your inbox again');
 

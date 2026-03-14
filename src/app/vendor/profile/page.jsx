@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
+import { AuthAPI } from '@/lib/api/auth.api';
 import { toast } from '@/components/ui/toast';
 import SettingsSidebar from '@/components/vendor/VendorSettingsPage/SettingsSidebar';
 import LoadingState from '@/components/vendor/VendorSettingsPage/LoadingState';
@@ -68,7 +69,7 @@ const VendorSettingsPage = () => {
         try {
             setLoading(true);
             const [profileResponse, userResponse] = await Promise.all([
-                AuthAPI.getVendorProfile(),
+                VendorProfileAPI.getVendorProfile(),
                 AuthAPI.getCurrentUser().catch(() => null)
             ]);
 
@@ -132,7 +133,7 @@ const VendorSettingsPage = () => {
     const saveVendorSection = async (sectionData) => {
         try {
             setSaving(true);
-            const res = await AuthAPI.updateVendorProfile(sectionData);
+            const res = await VendorProfileAPI.updateVendorProfile(sectionData);
             if (res?.success) {
                 toast.success('Success' || 'Updated successfully');
                 await fetchProfile();
@@ -198,7 +199,7 @@ const VendorSettingsPage = () => {
         }
 
         try {
-            const response = await AuthAPI.uploadVendorImage(file, type);
+            const response = await VendorProfileAPI.uploadVendorImage(file, type);
 
             if (response?.success) {
                 toast.success(

@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
-import {AuthAPI} from '@/lib/api/auth';
+import {SearchAPI} from '@/lib/api/search.api';
 
 const FeaturedRestaurants = () => {
     const [featuredStores, setFeaturedStores] = useState([]);
@@ -12,7 +12,7 @@ const FeaturedRestaurants = () => {
         const fetchFeaturedProducts = async () => {
             try {
                 setLoading(true);
-                const response = await AuthAPI.getFeaturedProducts();
+                const response = await SearchAPI.getFeaturedProducts();
 
                 if (response?.success && response?.data) {
                     const transformedProducts = response.data.map(product => ({

@@ -5,7 +5,7 @@ import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import LocationSelector from '@/components/LocationSelector';
 import { ArrowRight, TrendingUp } from 'lucide-react';
-import { AuthAPI } from '@/lib/api/auth';
+import { SearchAPI } from '@/lib/api/search.api';
 import { useLocation } from '@/contexts/LocationContext';
 
 
@@ -21,7 +21,7 @@ const TopRestaurants = () => {
     const fetchNearbyProducts = async (cityParam) => {
         try {
             setLoading(true);
-            const response = await AuthAPI.getProductsNearMe(cityParam);
+            const response = await SearchAPI.getProductsNearMe(cityParam);
 
             if (response?.success && response?.data) {
                 const transformedProducts = response.data.map(product => ({

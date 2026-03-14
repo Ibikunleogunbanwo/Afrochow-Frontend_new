@@ -3,7 +3,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {usePathname, useRouter} from 'next/navigation';
 import { Menu, Search, Bell } from 'lucide-react';
 import { toast } from "@/components/ui/toast";
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
+import { AuthAPI } from '@/lib/api/auth.api';
 import { getAvatarUrl } from "@/components/avatar";
 import Sidebar from '@/components/VendorDashboardLayout/Sidebar';
 import MobileSidebar from '@/components/VendorDashboardLayout/MobileSidebar';
@@ -48,7 +49,7 @@ const VendorDashboardLayout = ({ children }) => {
         setLoading(true);
         try {
             const [profileResponse, userResponse] = await Promise.all([
-                AuthAPI.getVendorProfile(),
+                VendorProfileAPI.getVendorProfile(),
                 AuthAPI.getCurrentUser().catch((err) => {
                     return null;
                 }),

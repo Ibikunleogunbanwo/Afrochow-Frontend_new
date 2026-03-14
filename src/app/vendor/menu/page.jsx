@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star } from 'lucide-react';
 import { getVendorProducts, createProduct, updateProduct, deleteProduct, toggleProductAvailability, uploadProductImage } from '@/lib/api/vendorProducts';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
-import { AuthAPI } from '@/lib/api/auth';
+import { SearchAPI } from '@/lib/api/search.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
 import ProductReviewsModal from '@/components/vendor/ProductReviewsModal';
 
@@ -43,7 +43,7 @@ const VendorMenuPage = () => {
 
     const fetchCategories = async () => {
         try {
-            const json = await AuthAPI.getCategories(); // <- already JSON
+            const json = await SearchAPI.getAllCategories();
             const data = json.data ?? json;
 
             if (Array.isArray(data) && data.length > 0) {

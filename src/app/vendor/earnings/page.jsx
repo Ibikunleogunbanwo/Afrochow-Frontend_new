@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { AuthAPI } from '@/lib/api/auth';
+import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import {
     DollarSign,
     TrendingUp,
@@ -47,7 +47,7 @@ const VendorEarningsPage = () => {
 
     const fetchRevenueStats = async () => {
         try {
-            const response = await AuthAPI.getOrdersRevenue();
+            const response = await VendorOrdersAPI.getOrdersRevenue();
             if (response?.success && response.data) {
                 setStats(prev => ({
                     ...prev,
@@ -62,7 +62,7 @@ const VendorEarningsPage = () => {
 
     const fetchOrderCountStats = async () => {
         try {
-            const response = await AuthAPI.getOrderCountStats();
+            const response = await VendorOrdersAPI.getOrderCountStats();
             if (response?.success && response.data) {
                 setStats(prev => ({
                     ...prev,
@@ -76,7 +76,7 @@ const VendorEarningsPage = () => {
 
     const fetchRecentOrders = async () => {
         try {
-            const response = await AuthAPI.getVendorOrders();
+            const response = await VendorOrdersAPI.getVendorOrders();
             if (response?.success) {
                 const orders = response.data || [];
                 const deliveredOrders = orders.filter(order => order.orderStatus === 'DELIVERED');

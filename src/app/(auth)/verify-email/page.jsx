@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthAPI } from '@/lib/api/auth';
+import { RegistrationAPI } from '@/lib/api/registration.api';
 import { toast } from '@/components/ui/toast';
 import {
   MailCheck,
@@ -123,7 +123,7 @@ export default function VerifyEmail() {
     setLoading(true);
 
     try {
-      const response = await AuthAPI.verifyEmail(verificationCode);
+      const response = await RegistrationAPI.verifyEmail(verificationCode);
       console.log('Verification successful:', response);
 
       setSuccess(true);
@@ -155,7 +155,7 @@ export default function VerifyEmail() {
     setResendLoading(true);
 
     try {
-      await AuthAPI.resendVerificationEmail(emailFromUrl);
+      await RegistrationAPI.resendVerificationEmail(emailFromUrl);
 
       toast.success('Code Resent!', 'Check your email inbox and spam folder');
 
