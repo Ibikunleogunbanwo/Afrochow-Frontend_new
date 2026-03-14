@@ -170,15 +170,15 @@ const CategoriesAndBanner = () => {
                                     key={item.id || index}
                                     onMouseEnter={() => setHoveredIndex(index)}
                                     onMouseLeave={() => setHoveredIndex(null)}
-                                    className="group relative aspect-square p-6 text-center transition-all duration-300 bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 animate-fade-up cursor-pointer overflow-hidden border-2 border-gray-100 hover:border-orange-200"
+                                    className="group relative aspect-square p-3 md:p-6 text-center transition-all duration-300 bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 animate-fade-up cursor-pointer overflow-hidden border-2 border-gray-100 hover:border-orange-200"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                     aria-label={`Explore ${item.label}`}
                                 >
                                     {/* Animated Gradient Background */}
-                                    {/*<div className={`absolute inset-0 bg-linear-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>*/}
+                                    <div className={`absolute inset-0 bg-linear-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
 
                                     {/* Content Container */}
-                                    <div className="relative z-10 h-full flex flex-col items-center justify-center gap-3">
+                                    <div className="relative z-10 h-full flex flex-col items-center justify-center gap-1">
                                         {/* Icon Container */}
                                         <div className={`relative md:p-5 p-3 rounded-2xl bg-linear-to-br ${item.color} transition-all duration-300 ${isHovered ? 'scale-110 shadow-2xl' : 'scale-100 shadow-lg'}`}>
                                             <Icon className="md:w-10 md:h-10 w-7 h-7 text-white" strokeWidth={2.5} />
@@ -191,7 +191,7 @@ const CategoriesAndBanner = () => {
                                     </div>
 
                                     {/* Hover Arrow Indicator */}
-                                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div className="absolute bottom-3 right-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300">
                                         <ArrowRight className="w-4 h-4 text-orange-600" strokeWidth={2.5} />
                                     </div>
                                 </Link>
