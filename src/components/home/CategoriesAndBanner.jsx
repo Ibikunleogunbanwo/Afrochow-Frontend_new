@@ -170,7 +170,7 @@ const CategoriesAndBanner = () => {
                                     key={item.id || index}
                                     onMouseEnter={() => setHoveredIndex(index)}
                                     onMouseLeave={() => setHoveredIndex(null)}
-                                    className="group relative aspect-square p-3 md:p-6 text-center transition-all duration-300 bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 animate-fade-up cursor-pointer overflow-hidden border-2 border-gray-100 hover:border-orange-200"
+                                    className=" flex justify-center items-center group relative aspect-square p-3 md:p-6 text-center transition-all duration-300 bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 animate-fade-up cursor-pointer overflow-hidden border-2 border-gray-100 hover:border-orange-200"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                     aria-label={`Explore ${item.label}`}
                                 >
@@ -178,7 +178,7 @@ const CategoriesAndBanner = () => {
                                     <div className={`absolute inset-0 bg-linear-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
 
                                     {/* Content Container */}
-                                    <div className="relative z-10 flex flex-col items-center justify-center gap-2">
+                                    <div className="flex flex-col items-center justify-center gap-3">
                                         {/* Icon Container */}
                                         <div className={`relative md:p-5 p-3 rounded-2xl bg-linear-to-br ${item.color} transition-all duration-300 ${isHovered ? 'scale-110 shadow-2xl' : 'scale-100 shadow-lg'}`}>
                                             <Icon className="md:w-10 md:h-10 w-7 h-7 text-white" strokeWidth={2.5} />
