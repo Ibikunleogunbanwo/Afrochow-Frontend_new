@@ -178,7 +178,7 @@ const CategoriesAndBanner = () => {
                                     <div className={`absolute inset-0 bg-linear-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-all duration-300`}></div>
 
                                     {/* Content Container */}
-                                    <div className="relative z-10 h-full flex flex-col items-center justify-center gap-1">
+                                    <div className="relative z-10 flex flex-col items-center justify-center gap-2">
                                         {/* Icon Container */}
                                         <div className={`relative md:p-5 p-3 rounded-2xl bg-linear-to-br ${item.color} transition-all duration-300 ${isHovered ? 'scale-110 shadow-2xl' : 'scale-100 shadow-lg'}`}>
                                             <Icon className="md:w-10 md:h-10 w-7 h-7 text-white" strokeWidth={2.5} />
