@@ -1,14 +1,14 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Eye, EyeOff } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import {useEffect, useState} from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -38,7 +38,7 @@ const formSchema = z.object({
     rememberMe: z.boolean().default(false),
 })
 
-export function SignInModal({ isOpen, onClose }) {
+export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick }) {
     const { login, isLoading } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
     const router = useRouter()
@@ -102,6 +102,21 @@ export function SignInModal({ isOpen, onClose }) {
                         Sign in to your Afrochow account
                     </DialogDescription>
                 </DialogHeader>
+
+                {/* Sign Up Prompt — top */}
+                {onSignUpClick && (
+                    <p className="text-center text-sm text-gray-500 -mt-2">
+                        Don&#39;t have an account?{' '}
+                        <button
+                            type="button"
+                            onClick={onSignUpClick}
+                            className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+                        >
+                            Sign Up
+                        </button>
+                    </p>
+                )}
+
                 <div className="grid gap-4 py-4">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -113,7 +128,6 @@ export function SignInModal({ isOpen, onClose }) {
                                         <FormLabel className="font-bold">Email</FormLabel>
                                         <FormControl>
                                             <Input
-                                                className="block w-full text-black "
                                                 placeholder="you@example.com"
                                                 type="email"
                                                 disabled={isLoading}
@@ -129,7 +143,18 @@ export function SignInModal({ isOpen, onClose }) {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-bold">Password</FormLabel>
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel className="font-bold">Password</FormLabel>
+                                            {onForgotPasswordClick && (
+                                                <button
+                                                    type="button"
+                                                    onClick={onForgotPasswordClick}
+                                                    className="text-xs text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                                                >
+                                                    Forgot password?
+                                                </button>
+                                            )}
+                                        </div>
                                         <FormControl>
                                             <div className="relative">
                                                 <Input
@@ -174,7 +199,12 @@ export function SignInModal({ isOpen, onClose }) {
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" variant="destructive" className="w-full" disabled={isLoading}>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                className="w-full"
+                                disabled={isLoading}
+                            >
                                 {isLoading ? "Signing in..." : "Sign in"}
                             </Button>
                         </form>

@@ -6,12 +6,16 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { SignInModal } from "@/components/signin/SignInModal";
+import { SignUpModal } from "@/components/register/SignUpModal";
+import {ForgotPasswordModal} from "@/components/signin/ForgotPasswordModal";
 
 const Header = ({ cartItemCount = 0 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -183,12 +187,12 @@ const Header = ({ cartItemCount = 0 }) => {
                     >
                       Log In
                     </button>
-                    <Link
-                        href="/register/signup"
+                    <button
+                        onClick={() => setShowSignUp(true)}
                         className="px-6 py-2.5 text-sm font-medium text-white transition-all duration-300 bg-linear-to-r from-orange-600 via-orange-500 to-amber-500 rounded-xl shadow-md hover:shadow-lg hover:shadow-orange-200 hover:scale-[1.02] focus:outline-none focus:ring-3 focus:ring-orange-300 focus:ring-offset-2 active:scale-95"
                     >
                       Sign Up
-                    </Link>
+                    </button>
                   </>
               )}
             </div>
@@ -238,7 +242,7 @@ const Header = ({ cartItemCount = 0 }) => {
                 {isAuthenticated && user ? (
                     // Mobile - Logged In
                     <>
-                      {/* Mobile Search — only shown when logged in */}
+                      {/* Mobile Search */}
                       <div className="relative mb-4 p-2 bg-linear-to-r from-gray-50 to-white rounded-xl border border-gray-200/50">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
@@ -311,7 +315,7 @@ const Header = ({ cartItemCount = 0 }) => {
                       </button>
                     </>
                 ) : (
-                    // Mobile - Logged Out (no search)
+                    // Mobile - Logged Out
                     <>
                       <button
                           onClick={() => {
@@ -322,13 +326,15 @@ const Header = ({ cartItemCount = 0 }) => {
                       >
                         Log In
                       </button>
-                      <Link
-                          href="/register/signup"
-                          className="block px-4 py-3.5 text-center text-white bg-linear-to-r from-orange-600 to-orange-500 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 active:scale-95"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                      <button
+                          onClick={() => {
+                            setShowSignUp(true);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="block w-full px-4 py-3.5 text-center text-white bg-linear-to-r from-orange-600 to-orange-500 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 active:scale-95"
                       >
                         Sign Up Free
-                      </Link>
+                      </button>
                     </>
                 )}
               </div>
@@ -338,6 +344,23 @@ const Header = ({ cartItemCount = 0 }) => {
         <SignInModal
             isOpen={showSignIn}
             onClose={() => setShowSignIn(false)}
+            onSignUpClick={() => { setShowSignIn(false); setShowSignUp(true) }}
+            onForgotPasswordClick={() => { setShowSignIn(false); setShowForgotPassword(true) }}
+        />
+
+        <SignUpModal
+            isOpen={showSignUp}
+            onClose={() => setShowSignUp(false)}
+            onSignInClick={() => {
+              setShowSignUp(false);
+              setShowSignIn(true);
+            }}
+        />
+
+        <ForgotPasswordModal
+            isOpen={showForgotPassword}
+            onClose={() => setShowForgotPassword(false)}
+            onSignInClick={() => { setShowForgotPassword(false); setShowSignIn(true) }}
         />
       </nav>
   );

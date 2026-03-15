@@ -122,7 +122,7 @@ const VendorCTA = () => {
                         {/* Main Image Card */}
                         <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                             <Image
-                                src="/image/rest_owner.jpg"
+                                src="/image/img.png"
                                 alt="Restaurant owner with tablet"
                                 width={600}
                                 height={700}

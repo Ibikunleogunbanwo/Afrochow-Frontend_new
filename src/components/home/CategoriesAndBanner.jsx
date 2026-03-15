@@ -304,38 +304,6 @@ const CategoriesAndBanner = () => {
                     )}
                 </section>
 
-                {/* Enhanced Bottom CTA Section */}
-                <div className="mt-16 text-center animate-fade-in">
-                    <div className="relative max-w-3xl mx-auto p-10 md:p-12 bg-linear-to-br from-orange-50 via-red-50 to-orange-50 rounded-3xl border-2 border-orange-200 shadow-xl overflow-hidden">
-                        {/* Decorative Background Pattern */}
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(251,146,60,0.1)_1px,transparent_1px)] bg-size-[40px_40px]"></div>
-
-                        {/* Content */}
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-orange-500 to-red-500 rounded-2xl mb-6 shadow-lg">
-                                <ChefHat className="w-8 h-8 text-white" strokeWidth={2.5} />
-                            </div>
-
-                            <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
-                                Can&#39;t find what you&#39;re looking for?
-                            </h3>
-                            <p className="text-gray-700 text-lg md:text-xl mb-8 max-w-xl mx-auto leading-relaxed">
-                                Browse our full collection of kitchens and discover more amazing African cuisine
-                            </p>
-                            <Link
-                                href="/restaurants"
-                                className="inline-flex items-center gap-3 px-8 py-4 bg-linear-to-r from-orange-600 via-orange-500 to-red-500 text-white font-black rounded-2xl hover:from-orange-700 hover:via-orange-600 hover:to-red-600 transition-all duration-300 shadow-2xl hover:shadow-orange-500/50 hover:scale-105 text-lg group"
-                            >
-                                <span>View All Products</span>
-                                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" strokeWidth={2.5} />
-                            </Link>
-                        </div>
-
-                        {/* Decorative Corner Elements */}
-                        <div className="absolute top-0 left-0 w-32 h-32 bg-linear-to-br from-orange-300/30 to-transparent rounded-br-full"></div>
-                        <div className="absolute bottom-0 right-0 w-32 h-32 bg-linear-to-tl from-red-300/30 to-transparent rounded-tl-full"></div>
-                    </div>
-                </div>
             </div>
         </div>
     );

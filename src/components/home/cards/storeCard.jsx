@@ -8,6 +8,7 @@ import Image from 'next/image';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { SignInModal } from "@/components/signin/SignInModal";
+import { SignUpModal } from "@/components/register/SignUpModal";
 
 const useStoreOpenStatus = (openingHour, closingHour) => {
     return useMemo(() => {
@@ -25,6 +26,7 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
     const [showSignIn, setShowSignIn] = useState(false);
+    const [showSignUp, setShowSignUp] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -241,6 +243,19 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
             <SignInModal
                 isOpen={showSignIn}
                 onClose={() => setShowSignIn(false)}
+                onSignUpClick={() => {
+                    setShowSignIn(false)
+                    setShowSignUp(true)
+                }}
+            />
+
+            <SignUpModal
+                isOpen={showSignUp}
+                onClose={() => setShowSignUp(false)}
+                onSignInClick={() => {
+                    setShowSignUp(false);
+                    setShowSignIn(true);
+                }}
             />
         </>
     );
