@@ -6,10 +6,8 @@ import {
     Star,
     MapPin,
     Clock,
-    Phone,
     Truck,
     ShoppingBag,
-    ChevronDown,
     MessageSquare,
     Filter,
     X
@@ -169,7 +167,7 @@ const VendorProfilePage = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Banner Section */}
-            <div className="relative w-full h-80 bg-gradient-to-r from-orange-500 to-red-500">
+            <div className="relative w-full h-80 bg-linear-to-r from-orange-500 to-red-500">
                 {vendor.bannerUrl ? (
                     <Image
                         src={vendor.bannerUrl}
@@ -198,6 +196,7 @@ const VendorProfilePage = () => {
                                         src={vendor.logoUrl}
                                         alt={vendor.restaurantName}
                                         fill
+                                        sizes="128px"
                                         className="object-cover"
                                     />
                                 ) : (
@@ -210,9 +209,9 @@ const VendorProfilePage = () => {
 
                         {/* Details */}
                         <div className="flex-1">
-                            <div className="flex items-start justify-between mb-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
                                 <div>
-                                    <h1 className="text-4xl font-black text-gray-900 mb-2">
+                                    <h1 className="text-2xl md:text-4xl font-black text-gray-900 mb-2">
                                         {vendor.restaurantName}
                                         {vendor.isVerified && (
                                             <span className="ml-2 text-blue-600" title="Verified">✓</span>
@@ -238,12 +237,12 @@ const VendorProfilePage = () => {
                                 </div>
 
                                 {/* Status Badge */}
-                                <div className={`px-2 py-2 rounded-full font-bold text-xs md:text-sm  ${
-                                    isOpenNow
+                                <div className={`self-start shrink-0 px-3 py-1.5 rounded-full font-bold text-xs md:text-sm whitespace-nowrap ${
+                                    vendor.isOpenNow
                                         ? 'bg-green-100 text-green-700'
                                         : 'bg-red-100 text-red-700'
                                 }`}>
-                                    {isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
+                                    {vendor.isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
                                 </div>
                             </div>
 
@@ -258,19 +257,19 @@ const VendorProfilePage = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {/* Location */}
                                 <div className="flex items-start space-x-3">
-                                    <MapPin className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                                    <MapPin className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-semibold text-gray-900">Location</p>
-                                        <p className="text-sm text-gray-600">{vendor.formattedAddress}</p>
+                                        <p className="text-sm text-gray-600">{vendor.address.formattedAddress}</p>
                                     </div>
                                 </div>
 
                                 {/* Hours */}
                                 {todayHours && (
                                     <div className="flex items-start space-x-3">
-                                        <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                        <Clock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Today's Hours</p>
+                                            <p className="text-sm font-semibold text-gray-900">Today&#39;s Hours</p>
                                             <p className="text-sm text-gray-600">
                                                 {todayHours.openTime} - {todayHours.closeTime}
                                             </p>
@@ -281,7 +280,7 @@ const VendorProfilePage = () => {
                                 {/* Delivery */}
                                 {vendor.offersDelivery && (
                                     <div className="flex items-start space-x-3">
-                                        <Truck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                        <Truck className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Delivery</p>
                                             <p className="text-sm text-gray-600">
@@ -294,7 +293,7 @@ const VendorProfilePage = () => {
                                 {/* Pickup */}
                                 {vendor.offersPickup && (
                                     <div className="flex items-start space-x-3">
-                                        <ShoppingBag className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                                        <ShoppingBag className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Pickup</p>
                                             <p className="text-sm text-gray-600">
@@ -307,7 +306,7 @@ const VendorProfilePage = () => {
                                 {/* Minimum Order */}
                                 {vendor.minimumOrderAmount && (
                                     <div className="flex items-start space-x-3">
-                                        <span className="text-orange-600 flex-shrink-0 mt-0.5">💰</span>
+                                        <span className="text-orange-600 shrink-0 mt-0.5">💰</span>
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Minimum Order</p>
                                             <p className="text-sm text-gray-600">
@@ -383,7 +382,7 @@ const ProductCard = ({ product, onViewReviews }) => {
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
+                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
                         <span className="text-6xl">🍲</span>
                     </div>
                 )}
