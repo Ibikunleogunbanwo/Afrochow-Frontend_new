@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/toast';
-import router from 'next/router';
 import {
   Mail,
   Lock,

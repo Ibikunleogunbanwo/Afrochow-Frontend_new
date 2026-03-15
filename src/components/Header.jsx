@@ -3,20 +3,18 @@ import React, { useState } from "react";
 import { ShoppingCart, Search, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth"
+import { SignInModal } from "@/components/signin/SignInModal";
 
 const Header = ({ cartItemCount = 0 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
 
 
   const { user, isAuthenticated, logout } = useAuth();
 
-  console.log('=== HEADER RENDERED ===');
-  console.log('User:', user);
-  console.log('Is Authenticated:', isAuthenticated);
-  console.log('======================');
   const handleLogout = async () => {
     await logout();
   };
@@ -39,7 +37,7 @@ const Header = ({ cartItemCount = 0 }) => {
                   aria-label="Search"
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
-                <Search className="w-5 h-5 transition-transform group-hover:scale-110" />
+                <Search className="w-5 h-5 text-black transition-transform group-hover:scale-110" />
               </button>
 
               {isAuthenticated && user ? (
@@ -175,12 +173,12 @@ const Header = ({ cartItemCount = 0 }) => {
               ) : (
                   // MODERN LOGGED OUT STATE
                   <>
-                    <Link
-                        href="/login"
+                    <button
+                        onClick={() => setShowSignIn(true)}
                         className="px-5 py-2.5 text-sm font-medium text-gray-700 transition-all duration-300 rounded-xl hover:bg-linear-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:shadow-sm active:scale-95"
                     >
                       Log In
-                    </Link>
+                    </button>
                     <Link
                         href="/register/signup"
                         className="px-6 py-2.5 text-sm font-medium text-white transition-all duration-300 bg-linear-to-r from-orange-600 via-orange-500 to-amber-500 rounded-xl shadow-md hover:shadow-lg hover:shadow-orange-200 hover:scale-[1.02] focus:outline-none focus:ring-3 focus:ring-orange-300 focus:ring-offset-2 active:scale-95"
@@ -189,6 +187,7 @@ const Header = ({ cartItemCount = 0 }) => {
                     </Link>
                   </>
               )}
+
             </div>
 
             {/* Modern Mobile Menu Button */}
@@ -215,7 +214,7 @@ const Header = ({ cartItemCount = 0 }) => {
                   <input
                       type="search"
                       placeholder="Search for delicious African cuisine, spices, or recipes..."
-                      className="w-full pl-12 pr-4 py-3.5 bg-linear-to-r from-gray-50 to-white border border-gray-300/50 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-300/50 focus:border-transparent shadow-sm transition-all duration-300"
+                      className="w-full pl-12 text-black pr-4 py-3.5 bg-linear-to-r from-gray-50 to-white border border-gray-300/50 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-300/50 focus:border-transparent shadow-sm transition-all duration-300"
                       autoFocus
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -238,7 +237,7 @@ const Header = ({ cartItemCount = 0 }) => {
                   <input
                       type="search"
                       placeholder="Search..."
-                      className="w-full pl-10 pr-4 py-2.5 bg-transparent focus:outline-none"
+                      className="w-full text-black pl-10 pr-4 py-2.5 bg-transparent focus:outline-none"
                   />
                 </div>
 
@@ -278,7 +277,7 @@ const Header = ({ cartItemCount = 0 }) => {
                         )}
                       </Link>
 
-                      {['/profile', '/orders', '/profile'].map((href, idx) => {
+                      {['/profile', '/orders', '/settings'].map((href, idx) => {
                         const icons = [User, Package, Settings];
                         const labels = ['Profile', 'My Orders', 'Settings'];
                         const Icon = icons[idx];
@@ -310,13 +309,15 @@ const Header = ({ cartItemCount = 0 }) => {
                 ) : (
                     // Mobile - Modern Logged Out
                     <>
-                      <Link
-                          href="/login"
-                          className="block px-4 py-3.5 text-center text-gray-700 rounded-xl hover:bg-linear-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 mb-2"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                      <button
+                          onClick={() => {
+                            setShowSignIn(true)
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="block w-full px-4 py-3.5 text-center text-gray-700 rounded-xl hover:bg-linear-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 mb-2"
                       >
                         Log In
-                      </Link>
+                      </button>
                       <Link
                           href="/register/signup"
                           className="block px-4 py-3.5 text-center text-white bg-linear-to-r from-orange-600 to-orange-500 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 active:scale-95"
@@ -329,6 +330,10 @@ const Header = ({ cartItemCount = 0 }) => {
               </div>
             </div>
         )}
+        <SignInModal
+            isOpen={showSignIn}
+            onClose={() => setShowSignIn(false)}
+        />
       </nav>
   );
 };
