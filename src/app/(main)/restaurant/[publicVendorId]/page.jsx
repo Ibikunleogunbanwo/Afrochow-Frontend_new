@@ -157,7 +157,7 @@ const VendorProfilePage = () => {
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Not Found</h2>
-                    <p className="text-gray-600">The restaurant you're looking for doesn't exist.</p>
+                    <p className="text-gray-600">The restaurant you&#39;re looking for doesn&#39;t exist.</p>
                 </div>
             </div>
         );
@@ -183,7 +183,7 @@ const VendorProfilePage = () => {
                         <span className="text-9xl">🍽️</span>
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
             </div>
 
             {/* Vendor Info Section */}
@@ -191,7 +191,7 @@ const VendorProfilePage = () => {
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                     <div className="flex flex-col md:flex-row gap-6">
                         {/* Logo */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                             <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-lg bg-white">
                                 {vendor.logoUrl ? (
                                     <Image
@@ -201,7 +201,7 @@ const VendorProfilePage = () => {
                                         className="object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
+                                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
                                         <span className="text-5xl">🍴</span>
                                     </div>
                                 )}
@@ -238,7 +238,7 @@ const VendorProfilePage = () => {
                                 </div>
 
                                 {/* Status Badge */}
-                                <div className={`px-4 py-2 rounded-full font-bold text-sm ${
+                                <div className={`px-2 py-2 rounded-full font-bold text-xs md:text-sm  ${
                                     isOpenNow
                                         ? 'bg-green-100 text-green-700'
                                         : 'bg-red-100 text-red-700'

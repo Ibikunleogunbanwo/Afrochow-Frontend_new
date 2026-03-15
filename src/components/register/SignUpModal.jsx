@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, ChefHat, Check, ArrowRight } from "lucide-react"
 import {
@@ -10,12 +10,6 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog"
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs"
 
 const customerBenefits = [
     "Browse hundreds of restaurants",
@@ -44,8 +38,25 @@ function BenefitsList({ benefits }) {
     )
 }
 
+function SignInPrompt({ onSignInClick }) {
+    if (!onSignInClick) return null
+    return (
+        <p className="text-center text-sm text-gray-500 mt-4">
+            Already have an account?{' '}
+            <button
+                type="button"
+                onClick={onSignInClick}
+                className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+            >
+                Sign In
+            </button>
+        </p>
+    )
+}
+
 export function SignUpModal({ isOpen, onClose, onSignInClick }) {
     const router = useRouter()
+    const [activeTab, setActiveTab] = useState("Customer")
 
     const handleCustomerClick = () => {
         onClose()
@@ -65,34 +76,78 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                         Join Afrochow
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                        Choose how you&#39;d like to get started
+                        Choose how you'd like to get started
                     </DialogDescription>
                 </DialogHeader>
 
-                <Tabs defaultValue="Customer" className="w-full mt-2">
-                    <TabsList className="w-full bg-black border border-orange-100 h-11 md:h-13">
-                        <TabsTrigger
-                            value="Customer"
-                            className="flex-1 data-[state=active]:bg-orange-600 data-[state=active]:text-white"
+                {/* Sign In Prompt — top */}
+                {onSignInClick && (
+                    <p className="text-center text-sm text-gray-500 -mt-2">
+                        Already have an account?{' '}
+                        <button
+                            type="button"
+                            onClick={onSignInClick}
+                            className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
                         >
-                            Customer
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="Vendor"
-                            className="flex-1 data-[state=active]:bg-orange-600 data-[state=active]:text-white"
-                        >
-                            Vendor
-                        </TabsTrigger>
-                    </TabsList>
+                            Sign In
+                        </button>
+                    </p>
+                )}
 
-                    {/* Customer Tab */}
-                    <TabsContent value="Customer" className="mt-4">
+                {/* Custom Tab Switcher */}
+                <div style={{
+                    display: 'flex',
+                    width: '100%',
+                    backgroundColor: 'black',
+                    borderRadius: '12px',
+                    height: '44px',
+                    padding: '4px',
+                    gap: '4px',
+                    boxSizing: 'border-box',
+                }}>
+                    {["Customer", "Vendor"].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            style={{
+                                flex: 1,
+                                height: '100%',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                fontWeight: activeTab === tab ? '700' : '500',
+                                cursor: 'pointer',
+                                border: 'none',
+                                transition: 'all 0.2s ease',
+                                backgroundColor: activeTab === tab ? 'white' : 'transparent',
+                                color: activeTab === tab ? 'black' : '#9ca3af',
+                            }}
+                            onMouseEnter={(e) => {
+                                if (activeTab !== tab) {
+                                    e.currentTarget.style.backgroundColor = '#ea580c'
+                                    e.currentTarget.style.color = 'white'
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (activeTab !== tab) {
+                                    e.currentTarget.style.backgroundColor = 'transparent'
+                                    e.currentTarget.style.color = '#9ca3af'
+                                }
+                            }}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Customer Tab */}
+                {activeTab === "Customer" && (
+                    <div className="mt-2">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
                                 <User className="w-5 h-5 text-orange-600" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">I&#39;m a Customer</h3>
+                                <h3 className="font-bold text-gray-900">I'm a Customer</h3>
                                 <p className="text-xs text-gray-500">Order African cuisine near you</p>
                             </div>
                         </div>
@@ -101,34 +156,23 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
 
                         <button
                             onClick={handleCustomerClick}
-                            className="w-full inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <span>Sign Up as Customer</span>
                             <ArrowRight className="w-4 h-4" />
                         </button>
+                    </div>
+                )}
 
-                        {onSignInClick && (
-                            <p className="text-center text-sm text-gray-500 mt-4">
-                                Already have an account?{' '}
-                                <button
-                                    type="button"
-                                    onClick={onSignInClick}
-                                    className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
-                                >
-                                    Sign In
-                                </button>
-                            </p>
-                        )}
-                    </TabsContent>
-
-                    {/* Vendor Tab */}
-                    <TabsContent value="Vendor" className="mt-4">
+                {/* Vendor Tab */}
+                {activeTab === "Vendor" && (
+                    <div className="mt-2">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
                                 <ChefHat className="w-5 h-5 text-orange-600" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">I&#39;m a Vendor</h3>
+                                <h3 className="font-bold text-gray-900">I'm a Vendor</h3>
                                 <p className="text-xs text-gray-500">Grow your restaurant business online</p>
                             </div>
                         </div>
@@ -137,26 +181,13 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
 
                         <button
                             onClick={handleVendorClick}
-                            className="w-full inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <span>Sign Up as Vendor</span>
                             <ArrowRight className="w-4 h-4" />
                         </button>
-
-                        {onSignInClick && (
-                            <p className="text-center text-sm text-gray-500 mt-4">
-                                Already have an account?{' '}
-                                <button
-                                    type="button"
-                                    onClick={onSignInClick}
-                                    className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
-                                >
-                                    Sign In
-                                </button>
-                            </p>
-                        )}
-                    </TabsContent>
-                </Tabs>
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     )

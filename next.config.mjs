@@ -2,11 +2,10 @@
 const nextConfig = {
   reactCompiler: true,
 
-  // Fix cross origin warning
   allowedDevOrigins: ["10.0.0.149"],
 
   images: {
-    // Fix image quality warning
+
     qualities: [70, 75],
 
     remotePatterns: [

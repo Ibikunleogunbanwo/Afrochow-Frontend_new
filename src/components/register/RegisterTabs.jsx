@@ -3,12 +3,6 @@
 import { useState } from 'react'
 import { User, ChefHat, Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs'
 import { SignInModal } from '@/components/signin/SignInModal'
 
 const customerBenefits = [
@@ -52,46 +46,87 @@ function SignInPrompt({ onSignIn }) {
     )
 }
 
+function TabButton({ label, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            style={{
+                flex: 1,
+                height: '100%',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: active ? '700' : '500',
+                cursor: 'pointer',
+                border: 'none',
+                transition: 'all 0.2s ease',
+                backgroundColor: active ? 'white' : 'transparent',
+                color: active ? 'black' : '#9ca3af',
+            }}
+            onMouseEnter={(e) => {
+                if (!active) {
+                    e.currentTarget.style.backgroundColor = '#ea580c'
+                    e.currentTarget.style.color = 'white'
+                }
+            }}
+            onMouseLeave={(e) => {
+                if (!active) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = '#9ca3af'
+                }
+            }}
+        >
+            {label}
+        </button>
+    )
+}
+
 export function RegisterTabs() {
+    const [activeTab, setActiveTab] = useState("Customer")
     const [showSignIn, setShowSignIn] = useState(false)
 
     return (
         <>
-            <Tabs defaultValue="Customer" className="w-full max-w-[500px] mx-auto">
-                <TabsList className="w-full bg-black border border-orange-100 h-12">
-                    <TabsTrigger
-                        value="Customer"
-                        className="flex-1 data-[state=active]:bg-orange-600 data-[state=active]:text-white px-4 py-2"
-                    >
-                        Customer
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="Vendor"
-                        className="flex-1 data-[state=active]:bg-orange-600 data-[state=active]:text-white px-4 py-2"
-                    >
-                        Vendor
-                    </TabsTrigger>
-                </TabsList>
+            <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
 
-                {/* Customer Tab */}
-                <TabsContent value="Customer">
+                {/* Tab Switcher */}
+                <div style={{
+                    display: 'flex',
+                    width: '100%',
+                    backgroundColor: 'black',
+                    borderRadius: '12px',
+                    height: '48px',
+                    padding: '4px',
+                    gap: '4px',
+                    marginBottom: '16px',
+                    boxSizing: 'border-box',
+                }}>
+                    <TabButton
+                        label="Customer"
+                        active={activeTab === "Customer"}
+                        onClick={() => setActiveTab("Customer")}
+                    />
+                    <TabButton
+                        label="Vendor"
+                        active={activeTab === "Vendor"}
+                        onClick={() => setActiveTab("Vendor")}
+                    />
+                </div>
+
+                {/* Customer Content */}
+                {activeTab === "Customer" && (
                     <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-orange-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
                         <div className="absolute inset-0 bg-linear-to-br from-orange-50/0 via-orange-50/0 to-orange-100/0 group-hover:to-orange-100/30 transition-all duration-500 pointer-events-none" />
-
                         <div className="relative z-10">
                             <div className="w-15 h-15 bg-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
                                 <User className="w-7 h-7 text-black group-hover:text-orange-700 transition-colors" />
                             </div>
-
                             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
                                 I&#39;m a Customer
                             </h2>
                             <p className="text-gray-600 mb-8 text-lg leading-relaxed">
                                 Order delicious African cuisine from the best restaurants near you
                             </p>
-
                             <BenefitsList benefits={customerBenefits} />
-
                             <Link
                                 href="/register/customer"
                                 className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
@@ -99,36 +134,29 @@ export function RegisterTabs() {
                                 <span>Sign Up as Customer</span>
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
-
-                            {/* Sign In Prompt */}
                             <SignInPrompt onSignIn={() => setShowSignIn(true)} />
                         </div>
                     </div>
-                </TabsContent>
+                )}
 
-                {/* Vendor Tab */}
-                <TabsContent value="Vendor">
+                {/* Vendor Content */}
+                {activeTab === "Vendor" && (
                     <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-orange-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
                         <div className="absolute inset-0 bg-linear-to-br from-red-50/0 via-orange-50/0 to-red-100/0 group-hover:to-red-100/30 transition-all duration-500 pointer-events-none" />
-
                         <div className="relative z-10">
                             <div className="absolute -top-2 -right-2 bg-linear-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                                 Grow Business
                             </div>
-
                             <div className="w-15 h-15 bg-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
                                 <ChefHat className="w-7 h-7 text-black group-hover:text-orange-700 transition-colors" />
                             </div>
-
                             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
                                 I&#39;m a Vendor
                             </h2>
                             <p className="text-gray-600 mb-8 text-lg leading-relaxed">
                                 Grow your restaurant business and reach more customers online
                             </p>
-
                             <BenefitsList benefits={vendorBenefits} />
-
                             <Link
                                 href="/register/vendor/step-1"
                                 className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
@@ -136,13 +164,11 @@ export function RegisterTabs() {
                                 <span>Sign Up as Vendor</span>
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
-
-                            {/* Sign In Prompt */}
                             <SignInPrompt onSignIn={() => setShowSignIn(true)} />
                         </div>
                     </div>
-                </TabsContent>
-            </Tabs>
+                )}
+            </div>
 
             <SignInModal
                 isOpen={showSignIn}
