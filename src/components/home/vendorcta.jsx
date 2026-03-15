@@ -120,12 +120,11 @@ const VendorCTA = () => {
                     {/* Right Column - Visual Content */}
                     <div className="relative">
                         {/* Main Image Card */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[500px] lg:h-[600px]">
                             <Image
                                 src="/image/img.png"
                                 alt="Restaurant owner with tablet"
-                                width={600}
-                                height={700}
+                                fill
                                 className="object-cover"
                                 quality={75}
                             />
@@ -133,31 +132,14 @@ const VendorCTA = () => {
                             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
 
                             {/* Floating Stats Card */}
-                            <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <div className="text-sm text-gray-600 mb-1">Monthly Revenue</div>
-                                        <div className="text-3xl font-black text-gray-900">$12,450</div>
-                                    </div>
-                                    <div className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                                        <TrendingUp className="w-4 h-4" />
-                                        <span>+28%</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-4 text-sm">
-                                    <div>
-                                        <span className="text-gray-600">Orders: </span>
-                                        <span className="font-bold text-gray-900">156</span>
-                                    </div>
-                                    <div className="w-px h-4 bg-gray-300"></div>
-                                    <div>
-                                        <span className="text-gray-600">Rating: </span>
-                                        <span className="font-bold text-gray-900 inline-flex items-center">
-                      4.9 <Star className="w-2 h-2 ml-1 text-yellow-500 fill-yellow-500" />
-                    </span>
-                                    </div>
-                                </div>
-                            </div>
+                            {/*<div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">*/}
+                            {/*    <div className="flex items-center justify-between mb-4">*/}
+                            {/*        <div>*/}
+                            {/*            <div className="text-sm text-gray-600 mb-1">Monthly Revenue</div>*/}
+                            {/*            <div className="text-3xl font-black text-gray-900">$12,450</div>*/}
+                            {/*        </div>*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
                         </div>
 
                         {/* Floating Badge */}
