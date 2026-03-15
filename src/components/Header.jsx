@@ -1,9 +1,10 @@
 "use client";
+
 import React, { useState } from "react";
 import { ShoppingCart, Search, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth";
 import { SignInModal } from "@/components/signin/SignInModal";
 
 const Header = ({ cartItemCount = 0 }) => {
@@ -11,7 +12,6 @@ const Header = ({ cartItemCount = 0 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
-
 
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -32,10 +32,19 @@ const Header = ({ cartItemCount = 0 }) => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-1 lg:space-x-2">
 
+              {/* Search Button */}
+              <button
+                  className="p-2.5 text-gray-600 transition-all duration-300 rounded-xl hover:bg-linear-to-r hover:from-orange-50 hover:to-amber-50 hover:text-orange-600 focus:outline-none focus:ring-3 focus:ring-orange-200 focus:ring-offset-2 active:scale-95 group"
+                  aria-label="Search"
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+              >
+                <Search className="w-5 h-5 text-black transition-transform group-hover:scale-110" />
+              </button>
+
               {isAuthenticated && user ? (
-                  // LOGGED IN STATE - MODERN DESIGN
+                  // LOGGED IN STATE
                   <>
-                    {/* Shopping Cart - Modernized */}
+                    {/* Shopping Cart */}
                     <Link
                         href="/cart"
                         className="relative p-2.5 text-gray-600 transition-all duration-300 rounded-xl hover:bg-linear-to-r hover:from-orange-50 hover:to-amber-50 hover:text-orange-600 focus:outline-none focus:ring-3 focus:ring-orange-200 focus:ring-offset-2 active:scale-95 group"
@@ -44,29 +53,29 @@ const Header = ({ cartItemCount = 0 }) => {
                       <ShoppingCart className="w-5 h-5 transition-transform group-hover:scale-110" />
                       {cartItemCount > 0 && (
                           <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-6 h-6 px-1.5 text-xs font-bold text-white bg-linear-to-br from-orange-500 to-orange-600 rounded-full shadow-lg animate-pulse-subtle">
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
-                    </span>
+                                            {cartItemCount > 99 ? '99+' : cartItemCount}
+                                        </span>
                       )}
                     </Link>
 
-                    {/* Modern User Menu Dropdown */}
+                    {/* User Menu Dropdown */}
                     <div className="relative">
                       <button
                           onClick={() => setIsMenuOpen(!isMenuOpen)}
                           className="group flex items-center gap-3 p-2.5 pr-4 rounded-xl transition-all duration-300 hover:bg-linear-to-r hover:from-orange-50 hover:to-amber-50 focus:outline-none focus:ring-3 focus:ring-orange-200 focus:ring-offset-2"
                       >
-                        {/* Modern Avatar */}
+                        {/* Avatar */}
                         <div className="relative">
                           <div className="flex items-center justify-center w-10 h-10 bg-linear-to-br from-orange-500 via-amber-500 to-orange-600 rounded-full shadow-lg shadow-orange-200/50 group-hover:shadow-xl group-hover:shadow-orange-300/60 transition-all duration-300">
-                        <span className="text-base font-bold text-white">
-                          {user.lastName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-                        </span>
+                                                <span className="text-base font-bold text-white">
+                                                    {user.lastName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                                                </span>
                           </div>
                           {/* Online indicator */}
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm" />
                         </div>
 
-                        {/* User Info with Typography */}
+                        {/* User Info */}
                         <div className="hidden lg:block text-left">
                           <p className="text-sm font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">
                             {user.firstName || 'Welcome Back'}
@@ -77,11 +86,10 @@ const Header = ({ cartItemCount = 0 }) => {
                           </p>
                         </div>
 
-                        {/* Animated Chevron */}
                         <ChevronDown className={`w-4 h-4 ml-1 text-gray-500 transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
 
-                      {/* Modern Dropdown Menu */}
+                      {/* Dropdown Menu */}
                       {isMenuOpen && (
                           <>
                             <div
@@ -89,6 +97,7 @@ const Header = ({ cartItemCount = 0 }) => {
                                 onClick={() => setIsMenuOpen(false)}
                             />
                             <div className="absolute right-0 z-20 w-64 mt-2 bg-white border border-gray-200/50 rounded-xl shadow-2xl shadow-black/5 backdrop-blur-xl overflow-hidden animate-in slide-in-from-top-2 duration-200">
+
                               {/* User Info Header */}
                               <div className="p-4 bg-linear-to-r from-orange-50 to-amber-50 border-b border-gray-100">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
@@ -96,11 +105,14 @@ const Header = ({ cartItemCount = 0 }) => {
                                 </p>
                                 <p className="text-xs text-gray-600 truncate">{user.email}</p>
                                 {user.role && (
-                                  <div className="mt-2 px-3 py-1 bg-white/80 rounded-full inline-block">
-                                    <span className="text-xs font-medium text-orange-600">
-                                      {user.role === 'CUSTOMER' ? 'Customer' : user.role === 'VENDOR' ? 'Vendor' : user.role === 'ADMIN' ? 'Administrator' : user.role}
-                                    </span>
-                                  </div>
+                                    <div className="mt-2 px-3 py-1 bg-white/80 rounded-full inline-block">
+                                                            <span className="text-xs font-medium text-orange-600">
+                                                                {user.role === 'CUSTOMER' ? 'Customer'
+                                                                    : user.role === 'VENDOR' ? 'Vendor'
+                                                                        : user.role === 'ADMIN' ? 'Administrator'
+                                                                            : user.role}
+                                                            </span>
+                                    </div>
                                 )}
                               </div>
 
@@ -128,8 +140,8 @@ const Header = ({ cartItemCount = 0 }) => {
                                   <span>My Orders</span>
                                   {user.orderCount > 0 && (
                                       <span className="ml-auto px-2 py-1 text-xs font-bold text-orange-600 bg-orange-100 rounded-full">
-                                {user.orderCount}
-                              </span>
+                                                                {user.orderCount}
+                                                            </span>
                                   )}
                                 </Link>
 
@@ -145,7 +157,7 @@ const Header = ({ cartItemCount = 0 }) => {
                                 </Link>
                               </div>
 
-                              {/* Logout Section */}
+                              {/* Logout */}
                               <div className="border-t border-gray-100 p-2 bg-gray-50/50">
                                 <button
                                     onClick={handleLogout}
@@ -163,7 +175,7 @@ const Header = ({ cartItemCount = 0 }) => {
                     </div>
                   </>
               ) : (
-                  // MODERN LOGGED OUT STATE
+                  // LOGGED OUT STATE
                   <>
                     <button
                         onClick={() => setShowSignIn(true)}
@@ -179,10 +191,9 @@ const Header = ({ cartItemCount = 0 }) => {
                     </Link>
                   </>
               )}
-
             </div>
 
-            {/* Modern Mobile Menu Button */}
+            {/* Mobile Menu Button */}
             <div className="flex items-center md:hidden">
               <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -198,7 +209,7 @@ const Header = ({ cartItemCount = 0 }) => {
             </div>
           </div>
 
-          {/* Modern Search Bar (Desktop) */}
+          {/* Desktop Search Bar */}
           {isSearchOpen && (
               <div className="hidden md:block pb-4 animate-in slide-in-from-top-2 duration-300">
                 <div className="relative">
@@ -219,20 +230,31 @@ const Header = ({ cartItemCount = 0 }) => {
           )}
         </div>
 
-        {/* Modern Mobile Menu */}
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200/60 bg-white animate-in slide-in-from-top-2 duration-300">
               <div className="px-4 py-3 space-y-1">
+
                 {isAuthenticated && user ? (
-                    // Mobile - Modern Logged In
+                    // Mobile - Logged In
                     <>
+                      {/* Mobile Search — only shown when logged in */}
+                      <div className="relative mb-4 p-2 bg-linear-to-r from-gray-50 to-white rounded-xl border border-gray-200/50">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="search"
+                            placeholder="Search..."
+                            className="w-full text-black pl-10 pr-4 py-2.5 bg-transparent focus:outline-none"
+                        />
+                      </div>
+
                       {/* User Info Card */}
                       <div className="p-4 mb-3 bg-linear-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-12 h-12 bg-linear-to-br from-orange-500 to-orange-600 rounded-full shadow-md">
-                      <span className="text-lg font-bold text-white">
-                        {user.username?.charAt(0).toUpperCase() || 'U'}
-                      </span>
+                                            <span className="text-lg font-bold text-white">
+                                                {user.username?.charAt(0).toUpperCase() || 'U'}
+                                            </span>
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{user.username}</p>
@@ -246,16 +268,16 @@ const Header = ({ cartItemCount = 0 }) => {
                           className="flex items-center justify-between px-4 py-3.5 text-gray-700 rounded-xl hover:bg-linear-to-r hover:from-orange-50 hover:to-amber-50 group transition-all duration-200"
                           onClick={() => setIsMobileMenuOpen(false)}
                       >
-                  <span className="flex items-center">
-                    <div className="flex items-center justify-center w-9 h-9 mr-3 bg-linear-to-br from-orange-100 to-amber-100 rounded-lg group-hover:from-orange-200 group-hover:to-amber-200">
-                      <ShoppingCart className="w-4 h-4 text-orange-600" />
-                    </div>
-                    Cart
-                  </span>
+                                    <span className="flex items-center">
+                                        <div className="flex items-center justify-center w-9 h-9 mr-3 bg-linear-to-br from-orange-100 to-amber-100 rounded-lg group-hover:from-orange-200 group-hover:to-amber-200">
+                                            <ShoppingCart className="w-4 h-4 text-orange-600" />
+                                        </div>
+                                        Cart
+                                    </span>
                         {cartItemCount > 0 && (
                             <span className="px-2.5 py-1 text-xs font-bold text-white bg-linear-to-br from-orange-500 to-orange-600 rounded-full shadow-sm">
-                      {cartItemCount}
-                    </span>
+                                            {cartItemCount}
+                                        </span>
                         )}
                       </Link>
 
@@ -289,12 +311,12 @@ const Header = ({ cartItemCount = 0 }) => {
                       </button>
                     </>
                 ) : (
-                    // Mobile - Modern Logged Out
+                    // Mobile - Logged Out (no search)
                     <>
                       <button
                           onClick={() => {
-                            setShowSignIn(true)
-                            setIsMobileMenuOpen(false)
+                            setShowSignIn(true);
+                            setIsMobileMenuOpen(false);
                           }}
                           className="block w-full px-4 py-3.5 text-center text-gray-700 rounded-xl hover:bg-linear-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 mb-2"
                       >
@@ -312,6 +334,7 @@ const Header = ({ cartItemCount = 0 }) => {
               </div>
             </div>
         )}
+
         <SignInModal
             isOpen={showSignIn}
             onClose={() => setShowSignIn(false)}
