@@ -31,7 +31,7 @@ const Header = ({ cartItemCount = 0 }) => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-1 lg:space-x-2">
-            
+
               {isAuthenticated && user ? (
                   // LOGGED IN STATE - MODERN DESIGN
                   <>
@@ -223,16 +223,6 @@ const Header = ({ cartItemCount = 0 }) => {
         {isMobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200/60 bg-white animate-in slide-in-from-top-2 duration-300">
               <div className="px-4 py-3 space-y-1">
-                {/* Mobile Search - Modern */}
-                <div className="relative mb-4 p-2 bg-linear-to-r from-gray-50 to-white rounded-xl border border-gray-200/50">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                      type="search"
-                      placeholder="Search..."
-                      className="w-full text-black pl-10 pr-4 py-2.5 bg-transparent focus:outline-none"
-                  />
-                </div>
-
                 {isAuthenticated && user ? (
                     // Mobile - Modern Logged In
                     <>
