@@ -155,26 +155,32 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                     {/* Content Container */}
                     <div className="p-5 space-y-3">
 
-                        {/* Restaurant Name */}
+                        {/* Product Name — bold, primary */}
+                        <h3 className="text-base font-bold text-gray-900 line-clamp-1">
+                            {name}
+                        </h3>
+
+                        {/* Restaurant Name — orange, not bold */}
                         {restaurantName && (
-                            <h3 className="text-xl font-bold text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                            <p className="text-sm font-medium text-orange-500 line-clamp-1 flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                                 {restaurantName}
-                            </h3>
+                            </p>
                         )}
 
-                        {/* Product Name */}
-                        <p className="text-sm font-medium text-gray-700 line-clamp-1">
-                            {name}
-                        </p>
-
-                        {/* Categories */}
-                        <div className="flex items-center space-x-2">
-                            <div className="flex-1">
-                                <p className="text-sm text-gray-600 line-clamp-1">
-                                    {categoryDisplay}
-                                </p>
+                        {/* Categories — pill badges */}
+                        {categoryDisplay && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {categoryDisplay.split(' • ').map((cat, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="px-2.5 py-0.5 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-100 rounded-full"
+                                    >
+                                        {cat}
+                                    </span>
+                                ))}
                             </div>
-                        </div>
+                        )}
 
                         {/* Info Grid */}
                         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
@@ -206,19 +212,18 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
 
                         {/* Delivery Fee & Location */}
                         {(deliveryFee !== undefined || location) && (
-                            <div className="flex items-center justify-between pt-2 text-xs text-gray-500">
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
                                 {deliveryFee !== undefined && (
                                     <span className="font-semibold text-orange-600">
                                         {deliveryFee === 0 || deliveryFee === '0'
                                             ? '🎉 Free Delivery'
-                                            : `$${deliveryFee} delivery`}
+                                            : `$${deliveryFee} delivery fee`}
                                     </span>
                                 )}
                                 {location && (
-                                    <div className="flex items-center space-x-1">
-                                        <MapPin className="w-3 h-3" />
-                                        <span className="line-clamp-1">{location}</span>
-                                    </div>
+                                    <span className="text-gray-400 line-clamp-1 max-w-[120px]">
+                                        {location}
+                                    </span>
                                 )}
                             </div>
                         )}
