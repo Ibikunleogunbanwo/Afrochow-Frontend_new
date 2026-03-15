@@ -95,7 +95,7 @@ export function SignInModal({ isOpen, onClose }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="w-full mx-4 sm:mx-0 sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle className="text-center">Welcome back</DialogTitle>
                     <DialogDescription className="text-center text-black font-bold p-2">

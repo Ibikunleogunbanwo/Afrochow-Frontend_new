@@ -31,15 +31,7 @@ const Header = ({ cartItemCount = 0 }) => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-1 lg:space-x-2">
-              {/* Search Button */}
-              <button
-                  className="p-2.5 text-gray-600 transition-all duration-300 rounded-xl hover:bg-linear-to-r hover:from-orange-50 hover:to-amber-50 hover:text-orange-600 focus:outline-none focus:ring-3 focus:ring-orange-200 focus:ring-offset-2 active:scale-95 group"
-                  aria-label="Search"
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-              >
-                <Search className="w-5 h-5 text-black transition-transform group-hover:scale-110" />
-              </button>
-
+            
               {isAuthenticated && user ? (
                   // LOGGED IN STATE - MODERN DESIGN
                   <>
