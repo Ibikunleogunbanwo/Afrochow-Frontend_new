@@ -81,7 +81,7 @@ export const useAuth = () => {
             console.error('Logout API failed:', err);
         } finally {
             dispatch(clearAuth());
-            router.push('/login');
+            router.push('/');
         }
     };
 

@@ -60,10 +60,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            console.log("Fetching customer profile...");
             const response = await getCustomerProfile();
-            console.log("Profile response:", response);
-
             if (response?.success && response?.data) {
                 const profileData = response.data;
                 console.log("Profile data received:", profileData);
