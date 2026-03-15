@@ -25,7 +25,7 @@ const VendorProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [productsLoading, setProductsLoading] = useState(true);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
-    const [reviewType, setReviewType] = useState('vendor'); // 'vendor' or 'product'
+    const [reviewType, setReviewType] = useState('vendor');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [ratingFilter, setRatingFilter] = useState(0);
 
@@ -40,8 +40,6 @@ const VendorProfilePage = () => {
         try {
             setLoading(true);
             const response = await SearchAPI.getVendorDetails(publicVendorId);
-
-            console.log('Vendor data:', response);
             if (response?.success && response?.data) {
                 setVendor(response.data);
             }
@@ -56,7 +54,6 @@ const VendorProfilePage = () => {
         try {
             setProductsLoading(true);
             const response = await SearchAPI.getVendorProducts(publicVendorId, page, 20);
-
             if (response?.success && response?.data) {
                 setProducts(response.data);
             } else if (Array.isArray(response)) {
@@ -90,7 +87,6 @@ const VendorProfilePage = () => {
     const fetchProductReviews = async (productPublicId) => {
         try {
             const response = await ReviewsAPI.getProductReviews(productPublicId);
-
             if (response?.success && response?.data) {
                 setReviews(response.data);
             } else if (Array.isArray(response)) {
@@ -123,15 +119,6 @@ const VendorProfilePage = () => {
         }
     };
 
-    const formatOperatingHours = (operatingHours) => {
-        if (!operatingHours) return null;
-
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        const today = days[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
-
-        return operatingHours[today];
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -161,9 +148,6 @@ const VendorProfilePage = () => {
         );
     }
 
-    const todayHours = formatOperatingHours(vendor.operatingHours);
-    const isOpenNow = todayHours?.isOpen || false;
-
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Banner Section */}
@@ -173,6 +157,7 @@ const VendorProfilePage = () => {
                         src={vendor.bannerUrl}
                         alt={vendor.restaurantName}
                         fill
+                        sizes="100vw"
                         className="object-cover"
                         priority
                     />
@@ -188,6 +173,7 @@ const VendorProfilePage = () => {
             <div className="container mx-auto px-4 -mt-20 relative z-10 max-w-7xl">
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                     <div className="flex flex-col md:flex-row gap-6">
+
                         {/* Logo */}
                         <div className="shrink-0">
                             <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-lg bg-white">
@@ -255,24 +241,25 @@ const VendorProfilePage = () => {
 
                             {/* Info Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
                                 {/* Location */}
-                                <div className="flex items-start space-x-3">
-                                    <MapPin className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-900">Location</p>
-                                        <p className="text-sm text-gray-600">{vendor.address.formattedAddress}</p>
+                                {vendor.address?.formattedAddress && (
+                                    <div className="flex items-start space-x-3">
+                                        <MapPin className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900">Location</p>
+                                            <p className="text-sm text-gray-600">{vendor.address.formattedAddress}</p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Hours */}
-                                {todayHours && (
+                                {vendor.todayHoursFormatted && (
                                     <div className="flex items-start space-x-3">
                                         <Clock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Today&#39;s Hours</p>
-                                            <p className="text-sm text-gray-600">
-                                                {todayHours.openTime} - {todayHours.closeTime}
-                                            </p>
+                                            <p className="text-sm text-gray-600">{vendor.todayHoursFormatted}</p>
                                         </div>
                                     </div>
                                 )}
@@ -379,6 +366,7 @@ const ProductCard = ({ product, onViewReviews }) => {
                         src={product.imageUrl}
                         alt={product.name}
                         fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                 ) : (
@@ -448,28 +436,26 @@ const ProductCard = ({ product, onViewReviews }) => {
 
 // Reviews Modal Component
 const ReviewsModal = ({
-    isOpen,
-    onClose,
-    reviews,
-    reviewType,
-    vendorName,
-    productName,
-    ratingFilter,
-    onRatingFilterChange
-}) => {
+                          isOpen,
+                          onClose,
+                          reviews,
+                          reviewType,
+                          vendorName,
+                          productName,
+                          ratingFilter,
+                          onRatingFilterChange
+                      }) => {
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 onClick={onClose}
             />
-
-            {/* Modal */}
             <div className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl">
                 <div className="flex flex-col h-full">
+
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-gray-200">
                         <div>
