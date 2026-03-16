@@ -15,6 +15,12 @@ export const SearchAPI = {
     return fetchWithCredentials(url, { method: 'GET' });
   },
 
+  getProductById: async (publicProductId) => {
+    return fetchWithCredentials(`${API_BASE_URL}/products/${publicProductId}`, {
+      method: 'GET',
+    });
+  },
+
   searchProductsAdvanced: async (filters = {}) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
