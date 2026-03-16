@@ -1,82 +1,92 @@
 "use client";
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
-import {SearchAPI} from '@/lib/api/search.api';
+import { SearchAPI } from '@/lib/api/search.api';
 
 const FeaturedRestaurants = () => {
     const [featuredStores, setFeaturedStores] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchFeaturedProducts = async () => {
+        const fetchFeaturedData = async () => {
             try {
                 setLoading(true);
-                const response = await SearchAPI.getFeaturedProducts();
 
-                if (response?.success && response?.data) {
-                    const transformedProducts = response.data.map(product => ({
+                // fetch both in parallel
+                const [productsResponse, vendorsResponse] = await Promise.all([
+                    SearchAPI.getFeaturedProducts(),
+                    SearchAPI.getVerifiedVendors(),
+                ]);
+
+                const products = productsResponse?.success && productsResponse?.data
+                    ? productsResponse.data
+                    : Array.isArray(productsResponse) ? productsResponse : [];
+
+                const vendors = Array.isArray(vendorsResponse) ? vendorsResponse : [];
+
+                // build a vendor lookup map by publicUserId for O(1) access
+                const vendorMap = vendors.reduce((map, vendor) => {
+                    map[vendor.publicUserId] = vendor;
+                    return map;
+                }, {});
+
+                // merge product data with vendor data
+                const transformedStores = products.map(product => {
+                    const vendor = vendorMap[product.vendorPublicId] || {};
+
+                    return {
+                        // ids
                         storeId: product.publicProductId,
+                        vendorPublicId: product.vendorPublicId,
+                        publicProductId: product.publicProductId,
+
+                        // product details
                         name: product.name,
                         rating: product.averageRating || 0,
                         reviewCount: product.reviewCount || 0,
-                        categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                        deliveryTime: product.preparationTimeMinutes || 30,
-                        location: product.vendorCity && product.vendorProvince
-                            ? `${product.vendorCity}, ${product.vendorProvince}`
-                            : product.vendorCity || '',
-                        deliveryFee: 2.99,
+                        categories: product.categoryName
+                            ? [product.categoryName]
+                            : ['African Cuisine'],
                         popularItems: [{
                             name: product.name,
                             imageUrl: product.imageUrl || '/image/placeholder.jpg',
                             price: product.price,
-                            description: product.description
+                            description: product.description,
                         }],
-                        available: product.available !== false,
-                        openingHour: 9,
-                        closingHour: 21,
-                        restaurantName: product.restaurantName,
-                        publicProductId: product.publicProductId,
-                        vendorPublicId: product.vendorPublicId
-                    }));
 
-                    setFeaturedStores(transformedProducts);
-                } else if (Array.isArray(response)) {
-                    const transformedProducts = response.map(product => ({
-                        storeId: product.publicProductId,
-                        name: product.name,
-                        rating: product.averageRating || 0,
-                        reviewCount: product.reviewCount || 0,
-                        categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                        deliveryTime: product.preparationTimeMinutes || 30,
-                        location: product.vendorCity && product.vendorProvince
-                            ? `${product.vendorCity}, ${product.vendorProvince}`
-                            : product.vendorCity || '',
-                        deliveryFee: 2.99,
-                        popularItems: [{
-                            name: product.name,
-                            imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                            price: product.price,
-                            description: product.description
-                        }],
-                        available: product.available !== false,
-                        openingHour: 9,
-                        closingHour: 21,
-                        restaurantName: product.restaurantName,
-                        publicProductId: product.publicProductId,
-                        vendorPublicId: product.vendorPublicId
-                    }));
+                        // vendor details
+                        restaurantName: product.restaurantName || vendor.restaurantName,
+                        deliveryTime: vendor.estimatedDeliveryMinutes || product.preparationTimeMinutes || 30,
+                        deliveryFee: vendor.deliveryFee || 2.99,
+                        location: vendor.address?.city && vendor.address?.province
+                            ? `${vendor.address.city}, ${vendor.address.province}`
+                            : product.vendorCity && product.vendorProvince
+                                ? `${product.vendorCity}, ${product.vendorProvince}`
+                                : product.vendorCity || '',
 
-                    setFeaturedStores(transformedProducts);
-                }
+                        // open status — from vendor (timezone-aware)
+                        isOpenNow: vendor.isOpenNow ?? null,
+                        todayHoursFormatted: vendor.todayHoursFormatted ?? null,
+                    };
+                });
+
+                // open first, closed at the bottom
+                const sortedStores = transformedStores.sort((a, b) => {
+                    if (a.isOpenNow === b.isOpenNow) return 0
+                    return a.isOpenNow ? -1 : 1
+                })
+
+                setFeaturedStores(sortedStores);
             } catch (error) {
+                console.error('Error fetching featured data:', error);
                 setFeaturedStores([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        void fetchFeaturedProducts();
+        void fetchFeaturedData();
     }, []);
 
     return (
@@ -96,7 +106,7 @@ const FeaturedRestaurants = () => {
                     </p>
                 </div>
 
-                {/* Cards Grid - Up to 8 Cards */}
+                {/* Cards Grid */}
                 {loading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(8)].map((_, index) => (
@@ -117,10 +127,11 @@ const FeaturedRestaurants = () => {
                     </div>
                 ) : (
                     <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-lg font-medium">No featured products available at the moment</p>
+                        <p className="text-gray-500 text-lg font-medium">
+                            No featured products available at the moment
+                        </p>
                     </div>
                 )}
-
             </div>
         </section>
     );

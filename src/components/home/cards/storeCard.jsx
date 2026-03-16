@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { Heart, Star, Clock, Truck, MapPin } from 'lucide-react';
@@ -10,17 +10,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { SignInModal } from "@/components/signin/SignInModal";
 import { SignUpModal } from "@/components/register/SignUpModal";
 
-const useStoreOpenStatus = (openingHour, closingHour) => {
-    return useMemo(() => {
-        const now = new Date();
-        const currentHour = now.getHours();
-
-        return openingHour >= closingHour
-            ? currentHour >= openingHour || currentHour < closingHour
-            : currentHour >= openingHour && currentHour < closingHour;
-    }, [openingHour, closingHour]);
-};
-
 const StoreCard = ({ store, isLoading = false, priority = false }) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -29,11 +18,6 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
     const [showSignUp, setShowSignUp] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
-
-    const openingHour = store?.openingHour ?? 0;
-    const closingHour = store?.closingHour ?? 0;
-
-    const isOpen = useStoreOpenStatus(openingHour, closingHour);
 
     if (isLoading) {
         return <StoreCardSkeleton />;
@@ -54,6 +38,8 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
         deliveryFee,
         restaurantName,
         vendorPublicId,
+        isOpenNow,
+        todayHoursFormatted,
     } = store;
 
     const imageUrl = popularItems?.length > 0
@@ -63,12 +49,6 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
     const categoryDisplay = Array.isArray(categories) && categories.length > 0
         ? categories.slice(0, 2).join(' • ')
         : 'African Cuisine';
-
-    const formatTime = (hour) => {
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const formattedHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        return `${formattedHour}${period}`;
-    };
 
     const handleFavoriteClick = (e) => {
         e.preventDefault();
@@ -146,11 +126,11 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
 
                         {/* Status Badge */}
                         <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg ${
-                            isOpen
+                            isOpenNow
                                 ? 'bg-green-500/90 text-white'
                                 : 'bg-red-500/90 text-white'
                         }`}>
-                            {isOpen ? '🟢 Open Now' : '🔴 Closed'}
+                            {isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
                         </div>
                     </div>
 
@@ -198,7 +178,7 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                                 </div>
                             </div>
 
-                            {/* Opening Hours */}
+                            {/* Today's Hours */}
                             <div className="flex items-center space-x-2 text-gray-600">
                                 <div className="p-1.5 bg-blue-100 rounded-lg">
                                     <Clock className="w-4 h-4 text-blue-600" />
@@ -206,7 +186,7 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                                 <div>
                                     <p className="text-xs text-gray-500">Hours</p>
                                     <p className="text-xs font-normal text-gray-900">
-                                        {formatTime(openingHour)}-{formatTime(closingHour)}
+                                        {todayHoursFormatted || 'Hours not set'}
                                     </p>
                                 </div>
                             </div>
@@ -244,8 +224,8 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                 isOpen={showSignIn}
                 onClose={() => setShowSignIn(false)}
                 onSignUpClick={() => {
-                    setShowSignIn(false)
-                    setShowSignUp(true)
+                    setShowSignIn(false);
+                    setShowSignUp(true);
                 }}
             />
 
@@ -266,8 +246,8 @@ StoreCard.propTypes = {
         storeId: PropTypes.string.isRequired,
         name: PropTypes.string.isRequired,
         rating: PropTypes.number.isRequired,
-        openingHour: PropTypes.number.isRequired,
-        closingHour: PropTypes.number.isRequired,
+        isOpenNow: PropTypes.bool,
+        todayHoursFormatted: PropTypes.string,
         categories: PropTypes.arrayOf(PropTypes.string),
         deliveryTime: PropTypes.string.isRequired,
         popularItems: PropTypes.arrayOf(PropTypes.shape({

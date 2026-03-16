@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -14,43 +14,98 @@ import {
 } from 'lucide-react';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
+import StoreCard from '@/components/home/cards/storeCard';
 
 const VendorProfilePage = () => {
     const params = useParams();
     const publicVendorId = params.publicVendorId;
 
+    // vendor & products
     const [vendor, setVendor] = useState(null);
     const [products, setProducts] = useState([]);
-    const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [productsLoading, setProductsLoading] = useState(true);
+
+    // reviews
+    const [reviews, setReviews] = useState([]);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
     const [reviewType, setReviewType] = useState('vendor');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [ratingFilter, setRatingFilter] = useState(0);
 
-    useEffect(() => {
-        if (publicVendorId) {
-            void fetchVendorDetails();
-            void fetchVendorProducts();
-        }
-    }, [publicVendorId]);
+    // related content
+    const [relatedVendors, setRelatedVendors] = useState([]);
+    const [relatedProducts, setRelatedProducts] = useState([]);
+    const [relatedLoading, setRelatedLoading] = useState(false);
 
-    const fetchVendorDetails = async () => {
+    const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
+        if (!cuisineType) return;
+        try {
+            setRelatedLoading(true);
+
+            const [vendorsRes, productsRes] = await Promise.all([
+                SearchAPI.getVendorsByCuisine(cuisineType),
+                SearchAPI.searchProductsAdvanced({ query: cuisineType, size: 10 }),
+            ]);
+
+            const vendors = Array.isArray(vendorsRes) ? vendorsRes : [];
+            const filteredVendors = vendors
+                .filter(v => v.publicUserId !== currentVendorId)
+                .slice(0, 4);
+
+            const productList = productsRes?.success && productsRes?.data
+                ? productsRes.data.content || []
+                : [];
+
+            const filteredProducts = productList
+                .filter(p => p.vendorPublicId !== currentVendorId)
+                .slice(0, 6);
+
+            setRelatedVendors(filteredVendors.map(v => ({
+                storeId: v.publicUserId,
+                vendorPublicId: v.publicUserId,
+                name: v.restaurantName,
+                restaurantName: v.restaurantName,
+                rating: v.averageRating || 0,
+                categories: v.cuisineType ? [v.cuisineType] : [],
+                deliveryTime: v.estimatedDeliveryMinutes || 30,
+                deliveryFee: v.deliveryFee || 0,
+                location: v.address?.city && v.address?.province
+                    ? `${v.address.city}, ${v.address.province}`
+                    : v.address?.city || '',
+                popularItems: v.bannerUrl
+                    ? [{ name: v.restaurantName, imageUrl: v.bannerUrl }]
+                    : v.logoUrl
+                        ? [{ name: v.restaurantName, imageUrl: v.logoUrl }]
+                        : [],
+                isOpenNow: v.isOpenNow,
+                todayHoursFormatted: v.todayHoursFormatted,
+            })));
+
+            setRelatedProducts(filteredProducts);
+        } catch (error) {
+            console.error('Error fetching related content:', error);
+        } finally {
+            setRelatedLoading(false);
+        }
+    }, []);
+
+    const fetchVendorDetails = useCallback(async () => {
         try {
             setLoading(true);
             const response = await SearchAPI.getVendorDetails(publicVendorId);
             if (response?.success && response?.data) {
                 setVendor(response.data);
+                void fetchRelatedContent(response.data.cuisineType, publicVendorId);
             }
         } catch (error) {
             console.error('Error fetching vendor details:', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [publicVendorId, fetchRelatedContent]);
 
-    const fetchVendorProducts = async (page = 0) => {
+    const fetchVendorProducts = useCallback(async (page = 0) => {
         try {
             setProductsLoading(true);
             const response = await SearchAPI.getVendorProducts(publicVendorId, page, 20);
@@ -65,19 +120,24 @@ const VendorProfilePage = () => {
         } finally {
             setProductsLoading(false);
         }
-    };
+    }, [publicVendorId]);
+
+    useEffect(() => {
+        if (publicVendorId) {
+            void fetchVendorDetails();
+            void fetchVendorProducts();
+        }
+    }, [publicVendorId, fetchVendorDetails, fetchVendorProducts]);
 
     const fetchVendorReviews = async (minRating = 0) => {
         try {
             const response = minRating > 0
                 ? await ReviewsAPI.filterVendorReviews(publicVendorId, minRating)
                 : await ReviewsAPI.getVendorsReviews(publicVendorId);
-
-            if (response?.success && response?.data) {
-                setReviews(response.data);
-            } else if (Array.isArray(response)) {
-                setReviews(response);
-            }
+            const data = response?.success && response?.data
+                ? response.data
+                : Array.isArray(response) ? response : [];
+            setReviews(data);
         } catch (error) {
             console.error('Error fetching vendor reviews:', error);
             setReviews([]);
@@ -87,11 +147,10 @@ const VendorProfilePage = () => {
     const fetchProductReviews = async (productPublicId) => {
         try {
             const response = await ReviewsAPI.getProductReviews(productPublicId);
-            if (response?.success && response?.data) {
-                setReviews(response.data);
-            } else if (Array.isArray(response)) {
-                setReviews(response);
-            }
+            const data = response?.success && response?.data
+                ? response.data
+                : Array.isArray(response) ? response : [];
+            setReviews(data);
         } catch (error) {
             console.error('Error fetching product reviews:', error);
             setReviews([]);
@@ -101,15 +160,15 @@ const VendorProfilePage = () => {
     const handleViewVendorReviews = () => {
         setReviewType('vendor');
         setSelectedProduct(null);
-        void fetchVendorReviews(ratingFilter);
         setShowReviewsModal(true);
+        void fetchVendorReviews(ratingFilter);
     };
 
     const handleViewProductReviews = (product) => {
         setReviewType('product');
         setSelectedProduct(product);
-        void fetchProductReviews(product.publicProductId);
         setShowReviewsModal(true);
+        void fetchProductReviews(product.publicProductId);
     };
 
     const handleRatingFilterChange = (rating) => {
@@ -141,8 +200,8 @@ const VendorProfilePage = () => {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Not Found</h2>
-                    <p className="text-gray-600">The restaurant you&#39;re looking for doesn&#39;t exist.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Store Not Found</h2>
+                    <p className="text-gray-600">The store you&#39;re looking for doesn&#39;t exist.</p>
                 </div>
             </div>
         );
@@ -205,7 +264,6 @@ const VendorProfilePage = () => {
                                     </h1>
                                     <p className="text-lg text-gray-600 mb-3">{vendor.cuisineType}</p>
 
-                                    {/* Rating */}
                                     <button
                                         onClick={handleViewVendorReviews}
                                         className="inline-flex items-center space-x-2 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
@@ -222,7 +280,6 @@ const VendorProfilePage = () => {
                                     </button>
                                 </div>
 
-                                {/* Status Badge */}
                                 <div className={`self-start shrink-0 px-3 py-1.5 rounded-full font-bold text-xs md:text-sm whitespace-nowrap ${
                                     vendor.isOpenNow
                                         ? 'bg-green-100 text-green-700'
@@ -232,17 +289,13 @@ const VendorProfilePage = () => {
                                 </div>
                             </div>
 
-                            {/* Description */}
                             {vendor.description && (
                                 <p className="text-gray-700 mb-4 leading-relaxed">
                                     {vendor.description}
                                 </p>
                             )}
 
-                            {/* Info Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                                {/* Location */}
                                 {vendor.address?.formattedAddress && (
                                     <div className="flex items-start space-x-3">
                                         <MapPin className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
@@ -253,7 +306,6 @@ const VendorProfilePage = () => {
                                     </div>
                                 )}
 
-                                {/* Hours */}
                                 {vendor.todayHoursFormatted && (
                                     <div className="flex items-start space-x-3">
                                         <Clock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
@@ -264,7 +316,6 @@ const VendorProfilePage = () => {
                                     </div>
                                 )}
 
-                                {/* Delivery */}
                                 {vendor.offersDelivery && (
                                     <div className="flex items-start space-x-3">
                                         <Truck className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
@@ -277,7 +328,6 @@ const VendorProfilePage = () => {
                                     </div>
                                 )}
 
-                                {/* Pickup */}
                                 {vendor.offersPickup && (
                                     <div className="flex items-start space-x-3">
                                         <ShoppingBag className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
@@ -290,7 +340,6 @@ const VendorProfilePage = () => {
                                     </div>
                                 )}
 
-                                {/* Minimum Order */}
                                 {vendor.minimumOrderAmount && (
                                     <div className="flex items-start space-x-3">
                                         <span className="text-orange-600 shrink-0 mt-0.5">💰</span>
@@ -336,6 +385,58 @@ const VendorProfilePage = () => {
                         </div>
                     )}
                 </div>
+
+                {/* More Stores in Same Cuisine */}
+                {(relatedLoading || relatedVendors.length > 0) && (
+                    <div className="mb-12">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-black text-gray-900">
+                                More {vendor.cuisineType} Stores
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Other stores you might like
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {relatedLoading
+                                ? [...Array(4)].map((_, i) => (
+                                    <div key={i} className="bg-white rounded-xl h-64 animate-pulse" />
+                                ))
+                                : relatedVendors.map((store) => (
+                                    <StoreCard key={store.storeId} store={store} />
+                                ))
+                            }
+                        </div>
+                    </div>
+                )}
+
+                {/* Popular Products in Same Cuisine */}
+                {(relatedLoading || relatedProducts.length > 0) && (
+                    <div className="mb-12">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-black text-gray-900">
+                                Popular {vendor.cuisineType} Dishes
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Loved by customers near you
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {relatedLoading
+                                ? [...Array(6)].map((_, i) => (
+                                    <div key={i} className="bg-white rounded-xl h-80 animate-pulse" />
+                                ))
+                                : relatedProducts.map((product) => (
+                                    <ProductCard
+                                        key={product.publicProductId}
+                                        product={product}
+                                        onViewReviews={() => handleViewProductReviews(product)}
+                                    />
+                                ))
+                            }
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Reviews Modal */}
@@ -359,7 +460,6 @@ const VendorProfilePage = () => {
 const ProductCard = ({ product, onViewReviews }) => {
     return (
         <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            {/* Image */}
             <div className="relative w-full h-48 bg-gray-200">
                 {product.imageUrl ? (
                     <Image
@@ -374,8 +474,6 @@ const ProductCard = ({ product, onViewReviews }) => {
                         <span className="text-6xl">🍲</span>
                     </div>
                 )}
-
-                {/* Availability Badge */}
                 {!product.available && (
                     <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
                         Unavailable
@@ -383,7 +481,6 @@ const ProductCard = ({ product, onViewReviews }) => {
                 )}
             </div>
 
-            {/* Content */}
             <div className="p-5">
                 <div className="mb-3">
                     <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1">
@@ -399,7 +496,6 @@ const ProductCard = ({ product, onViewReviews }) => {
                     )}
                 </div>
 
-                {/* Rating */}
                 <button
                     onClick={onViewReviews}
                     className="flex items-center space-x-1 mb-3 hover:bg-gray-50 px-2 py-1 rounded transition-colors -ml-2"
@@ -413,7 +509,6 @@ const ProductCard = ({ product, onViewReviews }) => {
                     </span>
                 </button>
 
-                {/* Price */}
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className="text-2xl font-black text-orange-600">
                         ${product.price?.toFixed(2)}
@@ -443,7 +538,7 @@ const ReviewsModal = ({
                           vendorName,
                           productName,
                           ratingFilter,
-                          onRatingFilterChange
+                          onRatingFilterChange,
                       }) => {
     if (!isOpen) return null;
 
@@ -455,8 +550,6 @@ const ReviewsModal = ({
             />
             <div className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl">
                 <div className="flex flex-col h-full">
-
-                    {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-gray-200">
                         <div>
                             <h2 className="text-2xl font-black text-gray-900">
@@ -474,7 +567,6 @@ const ReviewsModal = ({
                         </button>
                     </div>
 
-                    {/* Filter */}
                     {reviewType === 'vendor' && (
                         <div className="p-6 border-b border-gray-200 bg-gray-50">
                             <div className="flex items-center space-x-3">
@@ -495,7 +587,6 @@ const ReviewsModal = ({
                         </div>
                     )}
 
-                    {/* Reviews List */}
                     <div className="flex-1 overflow-y-auto p-6">
                         {reviews.length > 0 ? (
                             <div className="space-y-6">
@@ -527,7 +618,7 @@ const ReviewCard = ({ review }) => {
                         {new Date(review.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
-                            day: 'numeric'
+                            day: 'numeric',
                         })}
                     </p>
                 </div>

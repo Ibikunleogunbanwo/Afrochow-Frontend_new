@@ -6,7 +6,7 @@ import { Star } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
 import { SearchAPI } from '@/lib/api/search.api';
 
-const PopularRestaurants = () => {
+const PopularStores = () => {
     const [popularStores, setPopularStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const { city } = useLocation();
@@ -15,64 +15,65 @@ const PopularRestaurants = () => {
         const fetchMonthlyPopular = async () => {
             try {
                 setLoading(true);
-                const response = await SearchAPI.getMonthlyPopularProducts(city);
 
-                if (response?.success && response?.data) {
-                    const transformedProducts = response.data.map(product => ({
+                const [productsResponse, vendorsResponse] = await Promise.all([
+                    SearchAPI.getMonthlyPopularProducts(city),
+                    SearchAPI.getVerifiedVendors(),
+                ]);
+
+                const productList = productsResponse?.success && productsResponse?.data
+                    ? productsResponse.data
+                    : Array.isArray(productsResponse) ? productsResponse : [];
+
+                const vendors = Array.isArray(vendorsResponse) ? vendorsResponse : [];
+
+                // build vendor lookup map
+                const vendorMap = vendors.reduce((map, vendor) => {
+                    map[vendor.publicUserId] = vendor;
+                    return map;
+                }, {});
+
+                const transformedProducts = productList.map(product => {
+                    const vendor = vendorMap[product.vendorPublicId] || {};
+
+                    return {
                         storeId: product.publicProductId,
+                        publicProductId: product.publicProductId,
+                        vendorPublicId: product.vendorPublicId,
                         name: product.name,
                         rating: product.averageRating || 0,
                         reviewCount: product.reviewCount || 0,
-                        categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                        deliveryTime: product.preparationTimeMinutes || 30,
-                        location: product.vendorCity && product.vendorProvince
-                            ? `${product.vendorCity}, ${product.vendorProvince}`
-                            : product.vendorCity || '',
-                        deliveryFee: 2.99,
+                        categories: product.categoryName
+                            ? [product.categoryName]
+                            : ['African Cuisine'],
                         popularItems: [{
                             name: product.name,
                             imageUrl: product.imageUrl || '/image/placeholder.jpg',
                             price: product.price,
-                            description: product.description
+                            description: product.description,
                         }],
-                        available: product.available !== false,
-                        openingHour: 9,
-                        closingHour: 21,
-                        restaurantName: product.restaurantName,
-                        publicProductId: product.publicProductId,
-                        vendorPublicId: product.vendorPublicId
-                    }));
+                        restaurantName: product.restaurantName || vendor.restaurantName,
+                        deliveryTime: vendor.estimatedDeliveryMinutes || product.preparationTimeMinutes || 30,
+                        deliveryFee: vendor.deliveryFee || 2.99,
+                        location: vendor.address?.city && vendor.address?.province
+                            ? `${vendor.address.city}, ${vendor.address.province}`
+                            : product.vendorCity && product.vendorProvince
+                                ? `${product.vendorCity}, ${product.vendorProvince}`
+                                : product.vendorCity || '',
+                        isOpenNow: vendor.isOpenNow ?? null,
+                        todayHoursFormatted: vendor.todayHoursFormatted ?? null,
+                    };
+                });
 
-                    setPopularStores(transformedProducts);
-                } else if (Array.isArray(response)) {
-                    const transformedProducts = response.map(product => ({
-                        storeId: product.publicProductId,
-                        name: product.name,
-                        rating: product.averageRating || 0,
-                        reviewCount: product.reviewCount || 0,
-                        categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                        deliveryTime: product.preparationTimeMinutes || 30,
-                        location: product.vendorCity && product.vendorProvince
-                            ? `${product.vendorCity}, ${product.vendorProvince}`
-                            : product.vendorCity || '',
-                        deliveryFee: 2.99,
-                        popularItems: [{
-                            name: product.name,
-                            imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                            price: product.price,
-                            description: product.description
-                        }],
-                        available: product.available !== false,
-                        openingHour: 9,
-                        closingHour: 21,
-                        restaurantName: product.restaurantName,
-                        publicProductId: product.publicProductId,
-                        vendorPublicId: product.vendorPublicId
-                    }));
+                // open first, closed at the bottom
+                const sortedProducts = transformedProducts.sort((a, b) => {
+                    if (a.isOpenNow === b.isOpenNow) return 0;
+                    return a.isOpenNow ? -1 : 1;
+                });
 
-                    setPopularStores(transformedProducts);
-                }
+                setPopularStores(sortedProducts);
             } catch (error) {
+                console.error('Error fetching popular stores:', error);
                 setPopularStores([]);
             } finally {
                 setLoading(false);
@@ -96,16 +97,17 @@ const PopularRestaurants = () => {
                     <h2 className="text-5xl font-black text-gray-900 mb-6 leading-tight">
                         Most Popular
                         <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
-              This Month
-            </span>
+                            This Month
+                        </span>
                     </h2>
 
                     <p className="text-xl text-gray-600">
-                        These restaurants are trending among our food lovers. Order now and taste why they&#39;re so popular!
+                        From home kitchens to African grocery stores — these are the most ordered spots
+                        in {city} this month. Fresh, authentic, and loved by thousands.
                     </p>
                 </div>
 
-                {/* 4-Column Grid (3 rows of 4 cards) */}
+                {/* Cards Grid */}
                 {loading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(12)].map((_, index) => (
@@ -120,7 +122,7 @@ const PopularRestaurants = () => {
                                 className="animate-scale-in"
                                 style={{
                                     animationDelay: `${index * 50}ms`,
-                                    animationFillMode: 'backwards'
+                                    animationFillMode: 'backwards',
                                 }}
                             >
                                 <StoreCard store={store} priority={index < 4} />
@@ -129,14 +131,17 @@ const PopularRestaurants = () => {
                     </div>
                 ) : (
                     <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-lg font-medium">No popular products available in {city} this month</p>
-                        <p className="text-sm text-gray-400 mt-2">Check back soon for trending dishes</p>
+                        <p className="text-gray-500 text-lg font-medium">
+                            No popular stores available in {city} this month
+                        </p>
+                        <p className="text-sm text-gray-400 mt-2">
+                            Check back soon for trending stores
+                        </p>
                     </div>
                 )}
-
             </div>
         </section>
     );
 };
 
-export default PopularRestaurants;
+export default PopularStores;

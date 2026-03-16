@@ -8,78 +8,66 @@ import { ArrowRight, TrendingUp } from 'lucide-react';
 import { SearchAPI } from '@/lib/api/search.api';
 import { useLocation } from '@/contexts/LocationContext';
 
-
-const TopRestaurants = () => {
-    const [products, setProducts] = useState([]);
+const TopStores = () => {
+    const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const { city } = useLocation();
 
     useEffect(() => {
-        void fetchNearbyProducts(city);
+        void fetchTopStores();
     }, [city]);
 
-    const fetchNearbyProducts = async (cityParam) => {
+    const fetchTopStores = async () => {
         try {
             setLoading(true);
-            const response = await SearchAPI.getProductsNearMe(cityParam);
 
-            if (response?.success && response?.data) {
-                const transformedProducts = response.data.map(product => ({
-                    storeId: product.publicProductId,
-                    name: product.name,
-                    rating: product.averageRating || 0,
-                    reviewCount: product.reviewCount || 0,
-                    categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                    deliveryTime: product.preparationTimeMinutes || 30,
-                    location: product.vendorCity && product.vendorProvince
-                        ? `${product.vendorCity}, ${product.vendorProvince}`
-                        : product.vendorCity || '',
-                    deliveryFee: 2.99,
-                    popularItems: [{
-                        name: product.name,
-                        imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                        price: product.price,
-                        description: product.description
-                    }],
-                    available: product.available !== false,
-                    openingHour: 9,
-                    closingHour: 21,
-                    restaurantName: product.restaurantName,
-                    publicProductId: product.publicProductId,
-                    vendorPublicId: product.vendorPublicId
-                }));
+            const response = await SearchAPI.getTopRatedVendors(12);
 
-                setProducts(transformedProducts);
-            } else if (Array.isArray(response)) {
-                const transformedProducts = response.map(product => ({
-                    storeId: product.publicProductId,
-                    name: product.name,
-                    rating: product.averageRating || 0,
-                    reviewCount: product.reviewCount || 0,
-                    categories: product.categoryName ? [product.categoryName] : ['African Cuisine'],
-                    deliveryTime: product.preparationTimeMinutes || 30,
-                    location: product.vendorCity && product.vendorProvince
-                        ? `${product.vendorCity}, ${product.vendorProvince}`
-                        : product.vendorCity || '',
-                    deliveryFee: 2.99,
-                    popularItems: [{
-                        name: product.name,
-                        imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                        price: product.price,
-                        description: product.description
-                    }],
-                    available: product.available !== false,
-                    openingHour: 9,
-                    closingHour: 21,
-                    restaurantName: product.restaurantName,
-                    publicProductId: product.publicProductId,
-                    vendorPublicId: product.vendorPublicId
-                }));
+            const vendors = Array.isArray(response)
+                ? response
+                : response?.success && response?.data
+                    ? response.data
+                    : [];
 
-                setProducts(transformedProducts);
-            }
+            // filter by city if available
+            const filteredVendors = city
+                ? vendors.filter(v =>
+                    v.address?.city?.toLowerCase() === city.toLowerCase()
+                )
+                : vendors;
+
+            const transformedVendors = filteredVendors.map(vendor => ({
+                storeId: vendor.publicUserId,
+                vendorPublicId: vendor.publicUserId,
+                name: vendor.restaurantName,
+                restaurantName: vendor.restaurantName,
+                rating: vendor.averageRating || 0,
+                reviewCount: vendor.reviewCount || 0,
+                categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
+                deliveryTime: vendor.estimatedDeliveryMinutes || 30,
+                deliveryFee: vendor.deliveryFee || 0,
+                location: vendor.address?.city && vendor.address?.province
+                    ? `${vendor.address.city}, ${vendor.address.province}`
+                    : vendor.address?.city || '',
+                popularItems: vendor.bannerUrl
+                    ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
+                    : vendor.logoUrl
+                        ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
+                        : [],
+                isOpenNow: vendor.isOpenNow,
+                todayHoursFormatted: vendor.todayHoursFormatted,
+            }));
+
+            // open first, closed at the bottom
+            const sortedVendors = transformedVendors.sort((a, b) => {
+                if (a.isOpenNow === b.isOpenNow) return 0;
+                return a.isOpenNow ? -1 : 1;
+            });
+
+            setStores(sortedVendors);
         } catch (error) {
-            setProducts([]);
+            console.error('Error fetching top stores:', error);
+            setStores([]);
         } finally {
             setLoading(false);
         }
@@ -89,7 +77,7 @@ const TopRestaurants = () => {
         <section className="py-16 bg-linear-to-b from-white to-orange-50/30">
             <div className="container px-4 mx-auto max-w-7xl">
 
-                {/* Section Header with CTA */}
+                {/* Section Header */}
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
                     <div className="flex-1">
                         <div className="inline-flex items-center space-x-2 px-4 py-2 mb-4 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
@@ -97,13 +85,13 @@ const TopRestaurants = () => {
                             <span className="text-sm font-semibold text-orange-800">Top Rated</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
-                            Best Restaurants
+                            Best Stores
                             <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
                                 in {city}
                             </span>
                         </h2>
                         <p className="text-lg text-gray-600 max-w-xl">
-                            Discover top-rated dishes from the best restaurants in your area
+                            Discover the highest rated African stores in your area
                         </p>
                     </div>
 
@@ -119,51 +107,54 @@ const TopRestaurants = () => {
                     </div>
                 </div>
 
-                {/* Cards Grid - Up to 12 Cards */}
+                {/* Cards Grid */}
                 {loading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {[...Array(12)].map((_, index) => (
                             <StoreCardSkeleton key={`skeleton-${index}`} />
                         ))}
                     </div>
-                ) : products.length > 0 ? (
+                ) : stores.length > 0 ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {products.map((product, index) => (
+                        {stores.map((store, index) => (
                             <div
-                                key={product.publicProductId || `product-${index}`}
+                                key={store.storeId || `store-${index}`}
                                 className="animate-fade-in"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
-                                <StoreCard store={product} priority={index < 3} />
+                                <StoreCard store={store} priority={index < 3} />
                             </div>
                         ))}
                     </div>
                 ) : (
                     <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-lg font-medium">No restaurants available in {city} at the moment</p>
-                        <p className="text-sm text-gray-400 mt-2">Try selecting a different city from the dropdown above</p>
+                        <p className="text-gray-500 text-lg font-medium">
+                            No stores available in {city} at the moment
+                        </p>
+                        <p className="text-sm text-gray-400 mt-2">
+                            Try selecting a different city from the dropdown above
+                        </p>
                     </div>
                 )}
 
                 {/* Bottom CTA */}
-                {products.length > 0 && (
+                {stores.length > 0 && (
                     <div className="mt-12 text-center">
                         <p className="text-gray-600 mb-4">
-                            Want to see more amazing kitchens?
+                            Want to see more amazing stores?
                         </p>
                         <Link
                             href="/restaurants"
                             className="inline-flex items-center space-x-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                         >
-                            <span>Explore All Restaurants</span>
+                            <span>Explore All Stores</span>
                             <ArrowRight className="w-5 h-5" />
                         </Link>
                     </div>
                 )}
-
             </div>
         </section>
     );
 };
 
-export default TopRestaurants;
+export default TopStores;

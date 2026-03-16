@@ -2,108 +2,105 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChefHat, TrendingUp, Users, DollarSign, ArrowRight, Check, Star } from 'lucide-react';
+import { ChefHat, TrendingUp, Users, DollarSign, ArrowRight, Check, Star, ShoppingBag, Clock, Shield } from 'lucide-react';
 
 const VendorCTA = () => {
     const benefits = [
         {
             icon: Users,
             title: "Reach More Customers",
-            description: "Connect with thousands of african customers in your area"
+            description: "Connect with thousands of African customers in your area and across Canada"
         },
         {
             icon: TrendingUp,
-            title: "Grow Your Business",
-            description: "Increase your revenue with our easy-to-use platform"
+            title: "Grow Your Revenue",
+            description: "Increase your sales with our powerful online ordering platform"
         },
         {
             icon: DollarSign,
-            title: "No Commission",
-            description: "Keep All your earnings"
-        }
+            title: "Zero Commission",
+            description: "Keep 100% of your earnings — no hidden fees, ever"
+        },
+        {
+            icon: ShoppingBag,
+            title: "Easy Order Management",
+            description: "Manage all your orders in one place, from any device"
+        },
+        {
+            icon: Clock,
+            title: "Go Live in Minutes",
+            description: "Set up your store quickly and start accepting orders same day"
+        },
+        {
+            icon: Shield,
+            title: "Secure Payments",
+            description: "Fast, reliable payouts directly to your bank account"
+        },
     ];
 
     const features = [
         "Easy menu management",
         "Real-time order tracking",
-        "Detailed analytics",
-        "Marketing support",
+        "Detailed analytics dashboard",
+        "Marketing & promotions tools",
         "24/7 customer support",
-        "Flexible payment options"
+        "Flexible payment options",
+        "Mobile-friendly dashboard",
+        "Custom store branding",
     ];
 
     return (
-        <section className="relative py-20 overflow-hidden bg-linear-to-br from-orange-50 via-white to-orange-50">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
-                <div className="absolute top-0 left-0 w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                <div className="absolute top-0 right-0 w-96 h-96 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
-            </div>
+        <section className="relative py-24 overflow-hidden bg-white">
 
             <div className="container relative z-10 px-4 mx-auto max-w-7xl">
 
+
                 {/* Main Content Grid */}
-                <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+                <div className="grid gap-16 lg:grid-cols-2 items-center mb-20">
 
-                    {/* Left Column - Text Content */}
+                    {/* Left Column */}
                     <div className="space-y-8">
-                        {/* Badge */}
-                        <div className="inline-flex items-center space-x-2 px-4 py-2 bg-orange-100 rounded-full">
-                            <ChefHat className="w-4 h-4 text-orange-600" />
-                            <span className="text-sm font-semibold text-orange-800">For Restaurant/Home Kitchen Owners</span>
-                        </div>
-
-                        {/* Heading */}
                         <div>
-                            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight">
-                                Grow Your Home Restaurant
+                            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-5 leading-tight">
+                                Sell Your African Food
                                 <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
-                  With Afrochow
-                </span>
+                                    Online With Afrochow
+                                </span>
                             </h2>
                             <p className="text-xl text-gray-600 leading-relaxed">
-                                Join hundreds of African Home Kitchens reaching more customers every day.
-                                Start selling online in minutes with zero upfront costs.
+                                Whether you run a home kitchen, a restaurant, or an African grocery store
+                                Afrochow gives you the tools to reach more customers, manage orders effortlessly,
+                                and grow your business.
+                                Join hundreds of vendors already thriving on our platform.
                             </p>
                         </div>
 
                         {/* Benefits Grid */}
-                        <div className="grid gap-6 sm:grid-cols-3">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             {benefits.map((benefit, index) => {
                                 const Icon = benefit.icon;
                                 return (
                                     <div
                                         key={index}
-                                        className="flex flex-col items-start p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                                        className="flex items-start gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-50"
                                     >
-                                        <div className="p-2 bg-orange-100 rounded-lg mb-3">
-                                            <Icon className="w-5 h-5 text-orange-600" />
+                                        <div className="shrink-0 p-2 bg-orange-100 rounded-lg">
+                                            <Icon className="w-4 h-4 text-orange-600" />
                                         </div>
-                                        <h3 className="text-sm font-bold text-gray-900 mb-1">{benefit.title}</h3>
-                                        <p className="text-xs text-gray-600">{benefit.description}</p>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-900 mb-0.5">{benefit.title}</h3>
+                                            <p className="text-xs text-gray-500 leading-relaxed">{benefit.description}</p>
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
 
-                        {/* Features Checklist */}
-                        <div className="grid grid-cols-2 gap-3">
-                            {features.map((feature, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                    <div className="shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                                        <Check className="w-3 h-3 text-green-600" />
-                                    </div>
-                                    <span className="text-sm text-gray-700">{feature}</span>
-                                </div>
-                            ))}
-                        </div>
-
                         {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <div className="flex flex-col sm:flex-row gap-4 pt-2">
                             <Link
                                 href="/register/vendor/step-1"
-                                className="group inline-flex items-center justify-center space-x-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                                className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                             >
                                 <span>Start Selling Today</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -117,47 +114,53 @@ const VendorCTA = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Visual Content */}
+                    {/* Right Column — Image */}
                     <div className="relative">
-                        {/* Main Image Card */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[500px] lg:h-[600px]">
+                        <div className="relative rounded-2xl overflow-hidden shadow-2xl h-130 lg:h-155">
                             <Image
                                 src="/image/img.png"
-                                alt="Restaurant owner with tablet"
+                                alt="African store owner managing orders on Afrochow"
                                 fill
+                                sizes="(max-width: 1024px) 100vw, 50vw"
                                 className="object-cover"
-                                quality={75}
+                                quality={80}
                             />
-                            {/* Gradient Overlay */}
-                            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
+                            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
 
-                            {/* Floating Stats Card */}
-                            {/*<div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg">*/}
-                            {/*    <div className="flex items-center justify-between mb-4">*/}
-                            {/*        <div>*/}
-                            {/*            <div className="text-sm text-gray-600 mb-1">Monthly Revenue</div>*/}
-                            {/*            <div className="text-3xl font-black text-gray-900">$12,450</div>*/}
-                            {/*        </div>*/}
-                            {/*    </div>*/}
-                            {/*</div>*/}
                         </div>
 
                         {/* Floating Badge */}
                         <div className="absolute -top-4 -right-4 bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg transform rotate-12">
                             <div className="text-center">
-                                <div className="text-2xl font-black">0%</div>
-                                <div className="text-xs">Commission</div>
+                                <div className="text-2xl font-black">Free</div>
+                                <div className="text-xs">To Join</div>
                             </div>
                         </div>
 
-                        {/* Decorative Dots */}
-                        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-200 rounded-full filter blur-3xl opacity-50"></div>
-                        <div className="absolute -top-8 -right-8 w-32 h-32 bg-red-200 rounded-full filter blur-3xl opacity-50"></div>
+                        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-200 rounded-full filter blur-3xl opacity-50" />
+                        <div className="absolute -top-8 -right-8 w-32 h-32 bg-red-200 rounded-full filter blur-3xl opacity-50" />
                     </div>
                 </div>
 
-                {/* Bottom Testimonial */}
-                <div className="mt-16 max-w-4xl mx-auto">
+                {/* Features Checklist */}
+                <div className="bg-white rounded-2xl shadow-md p-8 mb-16 border border-gray-100">
+                    <h3 className="text-xl font-black text-gray-900 mb-6 text-center">
+                        Everything you need to run your store online
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {features.map((feature, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <div className="shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-green-600" />
+                                </div>
+                                <span className="text-sm text-gray-700">{feature}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Testimonial */}
+                <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-2xl shadow-lg p-8 border-l-4 border-orange-500">
                         <div className="flex items-start space-x-4">
                             <div className="shrink-0">
@@ -166,18 +169,19 @@ const VendorCTA = () => {
                                 </div>
                             </div>
                             <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
+                                <div className="flex items-center space-x-1 mb-2">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                     ))}
                                 </div>
-                                <p className="text-gray-700 mb-3 italic">
+                                <p className="text-gray-700 mb-3 italic leading-relaxed">
                                     &#34;Afrochow helped me reach customers I never thought possible. My online orders
-                                    have tripled in just 3 months. The platform is so easy to use!&#34;
+                                    have tripled in just 3 months. Setting up my store took less than an hour
+                                    and the support team was incredible throughout.&#34;
                                 </p>
                                 <div>
                                     <div className="font-semibold text-gray-900">Amara Okafor</div>
-                                    <div className="text-sm text-gray-600">Owner, Mama&#39;s Kitchen</div>
+                                    <div className="text-sm text-gray-500">Owner, Mama&#39;s Kitchen — Calgary, AB</div>
                                 </div>
                             </div>
                         </div>

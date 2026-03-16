@@ -21,7 +21,6 @@ const HeroSection = () => {
         void fetchStats();
     }, []);
 
-
     const fetchPopularProducts = async () => {
         try {
             setLoadingPopular(true);
@@ -42,7 +41,6 @@ const HeroSection = () => {
             if (productNames.length > 0) {
                 setPopularCuisines(productNames);
             }
-
         } catch (error) {
             setError('Failed to load popular items');
         } finally {
@@ -60,7 +58,6 @@ const HeroSection = () => {
             console.error('Error fetching stats:', error);
         }
     };
-
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -95,14 +92,14 @@ const HeroSection = () => {
 
             {/* Animated Background Pattern */}
             <div className="absolute inset-0 opacity-5">
-                <div className="absolute top-20 left-10 w-72 h-72 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                <div className="absolute top-40 right-10 w-72 h-72 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+                <div className="absolute top-20 left-10 w-72 h-72 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+                <div className="absolute top-40 right-10 w-72 h-72 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+                <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
             </div>
 
             {/* Background Image with Overlay */}
             <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/50 to-orange-900/60 z-10"></div>
+                <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/50 to-orange-900/60 z-10" />
                 <Image
                     className="object-cover"
                     src="/image/Jollof.jpg"
@@ -121,24 +118,27 @@ const HeroSection = () => {
                     {/* Badge */}
                     <div className="inline-flex items-center space-x-2 px-4 py-2 bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 rounded-full animate-fade-in-down">
                         <span className="text-sm font-medium text-orange-100">
-                            Authentic African Flavors
+                            🌍 Canada&#39;s #1 African Food Platform
                         </span>
                     </div>
 
                     {/* Main Heading */}
                     <h1 className="space-y-2 animate-fade-in-up">
                         <span className="block text-5xl font-black text-white sm:text-6xl md:text-7xl lg:text-8xl tracking-tight drop-shadow-2xl">
-                            Taste of
+                            Authentic
                         </span>
                         <span className="block text-5xl font-black bg-linear-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg">
-                            Africa
+                            African Flavors
                         </span>
                     </h1>
 
                     {/* Subtitle */}
                     <p className="max-w-2xl mx-auto text-lg text-gray-200 sm:text-xl md:text-2xl font-medium drop-shadow-lg animate-fade-in">
-                        Discover authentic African cuisine from the best home Kitchens.
-                        <span className="block mt-1 text-orange-300">Delivered fresh to your doorstep!</span>
+                        From home kitchens to African grocery stores order your favorite dishes,
+                        spices, and ingredients from verified African vendors near you.
+                        <span className="block mt-1 text-orange-300">
+                            Fresh. Authentic. Delivered fast.
+                        </span>
                     </p>
 
                     {/* Search Form */}
@@ -153,14 +153,14 @@ const HeroSection = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Search for Jollof, Suya, Egusi..."
+                                    placeholder="Search Jollof Rice, Egusi, Suya, Groceries..."
                                     className="w-full pl-12 pr-4 py-4 text-gray-800 placeholder-gray-500 bg-transparent border-0 focus:outline-none focus:ring-0 text-base font-medium"
                                     aria-label="Search for food"
                                 />
                             </div>
 
                             {/* Divider */}
-                            <div className="hidden sm:block w-px bg-gray-300"></div>
+                            <div className="hidden sm:block w-px bg-gray-300" />
 
                             {/* Location Input */}
                             <div className="relative flex-1">
@@ -170,7 +170,7 @@ const HeroSection = () => {
                                     value={location}
                                     onChange={(e) => setLocation(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Enter your location..."
+                                    placeholder="Calgary, Toronto, Vancouver..."
                                     className="w-full pl-12 pr-4 py-4 text-gray-800 placeholder-gray-500 bg-transparent border-0 focus:outline-none focus:ring-0 text-base font-medium"
                                     aria-label="Enter location"
                                 />
@@ -190,7 +190,7 @@ const HeroSection = () => {
 
                     {/* Popular Cuisines */}
                     <div className="flex flex-wrap items-center justify-center gap-3 mt-8 animate-fade-in animation-delay-400">
-                        <span className="text-sm font-medium text-gray-300">Popular:</span>
+                        <span className="text-sm font-medium text-gray-300">Trending now:</span>
                         {loadingPopular ? (
                             <div className="flex items-center gap-2 text-sm text-gray-400">
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -217,30 +217,30 @@ const HeroSection = () => {
                         <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mt-12 sm:grid-cols-3 animate-fade-in animation-delay-600">
                             <div className="p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">{stats.totalActiveVendors}+</div>
-                                <div className="text-sm text-gray-300">Kitchens</div>
+                                <div className="text-sm text-gray-300">Active Vendors</div>
                             </div>
                             <div className="p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">{stats.totalCustomers}+</div>
-                                <div className="text-sm text-gray-300">Happy Customers</div>
+                                <div className="text-sm text-gray-300">Satisfied Customers</div>
                             </div>
                             <div className="hidden sm:block p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">{stats.averageDeliveryTimeMinutes} min</div>
-                                <div className="text-sm text-gray-300">Avg. Delivery</div>
+                                <div className="text-sm text-gray-300">Avg. Delivery Time</div>
                             </div>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mt-12 sm:grid-cols-3 animate-fade-in animation-delay-600">
                             <div className="p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">50+</div>
-                                <div className="text-sm text-gray-300">Kitchens</div>
+                                <div className="text-sm text-gray-300">Active Vendors</div>
                             </div>
                             <div className="p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">200+</div>
-                                <div className="text-sm text-gray-300">Happy Customers</div>
+                                <div className="text-sm text-gray-300">Satisfied Customers</div>
                             </div>
                             <div className="hidden sm:block p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
                                 <div className="text-3xl font-black text-white">30 min</div>
-                                <div className="text-sm text-gray-300">Avg. Delivery</div>
+                                <div className="text-sm text-gray-300">Avg. Delivery Time</div>
                             </div>
                         </div>
                     )}
@@ -250,7 +250,7 @@ const HeroSection = () => {
             {/* Bottom Wave */}
             <div className="absolute bottom-0 left-0 right-0 z-10">
                 <svg className="w-full h-24 fill-white" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" />
                 </svg>
             </div>
         </section>

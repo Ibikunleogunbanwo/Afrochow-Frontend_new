@@ -86,10 +86,24 @@ export const SearchAPI = {
     });
   },
 
+  getVendorsByCuisine: async (cuisineType) => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/advanced?cuisineType=${encodeURIComponent(cuisineType)}`,
+        { method: 'GET' }
+    );
+  },
+
   getVendorDetails: async (publicVendorId) => {
     return fetchWithCredentials(`${API_BASE_URL}/search/vendors/${publicVendorId}`, {
       method: 'GET',
     });
+  },
+
+  getVerifiedVendors: async () => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/advanced?isVerified=true`,
+        { method: 'GET' }
+    );
   },
 
   // ================= CATEGORIES =================
