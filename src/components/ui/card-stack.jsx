@@ -114,13 +114,12 @@ export function CardStack({
                     <button
                         onClick={prev}
                         disabled={!canGoPrev}
-                        className="shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
                         aria-label="Previous category"
                     >
                         <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors" />
                     </button>
                 )}
-
                 {/* Stage */}
                 <div
                     className="relative flex-1"
@@ -203,7 +202,7 @@ export function CardStack({
                     <button
                         onClick={next}
                         disabled={!canGoNext}
-                        className="shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
                         aria-label="Next category"
                     >
                         <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors" />
