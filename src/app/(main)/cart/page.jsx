@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 const CartPage = () => {
@@ -9,127 +10,167 @@ const CartPage = () => {
 
     if (cartItems.length === 0) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                 <div className="text-center">
-                    <p className="text-2xl font-black text-gray-900 mb-2">Your cart is empty</p>
-                    <p className="text-gray-500 mb-6">Add some delicious African food to get started</p>
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <ShoppingBag className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-lg font-bold text-gray-900 mb-1">Your cart is empty</p>
+                    <p className="text-sm text-gray-500 mb-6">Add some delicious African food to get started</p>
                     <Link
                         href="/"
-                        className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                     >
                         Browse Stores
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
         );
     }
 
+    const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
-            <div className="container mx-auto max-w-2xl px-4">
-                <h1 className="text-3xl font-black text-gray-900 mb-8">Your Cart</h1>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-2xl mx-auto px-4 py-8">
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={clearCart}
+                        className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                        Clear all
+                    </button>
+                </div>
 
                 {/* Cart Items */}
-                <div className="bg-white rounded-2xl shadow-md p-6 space-y-4 mb-6">
-                    {cartItems.map(item => (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
+                    {cartItems.map((item, idx) => (
                         <div
                             key={item.publicProductId}
-                            className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0"
+                            className={`p-4 ${idx < cartItems.length - 1 ? 'border-b border-gray-100' : ''}`}
                         >
-                            {/* Product Image */}
-                            <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-orange-50">
-                                {item.imageUrl ? (
-                                    <Image
-                                        src={item.imageUrl}
-                                        alt={item.name}
-                                        fill
-                                        sizes="64px"
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <span className="text-2xl">🍲</span>
+                            <div className="flex gap-3">
+
+                                {/* Image */}
+                                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                                    {item.imageUrl ? (
+                                        <Image
+                                            src={item.imageUrl}
+                                            alt={item.name}
+                                            fill
+                                            sizes="64px"
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <span className="text-2xl">🍲</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Info + Controls */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-gray-900 truncate">
+                                                {item.name}
+                                            </p>
+                                            {item.restaurantName && (
+                                                <Link
+                                                    href={`restaurant/${item.vendorPublicId}`}
+                                                    className="text-xs text-orange-500 hover:text-orange-600 truncate mt-0.5 transition-colors"
+                                                >
+                                                    {item.restaurantName}
+                                                </Link>
+                                            )}
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900 shrink-0">
+                                            ${(item.price * item.quantity).toFixed(2)}
+                                        </p>
                                     </div>
-                                )}
-                            </div>
 
-                            {/* Product Info */}
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-gray-900 truncate">{item.name}</p>
-                                {item.restaurantName && (
-                                    <p className="text-xs text-gray-500 truncate">{item.restaurantName}</p>
-                                )}
-                                <p className="text-sm text-orange-600 font-semibold mt-0.5">
-                                    ${item.price.toFixed(2)} each
-                                </p>
-                            </div>
+                                    <div className="flex items-center justify-between mt-3">
 
-                            {/* Quantity Controls */}
-                            <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden shrink-0">
-                                <button
-                                    onClick={() => updateQuantity(item.publicProductId, item.quantity - 1)}
-                                    className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600 transition-colors"
-                                >
-                                    −
-                                </button>
-                                <span className="px-3 py-2 font-bold text-gray-900 min-w-8 text-center">
-                                    {item.quantity}
-                                </span>
-                                <button
-                                    onClick={() => updateQuantity(item.publicProductId, item.quantity + 1)}
-                                    className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600 transition-colors"
-                                >
-                                    +
-                                </button>
-                            </div>
+                                        {/* Quantity */}
+                                        <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
+                                            <button
+                                                onClick={() => updateQuantity(item.publicProductId, item.quantity - 1)}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-600"
+                                            >
+                                                <Minus className="w-3 h-3" />
+                                            </button>
+                                            <span className="w-8 text-center text-sm font-semibold text-gray-900">
+                                                {item.quantity}
+                                            </span>
+                                            <button
+                                                onClick={() => updateQuantity(item.publicProductId, item.quantity + 1)}
+                                                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-600"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </button>
+                                        </div>
 
-                            {/* Item Total + Remove */}
-                            <div className="text-right shrink-0">
-                                <p className="font-black text-gray-900">
-                                    ${(item.price * item.quantity).toFixed(2)}
-                                </p>
-                                <button
-                                    onClick={() => removeFromCart(item.publicProductId)}
-                                    className="text-xs text-red-500 hover:text-red-700 font-semibold mt-1 transition-colors"
-                                >
-                                    Remove
-                                </button>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-gray-400">${item.price.toFixed(2)} each</p>
+                                            <button
+                                                onClick={() => removeFromCart(item.publicProductId)}
+                                                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Order Summary */}
-                <div className="bg-white rounded-2xl shadow-md p-6">
-                    <h2 className="text-lg font-black text-gray-900 mb-4">Order Summary</h2>
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100">
+                        <h2 className="text-sm font-semibold text-gray-900">Order summary</h2>
+                    </div>
 
-                    <div className="space-y-2 mb-4">
+                    <div className="px-5 py-4 space-y-2.5">
                         <div className="flex justify-between text-sm text-gray-600">
-                            <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                            <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
                             <span>${cartTotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Delivery fee</span>
-                            <span className="text-green-600 font-semibold">Calculated at checkout</span>
+                            <span className="text-gray-400">Calculated at checkout</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-600">
+                            <span>Tax</span>
+                            <span className="text-gray-400">Calculated at checkout</span>
+                        </div>
+                        <div className="pt-2 border-t border-gray-100 flex justify-between">
+                            <span className="text-sm font-semibold text-gray-900">Estimated total</span>
+                            <span className="text-sm font-bold text-gray-900">${cartTotal.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div className="flex justify-between font-black text-gray-900 text-lg border-t border-gray-100 pt-4 mb-6">
-                        <span>Total</span>
-                        <span>${cartTotal.toFixed(2)}</span>
+                    <div className="px-5 pb-5">
+                        <Link
+                            href="/checkout"
+                            className="flex items-center justify-center gap-2 w-full py-3.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
+                        >
+                            Proceed to Checkout
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
                     </div>
-
-                    <Link href="/checkout" className="block w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg text-center">
-                        Proceed to Checkout
-                    </Link>
-
-                    <button
-                        onClick={clearCart}
-                        className="w-full py-3 mt-3 text-gray-500 font-semibold text-sm hover:text-red-500 transition-colors"
-                    >
-                        Clear Cart
-                    </button>
                 </div>
+
             </div>
         </div>
     );

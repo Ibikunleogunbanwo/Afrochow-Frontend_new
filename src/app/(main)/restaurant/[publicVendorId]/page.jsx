@@ -19,6 +19,22 @@ import ProductDetailModal from '@/components/register/vendor/ProductDetailModal'
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
 import ReviewsModal from '@/components/register/vendor/vendorComponent/ReviewsModal';
 
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+const unwrapResponse = (response) => {
+    if (response?.success && response?.data) return response.data;
+    if (Array.isArray(response)) return response;
+    return [];
+};
+
+const SKELETON_COUNTS = {
+    products: 6,
+    relatedVendors: 4,
+    relatedProducts: 6,
+};
+
+// ─── component ──────────────────────────────────────────────────────────────
+
 const VendorProfilePage = () => {
     const params = useParams();
     const publicVendorId = params.publicVendorId;
@@ -41,6 +57,8 @@ const VendorProfilePage = () => {
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [relatedLoading, setRelatedLoading] = useState(false);
 
+    // ── data fetching ────────────────────────────────────────────────────────
+
     const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
         if (!cuisineType) return;
         try {
@@ -52,9 +70,30 @@ const VendorProfilePage = () => {
             ]);
 
             const vendors = Array.isArray(vendorsRes) ? vendorsRes : [];
+
             const filteredVendors = vendors
                 .filter(v => v.publicUserId !== currentVendorId)
-                .slice(0, 4);
+                .slice(0, SKELETON_COUNTS.relatedVendors)
+                .map(v => ({
+                    storeId: v.publicUserId,
+                    vendorPublicId: v.publicUserId,
+                    name: v.restaurantName,
+                    restaurantName: v.restaurantName,
+                    rating: v.averageRating || 0,
+                    categories: v.cuisineType ? [v.cuisineType] : [],
+                    deliveryTime: v.estimatedDeliveryMinutes || 30,
+                    deliveryFee: v.deliveryFee || 0,
+                    location: v.address?.city && v.address?.province
+                        ? `${v.address.city}, ${v.address.province}`
+                        : v.address?.city || '',
+                    popularItems: v.bannerUrl
+                        ? [{ name: v.restaurantName, imageUrl: v.bannerUrl }]
+                        : v.logoUrl
+                            ? [{ name: v.restaurantName, imageUrl: v.logoUrl }]
+                            : [],
+                    isOpenNow: v.isOpenNow,
+                    todayHoursFormatted: v.todayHoursFormatted,
+                }));
 
             const productList = productsRes?.success && productsRes?.data
                 ? productsRes.data.content || []
@@ -62,32 +101,14 @@ const VendorProfilePage = () => {
 
             const filteredProducts = productList
                 .filter(p => p.vendorPublicId !== currentVendorId)
-                .slice(0, 6);
+                .slice(0, SKELETON_COUNTS.relatedProducts);
 
-            setRelatedVendors(filteredVendors.map(v => ({
-                storeId: v.publicUserId,
-                vendorPublicId: v.publicUserId,
-                name: v.restaurantName,
-                restaurantName: v.restaurantName,
-                rating: v.averageRating || 0,
-                categories: v.cuisineType ? [v.cuisineType] : [],
-                deliveryTime: v.estimatedDeliveryMinutes || 30,
-                deliveryFee: v.deliveryFee || 0,
-                location: v.address?.city && v.address?.province
-                    ? `${v.address.city}, ${v.address.province}`
-                    : v.address?.city || '',
-                popularItems: v.bannerUrl
-                    ? [{ name: v.restaurantName, imageUrl: v.bannerUrl }]
-                    : v.logoUrl
-                        ? [{ name: v.restaurantName, imageUrl: v.logoUrl }]
-                        : [],
-                isOpenNow: v.isOpenNow,
-                todayHoursFormatted: v.todayHoursFormatted,
-            })));
-
+            setRelatedVendors(filteredVendors);
             setRelatedProducts(filteredProducts);
         } catch (error) {
             console.error('Error fetching related content:', error);
+            setRelatedVendors([]);
+            setRelatedProducts([]);
         } finally {
             setRelatedLoading(false);
         }
@@ -99,7 +120,7 @@ const VendorProfilePage = () => {
             const response = await SearchAPI.getVendorDetails(publicVendorId);
             if (response?.success && response?.data) {
                 setVendor(response.data);
-                void fetchRelatedContent(response.data.cuisineType, publicVendorId);
+                await fetchRelatedContent(response.data.cuisineType, publicVendorId);
             }
         } catch (error) {
             console.error('Error fetching vendor details:', error);
@@ -112,11 +133,11 @@ const VendorProfilePage = () => {
         try {
             setProductsLoading(true);
             const response = await SearchAPI.getVendorProducts(publicVendorId, page, 20);
-            if (response?.success && response?.data) {
-                setProducts(response.data);
-            } else if (Array.isArray(response)) {
-                setProducts(response);
-            }
+            setProducts(
+                response?.success && response?.data
+                    ? response.data
+                    : Array.isArray(response) ? response : []
+            );
         } catch (error) {
             console.error('Error fetching vendor products:', error);
             setProducts([]);
@@ -125,14 +146,38 @@ const VendorProfilePage = () => {
         }
     }, [publicVendorId]);
 
+    const fetchVendorReviews = useCallback(async (minRating = 0) => {
+        try {
+            const response = minRating > 0
+                ? await ReviewsAPI.filterVendorReviews(publicVendorId, minRating)
+                : await ReviewsAPI.getVendorsReviews(publicVendorId);
+            setReviews(unwrapResponse(response));
+        } catch (error) {
+            console.error('Error fetching vendor reviews:', error);
+            setReviews([]);
+        }
+    }, [publicVendorId]);
+
+    const fetchProductReviews = useCallback(async (productPublicId) => {
+        try {
+            const response = await ReviewsAPI.getProductReviews(productPublicId);
+            setReviews(unwrapResponse(response));
+        } catch (error) {
+            console.error('Error fetching product reviews:', error);
+            setReviews([]);
+        }
+    }, []);
+
     useEffect(() => {
         if (publicVendorId) {
-            void fetchVendorDetails();
-            void fetchVendorProducts();
+            fetchVendorDetails();
+            fetchVendorProducts();
         }
     }, [publicVendorId, fetchVendorDetails, fetchVendorProducts]);
 
-    const handleProductCardClick = async (product) => {
+    // ── event handlers ───────────────────────────────────────────────────────
+
+    const handleProductCardClick = useCallback(async (product) => {
         try {
             setProductModalLoading(true);
             setSelectedProductModal(product);
@@ -145,56 +190,33 @@ const VendorProfilePage = () => {
         } finally {
             setProductModalLoading(false);
         }
-    };
+    }, []);
 
-    const fetchVendorReviews = async (minRating = 0) => {
-        try {
-            const response = minRating > 0
-                ? await ReviewsAPI.filterVendorReviews(publicVendorId, minRating)
-                : await ReviewsAPI.getVendorsReviews(publicVendorId);
-            const data = response?.success && response?.data
-                ? response.data
-                : Array.isArray(response) ? response : [];
-            setReviews(data);
-        } catch (error) {
-            console.error('Error fetching vendor reviews:', error);
-            setReviews([]);
-        }
-    };
-
-    const fetchProductReviews = async (productPublicId) => {
-        try {
-            const response = await ReviewsAPI.getProductReviews(productPublicId);
-            const data = response?.success && response?.data
-                ? response.data
-                : Array.isArray(response) ? response : [];
-            setReviews(data);
-        } catch (error) {
-            console.error('Error fetching product reviews:', error);
-            setReviews([]);
-        }
-    };
-
-    const handleViewVendorReviews = () => {
+    const handleViewVendorReviews = useCallback(() => {
         setReviewType('vendor');
         setSelectedProduct(null);
         setShowReviewsModal(true);
-        void fetchVendorReviews(ratingFilter);
-    };
+        fetchVendorReviews(ratingFilter);
+    }, [fetchVendorReviews, ratingFilter]);
 
-    const handleViewProductReviews = (product) => {
+    const handleViewProductReviews = useCallback((product) => {
         setReviewType('product');
         setSelectedProduct(product);
         setShowReviewsModal(true);
-        void fetchProductReviews(product.publicProductId);
-    };
+        fetchProductReviews(product.publicProductId);
+    }, [fetchProductReviews]);
 
-    const handleRatingFilterChange = (rating) => {
+    const handleRatingFilterChange = useCallback((rating) => {
         setRatingFilter(rating);
         if (reviewType === 'vendor') {
-            void fetchVendorReviews(rating);
+            fetchVendorReviews(rating);
         }
-    };
+    }, [reviewType, fetchVendorReviews]);
+
+    const handleCloseProductModal = useCallback(() => setSelectedProductModal(null), []);
+    const handleCloseReviewsModal = useCallback(() => setShowReviewsModal(false), []);
+
+    // ── render states ────────────────────────────────────────────────────────
 
     if (loading) {
         return (
@@ -204,7 +226,7 @@ const VendorProfilePage = () => {
                     <div className="container mx-auto px-4 py-8 max-w-7xl">
                         <div className="h-32 bg-gray-300 rounded-xl mb-6" />
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {[...Array(6)].map((_, i) => (
+                            {[...Array(SKELETON_COUNTS.products)].map((_, i) => (
                                 <div key={i} className="h-64 bg-gray-300 rounded-xl" />
                             ))}
                         </div>
@@ -245,10 +267,12 @@ const VendorProfilePage = () => {
         address,
     } = vendor;
 
+    // ── render ───────────────────────────────────────────────────────────────
+
     return (
         <div className="min-h-screen bg-gray-50">
 
-            {/* Breadcrumb — above banner */}
+            {/* Breadcrumb */}
             <div className="bg-white border-b border-gray-100 px-4 py-3">
                 <div className="container mx-auto max-w-7xl">
                     <nav className="flex items-center gap-1.5 text-sm flex-wrap" aria-label="Breadcrumb">
@@ -271,15 +295,15 @@ const VendorProfilePage = () => {
 
                         <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
 
-                        <span className="text-gray-700 font-semibold truncate max-w-[200px]">
+                        <span className="text-gray-700 font-semibold truncate max-w-50">
                             {restaurantName}
                         </span>
                     </nav>
                 </div>
             </div>
 
-            {/* Banner Section */}
-            <div className="relative w-full h-80 bg-gradient-to-r from-orange-500 to-red-500">
+            {/* Banner */}
+            <div className="relative w-full h-80 bg-linear-to-r from-orange-500 to-red-500">
                 {bannerUrl ? (
                     <Image
                         src={bannerUrl}
@@ -294,11 +318,12 @@ const VendorProfilePage = () => {
                         <span className="text-9xl">🍽️</span>
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
             </div>
 
-            {/* Vendor Info Section */}
             <div className="container mx-auto px-4 -mt-20 relative z-10 max-w-7xl">
+
+                {/* Vendor Info */}
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                     <div className="flex flex-col md:flex-row gap-6">
 
@@ -314,7 +339,7 @@ const VendorProfilePage = () => {
                                         className="object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
+                                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
                                         <span className="text-5xl">🍴</span>
                                     </div>
                                 )}
@@ -359,9 +384,7 @@ const VendorProfilePage = () => {
                             </div>
 
                             {description && (
-                                <p className="text-gray-700 mb-4 leading-relaxed">
-                                    {description}
-                                </p>
+                                <p className="text-gray-700 mb-4 leading-relaxed">{description}</p>
                             )}
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -379,7 +402,7 @@ const VendorProfilePage = () => {
                                     <div className="flex items-start space-x-3">
                                         <Clock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Today&#39;s Hours</p>
+                                            <p className="text-sm font-semibold text-gray-900">Hours of Operation</p>
                                             <p className="text-sm text-gray-600">{todayHoursFormatted}</p>
                                         </div>
                                     </div>
@@ -413,7 +436,7 @@ const VendorProfilePage = () => {
                                     <div className="flex items-start space-x-3">
                                         <span className="text-orange-600 shrink-0 mt-0.5">💰</span>
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Minimum Order</p>
+                                            <p className="text-sm font-semibold text-gray-900">Min Delivery Order</p>
                                             <p className="text-sm text-gray-600">
                                                 ${minimumOrderAmount?.toFixed(2)}
                                             </p>
@@ -425,7 +448,7 @@ const VendorProfilePage = () => {
                     </div>
                 </div>
 
-                {/* Products Section */}
+                {/* Menu */}
                 <div className="mb-12">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-3xl font-black text-gray-900">Menu</h2>
@@ -434,7 +457,7 @@ const VendorProfilePage = () => {
 
                     {productsLoading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[...Array(6)].map((_, i) => (
+                            {[...Array(SKELETON_COUNTS.products)].map((_, i) => (
                                 <div key={i} className="bg-white rounded-xl h-80 animate-pulse" />
                             ))}
                         </div>
@@ -456,20 +479,18 @@ const VendorProfilePage = () => {
                     )}
                 </div>
 
-                {/* More Stores in Same Cuisine */}
+                {/* Related Stores */}
                 {(relatedLoading || relatedVendors.length > 0) && (
                     <div className="mb-12">
                         <div className="mb-6">
                             <h2 className="text-2xl font-black text-gray-900">
                                 More {cuisineType} Stores
                             </h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Other stores you might like
-                            </p>
+                            <p className="text-sm text-gray-500 mt-1">Other stores you might like</p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {relatedLoading
-                                ? [...Array(4)].map((_, i) => (
+                                ? [...Array(SKELETON_COUNTS.relatedVendors)].map((_, i) => (
                                     <div key={i} className="bg-white rounded-xl h-64 animate-pulse" />
                                 ))
                                 : relatedVendors.map((store) => (
@@ -480,20 +501,18 @@ const VendorProfilePage = () => {
                     </div>
                 )}
 
-                {/* Popular Products in Same Cuisine */}
+                {/* Related Products */}
                 {(relatedLoading || relatedProducts.length > 0) && (
                     <div className="mb-12">
                         <div className="mb-6">
                             <h2 className="text-2xl font-black text-gray-900">
                                 Popular {cuisineType} Dishes
                             </h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Loved by customers near you
-                            </p>
+                            <p className="text-sm text-gray-500 mt-1">Loved by customers near you</p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {relatedLoading
-                                ? [...Array(6)].map((_, i) => (
+                                ? [...Array(SKELETON_COUNTS.relatedProducts)].map((_, i) => (
                                     <div key={i} className="bg-white rounded-xl h-80 animate-pulse" />
                                 ))
                                 : relatedProducts.map((product) => (
@@ -516,7 +535,8 @@ const VendorProfilePage = () => {
                     product={selectedProductModal}
                     vendorName={restaurantName}
                     isLoading={productModalLoading}
-                    onClose={() => setSelectedProductModal(null)}
+                    isStoreOpen={isOpenNow}
+                    onClose={handleCloseProductModal}
                 />
             )}
 
@@ -524,7 +544,7 @@ const VendorProfilePage = () => {
             {showReviewsModal && (
                 <ReviewsModal
                     isOpen={showReviewsModal}
-                    onClose={() => setShowReviewsModal(false)}
+                    onClose={handleCloseReviewsModal}
                     reviews={reviews}
                     reviewType={reviewType}
                     vendorName={restaurantName}

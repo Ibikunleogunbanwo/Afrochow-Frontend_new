@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const LocationContext = createContext(undefined);
 
 export const LocationProvider = ({ children }) => {
-    const [city, setCity] = useState('Toronto');
+    const [city, setCity] = useState('Calgary');
     const [detectedCity, setDetectedCity] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
 

@@ -21,7 +21,7 @@ const Header = () => {
     const [showSignUp, setShowSignUp] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [navCategories, setNavCategories] = useState([]);
-    const { cartCount, cartTotal } = useCart();
+    const { cartCount, cartTotal, clearCart } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
 
     useEffect(() => {
@@ -44,6 +44,7 @@ const Header = () => {
 
     const handleLogout = async () => {
         await logout();
+        clearCart();
         setIsMenuOpen(false);
         setIsMobileMenuOpen(false);
     };

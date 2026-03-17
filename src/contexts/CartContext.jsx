@@ -3,41 +3,37 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const CartContext = createContext(null);
 
+const CART_STORAGE_KEY = 'afrochow_cart';
+
+const loadCartFromStorage = () => {
+    try {
+        const saved = localStorage.getItem(CART_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : [];
+    } catch {
+        return [];
+    }
+};
+
 export const CartProvider = ({ children }) => {
+    const [cartItems, setCartItems] = useState(loadCartFromStorage);
 
-    const [cartItems, setCartItems] = useState(() => {
-        try {
-            const saved = localStorage.getItem('afrochow_cart');
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
+    const vendorId = cartItems.length > 0 ? cartItems[0].vendorPublicId : null;
 
-    const [vendorId, setVendorId] = useState(() => {
-        try {
-            const saved = localStorage.getItem('afrochow_cart_vendor');
-            return saved ?? null;
-        } catch {
-            return null;
-        }
-    });
-
-    // persist to localStorage on every change
     useEffect(() => {
-        localStorage.setItem('afrochow_cart', JSON.stringify(cartItems));
-        localStorage.setItem('afrochow_cart_vendor', vendorId ?? '');
-    }, [cartItems, vendorId]);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    }, [cartItems]);
 
-    const addToCart = (product, quantity = 1) => {
+    const addToCart = (product, quantity = 1, isStoreOpen = true) => {
+        if (!isStoreOpen) {
+            return { success: false, message: 'This store is currently closed.' };
+        }
+
         if (vendorId && vendorId !== product.vendorPublicId) {
             return {
                 success: false,
                 message: 'Your cart has items from another store. Clear your cart to add this item.',
             };
         }
-
-        setVendorId(product.vendorPublicId);
 
         setCartItems(prev => {
             const existing = prev.find(item => item.publicProductId === product.publicProductId);
@@ -55,11 +51,7 @@ export const CartProvider = ({ children }) => {
     };
 
     const removeFromCart = (publicProductId) => {
-        setCartItems(prev => {
-            const updated = prev.filter(item => item.publicProductId !== publicProductId);
-            if (updated.length === 0) setVendorId(null);
-            return updated;
-        });
+        setCartItems(prev => prev.filter(item => item.publicProductId !== publicProductId));
     };
 
     const updateQuantity = (publicProductId, quantity) => {
@@ -69,20 +61,15 @@ export const CartProvider = ({ children }) => {
         }
         setCartItems(prev =>
             prev.map(item =>
-                item.publicProductId === publicProductId
-                    ? { ...item, quantity }
-                    : item
+                item.publicProductId === publicProductId ? { ...item, quantity } : item
             )
         );
     };
 
-    const clearCart = () => {
-        setCartItems([]);
-        setVendorId(null);
-    };
+    const clearCart = () => setCartItems([]);
 
     const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     return (
         <CartContext.Provider value={{

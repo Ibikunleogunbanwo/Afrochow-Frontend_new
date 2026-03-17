@@ -19,6 +19,7 @@ import {
 import { AuthAPI } from "@/lib/api/auth.api";
 import { RegistrationAPI } from "@/lib/api/registration.api";
 import { CustomerAPI } from "@/lib/api/customer.api";
+import {useCart} from "@/contexts/CartContext";
 
 export const useAuth = () => {
     const dispatch = useDispatch();
@@ -33,6 +34,7 @@ export const useAuth = () => {
     const username = useSelector(selectUsername);
     const email = useSelector(selectEmail);
 
+    const { clearCart } = useCart();
     const login = async (identifier, password) => {
         dispatch(setLoading(true));
         dispatch(setError(null));
@@ -81,6 +83,7 @@ export const useAuth = () => {
             console.error('Logout API failed:', err);
         } finally {
             dispatch(clearAuth());
+            clearCart();
             router.push('/');
         }
     };

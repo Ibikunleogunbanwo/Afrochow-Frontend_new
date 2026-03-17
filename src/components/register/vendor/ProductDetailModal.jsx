@@ -1,14 +1,51 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { X, Loader2, Clock, Star } from 'lucide-react';
 import { useCart } from "@/contexts/CartContext";
 
-const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
+const Tag = ({ text }) => (
+    <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+        {text}
+    </span>
+);
+
+const ProductDetailModal = ({
+                                product,
+                                vendorName,
+                                isLoading,
+                                isStoreOpen,
+                                onClose,
+                            }) => {
     const [quantity, setQuantity] = useState(1);
     const [cartError, setCartError] = useState(null);
     const [addedSuccess, setAddedSuccess] = useState(false);
+    const timerRef = useRef(null);
+
     const { addToCart, clearCart } = useCart();
+
+    // Handle ESC close
+    useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
+    // Prevent background scroll, restore previous value on cleanup
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = prev; };
+    }, []);
+
+    // Clear success timer on unmount
+    useEffect(() => {
+        return () => clearTimeout(timerRef.current);
+    }, []);
+
+    if (!product) return null;
 
     const {
         name,
@@ -27,19 +64,33 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
     } = product;
 
     const hasDietaryTags = isVegetarian || isVegan || isGlutenFree || isSpicy;
+    const totalPrice = (price * quantity).toFixed(2);
+    const isDisabled = !available || !isStoreOpen;
 
     const handleAddToCart = () => {
-        const result = addToCart(product, quantity);
+        if (isDisabled) return;
+
+        const result = addToCart(product, quantity, isStoreOpen);
+
         if (!result.success) {
-            setCartError(result.message);
+            setCartError(result.message || 'Unable to add item');
             return;
         }
+
         setCartError(null);
         setAddedSuccess(true);
-        setTimeout(() => {
+
+        timerRef.current = setTimeout(() => {
             setAddedSuccess(false);
             onClose();
-        }, 800);
+        }, 1200);
+    };
+
+    const getButtonText = () => {
+        if (addedSuccess) return '✓ Added to Cart!';
+        if (!available) return 'Currently Unavailable';
+        if (!isStoreOpen) return '🕐 Store is currently closed';
+        return `Add to Order • $${totalPrice}`;
     };
 
     return (
@@ -51,12 +102,15 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto z-10">
-
+            <div
+                role="dialog"
+                aria-modal="true"
+                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto z-10"
+            >
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full transition"
                 >
                     <X className="w-5 h-5 text-gray-600" />
                 </button>
@@ -81,7 +135,7 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                                 src={imageUrl}
                                 alt={name}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 448px"
+                                priority
                                 className="object-cover"
                             />
                         ) : (
@@ -99,44 +153,27 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                     {description && (
                         <div>
                             <h3 className="text-base font-bold text-gray-900 mb-1">Description</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed">
-                                {description}
-                            </p>
+                            <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
                         </div>
                     )}
 
-                    {/* Calories + Dietary Tags */}
+                    {/* Calories & Dietary Tags */}
                     {(calories > 0 || hasDietaryTags) && (
                         <div className="space-y-3">
                             {calories > 0 && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl w-fit">
-                                    <span className="text-lg">🔥</span>
-                                    <span className="text-sm font-bold text-gray-900">{calories}</span>
-                                    <span className="text-sm text-gray-500">cal</span>
+                                    <span>🔥</span>
+                                    <span className="font-bold">{calories}</span>
+                                    <span className="text-gray-500 text-sm">cal</span>
                                 </div>
                             )}
+
                             {hasDietaryTags && (
                                 <div className="flex flex-wrap gap-2">
-                                    {isVegetarian && (
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                            🌱 Vegetarian
-                                        </span>
-                                    )}
-                                    {isVegan && (
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                            🌿 Vegan
-                                        </span>
-                                    )}
-                                    {isGlutenFree && (
-                                        <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                                            🌾 Gluten Free
-                                        </span>
-                                    )}
-                                    {isSpicy && (
-                                        <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                                            🌶️ Spicy
-                                        </span>
-                                    )}
+                                    {isVegetarian && <Tag text="🌱 Vegetarian" />}
+                                    {isVegan && <Tag text="🌿 Vegan" />}
+                                    {isGlutenFree && <Tag text="🌾 Gluten Free" />}
+                                    {isSpicy && <Tag text="🌶️ Spicy" />}
                                 </div>
                             )}
                         </div>
@@ -154,71 +191,60 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                     {averageRating > 0 && (
                         <div className="flex items-center gap-2">
                             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span className="text-sm font-semibold text-gray-900">
-                                {averageRating?.toFixed(1)}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                                ({reviewCount || 0} reviews)
-                            </span>
+                            <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                            <span className="text-xs text-gray-500">({reviewCount || 0} reviews)</span>
                         </div>
                     )}
 
-                    {/* Cart conflict error */}
+                    {/* Cart Error */}
                     {cartError && (
                         <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                            {cartError}
+                            ⚠️ {cartError}
                             <button
                                 onClick={() => {
                                     clearCart();
                                     setCartError(null);
                                 }}
-                                className="ml-2 font-bold underline"
+                                className="ml-2 underline font-bold"
                             >
                                 Clear cart
                             </button>
                         </div>
                     )}
 
-                    {/* Quantity + Add to Order */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
 
-                        {/* Quantity selector */}
-                        <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden self-start sm:self-auto shrink-0">
+                        {/* Quantity */}
+                        <div className="flex items-center justify-center sm:justify-start border-2 border-gray-200 rounded-xl overflow-hidden w-full sm:w-auto">
                             <button
                                 onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                className="px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors font-bold text-lg"
+                                className="px-4 py-3 hover:bg-gray-100 font-bold"
                             >
                                 −
                             </button>
-                            <span className="px-4 py-3 text-gray-900 font-bold text-base min-w-[48px] text-center">
-                                {quantity}
-                            </span>
+                            <span className="px-4 font-bold">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(q => q + 1)}
-                                className="px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors font-bold text-lg"
+                                className="px-4 py-3 hover:bg-gray-100 font-bold"
                             >
                                 +
                             </button>
                         </div>
 
-                        {/* Add to Order button */}
+                        {/* Add to Cart */}
                         <button
                             onClick={handleAddToCart}
-                            disabled={!available}
-                            className={`flex-1 w-full py-3 rounded-xl font-bold text-base transition-all duration-200 ${
+                            disabled={isDisabled}
+                            className={`flex-1 py-3 rounded-xl font-bold transition ${
                                 addedSuccess
                                     ? 'bg-green-600 text-white'
-                                    : available
-                                        ? 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-lg active:scale-95'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : isDisabled
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : 'bg-orange-600 text-white hover:bg-orange-700 active:scale-95'
                             }`}
                         >
-                            {addedSuccess
-                                ? '✓ Added to Cart!'
-                                : available
-                                    ? `Add to Order • $${(price * quantity).toFixed(2)}`
-                                    : 'Currently Unavailable'
-                            }
+                            {getButtonText()}
                         </button>
                     </div>
                 </div>
