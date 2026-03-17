@@ -202,7 +202,7 @@ const Header = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="pointer-events-auto absolute top-[72px] left-4 right-4 bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-3xl shadow-xl shadow-black/10 overflow-hidden">
+                    <div className="pointer-events-auto absolute top-18 left-4 right-4 bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-3xl shadow-xl shadow-black/10 overflow-hidden">
                         <div className="p-4 space-y-1">
 
                             {isAuthenticated && user ? (
@@ -322,13 +322,6 @@ const Header = () => {
                                         className="block w-full px-4 py-3 text-center text-sm font-semibold text-gray-700 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
                                     >
                                         Sign In
-                                    </button>
-                                    <button
-                                        onClick={() => { setShowSignUp(true); setIsMobileMenuOpen(false); }}
-                                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gray-900 text-white text-sm font-bold rounded-2xl hover:bg-gray-700 transition-colors"
-                                    >
-                                        <span>Get Started</span>
-                                        <ArrowRight className="w-4 h-4" />
                                     </button>
                                 </>
                             )}
