@@ -331,56 +331,55 @@ export default function ProfilePage() {
 
                     {/* Profile row */}
                     <div className="px-6 py-5 border-b border-gray-100">
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-500 w-32 shrink-0">Profile</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
 
-                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                                {/* Avatar */}
-                                <div className="relative shrink-0">
-                                    {uploadingImage && (
-                                        <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center z-10">
-                                            <div className="w-10 h-10 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
-                                        </div>
-                                    )}
-                                    {profileData.profileImageUrl && !imageError ? (
-                                        <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200">
-                                            <Image
-                                                src={profileData.profileImageUrl}
-                                                alt="Profile"
-                                                width={80}
-                                                height={80}
-                                                className="w-full h-full object-cover"
-                                                onError={() => setImageError(true)}
-                                                unoptimized
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                                            <span className="text-lg font-semibold text-gray-700">
-                                                {profileData.firstName?.charAt(0).toUpperCase() || "U"}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <label
-                                        htmlFor="profile-image-upload"
-                                        className="absolute bottom-0 right-0 w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors"
-                                        title="Change photo"
-                                    >
-                                        <Upload className="w-3 h-3 text-white" />
-                                        <input
-                                            id="profile-image-upload"
-                                            type="file"
-                                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                            disabled={uploadingImage}
+                            {/* Avatar + upload */}
+                            <div className="relative shrink-0 self-start sm:self-auto">
+                                {uploadingImage && (
+                                    <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center z-10">
+                                        <div className="w-10 h-10 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                )}
+                                {profileData.profileImageUrl && !imageError ? (
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200">
+                                        <Image
+                                            src={profileData.profileImageUrl}
+                                            alt="Profile"
+                                            width={96}
+                                            height={96}
+                                            className="w-full h-full object-cover"
+                                            onError={() => setImageError(true)}
+                                            unoptimized
                                         />
-                                    </label>
-                                </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-2xl font-semibold text-gray-700">
+                        {profileData.firstName?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                                    </div>
+                                )}
+                                <label
+                                    htmlFor="profile-image-upload"
+                                    className="absolute bottom-0 right-0 w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors"
+                                    title="Change photo"
+                                >
+                                    <Upload className="w-3.5 h-3.5 text-white" />
+                                    <input
+                                        id="profile-image-upload"
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                        disabled={uploadingImage}
+                                    />
+                                </label>
+                            </div>
 
-                                {/* Name */}
+                            {/* Name + action */}
+                            <div className="flex-1 min-w-0">
                                 {editingSection === "name" ? (
-                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input
                                             type="text"
                                             name="firstName"
@@ -399,8 +398,8 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                    <div>
+                                        <p className="text-base font-semibold text-gray-900">
                                             {profileData.firstName} {profileData.lastName}
                                         </p>
                                         {profileData.loyaltyPoints > 0 && (
@@ -411,27 +410,33 @@ export default function ProfilePage() {
                                         )}
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Actions */}
-                            <div className="flex items-center gap-1 shrink-0">
-                                {editingSection === "name" ? (
-                                    <>
-                                        <button onClick={handleSaveSection} className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <Save className="w-4 h-4" />
+                                {/* Actions stacked below name */}
+                                <div className="flex items-center gap-2 mt-2">
+                                    {editingSection === "name" ? (
+                                        <>
+                                            <button
+                                                onClick={handleSaveSection}
+                                                className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                            >
+                                                <Save className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={handleCancelSection}
+                                                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            onClick={() => setEditingSection("name")}
+                                            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                                        >
+                                            Update profile
                                         </button>
-                                        <button onClick={handleCancelSection} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <button
-                                        onClick={() => setEditingSection("name")}
-                                        className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-                                    >
-                                        Update profile
-                                    </button>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

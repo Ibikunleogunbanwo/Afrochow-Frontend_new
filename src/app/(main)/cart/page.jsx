@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 const CartPage = () => {
@@ -82,15 +82,16 @@ const CartPage = () => {
                                 {/* Info + Controls */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-sm font-semibold text-gray-900 truncate">
                                                 {item.name}
                                             </p>
                                             {item.restaurantName && (
                                                 <Link
                                                     href={`restaurant/${item.vendorPublicId}`}
-                                                    className="text-xs text-orange-500 hover:text-orange-600 truncate mt-0.5 transition-colors"
+                                                    className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-full text-xs font-medium text-orange-600 hover:bg-orange-100 hover:border-orange-300 transition-colors"
                                                 >
+                                                    <Store className="w-3 h-3 shrink-0" />
                                                     {item.restaurantName}
                                                 </Link>
                                             )}
