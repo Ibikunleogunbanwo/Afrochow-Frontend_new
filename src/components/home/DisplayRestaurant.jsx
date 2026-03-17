@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { HiArrowLeft, HiSearch } from 'react-icons/hi';
+import { HiSearch } from 'react-icons/hi';
+import { ChevronRight, Home } from 'lucide-react';
 import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
@@ -20,12 +21,35 @@ const DisplayRestaurant = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [products, setProducts] = useState([]);
     const [error, setError] = useState(null);
+    const [categoryName, setCategoryName] = useState('');
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [hasMore, setHasMore] = useState(false);
     const pageSize = 20;
+
+    useEffect(() => {
+        const fetchCategoryName = async () => {
+            if (!urlCategoryId) return;
+            try {
+                const response = await SearchAPI.getAllCategories();
+                if (response?.success && response?.data) {
+                    const match = response.data.find(
+                        cat => String(cat.categoryId) === String(urlCategoryId)
+                    );
+                    if (match) setCategoryName(match.name);
+                }
+            } catch (error) {
+                console.error('Error fetching category name:', error);
+            }
+        };
+        void fetchCategoryName();
+    }, [urlCategoryId]);
+
+    useEffect(() => {
+        if (!urlCategoryId) setCategoryName('');
+    }, [urlCategoryId]);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -61,11 +85,9 @@ const DisplayRestaurant = () => {
                     const pageData = response.data;
                     const productList = pageData.content || [];
 
-                    // fetch vendor data in parallel
                     const vendorsResponse = await SearchAPI.getVerifiedVendors();
                     const vendors = Array.isArray(vendorsResponse) ? vendorsResponse : [];
 
-                    // build vendor lookup map
                     const vendorMap = vendors.reduce((map, vendor) => {
                         map[vendor.publicUserId] = vendor;
                         return map;
@@ -73,7 +95,6 @@ const DisplayRestaurant = () => {
 
                     const transformedResults = productList.map(product => {
                         const vendor = vendorMap[product.vendorPublicId] || {};
-
                         return {
                             storeId: product.vendorPublicId,
                             publicProductId: product.publicProductId,
@@ -115,7 +136,6 @@ const DisplayRestaurant = () => {
                         };
                     });
 
-                    // open first, closed at the bottom
                     const sortedResults = transformedResults.sort((a, b) => {
                         if (a.isOpenNow === b.isOpenNow) return 0;
                         return a.isOpenNow ? -1 : 1;
@@ -146,28 +166,72 @@ const DisplayRestaurant = () => {
         void fetchResults();
     }, [urlCategoryId, urlSearchQuery, urlCity, urlCategory, currentPage]);
 
+    const decodedQuery = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
+    const decodedCity = urlCity ? decodeURIComponent(urlCity) : '';
+    const decodedCategory = urlCategory ? decodeURIComponent(urlCategory) : '';
+    const resolvedCategory = categoryName || decodedCategory;
+
+    const getPageTitle = () => {
+        if (resolvedCategory && decodedCity) return `${resolvedCategory} in ${decodedCity}`;
+        if (resolvedCategory) return resolvedCategory;
+        if (decodedQuery && decodedCity) return `"${decodedQuery}" in ${decodedCity}`;
+        if (decodedQuery) return `Results for "${decodedQuery}"`;
+        if (decodedCity) return `Stores in ${decodedCity}`;
+        return 'All Products';
+    };
+
+    const getPageSubtitle = () => {
+        if (resolvedCategory && decodedCity)
+            return `Browsing ${resolvedCategory} vendors and products in ${decodedCity}`;
+        if (resolvedCategory)
+            return `Explore all ${resolvedCategory} options from verified African vendors across Canada`;
+        if (decodedQuery && decodedCity)
+            return `Showing African food matching "${decodedQuery}" available in ${decodedCity}`;
+        if (decodedQuery)
+            return `African dishes and stores matching "${decodedQuery}" across Canada`;
+        if (decodedCity)
+            return `Discover authentic African cuisine from the best kitchens and stores in ${decodedCity}`;
+        return 'Discover authentic African cuisine from the best kitchens and stores near you';
+    };
+
+    const getResultsLabel = () => {
+        const count = totalElements;
+        const noun = count === 1 ? 'result' : 'results';
+        if (resolvedCategory && decodedCity) return `${count} ${noun} in ${resolvedCategory} — ${decodedCity}`;
+        if (resolvedCategory) return `${count} ${noun} in ${resolvedCategory}`;
+        if (decodedQuery && decodedCity) return `${count} ${noun} for "${decodedQuery}" in ${decodedCity}`;
+        if (decodedQuery) return `${count} ${noun} for "${decodedQuery}"`;
+        if (decodedCity) return `${count} stores in ${decodedCity}`;
+        return `${count} products available`;
+    };
+
+    const getEmptyStateMessage = () => {
+        if (resolvedCategory && decodedCity)
+            return `No ${resolvedCategory} products found in ${decodedCity}. Try browsing all stores or a different city.`;
+        if (resolvedCategory)
+            return `No products found in the ${resolvedCategory} category. Try browsing all stores.`;
+        if (decodedQuery && decodedCity)
+            return `No results for "${decodedQuery}" in ${decodedCity}. Try a different search term or city.`;
+        if (decodedQuery)
+            return `No results for "${decodedQuery}". Try a different search term.`;
+        if (decodedCity)
+            return `No stores found in ${decodedCity}. Try a different city.`;
+        return "We couldn't find any products. Try searching for something specific.";
+    };
+
     const getPageNumbers = () => {
         const pages = [];
         const maxPagesToShow = 7;
 
         if (totalPages <= maxPagesToShow) {
-            for (let i = 0; i < totalPages; i++) {
-                pages.push(i);
-            }
+            for (let i = 0; i < totalPages; i++) pages.push(i);
         } else {
             pages.push(0);
-
             const startPage = Math.max(1, currentPage - 1);
             const endPage = Math.min(totalPages - 2, currentPage + 1);
-
             if (startPage > 1) pages.push('ellipsis-start');
-
-            for (let i = startPage; i <= endPage; i++) {
-                pages.push(i);
-            }
-
+            for (let i = startPage; i <= endPage; i++) pages.push(i);
             if (endPage < totalPages - 2) pages.push('ellipsis-end');
-
             pages.push(totalPages - 1);
         }
 
@@ -184,33 +248,89 @@ const DisplayRestaurant = () => {
         router.push(`/restaurants?search=${encodeURIComponent(searchQuery)}&city=${encodeURIComponent(cityFilter)}`);
     };
 
+    const handleClearAll = () => {
+        setSearchQuery('');
+        setCityFilter('');
+        setCategoryName('');
+        setCurrentPage(0);
+        router.push('/restaurants');
+    };
+
+    const hasActiveFilters = !!(urlSearchQuery || urlCity || urlCategoryId || urlCategory);
+
     return (
         <div className="min-h-screen bg-white py-12">
             <div className="container px-4 mx-auto max-w-7xl">
 
-                {/* Header Section */}
                 <div className="mb-12">
-                    {/* Back Button */}
-                    <Link
-                        href="/"
-                        className="inline-flex items-center space-x-2 text-orange-600 hover:text-orange-700 font-semibold mb-6 transition-colors group"
-                    >
-                        <HiArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span>Back to Home</span>
-                    </Link>
 
-                    {/* Title */}
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-1 text-sm mb-8 flex-wrap" aria-label="Breadcrumb">
+                        <Link
+                            href="/"
+                            className="flex items-center gap-1 text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                        >
+                            <Home className="w-3.5 h-3.5" />
+                            <span>Home</span>
+                        </Link>
+
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+
+                        <Link
+                            href="/restaurants"
+                            className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                        >
+                            All Products
+                        </Link>
+
+                        {resolvedCategory && (
+                            <>
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                <Link
+                                    href={`/restaurants?categoryId=${urlCategoryId}`}
+                                    className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                                >
+                                    {resolvedCategory}
+                                </Link>
+                            </>
+                        )}
+
+                        {decodedCity && (
+                            <>
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                <span className="text-gray-500 font-medium">{decodedCity}</span>
+                            </>
+                        )}
+
+                        {decodedQuery && (
+                            <>
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                <span className="text-gray-700 font-semibold truncate max-w-45">
+                                    &#34;{decodedQuery}&#34;
+                                </span>
+                            </>
+                        )}
+
+                        {!resolvedCategory && !decodedCity && !decodedQuery && (
+                            <>
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                <span className="text-gray-700 font-semibold">Browse</span>
+                            </>
+                        )}
+                    </nav>
+
+                    {/* Dynamic Title */}
                     <div className="mb-8">
                         <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
-                            All Products
+                            {getPageTitle()}
                             {!isLoading && totalElements > 0 && (
-                                <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
-                                    {totalElements} Amazing Dishes
+                                <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
+                                    {totalElements} {totalElements === 1 ? 'result' : 'results'} found
                                 </span>
                             )}
                         </h1>
-                        <p className="text-gray-600 text-lg max-w-2xl">
-                            Discover authentic African cuisine from the best kitchens and stores near you
+                        <p className="text-gray-500 text-lg max-w-2xl">
+                            {getPageSubtitle()}
                         </p>
                     </div>
 
@@ -241,7 +361,7 @@ const DisplayRestaurant = () => {
 
                         <button
                             onClick={handleSearch}
-                            className="flex items-center space-x-2 px-6 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold"
+                            className="flex items-center space-x-2 px-6 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold whitespace-nowrap"
                         >
                             <HiSearch className="w-5 h-5" />
                             <span>Search</span>
@@ -250,13 +370,40 @@ const DisplayRestaurant = () => {
 
                     {/* Results Count */}
                     {!isLoading && totalElements > 0 && (
-                        <div className="mt-4 text-gray-600">
-                            Found <span className="font-bold text-orange-600">{totalElements}</span> products
-                            {urlSearchQuery && ` matching "${decodeURIComponent(urlSearchQuery)}"`}
-                            {urlCity && ` in ${decodeURIComponent(urlCity)}`}
+                        <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                            <span className="font-semibold text-orange-600">
+                                {getResultsLabel()}
+                            </span>
                             {totalPages > 1 && (
-                                <span> — Page {currentPage + 1} of {totalPages}</span>
+                                <span>— Page {currentPage + 1} of {totalPages}</span>
                             )}
+                        </div>
+                    )}
+
+                    {/* Active Filter Pills */}
+                    {hasActiveFilters && !isLoading && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {(urlCategoryId || urlCategory) && resolvedCategory && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                    📂 {resolvedCategory}
+                                </span>
+                            )}
+                            {urlSearchQuery && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                    🔍 {decodedQuery}
+                                </span>
+                            )}
+                            {urlCity && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                                    📍 {decodedCity}
+                                </span>
+                            )}
+                            <button
+                                onClick={handleClearAll}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full hover:bg-gray-200 transition-colors"
+                            >
+                                ✕ Clear all
+                            </button>
                         </div>
                     )}
 
@@ -293,22 +440,22 @@ const DisplayRestaurant = () => {
                         {/* Pagination */}
                         {totalPages > 1 && (
                             <div className="flex flex-col items-center gap-4 mt-8">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap justify-center">
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 0}
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Previous
                                     </button>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
                                         {getPageNumbers().map((page, index) => (
                                             typeof page === 'number' ? (
                                                 <button
                                                     key={index}
                                                     onClick={() => handlePageChange(page)}
-                                                    className={`min-w-[40px] px-3 py-2 rounded-lg font-semibold transition-all ${
+                                                    className={`min-w-10 px-3 py-2 rounded-lg font-semibold transition-all ${
                                                         currentPage === page
                                                             ? 'bg-orange-600 text-white shadow-lg'
                                                             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-orange-400'
@@ -325,15 +472,15 @@ const DisplayRestaurant = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={!hasMore}
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Next
                                     </button>
                                 </div>
 
-                                <div className="text-center text-gray-500 text-sm">
-                                    Showing {products.length} products on page {currentPage + 1} of {totalPages}
-                                </div>
+                                <p className="text-center text-gray-400 text-sm">
+                                    Showing {products.length} of {totalElements} on page {currentPage + 1} of {totalPages}
+                                </p>
                             </div>
                         )}
                     </>
@@ -344,21 +491,16 @@ const DisplayRestaurant = () => {
                                 <HiSearch className="w-12 h-12 text-orange-500" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                No products found
+                                No results found
                             </h3>
-                            <p className="text-gray-600 mb-6">
-                                We couldn&#39;t find any products matching your search. Try a different search term or city.
+                            <p className="text-gray-500 mb-6">
+                                {getEmptyStateMessage()}
                             </p>
                             <button
-                                onClick={() => {
-                                    setSearchQuery('');
-                                    setCityFilter('');
-                                    setCurrentPage(0);
-                                    router.push('/restaurants');
-                                }}
+                                onClick={handleClearAll}
                                 className="inline-block px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors"
                             >
-                                Clear Search
+                                Browse All Products
                             </button>
                         </div>
                     </div>

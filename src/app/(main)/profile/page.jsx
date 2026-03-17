@@ -2,40 +2,38 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { CustomerAPI } from "@/lib/api/customer.api";
 import { ImageUploadAPI } from "@/lib/api/imageUpload";
 import Image from "next/image";
 import {
-    User,
-    Mail,
-    Phone,
-    MapPin,
-    Calendar,
-    Edit2,
-    Save,
-    X,
-    Plus,
-    Trash2,
-    Star,
-    Upload,
-    Check
+    Edit2, Save, X, Plus, Trash2, Star,
+    Upload, Check, MapPin, MoreHorizontal, ChevronRight
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 
+const provinces = [
+    { value: "AB", label: "Alberta" },
+    { value: "BC", label: "British Columbia" },
+    { value: "MB", label: "Manitoba" },
+    { value: "NB", label: "New Brunswick" },
+    { value: "NL", label: "Newfoundland and Labrador" },
+    { value: "NS", label: "Nova Scotia" },
+    { value: "ON", label: "Ontario" },
+    { value: "PE", label: "Prince Edward Island" },
+    { value: "QC", label: "Quebec" },
+    { value: "SK", label: "Saskatchewan" },
+];
+
 export default function ProfilePage() {
-    const {
-        user,
-        getCustomerProfile,
-        updateCustomerProfile,
-        addAddress,
-        updateAddress,
-        deleteAddress,
-        setDefaultAddress
-    } = useAuth();
-    const [isEditing, setIsEditing] = useState(false);
+    const { user } = useAuth();
+
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [editingSection, setEditingSection] = useState(null);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -45,10 +43,16 @@ export default function ProfilePage() {
         profileImageUrl: ""
     });
 
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
     const [addressForm, setAddressForm] = useState({
+        addressLine: "",
+        city: "",
+        province: "AB",
+        postalCode: "",
+        country: "Canada",
+        defaultAddress: false
+    });
+
+    const resetAddressForm = () => ({
         addressLine: "",
         city: "",
         province: "AB",
@@ -60,40 +64,30 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const response = await getCustomerProfile();
+            const response = await CustomerAPI.getCustomerProfile();
             if (response?.success && response?.data) {
-                const profileData = response.data;
-                console.log("Profile data received:", profileData);
-                setProfileData(profileData);
+                const data = response.data;
+                setProfileData(data);
                 setFormData({
-                    firstName: profileData.firstName || "",
-                    lastName: profileData.lastName || "",
-                    phone: profileData.phone || "",
-                    defaultDeliveryInstructions: profileData.defaultDeliveryInstructions || "",
-                    profileImageUrl: profileData.profileImageUrl || ""
+                    firstName: data.firstName || "",
+                    lastName: data.lastName || "",
+                    phone: data.phone || "",
+                    defaultDeliveryInstructions: data.defaultDeliveryInstructions || "",
+                    profileImageUrl: data.profileImageUrl || ""
                 });
             } else {
-                console.warn("Profile response missing success or data:", response);
                 toast.error("Failed to load profile", "No profile data returned");
             }
         } catch (error) {
-            console.error("Error fetching profile:", error);
             toast.error("Failed to load profile", error.message || "Please try again later");
         } finally {
-            console.log("Setting loading to false");
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (user?.publicUserId) {
-            console.log("User authenticated, fetching profile for:", user.publicUserId);
-            fetchProfile();
-        } else {
-            console.log("No user publicUserId, skipping profile fetch");
-            setLoading(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (user?.publicUserId) void fetchProfile();
+        else setLoading(false);
     }, [user?.publicUserId]);
 
     const handleChange = (e) => {
@@ -103,791 +97,578 @@ export default function ProfilePage() {
 
     const handleAddressChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setAddressForm(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        setAddressForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     };
 
-    const handleSave = async () => {
+    const handleSaveSection = async () => {
         try {
-            const response = await updateCustomerProfile(formData);
-
+            const response = await CustomerAPI.updateCustomerProfile(formData);
             if (response?.success) {
-                // Re-fetch profile to ensure UI is in sync with backend
                 await fetchProfile();
-                setIsEditing(false);
-                toast.success("Profile Updated", "Your profile has been successfully updated");
-            } else {
-                throw new Error("Failed to update profile");
-            }
+                setEditingSection(null);
+                toast.success("Saved", "Profile updated successfully");
+            } else throw new Error("Failed to update profile");
         } catch (error) {
-            console.error("Error saving profile:", error);
             toast.error("Failed to save", error.message || "Please try again");
         }
     };
 
-    const handleCancel = () => {
-        setIsEditing(false);
+    const handleCancelSection = () => {
+        setEditingSection(null);
         if (profileData) {
             setFormData({
-                firstName: profileData.firstName,
-                lastName: profileData.lastName,
-                phone: profileData.phone,
-                defaultDeliveryInstructions: profileData.defaultDeliveryInstructions,
-                profileImageUrl: profileData.profileImageUrl
+                firstName: profileData.firstName || "",
+                lastName: profileData.lastName || "",
+                phone: profileData.phone || "",
+                defaultDeliveryInstructions: profileData.defaultDeliveryInstructions || "",
+                profileImageUrl: profileData.profileImageUrl || ""
             });
         }
     };
 
     const handleAddAddress = async () => {
         try {
-            const response = await addAddress(addressForm);
-
-            console.log(response);
-
+            const response = await CustomerAPI.addAddress(addressForm);
             if (response?.success && response?.data) {
-                // Re-fetch profile to get updated addresses
                 await fetchProfile();
-
                 setShowAddressForm(false);
-                setAddressForm({
-                    addressLine: "",
-                    city: "",
-                    province: "AB",
-                    postalCode: "",
-                    country: "Canada",
-                    defaultAddress: false
-                });
-
-                toast.success("Address Added", "New address has been saved");
-            } else {
-                throw new Error("Failed to add address");
-            }
+                setAddressForm(resetAddressForm());
+                toast.success("Address added", "New address saved");
+            } else throw new Error("Failed to add address");
         } catch (error) {
-            console.error("Error adding address:", error);
             toast.error("Failed to add address", error.message || "Please try again");
         }
     };
 
-    const handleEditAddress = (address) => {
-        setShowAddressForm(false);
-        setEditingAddress(address.publicAddressId);
-        setAddressForm({
-            addressLine: address.addressLine,
-            city: address.city,
-            province: address.province,
-            postalCode: address.postalCode,
-            country: address.country,
-            defaultAddress: address.defaultAddress
-        });
-    };
-
     const handleUpdateAddress = async () => {
         if (!editingAddress) return;
-
         try {
-            const response = await updateAddress(editingAddress, addressForm);
-
+            const response = await CustomerAPI.updateAddress(editingAddress, addressForm);
             if (response?.success && response?.data) {
-                // Re-fetch profile to get updated addresses
                 await fetchProfile();
-
                 setEditingAddress(null);
-                setAddressForm({
-                    addressLine: "",
-                    city: "",
-                    province: "AB",
-                    postalCode: "",
-                    country: "Canada",
-                    defaultAddress: false
-                });
-
-                toast.success("Address Updated", "Address has been successfully updated");
-            } else {
-                throw new Error("Failed to update address");
-            }
+                setAddressForm(resetAddressForm());
+                toast.success("Address updated", "Changes saved");
+            } else throw new Error("Failed to update address");
         } catch (error) {
-            console.error("Error updating address:", error);
             toast.error("Failed to update address", error.message || "Please try again");
         }
     };
 
-    const handleCancelEdit = () => {
-        setEditingAddress(null);
-        setAddressForm({
-            addressLine: "",
-            city: "",
-            province: "AB",
-            postalCode: "",
-            country: "Canada",
-            defaultAddress: false
-        });
-    };
-
     const handleDeleteAddress = async (publicAddressId) => {
-        if (!confirm("Are you sure you want to delete this address?")) return;
-
+        if (!confirm("Delete this address?")) return;
         try {
-            const response = await deleteAddress(publicAddressId);
+            const response = await CustomerAPI.deleteAddress(publicAddressId);
             if (response?.success) {
-                // Re-fetch profile to get updated addresses
                 await fetchProfile();
-                toast.success("Address Deleted", "Address has been removed");
-            } else {
-                throw new Error("Failed to delete address");
-            }
+                toast.success("Address deleted");
+            } else throw new Error("Failed to delete");
         } catch (error) {
-            console.error("Error deleting address:", error);
             toast.error("Failed to delete address", error.message || "Please try again");
         }
     };
 
-
     const handleSetDefaultAddress = async (addressId) => {
         try {
-            const response = await setDefaultAddress(addressId);
-
+            const response = await CustomerAPI.setDefaultAddress(addressId);
             if (response?.success) {
-                // Re-fetch profile to get updated addresses
                 await fetchProfile();
-
-                toast.success("Default Address Set", "Your default address has been updated");
-            } else {
-                throw new Error("Failed to set default address");
-            }
+                toast.success("Default updated");
+            } else throw new Error("Failed to set default");
         } catch (error) {
-            console.error("Error setting default address:", error);
-            toast.error("Failed to set default address", error.message || "Please try again");
+            toast.error("Failed to set default", error.message || "Please try again");
         }
     };
 
     const handleImageUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        // -------------------------
-        // 1. Validate file
-        // -------------------------
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            toast.error("Invalid file type", "Please upload a JPG, PNG, or WebP image");
+        if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+            toast.error("Invalid file type", "Please upload JPG, PNG or WebP");
             return;
         }
-
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            toast.error("File too large", "Image must be less than 5MB");
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File too large", "Max 5MB");
             return;
         }
-
         try {
             setUploadingImage(true);
-
-            // -------------------------
-            // 2. Upload to server
-            // -------------------------
-            const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(file, 'CustomerProfileImage');
-            console.log("Upload response:", uploadResponse);
-
-            let imageUrl = null;
-            if (uploadResponse?.success) {
-                imageUrl = uploadResponse?.data?.imageUrl ||
-                    uploadResponse?.imageUrl ||
-                    uploadResponse?.data?.url ||
-                    uploadResponse?.url;
-
-                console.log("Extracted image URL:", imageUrl);
-            }
-
-            if (!imageUrl) {
-                console.error("Image URL not found in response:", uploadResponse);
-                throw new Error("Failed to upload image - no URL returned");
-            }
-
-            // -------------------------
-            // 3. Update backend profile
-            // -------------------------
-            const payload = {
-                ...formData,             // spread existing form data
-                profileImageUrl: imageUrl // override with new image URL
-            };
-
-            console.log("Sending update payload:", payload);
-
-            const updateResponse = await updateCustomerProfile(payload);
-
+            const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(file, "CustomerProfileImage");
+            const imageUrl = uploadResponse?.data?.imageUrl || uploadResponse?.imageUrl || uploadResponse?.data?.url || uploadResponse?.url;
+            if (!imageUrl) throw new Error("No URL returned");
+            const updateResponse = await CustomerAPI.updateCustomerProfile({ ...formData, profileImageUrl: imageUrl });
             if (updateResponse?.success) {
-                // -------------------------
-                // 4. Re-fetch profile to ensure UI is in sync
-                // -------------------------
                 await fetchProfile();
                 setImageError(false);
-
-                toast.success("Image Uploaded", "Your profile picture has been updated");
-            } else {
-                console.error("Backend failed to update profile:", updateResponse);
-                throw new Error("Failed to update profile with new image");
-            }
-
+                toast.success("Photo updated");
+            } else throw new Error("Failed to update profile image");
         } catch (error) {
-            console.error("Error uploading image:", error);
-            toast.error("Upload Failed", error.message || "Failed to upload image. Please try again");
+            toast.error("Upload failed", error.message || "Please try again");
         } finally {
             setUploadingImage(false);
         }
     };
 
-
     const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!dateString) return "—";
+        return new Date(dateString).toLocaleDateString("en-CA", {
+            year: "numeric", month: "long", day: "numeric"
+        });
     };
+
+    const AddressFormBlock = ({ onSave, onCancel, saveLabel }) => (
+        <div className="space-y-3 py-4">
+            <input
+                type="text"
+                name="addressLine"
+                value={addressForm.addressLine}
+                onChange={handleAddressChange}
+                placeholder="Street address"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+            />
+            <div className="grid grid-cols-2 gap-3">
+                <input
+                    type="text"
+                    name="city"
+                    value={addressForm.city}
+                    onChange={handleAddressChange}
+                    placeholder="City"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                />
+                <select
+                    name="province"
+                    value={addressForm.province}
+                    onChange={handleAddressChange}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 bg-white"
+                >
+                    {provinces.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+            </div>
+            <input
+                type="text"
+                name="postalCode"
+                value={addressForm.postalCode}
+                onChange={handleAddressChange}
+                placeholder="Postal code"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+            />
+            <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                    type="checkbox"
+                    name="defaultAddress"
+                    checked={addressForm.defaultAddress}
+                    onChange={handleAddressChange}
+                    className="w-4 h-4 rounded text-gray-900"
+                />
+                <span className="text-sm text-gray-700">Set as default</span>
+            </label>
+            <div className="flex gap-2 pt-1">
+                <button
+                    onClick={onSave}
+                    className="flex-1 py-2 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                    {saveLabel}
+                </button>
+                <button
+                    onClick={onCancel}
+                    className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    );
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-red-50 flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 font-semibold">Loading profile...</p>
+                    <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">Loading profile...</p>
                 </div>
             </div>
         );
     }
 
     if (!profileData) {
-        return null;
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <p className="text-sm text-gray-500">Could not load profile. Please refresh.</p>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-red-50 py-8">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900">
-                        My Profile
-                    </h1>
-                    <p className="text-gray-600 mt-2">
-                        Manage your account information and preferences
-                    </p>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+
+                {/* Page title */}
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Account</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Manage your profile and preferences</p>
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Main Profile Card */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Profile Header */}
-                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                            <div className="bg-linear-to-r from-orange-500 to-red-500 px-8 py-12 text-white relative overflow-hidden">
-                                <div className="absolute inset-0 bg-black/10"></div>
-                                <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-                                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                                        {/* Avatar */}
-                                        <div className="relative group/avatar">
-                                            {uploadingImage && (
-                                                <div className="absolute inset-0 bg-white/90 rounded-full flex items-center justify-center z-20">
-                                                    <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                                                </div>
-                                            )}
-                                            {profileData.profileImageUrl && !imageError ? (
-                                                <div className="w-24 h-24 rounded-full overflow-hidden shadow-xl border-4 border-white">
-                                                    <Image
-                                                        src={profileData.profileImageUrl}
-                                                        alt="Profile Picture"
-                                                        width={400}
-                                                        height={400}
-                                                        className="w-full h-full object-cover"
-                                                        onError={() => setImageError(true)}
-                                                        unoptimized
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-xl">
-                                                    <span className="text-4xl font-black text-orange-600">
-                                                        {profileData.firstName?.charAt(0).toUpperCase() || 'U'}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <label
-                                                htmlFor="profile-image-upload"
-                                                className="absolute bottom-0 right-0 w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-700 transition-all cursor-pointer group-hover/avatar:scale-110"
-                                            >
-                                                <Upload className="w-5 h-5 text-white" />
-                                                <input
-                                                    id="profile-image-upload"
-                                                    type="file"
-                                                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                                                    onChange={handleImageUpload}
-                                                    className="hidden"
-                                                    disabled={uploadingImage}
-                                                />
-                                            </label>
-                                        </div>
-                                        <div className="text-center sm:text-left">
-                                            <h2 className="text-3xl font-black">
-                                                {profileData.firstName} {profileData.lastName}
-                                            </h2>
-                                            <div className="mt-3 flex items-center gap-2 justify-center sm:justify-start">
-                                                <Star className="w-5 h-5 text-yellow-300 fill-yellow-300" />
-                                                <span className="font-semibold">{profileData.loyaltyPoints} Loyalty Points</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                {/* Stats strip */}
+                <div className="grid grid-cols-3 gap-3">
+                    {[
+                        { label: "Total Orders", value: profileData.totalOrders ?? 0 },
+                        { label: "Loyalty Points", value: profileData.loyaltyPoints ?? 0 },
+                        { label: "Saved Addresses", value: profileData.addresses?.length ?? 0 },
+                    ].map(s => (
+                        <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                            <div className="text-2xl font-bold text-gray-900">{s.value}</div>
+                            <div className="text-xs text-gray-500 mt-0.5 leading-tight">{s.label}</div>
+                        </div>
+                    ))}
+                </div>
 
-                                    {/* Edit Button */}
-                                    {!isEditing ? (
-                                        <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="flex items-center space-x-2 px-6 py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 transition-all shadow-lg hover:scale-105 whitespace-nowrap"
-                                        >
-                                            <Edit2 className="w-5 h-5" />
-                                            <span>Edit Profile</span>
-                                        </button>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={handleSave}
-                                                className="flex items-center space-x-2 px-6 py-3 bg-white text-green-600 font-bold rounded-xl hover:bg-green-50 transition-all shadow-lg hover:scale-105"
-                                            >
-                                                <Save className="w-5 h-5" />
-                                                <span>Save</span>
-                                            </button>
-                                            <button
-                                                onClick={handleCancel}
-                                                className="flex items-center space-x-2 px-6 py-3 bg-white/20 text-white font-bold rounded-xl hover:bg-white/30 transition-all"
-                                            >
-                                                <X className="w-5 h-5" />
-                                                <span>Cancel</span>
-                                            </button>
+                {/* Profile details card */}
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <h2 className="text-sm font-semibold text-gray-900">Profile details</h2>
+                    </div>
+
+                    {/* Profile row */}
+                    <div className="px-6 py-5 border-b border-gray-100">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-500 w-32 shrink-0">Profile</span>
+
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                {/* Avatar */}
+                                <div className="relative shrink-0">
+                                    {uploadingImage && (
+                                        <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center z-10">
+                                            <div className="w-10 h-10 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     )}
-                                </div>
-                            </div>
-
-                            {/* Profile Details */}
-                            <div className="p-8 space-y-6">
-                                {/* First Name */}
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-linear-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <User className="w-6 h-6 text-orange-600" />
-                                    </div>
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                                First Name
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="firstName"
-                                                    value={formData.firstName}
-                                                    onChange={handleChange}
-                                                    style={{ color: 'black', backgroundColor: 'white' }}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 font-semibold"
-                                                />
-                                            ) : (
-                                                <p className="text-lg font-semibold text-gray-900">
-                                                    {profileData.firstName}
-                                                </p>
-                                            )}
+                                    {profileData.profileImageUrl && !imageError ? (
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200">
+                                            <Image
+                                                src={profileData.profileImageUrl}
+                                                alt="Profile"
+                                                width={80}
+                                                height={80}
+                                                className="w-full h-full object-cover"
+                                                onError={() => setImageError(true)}
+                                                unoptimized
+                                            />
                                         </div>
-                                        <div>
-                                            <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                                Last Name
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="lastName"
-                                                    value={formData.lastName}
-                                                    onChange={handleChange}
-                                                    style={{ color: 'black', backgroundColor: 'white' }}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 font-semibold"
-                                                />
-                                            ) : (
-                                                <p className="text-lg font-semibold text-gray-900">
-                                                    {profileData.lastName}
-                                                </p>
-                                            )}
+                                    ) : (
+                                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <span className="text-lg font-semibold text-gray-700">
+                                                {profileData.firstName?.charAt(0).toUpperCase() || "U"}
+                                            </span>
                                         </div>
-                                    </div>
+                                    )}
+                                    <label
+                                        htmlFor="profile-image-upload"
+                                        className="absolute bottom-0 right-0 w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors"
+                                        title="Change photo"
+                                    >
+                                        <Upload className="w-3 h-3 text-white" />
+                                        <input
+                                            id="profile-image-upload"
+                                            type="file"
+                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            disabled={uploadingImage}
+                                        />
+                                    </label>
                                 </div>
 
-                                {/* Email (Read-only) */}
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-linear-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Mail className="w-6 h-6 text-blue-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                            Email Address
-                                            <span className="ml-2 text-xs text-gray-500">(Cannot be changed)</span>
-                                        </label>
-                                        <p className="text-lg font-semibold text-gray-900">
-                                            {profileData.email}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Phone */}
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-linear-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Phone className="w-6 h-6 text-green-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                            Phone Number
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleChange}
-                                                style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 font-semibold"
-                                            />
-                                        ) : (
-                                            <p className="text-lg font-semibold text-gray-900">
-                                                {profileData.phone}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Delivery Instructions */}
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-linear-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <MapPin className="w-6 h-6 text-purple-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                            Default Delivery Instructions
-                                        </label>
-                                        {isEditing ? (
-                                            <textarea
-                                                name="defaultDeliveryInstructions"
-                                                value={formData.defaultDeliveryInstructions}
-                                                onChange={handleChange}
-                                                rows={3}
-                                                style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 font-semibold resize-none"
-                                                placeholder="e.g., Leave at the door, Ring the bell, etc."
-                                            />
-                                        ) : (
-                                            <p className="text-lg font-semibold text-gray-900">
-                                                {profileData.defaultDeliveryInstructions || "No instructions set"}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Member Since */}
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-linear-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Calendar className="w-6 h-6 text-amber-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-sm font-semibold text-gray-600 mb-2 block">
-                                            Member Since
-                                        </label>
-                                        <p className="text-lg font-semibold text-gray-900">
-                                            {formatDate(profileData.createdAt)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Addresses Section */}
-                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-black text-gray-900">Delivery Addresses</h2>
-                                    <p className="text-sm text-gray-600 mt-1">Manage your saved delivery locations</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setShowAddressForm(true);
-                                        setEditingAddress(null);
-                                    }}
-                                    disabled={editingAddress !== null}
-                                    className={`flex items-center space-x-2 px-4 py-2 font-bold rounded-xl transition-all shadow-md hover:shadow-lg ${
-                                        editingAddress !== null
-                                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                            : "bg-orange-600 text-white hover:bg-orange-700"
-                                    }`}
-                                >
-                                    <Plus className="w-5 h-5" />
-                                    <span>Add Address</span>
-                                </button>
-                            </div>
-
-                            <div className="p-6">
-                                {/* Add Address Form */}
-                                {showAddressForm && !editingAddress && (
-                                    <div className="mb-6 p-6 bg-orange-50 rounded-xl border-2 border-orange-200">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Address</h3>
-                                        <div className="space-y-4">
-                                            <input
-                                                type="text"
-                                                name="addressLine"
-                                                value={addressForm.addressLine}
-                                                onChange={handleAddressChange}
-                                                placeholder="Street Address"
-                                                style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300"
-                                            />
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <input
-                                                    type="text"
-                                                    name="city"
-                                                    value={addressForm.city}
-                                                    onChange={handleAddressChange}
-                                                    placeholder="City"
-                                                    style={{ color: 'black', backgroundColor: 'white' }}
-                                                    className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300"
-                                                />
-                                                <select
-                                                    name="province"
-                                                    value={addressForm.province}
-                                                    onChange={handleAddressChange}
-                                                    className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300"
-                                                >
-                                                    <option value="AB">Alberta</option>
-                                                    <option value="BC">British Columbia</option>
-                                                    <option value="MB">Manitoba</option>
-                                                    <option value="NB">New Brunswick</option>
-                                                    <option value="NL">Newfoundland and Labrador</option>
-                                                    <option value="NS">Nova Scotia</option>
-                                                    <option value="ON">Ontario</option>
-                                                    <option value="PE">Prince Edward Island</option>
-                                                    <option value="QC">Quebec</option>
-                                                    <option value="SK">Saskatchewan</option>
-                                                </select>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="postalCode"
-                                                value={addressForm.postalCode}
-                                                onChange={handleAddressChange}
-                                                placeholder="Postal Code"
-                                                style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300"
-                                            />
-                                            <label className="flex items-center space-x-2">
-                                                <input
-                                                    type="checkbox"
-                                                    name="defaultAddress"
-                                                    checked={addressForm.defaultAddress}
-                                                    onChange={handleAddressChange}
-                                                    className="w-5 h-5 text-orange-600 rounded focus:ring-orange-300"
-                                                />
-                                                <span className="text-sm font-semibold text-gray-700">Set as default address</span>
-                                            </label>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={handleAddAddress}
-                                                    className="flex-1 px-4 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all"
-                                                >
-                                                    Save Address
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setShowAddressForm(false);
-                                                        setAddressForm({
-                                                            addressLine: "",
-                                                            city: "",
-                                                            province: "AB",
-                                                            postalCode: "",
-                                                            country: "Canada",
-                                                            defaultAddress: false
-                                                        });
-                                                    }}
-                                                    className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Address List */}
-                                {profileData.addresses && profileData.addresses.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {profileData.addresses.map((address) => (
-                                            <div
-                                                key={address.publicAddressId}
-                                                className={`p-6 rounded-xl border-2 transition-all ${
-                                                    editingAddress === address.publicAddressId
-                                                        ? "border-blue-500 bg-blue-50"
-                                                        : address.defaultAddress
-                                                        ? "border-orange-500 bg-orange-50"
-                                                        : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                                                }`}
-                                            >
-                                                {editingAddress === address.publicAddressId ? (
-                                                    // Edit Mode
-                                                    <div className="space-y-4">
-                                                        <h3 className="text-lg font-bold text-gray-900 mb-2">Edit Address</h3>
-                                                        <input
-                                                            type="text"
-                                                            name="addressLine"
-                                                            value={addressForm.addressLine}
-                                                            onChange={handleAddressChange}
-                                                            placeholder="Street Address"
-                                                            style={{ color: 'black', backgroundColor: 'white' }}
-                                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                        />
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <input
-                                                                type="text"
-                                                                name="city"
-                                                                value={addressForm.city}
-                                                                onChange={handleAddressChange}
-                                                                placeholder="City"
-                                                                style={{ color: 'black', backgroundColor: 'white' }}
-                                                                className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                            />
-                                                            <select
-                                                                name="province"
-                                                                value={addressForm.province}
-                                                                onChange={handleAddressChange}
-                                                                className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                            >
-                                                                <option value="AB">Alberta</option>
-                                                                <option value="BC">British Columbia</option>
-                                                                <option value="MB">Manitoba</option>
-                                                                <option value="NB">New Brunswick</option>
-                                                                <option value="NL">Newfoundland and Labrador</option>
-                                                                <option value="NS">Nova Scotia</option>
-                                                                <option value="ON">Ontario</option>
-                                                                <option value="PE">Prince Edward Island</option>
-                                                                <option value="QC">Quebec</option>
-                                                                <option value="SK">Saskatchewan</option>
-                                                            </select>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            name="postalCode"
-                                                            value={addressForm.postalCode}
-                                                            onChange={handleAddressChange}
-                                                            placeholder="Postal Code"
-                                                            style={{ color: 'black', backgroundColor: 'white' }}
-                                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                        />
-                                                        <label className="flex items-center space-x-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                name="defaultAddress"
-                                                                checked={addressForm.defaultAddress}
-                                                                onChange={handleAddressChange}
-                                                                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-300"
-                                                            />
-                                                            <span className="text-sm font-semibold text-gray-700">Set as default address</span>
-                                                        </label>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={handleUpdateAddress}
-                                                                className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all"
-                                                            >
-                                                                Update Address
-                                                            </button>
-                                                            <button
-                                                                onClick={handleCancelEdit}
-                                                                className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    // View Mode
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            {address.defaultAddress && (
-                                                                <div className="inline-flex items-center space-x-1 px-3 py-1 bg-orange-600 text-white text-xs font-bold rounded-full mb-2">
-                                                                    <Check className="w-3 h-3" />
-                                                                    <span>Default</span>
-                                                                </div>
-                                                            )}
-                                                            <p className="font-bold text-gray-900 text-lg">
-                                                                {address.addressLine}
-                                                            </p>
-                                                            <p className="text-gray-600 mt-1">
-                                                                {address.city}, {address.province} {address.postalCode}
-                                                            </p>
-                                                            <p className="text-gray-500 text-sm mt-1">
-                                                                {address.country}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => handleEditAddress(address)}
-                                                                className="px-4 py-2 text-sm bg-blue-100 text-blue-600 font-semibold rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-1"
-                                                            >
-                                                                <Edit2 className="w-4 h-4" />
-                                                                Edit
-                                                            </button>
-                                                            {!address.defaultAddress && (
-                                                                <button
-                                                                    onClick={() => handleSetDefaultAddress(address.publicAddressId)}
-                                                                    className="px-4 py-2 text-sm bg-orange-100 text-orange-600 font-semibold rounded-lg hover:bg-orange-200 transition-colors"
-                                                                >
-                                                                    Set Default
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() => handleDeleteAddress(address.publicAddressId)}
-                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                            >
-                                                                <Trash2 className="w-5 h-5" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                {/* Name */}
+                                {editingSection === "name" ? (
+                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            placeholder="First name"
+                                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                        />
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                            placeholder="Last name"
+                                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12">
-                                        <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                        <p className="text-gray-600 font-semibold">No addresses saved yet</p>
-                                        <p className="text-sm text-gray-500 mt-1">Add your first delivery address</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                            {profileData.firstName} {profileData.lastName}
+                                        </p>
+                                        {profileData.loyaltyPoints > 0 && (
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <Star className="w-3 h-3 text-gray-400 fill-gray-400" />
+                                                <span className="text-xs text-gray-400">{profileData.loyaltyPoints} points</span>
+                                            </div>
+                                        )}
                                     </div>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-1 shrink-0">
+                                {editingSection === "name" ? (
+                                    <>
+                                        <button onClick={handleSaveSection} className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <Save className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={handleCancelSection} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => setEditingSection("name")}
+                                        className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                                    >
+                                        Update profile
+                                    </button>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Sidebar Stats */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Stats Cards */}
-                        <div className="bg-white rounded-2xl shadow-md p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Account Statistics</h3>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-linear-to-br from-orange-50 to-red-50 rounded-xl">
-                                    <div className="text-3xl font-black bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                        {profileData.totalOrders}
-                                    </div>
-                                    <p className="text-gray-600 font-medium mt-1">Total Orders</p>
+                    {/* Email row */}
+                    <div className="px-6 py-5 border-b border-gray-100">
+                        <div className="flex items-start gap-4">
+                            <span className="text-sm text-gray-500 w-32 shrink-0 pt-0.5">Email addresses</span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm text-gray-900">{profileData.email}</span>
+                                    <span className="px-2 py-0.5 text-xs border border-gray-300 text-gray-500 rounded-full">Primary</span>
                                 </div>
-                                <div className="p-4 bg-linear-to-br from-yellow-50 to-amber-50 rounded-xl">
-                                    <div className="text-3xl font-black bg-linear-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
-                                        {profileData.loyaltyPoints}
-                                    </div>
-                                    <p className="text-gray-600 font-medium mt-1">Loyalty Points</p>
-                                </div>
-                                <div className="p-4 bg-linear-to-br from-blue-50 to-cyan-50 rounded-xl">
-                                    <div className="text-3xl font-black bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                                        {profileData.addresses?.length || 0}
-                                    </div>
-                                    <p className="text-gray-600 font-medium mt-1">Saved Addresses</p>
-                                </div>
+                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
                             </div>
+                            <MoreHorizontal className="w-4 h-4 text-gray-300 shrink-0 mt-0.5" />
+                        </div>
+                    </div>
+
+                    {/* Phone row */}
+                    <div className="px-6 py-5 border-b border-gray-100">
+                        <div className="flex items-start gap-4">
+                            <span className="text-sm text-gray-500 w-32 shrink-0 pt-0.5">Phone numbers</span>
+                            <div className="flex-1 min-w-0">
+                                {editingSection === "phone" ? (
+                                    <input
+                                        type="tel"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        placeholder="Phone number"
+                                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                    />
+                                ) : (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm text-gray-900">
+                                            {profileData.phone || <span className="text-gray-400">Not set</span>}
+                                        </span>
+                                        {profileData.phone && (
+                                            <span className="px-2 py-0.5 text-xs border border-gray-300 text-gray-500 rounded-full">Primary</span>
+                                        )}
+                                    </div>
+                                )}
+                                {editingSection !== "phone" && (
+                                    <button
+                                        onClick={() => setEditingSection("phone")}
+                                        className="flex items-center gap-1 mt-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        {profileData.phone ? "Update phone number" : "Add phone number"}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="shrink-0 flex gap-1">
+                                {editingSection === "phone" ? (
+                                    <>
+                                        <button onClick={handleSaveSection} className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <Save className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={handleCancelSection} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <MoreHorizontal className="w-4 h-4 text-gray-300 mt-0.5" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Delivery instructions row */}
+                    <div className="px-6 py-5 border-b border-gray-100">
+                        <div className="flex items-start gap-4">
+                            <span className="text-sm text-gray-500 w-32 shrink-0 pt-0.5">Delivery</span>
+                            <div className="flex-1 min-w-0">
+                                {editingSection === "instructions" ? (
+                                    <textarea
+                                        name="defaultDeliveryInstructions"
+                                        value={formData.defaultDeliveryInstructions}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        placeholder="e.g., Leave at the door, ring the bell..."
+                                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 resize-none"
+                                    />
+                                ) : (
+                                    <p className="text-sm text-gray-900">
+                                        {profileData.defaultDeliveryInstructions || <span className="text-gray-400">No default instructions</span>}
+                                    </p>
+                                )}
+                                {editingSection !== "instructions" && (
+                                    <button
+                                        onClick={() => setEditingSection("instructions")}
+                                        className="flex items-center gap-1 mt-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        {profileData.defaultDeliveryInstructions ? "Update instructions" : "Add delivery instructions"}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="shrink-0 flex gap-1">
+                                {editingSection === "instructions" ? (
+                                    <>
+                                        <button onClick={handleSaveSection} className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <Save className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={handleCancelSection} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <MoreHorizontal className="w-4 h-4 text-gray-300 mt-0.5" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Member since row */}
+                    <div className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-500 w-32 shrink-0">Member since</span>
+                            <span className="text-sm text-gray-900">{formatDate(profileData.createdAt)}</span>
                         </div>
                     </div>
                 </div>
+
+                {/* Addresses card */}
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 className="text-sm font-semibold text-gray-900">Delivery addresses</h2>
+                        <button
+                            onClick={() => {
+                                setShowAddressForm(true);
+                                setEditingAddress(null);
+                                setAddressForm(resetAddressForm());
+                            }}
+                            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                        >
+                            Add address
+                        </button>
+                    </div>
+
+                    {/* Add form */}
+                    {showAddressForm && (
+                        <div className="px-6 border-b border-gray-100">
+                            <AddressFormBlock
+                                onSave={handleAddAddress}
+                                onCancel={() => { setShowAddressForm(false); setAddressForm(resetAddressForm()); }}
+                                saveLabel="Save address"
+                            />
+                        </div>
+                    )}
+
+                    {/* Address list */}
+                    {profileData.addresses && profileData.addresses.length > 0 ? (
+                        profileData.addresses.map((address, idx) => (
+                            <div
+                                key={address.publicAddressId}
+                                className={`px-6 ${idx < profileData.addresses.length - 1 ? "border-b border-gray-100" : ""}`}
+                            >
+                                {editingAddress === address.publicAddressId ? (
+                                    <AddressFormBlock
+                                        onSave={handleUpdateAddress}
+                                        onCancel={() => { setEditingAddress(null); setAddressForm(resetAddressForm()); }}
+                                        saveLabel="Update address"
+                                    />
+                                ) : (
+                                    <div className="py-4 flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                                            <MapPin className="w-4 h-4 text-gray-500" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="text-sm font-medium text-gray-900">{address.addressLine}</p>
+                                                {address.defaultAddress && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs border border-gray-300 text-gray-600 rounded-full">
+                                                        <Check className="w-3 h-3" />
+                                                        Default
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                {address.city}, {address.province} {address.postalCode}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingAddress(address.publicAddressId);
+                                                    setShowAddressForm(false);
+                                                    setAddressForm({
+                                                        addressLine: address.addressLine,
+                                                        city: address.city,
+                                                        province: address.province,
+                                                        postalCode: address.postalCode,
+                                                        country: address.country,
+                                                        defaultAddress: address.defaultAddress
+                                                    });
+                                                }}
+                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteAddress(address.publicAddressId)}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            {!address.defaultAddress && (
+                                                <button
+                                                    onClick={() => handleSetDefaultAddress(address.publicAddressId)}
+                                                    className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                                    title="Set as default"
+                                                >
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-6 py-12 text-center">
+                            <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                            <p className="text-sm text-gray-500">No addresses saved yet</p>
+                            <button
+                                onClick={() => setShowAddressForm(true)}
+                                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mx-auto mt-2 transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add your first address
+                            </button>
+                        </div>
+                    )}
+                </div>
+
             </div>
         </div>
     );

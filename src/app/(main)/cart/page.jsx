@@ -119,9 +119,9 @@ const CartPage = () => {
                         <span>${cartTotal.toFixed(2)}</span>
                     </div>
 
-                    <button className="w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg">
+                    <Link href="/checkout" className="block w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg text-center">
                         Proceed to Checkout
-                    </button>
+                    </Link>
 
                     <button
                         onClick={clearCart}

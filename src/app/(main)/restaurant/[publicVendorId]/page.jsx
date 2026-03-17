@@ -1,14 +1,16 @@
-
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
     Star,
     MapPin,
     Clock,
     Truck,
     ShoppingBag,
+    ChevronRight,
+    Home,
 } from 'lucide-react';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
@@ -38,7 +40,6 @@ const VendorProfilePage = () => {
     const [relatedVendors, setRelatedVendors] = useState([]);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [relatedLoading, setRelatedLoading] = useState(false);
-
 
     const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
         if (!cuisineType) return;
@@ -224,7 +225,6 @@ const VendorProfilePage = () => {
         );
     }
 
-    // destructure after null check — resolves all IDE warnings
     const {
         restaurantName,
         cuisineType,
@@ -247,8 +247,39 @@ const VendorProfilePage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+
+            {/* Breadcrumb — above banner */}
+            <div className="bg-white border-b border-gray-100 px-4 py-3">
+                <div className="container mx-auto max-w-7xl">
+                    <nav className="flex items-center gap-1.5 text-sm flex-wrap" aria-label="Breadcrumb">
+                        <Link
+                            href="/"
+                            className="flex items-center gap-1 text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                        >
+                            <Home className="w-3.5 h-3.5" />
+                            <span>Home</span>
+                        </Link>
+
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+
+                        <Link
+                            href="/restaurants"
+                            className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                        >
+                            All Products
+                        </Link>
+
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+
+                        <span className="text-gray-700 font-semibold truncate max-w-[200px]">
+                            {restaurantName}
+                        </span>
+                    </nav>
+                </div>
+            </div>
+
             {/* Banner Section */}
-            <div className="relative w-full h-80 bg-linear-to-r from-orange-500 to-red-500">
+            <div className="relative w-full h-80 bg-gradient-to-r from-orange-500 to-red-500">
                 {bannerUrl ? (
                     <Image
                         src={bannerUrl}
@@ -263,7 +294,7 @@ const VendorProfilePage = () => {
                         <span className="text-9xl">🍽️</span>
                     </div>
                 )}
-                <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             </div>
 
             {/* Vendor Info Section */}
@@ -283,7 +314,7 @@ const VendorProfilePage = () => {
                                         className="object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
                                         <span className="text-5xl">🍴</span>
                                     </div>
                                 )}

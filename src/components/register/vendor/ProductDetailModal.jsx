@@ -85,7 +85,7 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                                 className="object-cover"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
                                 <span className="text-6xl">🍲</span>
                             </div>
                         )}
@@ -179,16 +179,18 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                         </div>
                     )}
 
-                    {/* Quantity Selector + Add to Order */}
-                    <div className="flex items-center gap-3 pt-2">
-                        <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                    {/* Quantity + Add to Order */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+
+                        {/* Quantity selector */}
+                        <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden self-start sm:self-auto shrink-0">
                             <button
                                 onClick={() => setQuantity(q => Math.max(1, q - 1))}
                                 className="px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors font-bold text-lg"
                             >
                                 −
                             </button>
-                            <span className="px-4 py-3 text-gray-900 font-bold text-base min-w-12 text-center">
+                            <span className="px-4 py-3 text-gray-900 font-bold text-base min-w-[48px] text-center">
                                 {quantity}
                             </span>
                             <button
@@ -199,10 +201,11 @@ const ProductDetailModal = ({ product, vendorName, isLoading, onClose }) => {
                             </button>
                         </div>
 
+                        {/* Add to Order button */}
                         <button
                             onClick={handleAddToCart}
                             disabled={!available}
-                            className={`flex-1 py-3 rounded-xl font-bold text-base transition-all duration-200 ${
+                            className={`flex-1 w-full py-3 rounded-xl font-bold text-base transition-all duration-200 ${
                                 addedSuccess
                                     ? 'bg-green-600 text-white'
                                     : available
