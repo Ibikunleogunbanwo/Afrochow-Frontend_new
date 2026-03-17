@@ -181,12 +181,6 @@ const CategoriesAndBanner = () => {
 
                 {/* Section Header */}
                 <div className="text-center mb-12 md:mb-16">
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-orange-100 to-red-100 rounded-full mb-5 shadow-sm border border-orange-200/50">
-                        <Sparkles className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm font-bold text-orange-800 tracking-wide uppercase">
-                            Explore Categories
-                        </span>
-                    </div>
                     <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
                         Everything African {' '}
                         <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">

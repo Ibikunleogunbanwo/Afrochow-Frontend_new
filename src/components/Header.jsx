@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight, Store } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight, ArrowRight, Store } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,7 +26,6 @@ const Header = () => {
             try {
                 const response = await SearchAPI.getAllCategories();
                 if (response?.success && response?.data) {
-                    // take first 4 categories for nav
                     const mapped = response.data.slice(0, 4).map(cat => ({
                         href: `/restaurants?categoryId=${cat.categoryId}`,
                         label: cat.name,
@@ -43,6 +42,7 @@ const Header = () => {
     const handleLogout = async () => {
         await logout();
         setIsMenuOpen(false);
+        setIsMobileMenuOpen(false);
     };
 
     const handleSellClick = () => {
@@ -52,8 +52,7 @@ const Header = () => {
 
     return (
         <>
-            {/* Floating pill navbar */}
-            <div className="sticky top-0 z-50 w-full flex justify-center px-4 py-3 bg-transparent pointer-events-none">
+            <div className="sticky top-0 z-50 w-full flex justify-center px-3 sm:px-4 py-3 bg-transparent pointer-events-none">
                 <nav className="pointer-events-auto w-full max-w-5xl bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-full shadow-lg shadow-black/8 px-3 py-2 flex items-center justify-between gap-2">
 
                     {/* Logo */}
@@ -61,30 +60,54 @@ const Header = () => {
                         <Logo />
                     </div>
 
-                    {/* Desktop Nav Links — from API */}
-                    <div className="hidden md:flex items-center gap-1">
+                    {/* Desktop Nav Links — lg and above */}
+                    <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
                         {navCategories.map(({ href, label }) => (
                             <Link
                                 key={href}
                                 href={href}
-                                className="px-4 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
+                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
                             >
                                 {label}
                             </Link>
                         ))}
 
-                        {/* Sell on Afrochow */}
-                        <button
-                            onClick={handleSellClick}
-                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-orange-600 rounded-full hover:bg-orange-50 transition-all duration-200 whitespace-nowrap"
-                        >
-                            <Store className="w-3.5 h-3.5" />
-                            Sell on Afrochow
-                        </button>
+                        {/* Sell on Afrochow — only when NOT logged in */}
+                        {!isAuthenticated && (
+                            <button
+                                onClick={handleSellClick}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-orange-600 rounded-full hover:bg-orange-50 transition-all duration-200 whitespace-nowrap"
+                            >
+                                <Store className="w-3.5 h-3.5" />
+                                Join Afrochow
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Tablet Nav — md only, fewer links */}
+                    <div className="hidden md:flex lg:hidden items-center gap-1 flex-1 justify-center">
+                        {navCategories.slice(0, 2).map(({ href, label }) => (
+                            <Link
+                                key={href}
+                                href={href}
+                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
+                            >
+                                {label}
+                            </Link>
+                        ))}
+                        {!isAuthenticated && (
+                            <button
+                                onClick={handleSellClick}
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-orange-600 rounded-full hover:bg-orange-50 transition-all duration-200 whitespace-nowrap"
+                            >
+                                <Store className="w-3.5 h-3.5" />
+                                Sell
+                            </button>
+                        )}
                     </div>
 
                     {/* Right Side */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                         {isAuthenticated && user ? (
                             <>
                                 {/* Cart */}
@@ -94,7 +117,7 @@ const Header = () => {
                                     aria-label={`Cart - ${cartCount} items`}
                                 >
                                     <ShoppingCart className="w-4 h-4" />
-                                    <span className="hidden sm:inline">${cartTotal.toFixed(2)}</span>
+                                    <span className="hidden sm:inline text-sm">${cartTotal.toFixed(2)}</span>
                                     {cartCount > 0 && (
                                         <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">
                                             {cartCount > 9 ? '9+' : cartCount}
@@ -102,18 +125,18 @@ const Header = () => {
                                     )}
                                 </Link>
 
-                                {/* User Dropdown */}
-                                <div className="relative">
+                                {/* User Dropdown — desktop only (hidden on mobile) */}
+                                <div className="relative hidden md:block">
                                     <button
                                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                        className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-gray-100 transition-all duration-200"
+                                        className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-gray-100 transition-all duration-200"
                                     >
-                                        <div className="w-8 h-8 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-sm">
+                                        <div className="w-8 h-8 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-sm shrink-0">
                                             <span className="text-sm font-bold text-white">
                                                 {user.firstName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                                             </span>
                                         </div>
-                                        <span className="hidden lg:block text-sm font-semibold text-gray-800">
+                                        <span className="hidden xl:block text-sm font-semibold text-gray-800 max-w-20 truncate">
                                             {user.firstName || 'Account'}
                                         </span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`} />
@@ -128,14 +151,6 @@ const Header = () => {
                                                         {user.username || user.firstName || 'User'}
                                                     </p>
                                                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                                                    {user.role && (
-                                                        <span className="mt-1.5 inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                                                            {user.role === 'CUSTOMER' ? 'Customer'
-                                                                : user.role === 'VENDOR' ? 'Vendor'
-                                                                    : user.role === 'ADMIN' ? 'Admin'
-                                                                        : user.role}
-                                                        </span>
-                                                    )}
                                                 </div>
 
                                                 <div className="p-2">
@@ -183,13 +198,14 @@ const Header = () => {
                                 >
                                     Sign In
                                 </button>
+
                             </>
                         )}
 
-                        {/* Mobile hamburger */}
+                        {/* Hamburger — mobile only */}
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors ml-0.5"
                             aria-label="Toggle menu"
                         >
                             {isMobileMenuOpen
@@ -202,19 +218,19 @@ const Header = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="pointer-events-auto absolute top-18 left-4 right-4 bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-3xl shadow-xl shadow-black/10 overflow-hidden">
+                    <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-3xl shadow-xl shadow-black/10 overflow-hidden">
                         <div className="p-4 space-y-1">
 
                             {isAuthenticated && user ? (
                                 <>
-                                    {/* User card */}
+                                    {/* User profile card */}
                                     <div className="flex items-center gap-3 p-3 mb-2 bg-linear-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
                                         <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shrink-0">
                                             <span className="text-base font-bold text-white">
                                                 {user.firstName?.charAt(0).toUpperCase() || 'U'}
                                             </span>
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-sm font-bold text-gray-900 truncate">{user.username || user.firstName}</p>
                                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                         </div>
@@ -238,7 +254,7 @@ const Header = () => {
 
                                     <div className="h-px bg-gray-100 my-1" />
 
-                                    {/* Category nav links */}
+                                    {/* Nav category links */}
                                     {navCategories.map(({ href, label }) => (
                                         <Link
                                             key={href}
@@ -250,17 +266,9 @@ const Header = () => {
                                         </Link>
                                     ))}
 
-                                    {/* Sell on Afrochow */}
-                                    <button
-                                        onClick={handleSellClick}
-                                        className="flex items-center gap-2 w-full px-4 py-3 text-sm font-semibold text-orange-600 rounded-xl hover:bg-orange-50 transition-colors"
-                                    >
-                                        <Store className="w-4 h-4" />
-                                        Sell on Afrochow
-                                    </button>
-
                                     <div className="h-px bg-gray-100 my-1" />
 
+                                    {/* Profile links */}
                                     {[
                                         { href: '/profile', icon: User, label: 'Profile' },
                                         { href: '/orders', icon: Package, label: 'My Orders' },
@@ -294,7 +302,7 @@ const Header = () => {
                                 </>
                             ) : (
                                 <>
-                                    {/* Category nav links */}
+                                    {/* Nav category links */}
                                     {navCategories.map(({ href, label }) => (
                                         <Link
                                             key={href}
@@ -306,13 +314,13 @@ const Header = () => {
                                         </Link>
                                     ))}
 
-                                    {/* Sell on Afrochow */}
+                                    {/* Sell on Afrochow — only when NOT logged in */}
                                     <button
                                         onClick={handleSellClick}
                                         className="flex items-center gap-2 w-full px-4 py-3 text-sm font-semibold text-orange-600 rounded-xl hover:bg-orange-50 transition-colors"
                                     >
                                         <Store className="w-4 h-4" />
-                                        Sell on Afrochow
+                                        Join Afrochow
                                     </button>
 
                                     <div className="h-px bg-gray-100 my-2" />
