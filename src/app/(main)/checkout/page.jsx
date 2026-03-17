@@ -94,6 +94,10 @@ export default function CheckoutPage() {
                 const v = vendorRes.data;
                 setVendorData(v);
                 if (!v.offersDelivery && v.offersPickup) setFulfillment("pickup");
+            } else {
+                console.error("Vendor fetch failed:", vendorRes);
+                // Fallback — assume both options available
+                setVendorData({ offersDelivery: true, offersPickup: true, deliveryFee: 0 });
             }
         } catch (e) {
             toast.error("Could not load checkout data", e.message);
