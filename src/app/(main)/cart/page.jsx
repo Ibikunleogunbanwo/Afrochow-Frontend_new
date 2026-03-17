@@ -44,7 +44,9 @@ const CartPage = () => {
                         </p>
                     </div>
                     <button
-                        onClick={clearCart}
+                        onClick={() => {
+                            if (window.confirm('Clear your entire cart?')) clearCart();
+                        }}
                         className="text-sm text-gray-400 hover:text-red-500 transition-colors"
                     >
                         Clear all
