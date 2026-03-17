@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
     ShoppingCart, Menu, X, User, LogOut, Settings,
     Package, ChevronDown, ChevronRight, Store
@@ -13,6 +13,19 @@ import { SignUpModal } from "@/components/register/SignUpModal";
 import { ForgotPasswordModal } from "@/components/signin/ForgotPasswordModal";
 import { useCart } from "@/contexts/CartContext";
 import { SearchAPI } from "@/lib/api/search.api";
+import { useSearchParams } from "next/navigation";
+
+// ─── Sign-in param watcher ───────────────────────────────────────────────────
+
+const SignInParamWatcher = ({ onTrigger }) => {
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        if (searchParams.get('signin') === 'true') onTrigger();
+    }, [searchParams, onTrigger]);
+    return null;
+};
+
+// ─── Header ──────────────────────────────────────────────────────────────────
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,7 +34,8 @@ const Header = () => {
     const [showSignUp, setShowSignUp] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [navCategories, setNavCategories] = useState([]);
-    const { cartCount, cartTotal, clearCart } = useCart();
+
+    const { cartCount, cartTotal } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
 
     useEffect(() => {
@@ -29,22 +43,22 @@ const Header = () => {
             try {
                 const response = await SearchAPI.getAllCategories();
                 if (response?.success && response?.data) {
-                    const mapped = response.data.slice(0, 4).map(cat => ({
-                        href: `/restaurants?categoryId=${cat.categoryId}`,
-                        label: cat.name,
-                    }));
-                    setNavCategories(mapped);
+                    setNavCategories(
+                        response.data.slice(0, 4).map(cat => ({
+                            href: `/restaurants?categoryId=${cat.categoryId}`,
+                            label: cat.name,
+                        }))
+                    );
                 }
             } catch (error) {
                 console.error("Error loading nav categories:", error);
             }
         };
-        void loadCategories();
+        loadCategories();
     }, []);
 
     const handleLogout = async () => {
         await logout();
-        clearCart();
         setIsMenuOpen(false);
         setIsMobileMenuOpen(false);
     };
@@ -54,8 +68,14 @@ const Header = () => {
         setIsMobileMenuOpen(false);
     };
 
+    const handleOpenSignIn = useCallback(() => setShowSignIn(true), []);
+
     return (
         <>
+            <Suspense fallback={null}>
+                <SignInParamWatcher onTrigger={handleOpenSignIn} />
+            </Suspense>
+
             <div className="sticky top-0 z-50 w-full flex justify-center px-3 sm:px-4 py-3 bg-transparent pointer-events-none">
                 <nav className="pointer-events-auto w-full max-w-5xl bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-full shadow-lg shadow-black/8 px-3 py-2 flex items-center justify-between gap-2">
 

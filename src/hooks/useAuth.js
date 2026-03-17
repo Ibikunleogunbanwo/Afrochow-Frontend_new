@@ -193,8 +193,10 @@ export const useAuth = () => {
     };
 
     const requireAuth = (requiredRole) => {
+        if (isLoading) return false;
+
         if (!isAuthenticated) {
-            router.push('/login');
+            router.push(`/?signin=true`);
             return false;
         }
 
