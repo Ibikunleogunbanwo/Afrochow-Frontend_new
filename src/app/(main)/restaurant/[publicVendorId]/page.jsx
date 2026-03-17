@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -20,27 +21,24 @@ const VendorProfilePage = () => {
     const params = useParams();
     const publicVendorId = params.publicVendorId;
 
-    // vendor & products
     const [vendor, setVendor] = useState(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [productsLoading, setProductsLoading] = useState(true);
 
-    // product detail modal
     const [selectedProductModal, setSelectedProductModal] = useState(null);
     const [productModalLoading, setProductModalLoading] = useState(false);
 
-    // reviews
     const [reviews, setReviews] = useState([]);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
     const [reviewType, setReviewType] = useState('vendor');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [ratingFilter, setRatingFilter] = useState(0);
 
-    // related content
     const [relatedVendors, setRelatedVendors] = useState([]);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [relatedLoading, setRelatedLoading] = useState(false);
+
 
     const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
         if (!cuisineType) return;
@@ -226,7 +224,7 @@ const VendorProfilePage = () => {
         );
     }
 
-    // ✅ destructure after null check — resolves all IDE warnings
+    // destructure after null check — resolves all IDE warnings
     const {
         restaurantName,
         cuisineType,
