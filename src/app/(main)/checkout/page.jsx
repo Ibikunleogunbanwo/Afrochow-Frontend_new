@@ -76,13 +76,15 @@ export default function CheckoutPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [profileRes, vendorRes] = await Promise.all([
+
+            // Fetch independently so one failure doesn't block the other
+            const [profileRes, vendorRes] = await Promise.allSettled([
                 CustomerAPI.getCustomerProfile(),
                 vendorId ? SearchAPI.getVendorDetails(vendorId) : Promise.resolve(null),
             ]);
 
-            if (profileRes?.success && profileRes?.data) {
-                const data = profileRes.data;
+            if (profileRes.status === "fulfilled" && profileRes.value?.success && profileRes.value?.data) {
+                const data = profileRes.value.data;
                 setProfileData(data);
                 setDeliveryNote(data.defaultDeliveryInstructions || "");
                 const def = data.addresses?.find(a => a.defaultAddress);
@@ -90,15 +92,12 @@ export default function CheckoutPage() {
                 else if (data.addresses?.length > 0) setSelectedAddressId(data.addresses[0].publicAddressId);
             }
 
-            if (vendorRes?.success && vendorRes?.data) {
-                const v = vendorRes.data;
+            if (vendorRes.status === "fulfilled" && vendorRes.value?.success && vendorRes.value?.data) {
+                const v = vendorRes.value.data;
                 setVendorData(v);
                 if (!v.offersDelivery && v.offersPickup) setFulfillment("pickup");
-            } else {
-                console.error("Vendor fetch failed:", vendorRes);
-                // Fallback — assume both options available
-                setVendorData({ offersDelivery: true, offersPickup: true, deliveryFee: 0 });
             }
+
         } catch (e) {
             toast.error("Could not load checkout data", e.message);
         } finally {
