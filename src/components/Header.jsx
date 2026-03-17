@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight, ArrowRight, Store } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Settings, Package, ChevronDown, ChevronRight, Store } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -108,7 +108,7 @@ const Header = () => {
                                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                                         className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-gray-100 transition-all duration-200"
                                     >
-                                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-sm">
+                                        <div className="w-8 h-8 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-sm">
                                             <span className="text-sm font-bold text-white">
                                                 {user.firstName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                                             </span>
@@ -123,7 +123,7 @@ const Header = () => {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
                                             <div className="absolute right-0 top-full mt-2 z-20 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
-                                                <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-amber-50">
+                                                <div className="p-4 border-b border-gray-100 bg-linear-to-r from-orange-50 to-amber-50">
                                                     <p className="text-sm font-bold text-gray-900 truncate">
                                                         {user.username || user.firstName || 'User'}
                                                     </p>
@@ -208,8 +208,8 @@ const Header = () => {
                             {isAuthenticated && user ? (
                                 <>
                                     {/* User card */}
-                                    <div className="flex items-center gap-3 p-3 mb-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shrink-0">
+                                    <div className="flex items-center gap-3 p-3 mb-2 bg-linear-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
+                                        <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shrink-0">
                                             <span className="text-base font-bold text-white">
                                                 {user.firstName?.charAt(0).toUpperCase() || 'U'}
                                             </span>

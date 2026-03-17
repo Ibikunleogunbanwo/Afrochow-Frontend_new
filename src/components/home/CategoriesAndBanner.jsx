@@ -45,7 +45,7 @@ const CategoryStackCard = ({ item }) => {
 
     return (
         <Link href={item.path} className="block h-full w-full">
-            <div className={`relative h-full w-full bg-gradient-to-br ${gradient} overflow-hidden`}>
+            <div className={`relative h-full w-full bg-linear-to-br ${gradient} overflow-hidden`}>
 
                 {/* Dot grid */}
                 <div
@@ -87,7 +87,7 @@ const CategoryStackCard = ({ item }) => {
                 </div>
 
                 {/* Bottom fade */}
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-black/20 to-transparent" />
             </div>
         </Link>
     );
@@ -169,7 +169,7 @@ const CategoriesAndBanner = () => {
     const cardHeight = isMobile ? 260 : 320;
 
     return (
-        <div className="py-16 md:py-20 bg-gradient-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
+        <div className="py-16 md:py-20 bg-linear-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
 
             {/* Decorative Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -181,20 +181,20 @@ const CategoriesAndBanner = () => {
 
                 {/* Section Header */}
                 <div className="text-center mb-12 md:mb-16">
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-100 to-red-100 rounded-full mb-5 shadow-sm border border-orange-200/50">
+                    <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-orange-100 to-red-100 rounded-full mb-5 shadow-sm border border-orange-200/50">
                         <Sparkles className="w-4 h-4 text-orange-600" />
                         <span className="text-sm font-bold text-orange-800 tracking-wide uppercase">
                             Explore Categories
                         </span>
                     </div>
                     <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
-                        Everything African,{' '}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+                        Everything African {' '}
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
                             All in One Place
                         </span>
                     </h2>
                     <p className="text-gray-500 text-base md:text-xl max-w-2xl mx-auto leading-relaxed">
-                        From sizzling home kitchens to African grocery stores — find exactly what you're craving
+                        From sizzling home kitchens to African grocery stores find exactly what you&#39;re craving
                     </p>
                 </div>
 
