@@ -33,10 +33,10 @@ const CartPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-2xl mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
 
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                {/* Page title — matches Profile page header */}
+                <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
                         <p className="text-sm text-gray-500 mt-0.5">
@@ -54,7 +54,7 @@ const CartPage = () => {
                 </div>
 
                 {/* Cart Items */}
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                     {cartItems.map((item, idx) => (
                         <div
                             key={item.publicProductId}
@@ -140,11 +140,11 @@ const CartPage = () => {
 
                 {/* Order Summary */}
                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-gray-100">
+                    <div className="px-6 py-4 border-b border-gray-100">
                         <h2 className="text-sm font-semibold text-gray-900">Order summary</h2>
                     </div>
 
-                    <div className="px-5 py-4 space-y-2.5">
+                    <div className="px-6 py-4 space-y-2.5">
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
                             <span>${cartTotal.toFixed(2)}</span>
@@ -157,16 +157,17 @@ const CartPage = () => {
                             <span>Tax</span>
                             <span className="text-gray-400">Calculated at checkout</span>
                         </div>
-                        <div className="pt-2 border-t border-gray-100 flex justify-between">
+                        <div className="pt-2.5 border-t border-gray-100 flex justify-between">
                             <span className="text-sm font-semibold text-gray-900">Estimated total</span>
                             <span className="text-sm font-bold text-gray-900">${cartTotal.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div className="px-5 pb-5">
+                    {/* Checkout button — matches profile page save button style */}
+                    <div className="px-6 pb-6 pt-1">
                         <Link
                             href="/checkout"
-                            className="flex items-center justify-center gap-2 w-full py-3.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
+                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 active:scale-95 transition-colors"
                         >
                             Proceed to Checkout
                             <ArrowRight className="w-4 h-4" />

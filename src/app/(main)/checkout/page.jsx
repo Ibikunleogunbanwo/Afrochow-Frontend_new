@@ -77,7 +77,6 @@ export default function CheckoutPage() {
         try {
             setLoading(true);
 
-            // Fetch independently so one failure doesn't block the other
             const [profileRes, vendorRes] = await Promise.allSettled([
                 CustomerAPI.getCustomerProfile(),
                 vendorId ? SearchAPI.getVendorDetails(vendorId) : Promise.resolve(null),
@@ -105,25 +104,21 @@ export default function CheckoutPage() {
         }
     };
 
-    // --- Tax ---
     const selectedAddress = profileData?.addresses?.find(a => a.publicAddressId === selectedAddressId);
     const province = fulfillment === "delivery"
         ? (showNewAddress ? newAddress.province : selectedAddress?.province) ?? vendorData?.address?.province ?? "AB"
         : vendorData?.address?.province ?? "AB";
     const taxInfo = PROVINCIAL_TAX[province] || PROVINCIAL_TAX.AB;
 
-    // --- Financials ---
     const vendorDeliveryFee = vendorData?.deliveryFee ?? 0;
     const deliveryFee = fulfillment === "delivery" ? vendorDeliveryFee : 0;
     const taxAmount = (cartTotal + deliveryFee) * taxInfo.rate;
     const total = cartTotal + deliveryFee + taxAmount;
 
-    // --- Minimum order — delivery only ---
     const belowMinimum = fulfillment === "delivery" &&
         vendorData?.minimumOrderAmount > 0 &&
         cartTotal < vendorData.minimumOrderAmount;
 
-    // --- Card ---
     const cardComplete =
         cardDetails.name.trim() !== "" &&
         cardDetails.number.replace(/\s/g, "").length === 16 &&
@@ -662,10 +657,10 @@ export default function CheckoutPage() {
                                 <button
                                     onClick={handlePlaceOrder}
                                     disabled={placing}
-                                    className={`w-full py-3 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                    className={`w-full py-3 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 active:scale-95 ${
                                         !canSubmit
                                             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                            : "bg-gray-900 text-white hover:bg-gray-800"
+                                            : "bg-orange-600 text-white hover:bg-orange-700"
                                     }`}
                                 >
                                     {placing ? (
