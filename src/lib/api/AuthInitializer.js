@@ -7,7 +7,6 @@ import { setAuth, clearAuth, setLoading, setError } from "@/redux-store/authSlic
 import { AuthAPI } from "@/lib/api/auth.api";
 
 const PUBLIC_ROUTES = [
-    '/login',
     '/register',
     '/forgot-password',
     '/reset-password',
@@ -27,7 +26,6 @@ export default function AuthInitializer({ children }) {
     const pathname = usePathname();
     const { isAuthenticated, isLoading, user } = useSelector((state) => state.auth);
 
-    // Ensure isAuthenticated is always a boolean to prevent dependency array size changes
     const isAuth = Boolean(isAuthenticated);
     const userRole = user?.role?.toUpperCase();
 
@@ -55,11 +53,11 @@ export default function AuthInitializer({ children }) {
 
         initializeAuth();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run once on mount
+    }, []);
 
     // Route protection logic - runs when pathname or auth state changes
     useEffect(() => {
-        if (isLoading) return; // Don't redirect while loading
+        if (isLoading) return;
 
         if (isAuth) {
             // Redirect authenticated users away from public auth routes
@@ -89,7 +87,7 @@ export default function AuthInitializer({ children }) {
                 (pathname.startsWith('/admin') || pathname.startsWith('/vendor') || pathname.startsWith('/profile') || pathname.startsWith('/orders'));
 
             if (isProtectedRoute) {
-                router.push('/login');
+                router.push('/?signin=true');
             }
         }
     }, [pathname, isAuth, isLoading, router, userRole]);
@@ -108,7 +106,7 @@ export default function AuthInitializer({ children }) {
                     console.error("Token refresh failed:", error);
                     if (error.message.includes('401') || error.message.includes('403')) {
                         dispatch(clearAuth());
-                        router.push('/login');
+                        router.push('/?signin=true');
                     }
                 }
             }, 14 * 60 * 1000); // 14 minutes
