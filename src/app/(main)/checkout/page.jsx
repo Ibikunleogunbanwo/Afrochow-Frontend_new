@@ -67,11 +67,13 @@ export default function CheckoutPage() {
         name: "", number: "", expiry: "", cvv: ""
     });
 
+
     useEffect(() => {
+        if (isLoading) return;
         if (!isAuthenticated) { router.push("/"); return; }
         if (cartItems.length === 0) { router.push("/cart"); return; }
         loadData();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, isLoading]);
 
     const loadData = async () => {
         try {
