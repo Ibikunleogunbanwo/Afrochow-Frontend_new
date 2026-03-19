@@ -440,6 +440,39 @@ export default function CustomerRegistration() {
     };
   }, []);
 
+  // ── Resend ─────────────────────────────────────────────────────────────────
+  // Declared before the showSuccess early return so it is in scope when the
+  // SuccessScreen renders (const is not hoisted — TDZ would crash in prod).
+
+  const handleResend = async (email) => {
+    if (!email) return;
+    setResendLoading(true);
+    try {
+      await RegistrationAPI.resendVerificationEmail(email);
+      toast.success("Email Resent!", { description: "Check your inbox again" });
+      setResendDisabled(true);
+      setResendCountdown(RESEND_COOLDOWN_SECONDS);
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setResendCountdown((c) => {
+          if (c <= 1) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            setResendDisabled(false);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      toast.error("Resend Failed", { description: err?.message || "Please try again later" });
+      setResendDisabled(false);
+      setResendCountdown(0);
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   // ── Success screen (must come before auth guard) ───────────────────────────
   // Registration already completed — always show this regardless of auth state.
   // In production the registration response can set an auth cookie, which would
@@ -611,37 +644,6 @@ export default function CustomerRegistration() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  // ── Resend ─────────────────────────────────────────────────────────────────
-
-  const handleResend = async (email) => {
-    if (!email) return;
-    setResendLoading(true);
-    try {
-      await RegistrationAPI.resendVerificationEmail(email);
-      toast.success("Email Resent!", { description: "Check your inbox again" });
-      setResendDisabled(true);
-      setResendCountdown(RESEND_COOLDOWN_SECONDS);
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setResendCountdown((c) => {
-          if (c <= 1) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-            setResendDisabled(false);
-            return 0;
-          }
-          return c - 1;
-        });
-      }, 1000);
-    } catch (err) {
-      toast.error("Resend Failed", { description: err?.message || "Please try again later" });
-      setResendDisabled(false);
-      setResendCountdown(0);
-    } finally {
-      setResendLoading(false);
     }
   };
 
