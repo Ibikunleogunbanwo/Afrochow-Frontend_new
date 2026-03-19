@@ -440,6 +440,24 @@ export default function CustomerRegistration() {
     };
   }, []);
 
+  // ── Success screen (must come before auth guard) ───────────────────────────
+  // Registration already completed — always show this regardless of auth state.
+  // In production the registration response can set an auth cookie, which would
+  // make isAuthenticated flip to true and the auth guard below would block this
+  // screen from ever rendering if the check order were reversed.
+
+  if (showSuccess) {
+    return (
+        <SuccessScreen
+            email={userEmail}
+            resendLoading={resendLoading}
+            resendDisabled={resendDisabled}
+            resendCountdown={resendCountdown}
+            onResend={handleResend}
+        />
+    );
+  }
+
   // ── Auth guard early return ────────────────────────────────────────────────
   // Show a spinner while auth resolves, or while the redirect is in flight.
   // Keeps the registration form from flashing to authenticated users.
@@ -626,20 +644,6 @@ export default function CustomerRegistration() {
       setResendLoading(false);
     }
   };
-
-  // ── Success screen ─────────────────────────────────────────────────────────
-
-  if (showSuccess) {
-    return (
-        <SuccessScreen
-            email={userEmail}
-            resendLoading={resendLoading}
-            resendDisabled={resendDisabled}
-            resendCountdown={resendCountdown}
-            onResend={handleResend}
-        />
-    );
-  }
 
   // ── Error shorthand ────────────────────────────────────────────────────────
 
