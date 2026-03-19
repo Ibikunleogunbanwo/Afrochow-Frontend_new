@@ -537,6 +537,10 @@ const VendorProfilePage = () => {
                     isLoading={productModalLoading}
                     isStoreOpen={isOpenNow}
                     onClose={handleCloseProductModal}
+                    onViewReviews={() => {
+                        handleCloseProductModal();
+                        handleViewProductReviews(selectedProductModal);
+                    }}
                 />
             )}
 

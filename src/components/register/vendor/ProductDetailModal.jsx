@@ -16,6 +16,7 @@ const ProductDetailModal = ({
                                 isLoading,
                                 isStoreOpen,
                                 onClose,
+                                onViewReviews,
                             }) => {
     const [quantity, setQuantity] = useState(1);
     const [cartError, setCartError] = useState(null);
@@ -189,11 +190,14 @@ const ProductDetailModal = ({
 
                     {/* Rating */}
                     {averageRating > 0 && (
-                        <div className="flex items-center gap-2">
+                        <button
+                            onClick={onViewReviews}
+                            className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
+                        >
                             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                             <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                            <span className="text-xs text-gray-500">({reviewCount || 0} reviews)</span>
-                        </div>
+                            <span className="text-xs text-gray-500 underline">({reviewCount || 0} reviews)</span>
+                        </button>
                     )}
 
                     {/* Cart Error */}

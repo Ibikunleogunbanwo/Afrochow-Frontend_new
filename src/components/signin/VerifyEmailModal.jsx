@@ -67,9 +67,15 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
     }
 
     const handleSignIn = () => {
-        handleClose()
-        if (onSignInClick) onSignInClick()
-        else router.push("/")
+        setCode(["", "", "", "", "", ""])
+        setSuccess(false)
+        setResendDisabled(false)
+        setResendCountdown(0)
+        if (onSignInClick) {
+            onSignInClick()
+        } else {
+            router.push("/")
+        }
     }
 
     const handleInputChange = (index, value) => {
