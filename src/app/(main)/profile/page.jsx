@@ -8,7 +8,7 @@ import { ImageUploadAPI } from "@/lib/api/imageUpload";
 import { toast } from "@/components/ui/toast";
 import Image from "next/image";
 import {
-    Pencil, CheckCircle2, XCircle, Plus, Trash2, Star,
+    Pencil, Check, CheckCircle2, XCircle, Plus, Trash2, Star,
     Upload, Loader2, MapPin, Phone, Mail, Truck,
     CalendarDays, ShoppingBag, Coins, Home,
 } from "lucide-react";

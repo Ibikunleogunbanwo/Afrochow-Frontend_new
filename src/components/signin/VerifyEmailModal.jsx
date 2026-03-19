@@ -1,7 +1,7 @@
 // components/signin/VerifyEmailModal.jsx
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -24,20 +24,20 @@ import { RegistrationAPI } from "@/lib/api/registration.api"
 
 export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
     const router = useRouter()
-    const [code, setCode] = useState(["", "", "", "", "", ""])
+    const [code, setCode] = useState("")
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [resendLoading, setResendLoading] = useState(false)
     const [resendDisabled, setResendDisabled] = useState(false)
     const [resendCountdown, setResendCountdown] = useState(0)
     const [resendSent, setResendSent] = useState(false)
-    const inputRefs = useRef([])
+    const hiddenInputRef = useRef(null)
     const timerRef = useRef(null)
 
-    // autofocus first input when modal opens
+    // focus the hidden input when modal opens
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRefs.current[0]?.focus(), 100)
+            setTimeout(() => hiddenInputRef.current?.focus(), 150)
         }
     }, [isOpen])
 
@@ -58,20 +58,21 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         return () => { if (timerRef.current) clearInterval(timerRef.current) }
     }, [resendCountdown])
 
-    const handleClose = () => {
-        setCode(["", "", "", "", "", ""])
+    const resetState = () => {
+        setCode("")
         setSuccess(false)
         setResendDisabled(false)
         setResendCountdown(0)
+    }
+
+    const handleClose = () => {
+        resetState()
         router.push("/")
         onClose()
     }
 
     const handleSignIn = () => {
-        setCode(["", "", "", "", "", ""])
-        setSuccess(false)
-        setResendDisabled(false)
-        setResendCountdown(0)
+        resetState()
         if (onSignInClick) {
             onSignInClick()
         } else {
@@ -79,48 +80,15 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         }
     }
 
-    const handleInputChange = (index, value) => {
-        if (value && !/^\d$/.test(value)) return
-
-        const newCode = [...code]
-        newCode[index] = value
-        setCode(newCode)
-
-        if (value && index < 5) {
-            inputRefs.current[index + 1]?.focus()
-        }
-    }
-
-    const handleKeyDown = (index, e) => {
-        if (e.key === "Backspace") {
-            if (!code[index] && index > 0) {
-                inputRefs.current[index - 1]?.focus()
-            } else {
-                const newCode = [...code]
-                newCode[index] = ""
-                setCode(newCode)
-            }
-        }
-        if (e.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus()
-        if (e.key === "ArrowRight" && index < 5) inputRefs.current[index + 1]?.focus()
-    }
-
-    const handlePaste = (e) => {
-        e.preventDefault()
-        const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6).split("")
-        const newCode = [...code]
-        digits.forEach((digit, i) => { if (i < 6) newCode[i] = digit })
-        setCode(newCode)
-        const lastIndex = Math.min(digits.length, 5)
-        inputRefs.current[lastIndex]?.focus()
-    }
+    const handleCodeChange = useCallback((e) => {
+        const digits = e.target.value.replace(/\D/g, "").slice(0, 6)
+        setCode(digits)
+    }, [])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const verificationCode = code.join("")
-
-        if (verificationCode.length !== 6) {
+        if (code.length !== 6) {
             toast.error("Incomplete Code", { description: "Please enter all 6 digits" })
             return
         }
@@ -128,13 +96,12 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         setLoading(true)
 
         try {
-            await RegistrationAPI.verifyEmail(verificationCode)
+            await RegistrationAPI.verifyEmail(code)
             setSuccess(true)
         } catch (err) {
-            console.error("Verification failed:", err)
             toast.error("Verification Failed", { description: err.message || "Invalid or expired code" })
-            setCode(["", "", "", "", "", ""])
-            inputRefs.current[0]?.focus()
+            setCode("")
+            setTimeout(() => hiddenInputRef.current?.focus(), 50)
         } finally {
             setLoading(false)
         }
@@ -155,12 +122,14 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
             setResendDisabled(true)
             setResendCountdown(60)
         } catch (err) {
-            console.error("Resend failed:", err)
             toast.error("Resend Failed", { description: err.message || "Please try again" })
         } finally {
             setResendLoading(false)
         }
     }
+
+    // digits array used only for rendering the visual boxes
+    const digits = code.split("")
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -210,38 +179,53 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
 
                         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
 
-                            {/* Code Input */}
+                            {/* Code Input — single hidden input + visual boxes */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-bold text-slate-700 text-center">
                                     Verification Code
                                 </label>
 
-                                <div className="flex gap-2 justify-center">
-                                    {code.map((digit, index) => (
-                                        <input
-                                            key={index}
-                                            ref={(el) => { inputRefs.current[index] = el }}
-                                            type="text"
-                                            inputMode="numeric"
-                                            maxLength={1}
-                                            value={digit}
-                                            onChange={(e) => handleInputChange(index, e.target.value)}
-                                            onKeyDown={(e) => handleKeyDown(index, e)}
-                                            onPaste={handlePaste}
-                                            disabled={loading}
-                                            className={`w-10 h-12 text-center text-xl font-bold border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 transition-all text-black bg-white ${
-                                                digit
-                                                    ? "border-orange-600 bg-orange-50"
-                                                    : "border-slate-300 focus:border-orange-600"
-                                            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                                        />
+                                {/* Hidden real input that captures keystrokes */}
+                                <input
+                                    ref={hiddenInputRef}
+                                    type="text"
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    value={code}
+                                    onChange={handleCodeChange}
+                                    disabled={loading}
+                                    maxLength={6}
+                                    className="sr-only"
+                                    aria-label="6-digit verification code"
+                                />
+
+                                {/* Visual digit boxes — tapping focuses the hidden input */}
+                                <div
+                                    className="flex gap-2 justify-center cursor-text"
+                                    onClick={() => hiddenInputRef.current?.focus()}
+                                >
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`w-10 h-12 flex items-center justify-center text-xl font-bold border-2 rounded-xl transition-all select-none ${
+                                                loading
+                                                    ? "opacity-50 border-slate-200 bg-slate-50"
+                                                    : digits[i]
+                                                        ? "border-orange-600 bg-orange-50 text-black"
+                                                        : i === digits.length
+                                                            ? "border-orange-400 bg-white ring-2 ring-orange-200"
+                                                            : "border-slate-300 bg-white"
+                                            }`}
+                                        >
+                                            {digits[i] || ""}
+                                        </div>
                                     ))}
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={loading || code.join("").length !== 6}
+                                disabled={loading || code.length !== 6}
                                 className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {loading ? (
