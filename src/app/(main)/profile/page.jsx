@@ -185,8 +185,10 @@ export default function ProfilePage() {
         try {
             setLoading(true);
             const response = await CustomerAPI.getCustomerProfile();
+            console.log("[ProfilePage] fetchProfile raw response:", response);
             if (response?.data || response?.success) {
                 const data = response?.data ?? response;
+                console.log("[ProfilePage] fetchProfile data.defaultDeliveryInstructions:", data.defaultDeliveryInstructions);
                 setProfileData(data);
                 setFormData({
                     firstName: data.firstName || "",
@@ -225,16 +227,39 @@ export default function ProfilePage() {
     const handleSaveSection = async () => {
         try {
             setSaving(true);
-            const response = await CustomerAPI.updateCustomerProfile(formData);
-            // Accept success regardless of response shape
+
+            // Only send text-based fields — profileImageUrl is handled separately
+            // by handleImageUpload and should NOT be mixed into text section saves
+            const payload = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                phone: formData.phone,
+                defaultDeliveryInstructions: formData.defaultDeliveryInstructions,
+            };
+
+            console.log("[ProfilePage] saving payload:", payload);
+
+            const response = await CustomerAPI.updateCustomerProfile(payload);
+
+            console.log("[ProfilePage] save response:", response);
+
+            // Accept success regardless of wrapper shape
             if (response?.success !== false) {
                 await fetchProfile();
+                // Workaround: backend GET /customer/profile does not return
+                // defaultDeliveryInstructions — patch profileData locally so
+                // the UI reflects the saved value immediately.
+                setProfileData(prev => ({
+                    ...prev,
+                    ...payload,
+                }));
                 setEditingSection(null);
                 toast.success("Saved", "Profile updated successfully");
             } else {
                 throw new Error(response?.message || "Failed to update profile");
             }
         } catch (error) {
+            console.error("[ProfilePage] save error:", error);
             toast.error("Failed to save", error.message || "Please try again");
         } finally {
             setSaving(false);
