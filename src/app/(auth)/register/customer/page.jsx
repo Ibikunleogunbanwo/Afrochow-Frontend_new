@@ -339,7 +339,7 @@ function AvatarUpload({ value, onChange }) {
 
 // ─── SuccessScreen ────────────────────────────────────────────────────────────
 
-function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, onResend }) {
+function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, resendSent, onResend }) {
   const router = useRouter();
 
   return (
@@ -378,24 +378,26 @@ function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, 
             <Button
                 type="button"
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2"
-                disabled={resendDisabled || resendLoading}
+                className={`w-full flex items-center justify-center gap-2 transition-colors ${resendSent ? "border-green-400 text-green-600" : ""}`}
+                disabled={resendDisabled || resendLoading || resendSent}
                 onClick={() => onResend(email)}
             >
-              {resendLoading
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <RefreshCw className="w-4 h-4" />
-              }
-              {resendDisabled
-                  ? `Resend in ${resendCountdown}s`
-                  : "Resend Verification Email"}
+              {resendLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+              ) : resendSent ? (
+                  <><CheckCircle2 className="w-4 h-4" /> Email Sent!</>
+              ) : resendDisabled ? (
+                  `Resend in ${resendCountdown}s`
+              ) : (
+                  <><RefreshCw className="w-4 h-4" /> Resend Verification Email</>
+              )}
             </Button>
 
             <p className="text-sm text-center text-gray-500">
               Already verified?{" "}
               <button
                   type="button"
-                  onClick={() => router.push("/?sign-in=true")}
+                  onClick={() => router.push("/?signin=true")}
                   className="font-medium text-orange-600 hover:text-orange-700 transition-colors"
               >
                 Go to Sign In
@@ -424,6 +426,7 @@ export default function CustomerRegistration() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendSent, setResendSent] = useState(false);
   const timerRef = useRef(null);
 
   // Redirect already-authenticated users away from registration
@@ -449,7 +452,8 @@ export default function CustomerRegistration() {
     setResendLoading(true);
     try {
       await RegistrationAPI.resendVerificationEmail(email);
-      toast.success("Email Resent!", { description: "Check your inbox again" });
+      setResendSent(true);
+      setTimeout(() => setResendSent(false), 2000);
       setResendDisabled(true);
       setResendCountdown(RESEND_COOLDOWN_SECONDS);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -486,6 +490,7 @@ export default function CustomerRegistration() {
             resendLoading={resendLoading}
             resendDisabled={resendDisabled}
             resendCountdown={resendCountdown}
+            resendSent={resendSent}
             onResend={handleResend}
         />
     );
@@ -597,7 +602,6 @@ export default function CustomerRegistration() {
       await RegistrationAPI.registerCustomer(payload);
       setUserEmail(formData.email);
       setShowSuccess(true);
-      toast.success("Registration Successful!", { description: "Check your email to verify your account" });
     } catch (error) {
       console.error("Registration error:", error);
 
@@ -1032,7 +1036,7 @@ export default function CustomerRegistration() {
                   Already have an account?{" "}
                   <button
                       type="button"
-                      onClick={() => router.push("/?sign-in=true")}
+                      onClick={() => router.push("/?signin=true")}
                       className="font-medium text-orange-600 hover:text-orange-700 transition-colors"
                   >
                     Sign in

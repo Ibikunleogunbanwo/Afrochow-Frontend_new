@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSavedState } from "@/hooks/useSavedState";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import {
@@ -13,6 +14,8 @@ import {
     Shield,
     Trash2,
     Save,
+    Check,
+    Loader2,
     ChevronRight,
     X,
     Eye,
@@ -22,6 +25,8 @@ import {
 export default function SettingsPage() {
     const { user, changePassword, getSavedAddresses } = useAuth();
     const router = useRouter();
+    const settingsSave  = useSavedState();
+    const passwordSave  = useSavedState(1500);
 
     const [notifications, setNotifications] = useState({
         orderUpdates: true,
@@ -56,7 +61,7 @@ export default function SettingsPage() {
 
     const handleSaveSettings = () => {
         // TODO: Implement save functionality
-        toast.success("Settings Saved", "Your profile have been updated");
+        settingsSave.setSaved();
     };
 
     const handlePasswordFormChange = (e) => {
@@ -106,13 +111,12 @@ export default function SettingsPage() {
             );
 
             if (response?.success) {
-                toast.success("Password Changed", "Your password has been successfully updated");
-                setShowPasswordModal(false);
-                setPasswordForm({
-                    currentPassword: "",
-                    newPassword: "",
-                    confirmPassword: ""
-                });
+                passwordSave.setSaved();
+                setTimeout(() => {
+                    setShowPasswordModal(false);
+                    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                    passwordSave.reset();
+                }, 1500);
             } else {
                 throw new Error("Failed to change password");
             }
@@ -338,10 +342,17 @@ export default function SettingsPage() {
                     <div className="sticky bottom-4">
                         <button
                             onClick={handleSaveSettings}
-                            className="w-full px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                            disabled={settingsSave.isSaved}
+                            className={`w-full px-6 py-4 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2
+                                ${settingsSave.isSaved
+                                    ? "bg-green-500"
+                                    : "bg-linear-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"}`}
                         >
-                            <Save className="w-5 h-5" />
-                            <span>Save All Settings</span>
+                            {settingsSave.isSaved ? (
+                                <><Check className="w-5 h-5" /><span>Settings Saved!</span></>
+                            ) : (
+                                <><Save className="w-5 h-5" /><span>Save All Settings</span></>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -479,14 +490,14 @@ export default function SettingsPage() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-3 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={isChangingPassword}
+                                        className={`flex-1 px-4 py-3 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                                            ${passwordSave.isSaved ? "bg-green-500" : "bg-linear-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"}`}
+                                        disabled={isChangingPassword || passwordSave.isSaved}
                                     >
                                         {isChangingPassword ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Changing...
-                                            </span>
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Changing…</>
+                                        ) : passwordSave.isSaved ? (
+                                            <><Check className="w-4 h-4" /> Password Changed!</>
                                         ) : (
                                             "Change Password"
                                         )}

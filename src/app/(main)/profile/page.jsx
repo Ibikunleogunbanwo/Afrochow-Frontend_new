@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSavedState } from "@/hooks/useSavedState";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { ImageUploadAPI } from "@/lib/api/imageUpload";
+import { toast } from "@/components/ui/toast";
 import Image from "next/image";
 import {
     Pencil, CheckCircle2, XCircle, Plus, Trash2, Star,
-    Upload, Check, MapPin, Phone, Mail, Truck,
+    Upload, Loader2, MapPin, Phone, Mail, Truck,
     CalendarDays, ShoppingBag, Coins, Home,
 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
 
 const provinces = [
     { value: "AB", label: "Alberta" },
@@ -35,19 +36,27 @@ const emptyAddress = () => ({
 
 // ─── Inline edit action buttons ────────────────────────────────────────────
 
-function EditActions({ onSave, onCancel }) {
+function EditActions({ onSave, onCancel, isSaving = false, isSaved = false }) {
     return (
         <div className="flex gap-2 pt-1">
             <button
                 onClick={onSave}
-                className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+                disabled={isSaving || isSaved}
+                className={`flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:cursor-not-allowed
+                    ${isSaved ? "bg-green-500" : "bg-orange-500 hover:bg-orange-600 disabled:opacity-60"}`}
             >
-                <CheckCircle2 className="w-4 h-4" />
-                Save
+                {isSaving ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                ) : isSaved ? (
+                    <><CheckCircle2 className="w-4 h-4" /> Saved!</>
+                ) : (
+                    <><CheckCircle2 className="w-4 h-4" /> Save</>
+                )}
             </button>
             <button
                 onClick={onCancel}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-colors"
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-colors disabled:opacity-40"
             >
                 <XCircle className="w-4 h-4" />
                 Cancel
@@ -84,7 +93,7 @@ function ClearableInput({ value, onChange, onClear, ...props }) {
 
 // ─── Address form block ─────────────────────────────────────────────────────
 
-function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, saveLabel }) {
+function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, saveLabel, isSaving, isSaved }) {
     return (
         <div className="space-y-3 py-4">
             <ClearableInput
@@ -126,7 +135,7 @@ function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, saveLabel
                 />
                 <span className="text-sm text-gray-700 font-medium">Set as default delivery address</span>
             </label>
-            <EditActions onSave={onSave} onCancel={onCancel} />
+            <EditActions onSave={onSave} onCancel={onCancel} isSaving={isSaving} isSaved={isSaved} />
         </div>
     );
 }
@@ -170,7 +179,10 @@ export default function ProfilePage() {
     const [editingAddressId, setEditingAddressId] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [imageError, setImageError] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [photoSaved, setPhotoSaved] = useState(false);
+
+    const sectionSave   = useSavedState(1200);
+    const addressSave   = useSavedState(1200);
 
     const [formData, setFormData] = useState({
         firstName: "", lastName: "", phone: "",
@@ -185,10 +197,8 @@ export default function ProfilePage() {
         try {
             setLoading(true);
             const response = await CustomerAPI.getCustomerProfile();
-            console.log("[ProfilePage] fetchProfile raw response:", response);
             if (response?.data || response?.success) {
                 const data = response?.data ?? response;
-                console.log("[ProfilePage] fetchProfile data.defaultDeliveryInstructions:", data.defaultDeliveryInstructions);
                 setProfileData(data);
                 setFormData({
                     firstName: data.firstName || "",
@@ -226,43 +236,24 @@ export default function ProfilePage() {
 
     const handleSaveSection = async () => {
         try {
-            setSaving(true);
-
-            // Only send text-based fields — profileImageUrl is handled separately
-            // by handleImageUpload and should NOT be mixed into text section saves
+            sectionSave.setSaving();
             const payload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phone: formData.phone,
                 defaultDeliveryInstructions: formData.defaultDeliveryInstructions,
             };
-
-            console.log("[ProfilePage] saving payload:", payload);
-
             const response = await CustomerAPI.updateCustomerProfile(payload);
-
-            console.log("[ProfilePage] save response:", response);
-
-            // Accept success regardless of wrapper shape
             if (response?.success !== false) {
                 await fetchProfile();
-                // Workaround: backend GET /customer/profile does not return
-                // defaultDeliveryInstructions — patch profileData locally so
-                // the UI reflects the saved value immediately.
-                setProfileData(prev => ({
-                    ...prev,
-                    ...payload,
-                }));
-                setEditingSection(null);
-                toast.success("Saved", "Profile updated successfully");
+                sectionSave.setSaved();
+                setTimeout(() => setEditingSection(null), 1200);
             } else {
                 throw new Error(response?.message || "Failed to update profile");
             }
         } catch (error) {
-            console.error("[ProfilePage] save error:", error);
+            sectionSave.setError();
             toast.error("Failed to save", error.message || "Please try again");
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -281,14 +272,15 @@ export default function ProfilePage() {
 
     const handleAddAddress = async () => {
         try {
+            addressSave.setSaving();
             const response = await CustomerAPI.addAddress(addressForm);
             if (response?.success !== false) {
                 await fetchProfile();
-                setShowAddressForm(false);
-                setAddressForm(emptyAddress());
-                toast.success("Address added", "New address saved");
+                addressSave.setSaved();
+                setTimeout(() => { setShowAddressForm(false); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to add address");
         } catch (error) {
+            addressSave.setError();
             toast.error("Failed to add address", error.message || "Please try again");
         }
     };
@@ -296,14 +288,15 @@ export default function ProfilePage() {
     const handleUpdateAddress = async () => {
         if (!editingAddressId) return;
         try {
+            addressSave.setSaving();
             const response = await CustomerAPI.updateAddress(editingAddressId, addressForm);
             if (response?.success !== false) {
                 await fetchProfile();
-                setEditingAddressId(null);
-                setAddressForm(emptyAddress());
-                toast.success("Address updated", "Changes saved");
+                addressSave.setSaved();
+                setTimeout(() => { setEditingAddressId(null); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to update address");
         } catch (error) {
+            addressSave.setError();
             toast.error("Failed to update address", error.message || "Please try again");
         }
     };
@@ -314,7 +307,6 @@ export default function ProfilePage() {
             const response = await CustomerAPI.deleteAddress(publicAddressId);
             if (response?.success !== false) {
                 await fetchProfile();
-                toast.success("Address deleted");
             } else throw new Error("Failed to delete");
         } catch (error) {
             toast.error("Failed to delete address", error.message || "Please try again");
@@ -326,7 +318,6 @@ export default function ProfilePage() {
             const response = await CustomerAPI.setDefaultAddress(addressId);
             if (response?.success !== false) {
                 await fetchProfile();
-                toast.success("Default updated");
             } else throw new Error("Failed to set default");
         } catch (error) {
             toast.error("Failed to set default", error.message || "Please try again");
@@ -359,7 +350,8 @@ export default function ProfilePage() {
             if (updateResponse?.success !== false) {
                 await fetchProfile();
                 setImageError(false);
-                toast.success("Photo updated");
+                setPhotoSaved(true);
+                setTimeout(() => setPhotoSaved(false), 2000);
             } else throw new Error("Failed to update profile image");
         } catch (error) {
             toast.error("Upload failed", error.message || "Please try again");
@@ -441,6 +433,11 @@ export default function ProfilePage() {
                                         <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 )}
+                                {photoSaved && (
+                                    <div className="absolute inset-0 bg-green-500/80 rounded-full flex items-center justify-center z-10">
+                                        <CheckCircle2 className="w-8 h-8 text-white" />
+                                    </div>
+                                )}
                                 {profileData.profileImageUrl && !imageError ? (
                                     <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-orange-100">
                                         <Image
@@ -495,6 +492,8 @@ export default function ProfilePage() {
                                         <EditActions
                                             onSave={handleSaveSection}
                                             onCancel={handleCancelSection}
+                                            isSaving={sectionSave.isSaving}
+                                            isSaved={sectionSave.isSaved}
                                         />
                                     </div>
                                 ) : (
@@ -633,6 +632,8 @@ export default function ProfilePage() {
                                 onSave={handleAddAddress}
                                 onCancel={() => { setShowAddressForm(false); setAddressForm(emptyAddress()); }}
                                 saveLabel="Save address"
+                                isSaving={addressSave.isSaving}
+                                isSaved={addressSave.isSaved}
                             />
                         </div>
                     )}
@@ -653,6 +654,8 @@ export default function ProfilePage() {
                                             onSave={handleUpdateAddress}
                                             onCancel={() => { setEditingAddressId(null); setAddressForm(emptyAddress()); }}
                                             saveLabel="Update address"
+                                            isSaving={addressSave.isSaving}
+                                            isSaved={addressSave.isSaved}
                                         />
                                     </div>
                                 ) : (

@@ -222,9 +222,6 @@ export default function CheckoutPage() {
             // TODO: POST /orders
             await new Promise(r => setTimeout(r, 1200));
             clearCart();
-            toast.success("Order placed!", {
-                description: "Your order is being prepared.",
-            });
             router.push("/orders");
         } catch (e) {
             toast.error("Failed to place order", {

@@ -69,7 +69,6 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
             }
 
             await login(values.email, values.password)
-            toast.success("Welcome Back!", { description: "Login successful" })
             onClose()
         } catch (err) {
             console.error("Login failed:", err)

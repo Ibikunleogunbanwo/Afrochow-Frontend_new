@@ -88,8 +88,7 @@ useEffect(() => {
       if (!response?.data?.publicUserId || !response?.data?.message) {
         toast.error(response?.data?.message || "Incomplete response from server");
       } else {
-        setUploadProgress("Registration complete!");
-        toast.success("Welcome Onboard", "Registration successful");
+        setUploadProgress("Registration complete! Welcome Onboard 🎉");
       }
 
       dispatch?.({ type: "RESET" });

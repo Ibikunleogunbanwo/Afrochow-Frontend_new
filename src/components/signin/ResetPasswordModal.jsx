@@ -77,7 +77,6 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
         try {
             await AuthAPI.resetPassword(token, formData.password)
             setSuccess(true)
-            toast.success("Password Reset!", { description: "Your password has been successfully updated" })
         } catch (err) {
             console.error("Password reset failed:", err)
             toast.error("Reset Failed", { description: err.message || "The link may have expired. Request a new one." })

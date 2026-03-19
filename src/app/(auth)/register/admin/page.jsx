@@ -41,6 +41,7 @@ export default function AdminRegistrationPage() {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [registerSuccess, setRegisterSuccess] = useState(null); // null | string
   const router = useRouter();
   const { isAuthenticated, role, isLoading: authLoading } = useAuth();
 
@@ -198,10 +199,7 @@ export default function AdminRegistrationPage() {
         return;
       }
 
-      toast.success(
-          "Admin Registered Successfully!",
-          `${formData.firstName} has been added as a ${formData.accessLevel}`
-      );
+      setRegisterSuccess(`${formData.firstName} has been added as a ${formData.accessLevel}.`);
       setFormData(INITIAL_FORM_STATE);
       setErrors({});
       setTimeout(() => {
@@ -291,11 +289,24 @@ export default function AdminRegistrationPage() {
                 </label>
               </section>
 
+              {/* Inline success banner */}
+              {registerSuccess && (
+                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                          <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <div>
+                          <p className="font-semibold text-sm">Admin Registered Successfully!</p>
+                          <p className="text-xs text-green-600">{registerSuccess} Redirecting…</p>
+                      </div>
+                  </div>
+              )}
+
               {/* Submit Button */}
               <div className="pt-6">
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !!registerSuccess}
                     className="w-full py-4 bg-linear-to-r from-orange-500 to-red-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? (

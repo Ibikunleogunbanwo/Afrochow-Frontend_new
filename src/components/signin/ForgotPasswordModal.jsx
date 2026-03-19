@@ -28,6 +28,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSignInClick }) {
     const [resendLoading, setResendLoading] = useState(false)
     const [resendDisabled, setResendDisabled] = useState(false)
     const [resendCountdown, setResendCountdown] = useState(0)
+    const [resendSent, setResendSent] = useState(false)
 
     const startResendCountdown = () => {
         setResendDisabled(true)
@@ -73,7 +74,6 @@ export function ForgotPasswordModal({ isOpen, onClose, onSignInClick }) {
             await AuthAPI.forgotPassword(email)
             setSentEmail(email)
             setSuccess(true)
-            toast.success("Email Sent!", { description: "Check your inbox for reset instructions" })
             startResendCountdown()
         } catch (err) {
             console.error("Forgot password failed:", err)
@@ -87,7 +87,8 @@ export function ForgotPasswordModal({ isOpen, onClose, onSignInClick }) {
         setResendLoading(true)
         try {
             await AuthAPI.forgotPassword(sentEmail)
-            toast.success("Email Resent!", { description: "Check your inbox again" })
+            setResendSent(true)
+            setTimeout(() => setResendSent(false), 2000)
             startResendCountdown()
         } catch (err) {
             toast.error("Failed to Resend", { description: err.message || "Please try again" })
@@ -143,15 +144,19 @@ export function ForgotPasswordModal({ isOpen, onClose, onSignInClick }) {
                         <p className="text-xs text-slate-500 mb-2">Didn&#39;t receive the email?</p>
                         <button
                             onClick={handleResend}
-                            disabled={resendDisabled || resendLoading}
+                            disabled={resendDisabled || resendLoading || resendSent}
                             className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium mb-4 ${
-                                resendDisabled || resendLoading
-                                    ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                                    : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
+                                resendSent
+                                    ? "bg-green-50 text-green-600 border-green-200"
+                                    : resendDisabled || resendLoading
+                                        ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                        : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
                             }`}
                         >
                             {resendLoading ? (
                                 <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+                            ) : resendSent ? (
+                                <><CheckCircle2 className="h-4 w-4" /> Email Sent!</>
                             ) : resendDisabled ? (
                                 <><Clock className="h-4 w-4" /> Resend in {resendCountdown}s</>
                             ) : (

@@ -30,6 +30,7 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
     const [resendLoading, setResendLoading] = useState(false)
     const [resendDisabled, setResendDisabled] = useState(false)
     const [resendCountdown, setResendCountdown] = useState(0)
+    const [resendSent, setResendSent] = useState(false)
     const inputRefs = useRef([])
     const timerRef = useRef(null)
 
@@ -129,7 +130,6 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         try {
             await RegistrationAPI.verifyEmail(verificationCode)
             setSuccess(true)
-            toast.success("Email Verified!", { description: "Your account is now active" })
         } catch (err) {
             console.error("Verification failed:", err)
             toast.error("Verification Failed", { description: err.message || "Invalid or expired code" })
@@ -150,7 +150,8 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
 
         try {
             await RegistrationAPI.resendVerificationEmail(email)
-            toast.success("Code Resent!", { description: "Check your email inbox and spam folder" })
+            setResendSent(true)
+            setTimeout(() => setResendSent(false), 2000)
             setResendDisabled(true)
             setResendCountdown(60)
         } catch (err) {
@@ -258,15 +259,19 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
                                 <button
                                     type="button"
                                     onClick={handleResend}
-                                    disabled={resendDisabled || resendLoading}
+                                    disabled={resendDisabled || resendLoading || resendSent}
                                     className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
-                                        resendDisabled || resendLoading
-                                            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                                            : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
+                                        resendSent
+                                            ? "bg-green-50 text-green-600 border-green-200"
+                                            : resendDisabled || resendLoading
+                                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                                : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
                                     }`}
                                 >
                                     {resendLoading ? (
                                         <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+                                    ) : resendSent ? (
+                                        <><CheckCircle2 className="h-4 w-4" /> Code Sent!</>
                                     ) : resendDisabled ? (
                                         <><Clock className="h-4 w-4" /> Resend in {resendCountdown}s</>
                                     ) : (
