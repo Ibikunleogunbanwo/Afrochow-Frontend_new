@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
 import { CustomerAPI } from "@/lib/api/customer.api";
@@ -8,11 +8,11 @@ import { SearchAPI } from "@/lib/api/search.api";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
-    MapPin, ChevronRight, Plus, Truck,
+    MapPin, ChevronRight, Plus, Truck, FileText,
     ShoppingBag, Check, ChevronDown, Clock, AlertCircle
 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
 
 const PROVINCIAL_TAX = {
     AB: { rate: 0.05,    label: "GST",       province: "Alberta" },
@@ -27,7 +27,7 @@ const PROVINCIAL_TAX = {
     SK: { rate: 0.11,    label: "GST + PST",  province: "Saskatchewan" },
 };
 
-const provinces = [
+const PROVINCES = [
     { value: "AB", label: "Alberta" },
     { value: "BC", label: "British Columbia" },
     { value: "MB", label: "Manitoba" },
@@ -41,7 +41,11 @@ const provinces = [
 ];
 
 export default function CheckoutPage() {
-    const { isAuthenticated } = useAuth();
+    // ── Auth — destructure BOTH isAuthenticated AND isLoading ─────────────────
+    // isLoading tells us auth state is still being resolved — we must wait
+    // before redirecting, otherwise unauthenticated flashes happen.
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
+
     const { cartItems, cartTotal, vendorId, clearCart } = useCart();
     const router = useRouter();
 
@@ -67,15 +71,11 @@ export default function CheckoutPage() {
         name: "", number: "", expiry: "", cvv: ""
     });
 
+    // ── Data loader — stable reference via useCallback ───────────────────────
+    // useCallback ensures loadData doesn't change identity on every render,
+    // so it's safe to include in the useEffect dependency array.
 
-    useEffect(() => {
-        if (isLoading) return;
-        if (!isAuthenticated) { router.push("/"); return; }
-        if (cartItems.length === 0) { router.push("/cart"); return; }
-        loadData();
-    }, [isAuthenticated, isLoading]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -100,11 +100,25 @@ export default function CheckoutPage() {
             }
 
         } catch (e) {
-            toast.error("Could not load checkout data", e.message);
+            toast.error("Could not load checkout data", { description: e.message });
         } finally {
             setLoading(false);
         }
-    };
+    }, [vendorId]);
+
+    // ── Guard effect ──────────────────────────────────────────────────────────
+    // Wait for auth to resolve before acting — prevents redirect flicker.
+    // void loadData() explicitly discards the returned Promise, satisfying
+    // the "Promise returned is ignored" lint rule — effects can't be async.
+
+    useEffect(() => {
+        if (authLoading) return;
+        if (!isAuthenticated) { router.push("/"); return; }
+        if (cartItems.length === 0) { router.push("/cart"); return; }
+        void loadData();
+    }, [isAuthenticated, authLoading, cartItems.length, loadData, router]);
+
+    // ── Derived values ────────────────────────────────────────────────────────
 
     const selectedAddress = profileData?.addresses?.find(a => a.publicAddressId === selectedAddressId);
     const province = fulfillment === "delivery"
@@ -128,6 +142,8 @@ export default function CheckoutPage() {
         cardDetails.cvv.length >= 3;
 
     const canSubmit = !belowMinimum && cardComplete;
+
+    // ── Handlers ──────────────────────────────────────────────────────────────
 
     const handleCardChange = (e) => {
         let { name, value } = e.target;
@@ -177,17 +193,23 @@ export default function CheckoutPage() {
         if (!validateCard()) return;
 
         if (belowMinimum) {
-            toast.error("Minimum order not met", `Add $${(vendorData.minimumOrderAmount - cartTotal).toFixed(2)} more`);
+            toast.error("Minimum order not met", {
+                description: `Add $${(vendorData.minimumOrderAmount - cartTotal).toFixed(2)} more to proceed.`,
+            });
             return;
         }
 
         if (fulfillment === "delivery") {
             if (!showNewAddress && !selectedAddressId) {
-                toast.error("No address", "Please select or add a delivery address");
+                toast.error("No address selected", {
+                    description: "Please select or add a delivery address.",
+                });
                 return;
             }
             if (showNewAddress && (!newAddress.addressLine || !newAddress.city || !newAddress.postalCode)) {
-                toast.error("Incomplete address", "Please fill in all address fields");
+                toast.error("Incomplete address", {
+                    description: "Please fill in all required address fields.",
+                });
                 return;
             }
         }
@@ -200,22 +222,30 @@ export default function CheckoutPage() {
             // TODO: POST /orders
             await new Promise(r => setTimeout(r, 1200));
             clearCart();
-            toast.success("Order placed!", "Your order is being prepared");
+            toast.success("Order placed!", {
+                description: "Your order is being prepared.",
+            });
             router.push("/orders");
         } catch (e) {
-            toast.error("Failed to place order", e.message || "Please try again");
+            toast.error("Failed to place order", {
+                description: e.message || "Please try again.",
+            });
         } finally {
             setPlacing(false);
         }
     };
 
-    if (loading) {
+    // ── Loading state ─────────────────────────────────────────────────────────
+
+    if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
+
+    // ── Render ────────────────────────────────────────────────────────────────
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -248,12 +278,13 @@ export default function CheckoutPage() {
 
                 <div className="grid lg:grid-cols-5 gap-8">
 
-                    {/* Left */}
+                    {/* ── Left column ── */}
                     <div className="lg:col-span-3 space-y-4">
 
                         {/* Fulfillment */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><Truck className="w-3.5 h-3.5 text-orange-500" /></div>
                                 <h2 className="text-sm font-semibold text-gray-900">Fulfillment</h2>
                             </div>
                             <div className="p-4 grid grid-cols-2 gap-3">
@@ -289,7 +320,7 @@ export default function CheckoutPage() {
                                             <p className={`text-sm font-semibold ${fulfillment === opt.value && !opt.disabled ? "text-white" : "text-gray-900"}`}>
                                                 {opt.label}
                                             </p>
-                                            <p className={`text-xs mt-0.5 ${fulfillment === opt.value && !opt.disabled ? "text-gray-300" : "text-gray-400"}`}>
+                                            <p className={`text-xs mt-0.5 ${fulfillment === opt.value && !opt.disabled ? "text-orange-100" : "text-gray-400"}`}>
                                                 {opt.sub}
                                             </p>
                                         </div>
@@ -323,49 +354,53 @@ export default function CheckoutPage() {
                         {fulfillment === "delivery" && (
                             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                                    <h2 className="text-sm font-semibold text-gray-900">Delivery address</h2>
+                                    <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><MapPin className="w-3.5 h-3.5 text-orange-500" /></div>
+                                        <h2 className="text-sm font-semibold text-gray-900">Delivery address</h2></div>
                                     <button
                                         onClick={() => { setShowNewAddress(!showNewAddress); setSelectedAddressId(null); }}
-                                        className="text-sm text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1"
+                                        className="text-sm text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                         New address
                                     </button>
                                 </div>
                                 <div className="p-4 space-y-2">
-                                    {!showNewAddress && profileData?.addresses?.map(address => (
-                                        <button
-                                            key={address.publicAddressId}
-                                            onClick={() => setSelectedAddressId(address.publicAddressId)}
-                                            className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
-                                                selectedAddressId === address.publicAddressId
-                                                    ? "border-gray-900 bg-gray-50"
-                                                    : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                        >
-                                            <div className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
-                                                selectedAddressId === address.publicAddressId ? "border-gray-900" : "border-gray-300"
-                                            }`}>
-                                                {selectedAddressId === address.publicAddressId && (
-                                                    <div className="w-2 h-2 rounded-full bg-gray-900" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="text-sm font-medium text-gray-900">{address.addressLine}</p>
-                                                    {address.defaultAddress && (
-                                                        <span className="text-[10px] px-1.5 py-0.5 border border-gray-300 text-gray-500 rounded-full">Default</span>
+                                    {!showNewAddress && profileData?.addresses?.map(address => {
+                                        const { publicAddressId, addressLine, defaultAddress, city, province: addrProvince, postalCode } = address;
+                                        return (
+                                            <button
+                                                key={publicAddressId}
+                                                onClick={() => setSelectedAddressId(publicAddressId)}
+                                                className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                                                    selectedAddressId === publicAddressId
+                                                        ? "border-orange-500 bg-orange-50"
+                                                        : "border-gray-200 hover:border-orange-200"
+                                                }`}
+                                            >
+                                                <div className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
+                                                    selectedAddressId === publicAddressId ? "border-orange-500" : "border-gray-300"
+                                                }`}>
+                                                    {selectedAddressId === publicAddressId && (
+                                                        <div className="w-2 h-2 rounded-full bg-orange-500" />
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-gray-500 mt-0.5">
-                                                    {address.city}, {address.province} {address.postalCode}
-                                                </p>
-                                                <p className="text-xs text-gray-400 mt-0.5">
-                                                    {PROVINCIAL_TAX[address.province]?.label} · {(PROVINCIAL_TAX[address.province]?.rate * 100).toFixed(2)}%
-                                                </p>
-                                            </div>
-                                        </button>
-                                    ))}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="text-sm font-medium text-gray-900">{addressLine}</p>
+                                                        {defaultAddress && (
+                                                            <span className="text-[10px] px-1.5 py-0.5 border border-gray-300 text-gray-500 rounded-full">Default</span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        {city}, {addrProvince} {postalCode}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-0.5">
+                                                        {PROVINCIAL_TAX[addrProvince]?.label} · {(PROVINCIAL_TAX[addrProvince]?.rate * 100).toFixed(2)}%
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
 
                                     {!showNewAddress && !profileData?.addresses?.length && (
                                         <div className="text-center py-6">
@@ -373,7 +408,7 @@ export default function CheckoutPage() {
                                             <p className="text-sm text-gray-500">No saved addresses</p>
                                             <button
                                                 onClick={() => setShowNewAddress(true)}
-                                                className="text-sm text-gray-700 underline mt-1"
+                                                className="text-sm text-orange-600 hover:text-orange-700 underline mt-1"
                                             >
                                                 Add one
                                             </button>
@@ -388,7 +423,7 @@ export default function CheckoutPage() {
                                                 value={newAddress.addressLine}
                                                 onChange={handleNewAddressChange}
                                                 placeholder="Street address"
-                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                                             />
                                             <div className="grid grid-cols-2 gap-3">
                                                 <input
@@ -397,16 +432,16 @@ export default function CheckoutPage() {
                                                     value={newAddress.city}
                                                     onChange={handleNewAddressChange}
                                                     placeholder="City"
-                                                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                                                 />
                                                 <div className="relative">
                                                     <select
                                                         name="province"
                                                         value={newAddress.province}
                                                         onChange={handleNewAddressChange}
-                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 bg-white appearance-none"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 bg-white appearance-none"
                                                     >
-                                                        {provinces.map(p => (
+                                                        {PROVINCES.map(p => (
                                                             <option key={p.value} value={p.value}>{p.label}</option>
                                                         ))}
                                                     </select>
@@ -419,7 +454,7 @@ export default function CheckoutPage() {
                                                 value={newAddress.postalCode}
                                                 onChange={handleNewAddressChange}
                                                 placeholder="Postal code"
-                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900"
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                                             />
                                             <p className="text-xs text-gray-400">
                                                 Tax: {PROVINCIAL_TAX[newAddress.province]?.label} · {(PROVINCIAL_TAX[newAddress.province]?.rate * 100).toFixed(2)}%
@@ -440,9 +475,10 @@ export default function CheckoutPage() {
                             </div>
                         )}
 
-                        {/* Note */}
+                        {/* Delivery note */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><FileText className="w-3.5 h-3.5 text-orange-500" /></div>
                                 <h2 className="text-sm font-semibold text-gray-900">
                                     {fulfillment === "delivery" ? "Delivery instructions" : "Pickup note"}
                                     <span className="ml-2 text-xs font-normal text-gray-400">Optional</span>
@@ -456,20 +492,20 @@ export default function CheckoutPage() {
                                     placeholder={fulfillment === "delivery"
                                         ? "e.g., Leave at the door, ring the bell..."
                                         : "e.g., I'll arrive at 6pm"}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 resize-none"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 resize-none"
                                 />
                             </div>
                         </div>
 
                         {/* Payment */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><ShoppingBag className="w-3.5 h-3.5 text-orange-500" /></div>
                                 <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
                                 <p className="text-xs text-gray-400 mt-0.5">Credit or debit card</p>
                             </div>
                             <div className="p-4 space-y-3">
 
-                                {/* Name */}
                                 <div>
                                     <input
                                         type="text"
@@ -477,7 +513,7 @@ export default function CheckoutPage() {
                                         value={cardDetails.name}
                                         onChange={handleCardChange}
                                         placeholder="Cardholder name"
-                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 ${
+                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 ${
                                             cardErrors.name ? "border-red-400 bg-red-50" : "border-gray-300"
                                         }`}
                                     />
@@ -488,7 +524,6 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
 
-                                {/* Number */}
                                 <div>
                                     <input
                                         type="text"
@@ -496,7 +531,7 @@ export default function CheckoutPage() {
                                         value={cardDetails.number}
                                         onChange={handleCardChange}
                                         placeholder="Card number"
-                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 font-mono ${
+                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 font-mono ${
                                             cardErrors.number ? "border-red-400 bg-red-50" : "border-gray-300"
                                         }`}
                                     />
@@ -507,7 +542,6 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
 
-                                {/* Expiry + CVV */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <input
@@ -516,7 +550,7 @@ export default function CheckoutPage() {
                                             value={cardDetails.expiry}
                                             onChange={handleCardChange}
                                             placeholder="MM/YY"
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 font-mono ${
+                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 font-mono ${
                                                 cardErrors.expiry ? "border-red-400 bg-red-50" : "border-gray-300"
                                             }`}
                                         />
@@ -533,7 +567,7 @@ export default function CheckoutPage() {
                                             value={cardDetails.cvv}
                                             onChange={handleCardChange}
                                             placeholder="CVV"
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 font-mono ${
+                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 font-mono ${
                                                 cardErrors.cvv ? "border-red-400 bg-red-50" : "border-gray-300"
                                             }`}
                                         />
@@ -550,7 +584,7 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
-                    {/* Right — summary */}
+                    {/* ── Right column — order summary ── */}
                     <div className="lg:col-span-2">
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden sticky top-24">
 
@@ -637,7 +671,7 @@ export default function CheckoutPage() {
                                 )}
                             </div>
 
-                            {/* Blocked reasons */}
+                            {/* Blocked reasons — shown only after first submit attempt */}
                             {submitAttempted && !canSubmit && (
                                 <div className="px-5 pb-3">
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg">
@@ -654,7 +688,7 @@ export default function CheckoutPage() {
                                 </div>
                             )}
 
-                            {/* Place order */}
+                            {/* Place order button */}
                             <div className="px-5 pb-5">
                                 <button
                                     onClick={handlePlaceOrder}
@@ -662,7 +696,7 @@ export default function CheckoutPage() {
                                     className={`w-full py-3 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 active:scale-95 ${
                                         !canSubmit
                                             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                            : "bg-orange-600 text-white hover:bg-orange-700"
+                                            : "bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-md hover:shadow-lg"
                                     }`}
                                 >
                                     {placing ? (

@@ -1,7 +1,9 @@
+
 import { API_BASE_URL, fetchWithCredentials } from './httpClient';
 
 export const AuthAPI = {
-  // ================= SESSION =================
+
+  // ─── Session ───────────────────────────────────────────────────────────────
 
   login: async (identifier, password) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/login`, {
@@ -22,10 +24,33 @@ export const AuthAPI = {
     });
   },
 
-  refreshToken: async () => {
-    return fetchWithCredentials(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-    });
+  /**
+   * Refresh the access token using the HttpOnly refresh token cookie.
+   *
+   * @param {Function} onAuthCleared - Optional callback invoked when the
+   *   refresh token is invalid/expired (401 or 403). Use this to clear
+   *   auth state in your store/context without coupling AuthAPI to Redux.
+   *
+   * Returns { success: false, tokenExpired: true } on 401/403 so the
+   * caller can skip any retry logic rather than relying on a throw.
+   * Re-throws on all other errors (500, network failure, etc.).
+   */
+  refreshToken: async (onAuthCleared) => {
+    try {
+      return await fetchWithCredentials(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        // Refresh token is gone from the DB (backend restart, rotation
+        // invalidation, or manual revoke). Clear client auth state silently
+        // — no toast, no redirect loop.
+        onAuthCleared?.();
+        return { success: false, tokenExpired: true };
+      }
+      // Network error, 500, etc. — re-throw so the caller can decide
+      throw error;
+    }
   },
 
   getCurrentUser: async () => {
@@ -34,6 +59,10 @@ export const AuthAPI = {
     });
   },
 
+  /**
+   * Passive auth check — never throws.
+   * Returns { isAuthenticated, user } regardless of outcome.
+   */
   checkAuth: async () => {
     try {
       const result = await AuthAPI.getCurrentUser();
@@ -49,7 +78,7 @@ export const AuthAPI = {
     }
   },
 
-  // ================= PASSWORDS =================
+  // ─── Passwords ─────────────────────────────────────────────────────────────
 
   changePassword: async (currentPassword, newPassword) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/change-password`, {

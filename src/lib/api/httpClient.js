@@ -1,22 +1,27 @@
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 /**
- * Extract meaningful error message from wrapped API response
+ * Extract meaningful error message from a wrapped API response body.
  */
 export const extractErrorMessage = (errorData, defaultMessage) => {
   return (
-    errorData?.message ||
-    errorData?.error ||
-    errorData?.details ||
-    errorData?.data?.message ||
-    (typeof errorData === 'string' ? errorData : null) ||
-    defaultMessage
+      errorData?.message ||
+      errorData?.error ||
+      errorData?.details ||
+      errorData?.data?.message ||
+      (typeof errorData === 'string' ? errorData : null) ||
+      defaultMessage
   );
 };
 
 /**
  * Wrapper for fetch with credentials and response unwrapping.
- * Silences 401 errors on /auth/me (used for passive auth checks).
+ *
+ * - Attaches `error.status` to every thrown error so callers can
+ *   distinguish 401 (expired/invalid token) from 500 (server fault)
+ *   from network failures (status undefined).
+ * - Silences console noise for 401 on /auth/me (passive auth checks).
  */
 export const fetchWithCredentials = async (url, options = {}) => {
   const response = await fetch(url, {
@@ -45,7 +50,10 @@ export const fetchWithCredentials = async (url, options = {}) => {
       });
     }
 
-    throw new Error(errorMessage);
+
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    throw error;
   }
 
   return json;
