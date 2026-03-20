@@ -72,9 +72,6 @@ export default function CheckoutPage() {
     });
 
     // ── Data loader — stable reference via useCallback ───────────────────────
-    // useCallback ensures loadData doesn't change identity on every render,
-    // so it's safe to include in the useEffect dependency array.
-
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
@@ -107,10 +104,6 @@ export default function CheckoutPage() {
     }, [vendorId]);
 
     // ── Guard effect ──────────────────────────────────────────────────────────
-    // Wait for auth to resolve before acting — prevents redirect flicker.
-    // void loadData() explicitly discards the returned Promise, satisfying
-    // the "Promise returned is ignored" lint rule — effects can't be async.
-
     useEffect(() => {
         if (authLoading) return;
         if (!isAuthenticated) { router.push("/"); return; }
@@ -281,7 +274,9 @@ export default function CheckoutPage() {
                         {/* Fulfillment */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><Truck className="w-3.5 h-3.5 text-orange-500" /></div>
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                    <Truck className="w-3.5 h-3.5 text-orange-500" />
+                                </div>
                                 <h2 className="text-sm font-semibold text-gray-900">Fulfillment</h2>
                             </div>
                             <div className="p-4 grid grid-cols-2 gap-3">
@@ -351,8 +346,12 @@ export default function CheckoutPage() {
                         {fulfillment === "delivery" && (
                             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                                    <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><MapPin className="w-3.5 h-3.5 text-orange-500" /></div>
-                                        <h2 className="text-sm font-semibold text-gray-900">Delivery address</h2></div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                            <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                                        </div>
+                                        <h2 className="text-sm font-semibold text-gray-900">Delivery address</h2>
+                                    </div>
                                     <button
                                         onClick={() => { setShowNewAddress(!showNewAddress); setSelectedAddressId(null); }}
                                         className="text-sm text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1"
@@ -472,10 +471,42 @@ export default function CheckoutPage() {
                             </div>
                         )}
 
-                        {/* Delivery note */}
+                        {/* ── Pickup address — shown when fulfillment is pickup ── */}
+                        {fulfillment === "pickup" && vendorData?.address && (
+                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                        <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                                    </div>
+                                    <h2 className="text-sm font-semibold text-gray-900">Pickup location</h2>
+                                </div>
+                                <div className="p-4">
+                                    <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                                        <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {vendorData.restaurantName}
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-0.5">
+                                                {vendorData.address.formattedAddress}
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {PROVINCIAL_TAX[vendorData.address.province]?.label}
+                                                {" · "}
+                                                {((PROVINCIAL_TAX[vendorData.address.province]?.rate ?? 0) * 100).toFixed(2)}%
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Delivery / pickup note */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><FileText className="w-3.5 h-3.5 text-orange-500" /></div>
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                    <FileText className="w-3.5 h-3.5 text-orange-500" />
+                                </div>
                                 <h2 className="text-sm font-semibold text-gray-900">
                                     {fulfillment === "delivery" ? "Delivery instructions" : "Pickup note"}
                                     <span className="ml-2 text-xs font-normal text-gray-400">Optional</span>
@@ -497,7 +528,9 @@ export default function CheckoutPage() {
                         {/* Payment */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"><ShoppingBag className="w-3.5 h-3.5 text-orange-500" /></div>
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                    <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
+                                </div>
                                 <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
                                 <p className="text-xs text-gray-400 mt-0.5">Credit or debit card</p>
                             </div>
