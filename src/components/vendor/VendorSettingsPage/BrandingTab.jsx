@@ -1,6 +1,7 @@
+"use client";
 import React from 'react';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
-import { Image, Upload, Sparkles } from 'lucide-react';
+import { ImageIcon, Upload, Sparkles } from 'lucide-react';
 
 const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImageUpload }) => {
     return (
@@ -10,7 +11,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                 <div className="absolute inset-0 bg-linear-to-r from-orange-500/10 via-orange-400/5 to-transparent rounded-2xl blur-xl"></div>
                 <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <div className="bg-linear-to-br from-orange-500 to-amber-500 p-2.5 sm:p-3 rounded-xl shadow-lg w-fit">
-                        <Image
+                        <ImageIcon
                             className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div className="flex-1">
@@ -26,7 +27,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-5 sm:mb-6">
                         <div className="bg-white p-2.5 sm:p-3 rounded-xl shadow-sm w-fit">
 
-                            <Image
+                            <ImageIcon
                                 className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                         </div>
                         <div className="flex-1">
@@ -38,7 +39,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     </div>
                     <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-dashed border-orange-200 hover:border-orange-400 transition-all duration-200">
                         <div className="flex justify-center">
-                            <ImageUploader
+                            <ImageIconUploader
                                 id="vendor-logo"
                                 value={logoFile}
                                 onChange={setLogoFile}
@@ -66,7 +67,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     </div>
                     <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-dashed border-blue-200 hover:border-blue-400 transition-all duration-200">
                         <div className="flex justify-center">
-                            <ImageUploader
+                            <ImageIconUploader
                                 id="vendor-banner"
                                 value={bannerFile}
                                 onChange={setBannerFile}

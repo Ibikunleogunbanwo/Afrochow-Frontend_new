@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { Save, RefreshCw, Clock, Calendar } from 'lucide-react';
 import { DAYS_OF_WEEK } from '@/components/vendor/VendorSettingsPage/utils/constants';

@@ -28,20 +28,30 @@ async function fileToSerializable(file) {
 }
 
 /**
- * Convert serializable object back to File
+ * Convert serializable object back to File.
+ * Uses atob() to decode the base64 data URL — works in all browsers and
+ * avoids fetch(data:) which is blocked in many production environments.
  */
 function serializableToFile(obj) {
   if (!obj || !obj.data) return null;
 
   try {
-    // Convert base64 data URL to blob
-    const response = fetch(obj.data);
-    return response.then(res => res.blob()).then(blob => {
-      return new File([blob], obj.name, {
-        type: obj.type,
-        lastModified: obj.lastModified,
-      });
+    // data is a base64 data URL: "data:<type>;base64,<data>"
+    const commaIndex = obj.data.indexOf(',');
+    if (commaIndex === -1) return null;
+
+    const base64 = obj.data.slice(commaIndex + 1);
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: obj.type });
+    const file = new File([blob], obj.name, {
+      type: obj.type,
+      lastModified: obj.lastModified,
     });
+    return Promise.resolve(file);
   } catch (error) {
     console.error('Error converting to File:', error);
     return null;
@@ -71,7 +81,6 @@ export async function saveFiles(files) {
     }
 
     sessionStorage.setItem(FILE_STORAGE_KEY, JSON.stringify(serializable));
-    console.log('Files saved to sessionStorage');
   } catch (error) {
     console.error('Error saving files:', error);
   }
@@ -103,7 +112,6 @@ export async function loadFiles() {
       files.bannerFile = await serializableToFile(serializable.bannerFile);
     }
 
-    console.log('Files loaded from sessionStorage:', files);
     return files;
   } catch (error) {
     console.error('Error loading files:', error);
@@ -117,5 +125,4 @@ export async function loadFiles() {
 export function clearFiles() {
   if (typeof window === 'undefined') return;
   sessionStorage.removeItem(FILE_STORAGE_KEY);
-  console.log('Files cleared from sessionStorage');
 }

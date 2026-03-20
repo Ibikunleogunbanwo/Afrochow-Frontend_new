@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect, useRef } from 'react';
 import { Upload, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { Label } from '@/components/ui/label';

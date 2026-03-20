@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { Save, RefreshCw, MapPin, Building2, Globe } from 'lucide-react';
 import { CANADIAN_PROVINCES } from '@/components/vendor/VendorSettingsPage/utils/constants';
@@ -77,12 +78,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                                 className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all bg-white appearance-none"
                                 style={{ color: 'black' }}
                             >
-                                <option value="">
-                                    {profile?.address?.province
-                                        ? CANADIAN_PROVINCES.find((p) => p.code === profile.address.province)?.name ||
-                                        profile.address.province
-                                        : 'Select province'}
-                                </option>
+                                <option value="">Select province</option>
                                 {CANADIAN_PROVINCES.map((province) => (
                                     <option key={province.code} value={province.code}>
                                         {province.name} ({province.code})

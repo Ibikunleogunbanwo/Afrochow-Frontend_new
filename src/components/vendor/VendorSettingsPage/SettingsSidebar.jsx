@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { User, Store, MapPin, Clock, Image as ImageIcon, LogOut } from 'lucide-react';
 

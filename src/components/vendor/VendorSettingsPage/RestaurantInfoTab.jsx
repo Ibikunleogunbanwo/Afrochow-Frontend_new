@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { Save, RefreshCw } from 'lucide-react';
 
@@ -68,88 +69,83 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
                     />
                 </InputBlock>
 
-                {/* ---------- Two-column fields ---------- */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                    <InputBlock label="Preparation Time (mins)">
-                        <input
-                            type="number"
-                            min="1"
-                            value={profileForm.preparationTime}
-                            onChange={(e) =>
-                                setProfileForm({ ...profileForm, preparationTime: e.target.value })
-                            }
-                            className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                            placeholder="30"
-                        />
-                    </InputBlock>
-
-                    <InputBlock label="Delivery Fee (CAD)">
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={profileForm.deliveryFee}
-                            onChange={(e) =>
-                                setProfileForm({ ...profileForm, deliveryFee: e.target.value })
-                            }
-                            className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                            placeholder="5.00"
-                        />
-                    </InputBlock>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                    <InputBlock label="Minimum Order (CAD)">
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={profileForm.minimumOrderAmount}
-                            onChange={(e) =>
-                                setProfileForm({
-                                    ...profileForm,
-                                    minimumOrderAmount: e.target.value,
-                                })
-                            }
-                            className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                            placeholder="15.00"
-                        />
-                    </InputBlock>
-
-                    <InputBlock label="Delivery Time (mins)">
-                        <input
-                            type="number"
-                            min="1"
-                            value={profileForm.estimatedDeliveryMinutes}
-                            onChange={(e) =>
-                                setProfileForm({
-                                    ...profileForm,
-                                    estimatedDeliveryMinutes: e.target.value,
-                                })
-                            }
-                            className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                            placeholder="45"
-                        />
-                    </InputBlock>
-                </div>
-
-                {/* Max Delivery Distance */}
-                <InputBlock label="Max Delivery Distance (km)">
+                {/* Preparation Time — always visible */}
+                <InputBlock label="Preparation Time (mins)">
                     <input
                         type="number"
-                        step="0.1"
-                        min="0"
-                        value={profileForm.maxDeliveryDistanceKm}
+                        min="1"
+                        value={profileForm.preparationTime}
                         onChange={(e) =>
-                            setProfileForm({
-                                ...profileForm,
-                                maxDeliveryDistanceKm: e.target.value,
-                            })
+                            setProfileForm({ ...profileForm, preparationTime: e.target.value })
                         }
-                        className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                        placeholder="10.0"
+                        className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        placeholder="30"
                     />
                 </InputBlock>
+
+                {/* Delivery fields — only shown when delivery is enabled */}
+                {profileForm.offersDelivery && (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                            <InputBlock label="Delivery Fee (CAD)">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={profileForm.deliveryFee}
+                                    onChange={(e) =>
+                                        setProfileForm({ ...profileForm, deliveryFee: e.target.value })
+                                    }
+                                    className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    placeholder="5.00"
+                                />
+                            </InputBlock>
+
+                            <InputBlock label="Minimum Order Amount (CAD)">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={profileForm.minimumOrderAmount}
+                                    onChange={(e) =>
+                                        setProfileForm({ ...profileForm, minimumOrderAmount: e.target.value })
+                                    }
+                                    className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    placeholder="15.00"
+                                />
+                            </InputBlock>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                            <InputBlock label="Estimated Delivery Time (mins)">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={profileForm.estimatedDeliveryMinutes}
+                                    onChange={(e) =>
+                                        setProfileForm({ ...profileForm, estimatedDeliveryMinutes: e.target.value })
+                                    }
+                                    className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    placeholder="45"
+                                />
+                            </InputBlock>
+
+                            <InputBlock label="Max Delivery Radius (km)">
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    value={profileForm.maxDeliveryDistanceKm}
+                                    onChange={(e) =>
+                                        setProfileForm({ ...profileForm, maxDeliveryDistanceKm: e.target.value })
+                                    }
+                                    className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    placeholder="10.0"
+                                />
+                            </InputBlock>
+                        </div>
+                    </>
+                )}
 
                 {/* Service Options */}
                 <div className="bg-linear-to-br from-white to-gray-50/50 border border-gray-200 rounded-2xl p-5 sm:p-6 hover:border-orange-300 transition-all duration-200">
