@@ -39,7 +39,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     </div>
                     <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-dashed border-orange-200 hover:border-orange-400 transition-all duration-200">
                         <div className="flex justify-center">
-                            <ImageIconUploader
+                            <ImageUploader
                                 id="vendor-logo"
                                 value={logoFile}
                                 onChange={setLogoFile}
@@ -67,7 +67,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     </div>
                     <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8 border-2 border-dashed border-blue-200 hover:border-blue-400 transition-all duration-200">
                         <div className="flex justify-center">
-                            <ImageIconUploader
+                            <ImageUploader
                                 id="vendor-banner"
                                 value={bannerFile}
                                 onChange={setBannerFile}
