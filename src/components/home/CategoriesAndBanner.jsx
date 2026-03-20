@@ -28,6 +28,17 @@ const iconMap = {
     "default": ChefHat,
 };
 
+const categoryDescriptions = {
+    "African Kitchen":  "Authentic home-cooked meals delivered fresh",
+    "Groceries":        "African ingredients & pantry essentials",
+    "Farm Produce":     "Fresh fruits, vegetables & more",
+    "Cakes":            "Custom cakes for every occasion",
+    "Soups":            "Rich, hearty soups from across Africa",
+    "African Soups":    "Rich, hearty soups from across Africa",
+    "Pastries":         "Freshly baked treats every day",
+    "Baked Goods":      "Freshly baked treats every day",
+};
+
 const cardGradients = [
     "from-orange-500 to-red-600",
     "from-pink-500 to-purple-600",
@@ -106,35 +117,14 @@ const CategoriesAndBanner = () => {
             const response = await SearchAPI.getAllCategories();
 
             if (response?.success && response?.data) {
-                const mapped = response.data.map((category, index) => ({
+                // merged into a single .map() — removes the unused `mapped` intermediate variable
+                const items = response.data.map((category, index) => ({
                     id: category.categoryId,
-                    categoryId: category.categoryId,
+                    title: category.name,
+                    description: categoryDescriptions[category.name] || 'Explore our delicious selection',
                     icon: iconMap[category.name] || iconMap.default,
-                    label: category.name,
-                    color: cardGradients[index % cardGradients.length],
                     path: `/restaurants?categoryId=${category.categoryId}`,
-                }));
-
-                const items = mapped.map((cat, index) => ({
-                    id: cat.id,
-                    title: cat.label,
-                    description: cat.label === 'African Kitchen'
-                        ? 'Authentic home-cooked meals delivered fresh'
-                        : cat.label === 'Groceries'
-                            ? 'African ingredients & pantry essentials'
-                            : cat.label === 'Farm Produce'
-                                ? 'Fresh fruits, vegetables & more'
-                                : cat.label === 'Cakes'
-                                    ? 'Custom cakes for every occasion'
-                                    : cat.label === 'Soups' || cat.label === 'African Soups'
-                                        ? 'Rich, hearty soups from across Africa'
-                                        : cat.label === 'Pastries' || cat.label === 'Baked Goods'
-                                            ? 'Freshly baked treats every day'
-                                            : 'Explore our delicious selection',
-                    href: cat.path,
-                    icon: cat.icon,
                     colorIndex: index,
-                    path: cat.path,
                 }));
 
                 setStackItems(items);
@@ -153,7 +143,7 @@ const CategoriesAndBanner = () => {
         void loadCategories();
     }, [loadCategories]);
 
-    const cardWidth = isMobile ? 300 : 480;
+    const cardWidth  = isMobile ? 300 : 480;
     const cardHeight = isMobile ? 260 : 320;
 
     return (
@@ -176,7 +166,7 @@ const CategoriesAndBanner = () => {
                         </span>
                     </h2>
                     <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                        From sizzling home kitchens that promises amazing african dishes to African grocery stores find exactly what you&#39;re craving
+                        From sizzling home kitchens that promise amazing African dishes to African grocery stores — find exactly what you&#39;re craving
                     </p>
                 </div>
 

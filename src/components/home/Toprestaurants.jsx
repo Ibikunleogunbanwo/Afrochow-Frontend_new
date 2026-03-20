@@ -14,64 +14,61 @@ const TopStores = () => {
     const { city } = useLocation();
 
     useEffect(() => {
+        const fetchTopStores = async () => {
+            try {
+                setLoading(true);
+
+                // Use city-specific endpoint when a city is selected — avoids
+                // fetching all vendors and filtering in-memory on the frontend.
+                const response = city
+                    ? await SearchAPI.getVendorsByCity(city)
+                    : await SearchAPI.getTopRatedVendors();
+
+                const vendors = Array.isArray(response)
+                    ? response
+                    : response?.success && response?.data
+                        ? response.data
+                        : [];
+
+                const transformedVendors = vendors.map(vendor => ({
+                    storeId: vendor.publicUserId,
+                    vendorPublicId: vendor.publicUserId,
+                    name: vendor.restaurantName,
+                    restaurantName: vendor.restaurantName,
+                    rating: vendor.averageRating || 0,
+                    reviewCount: vendor.reviewCount || 0,
+                    categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
+                    deliveryTime: vendor.estimatedDeliveryMinutes || 30,
+                    deliveryFee: vendor.deliveryFee || 0,
+                    location: vendor.address?.city && vendor.address?.province
+                        ? `${vendor.address.city}, ${vendor.address.province}`
+                        : vendor.address?.city || '',
+                    popularItems: vendor.bannerUrl
+                        ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
+                        : vendor.logoUrl
+                            ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
+                            : [],
+                    isOpenNow: vendor.isOpenNow,
+                    todayHoursFormatted: vendor.todayHoursFormatted,
+                }));
+
+                // open first, closed at the bottom
+                const sortedVendors = transformedVendors.sort((a, b) => {
+                    if (a.isOpenNow === b.isOpenNow) return 0;
+                    return a.isOpenNow ? -1 : 1;
+                });
+
+                setStores(sortedVendors);
+            } catch (error) {
+                console.error('Error fetching top stores:', error);
+                setStores([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         void fetchTopStores();
     }, [city]);
-
-    const fetchTopStores = async () => {
-        try {
-            setLoading(true);
-
-            const response = await SearchAPI.getTopRatedVendors(12);
-
-            const vendors = Array.isArray(response)
-                ? response
-                : response?.success && response?.data
-                    ? response.data
-                    : [];
-
-            // filter by city if available
-            const filteredVendors = city
-                ? vendors.filter(v =>
-                    v.address?.city?.toLowerCase() === city.toLowerCase()
-                )
-                : vendors;
-
-            const transformedVendors = filteredVendors.map(vendor => ({
-                storeId: vendor.publicUserId,
-                vendorPublicId: vendor.publicUserId,
-                name: vendor.restaurantName,
-                restaurantName: vendor.restaurantName,
-                rating: vendor.averageRating || 0,
-                reviewCount: vendor.reviewCount || 0,
-                categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
-                deliveryTime: vendor.estimatedDeliveryMinutes || 30,
-                deliveryFee: vendor.deliveryFee || 0,
-                location: vendor.address?.city && vendor.address?.province
-                    ? `${vendor.address.city}, ${vendor.address.province}`
-                    : vendor.address?.city || '',
-                popularItems: vendor.bannerUrl
-                    ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
-                    : vendor.logoUrl
-                        ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
-                        : [],
-                isOpenNow: vendor.isOpenNow,
-                todayHoursFormatted: vendor.todayHoursFormatted,
-            }));
-
-            // open first, closed at the bottom
-            const sortedVendors = transformedVendors.sort((a, b) => {
-                if (a.isOpenNow === b.isOpenNow) return 0;
-                return a.isOpenNow ? -1 : 1;
-            });
-
-            setStores(sortedVendors);
-        } catch (error) {
-            console.error('Error fetching top stores:', error);
-            setStores([]);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <section className="py-16 bg-linear-to-b from-white to-orange-50/30">
@@ -87,7 +84,7 @@ const TopStores = () => {
                         <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
                             Best Stores
                             <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
-                                in {city}
+                                {city ? `in ${city}` : 'Near You'}
                             </span>
                         </h2>
                         <p className="text-lg text-gray-600 max-w-xl">
@@ -129,7 +126,7 @@ const TopStores = () => {
                 ) : (
                     <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
                         <p className="text-gray-500 text-lg font-medium">
-                            No stores available in {city} at the moment
+                            No stores available {city ? `in ${city}` : 'in your area'} at the moment
                         </p>
                         <p className="text-sm text-gray-400 mt-2">
                             Try selecting a different city from the dropdown above

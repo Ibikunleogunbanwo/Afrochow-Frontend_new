@@ -31,51 +31,54 @@ const FeaturedRestaurants = () => {
                     return map;
                 }, {});
 
-                // merge product data with vendor data
-                const transformedStores = products.map(product => {
-                    const vendor = vendorMap[product.vendorPublicId] || {};
+                // only include products whose vendor exists in the verified vendor map,
+                // then merge product data with vendor data
+                const transformedStores = products
+                    .filter(product => vendorMap[product.vendorPublicId])
+                    .map(product => {
+                        const vendor = vendorMap[product.vendorPublicId];
 
-                    return {
-                        // ids
-                        storeId: product.publicProductId,
-                        vendorPublicId: product.vendorPublicId,
-                        publicProductId: product.publicProductId,
+                        return {
+                            // ids
+                            storeId: product.publicProductId,
+                            vendorPublicId: product.vendorPublicId,
+                            publicProductId: product.publicProductId,
 
-                        // product details
-                        name: product.name,
-                        rating: product.averageRating || 0,
-                        reviewCount: product.reviewCount || 0,
-                        categories: product.categoryName
-                            ? [product.categoryName]
-                            : ['African Cuisine'],
-                        popularItems: [{
+                            // product details
                             name: product.name,
-                            imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                            price: product.price,
-                            description: product.description,
-                        }],
+                            rating: product.averageRating || 0,
+                            reviewCount: product.reviewCount || 0,
+                            categories: product.categoryName
+                                ? [product.categoryName]
+                                : ['African Cuisine'],
+                            popularItems: [{
+                                name: product.name,
+                                imageUrl: product.imageUrl || '/image/placeholder.jpg',
+                                price: product.price,
+                                description: product.description,
+                            }],
 
-                        // vendor details
-                        restaurantName: product.restaurantName || vendor.restaurantName,
-                        deliveryTime: vendor.estimatedDeliveryMinutes || product.preparationTimeMinutes || 30,
-                        deliveryFee: vendor.deliveryFee || 2.99,
-                        location: vendor.address?.city && vendor.address?.province
-                            ? `${vendor.address.city}, ${vendor.address.province}`
-                            : product.vendorCity && product.vendorProvince
-                                ? `${product.vendorCity}, ${product.vendorProvince}`
-                                : product.vendorCity || '',
+                            // vendor details
+                            restaurantName: product.restaurantName || vendor.restaurantName,
+                            deliveryTime: vendor.estimatedDeliveryMinutes || product.preparationTimeMinutes || 30,
+                            deliveryFee: vendor.deliveryFee || 2.99,
+                            location: vendor.address?.city && vendor.address?.province
+                                ? `${vendor.address.city}, ${vendor.address.province}`
+                                : product.vendorCity && product.vendorProvince
+                                    ? `${product.vendorCity}, ${product.vendorProvince}`
+                                    : product.vendorCity || '',
 
-                        // open status — from vendor (timezone-aware)
-                        isOpenNow: vendor.isOpenNow ?? null,
-                        todayHoursFormatted: vendor.todayHoursFormatted ?? null,
-                    };
-                });
+                            // open status — from vendor (timezone-aware)
+                            isOpenNow: vendor.isOpenNow ?? null,
+                            todayHoursFormatted: vendor.todayHoursFormatted ?? null,
+                        };
+                    });
 
                 // open first, closed at the bottom
                 const sortedStores = transformedStores.sort((a, b) => {
-                    if (a.isOpenNow === b.isOpenNow) return 0
-                    return a.isOpenNow ? -1 : 1
-                })
+                    if (a.isOpenNow === b.isOpenNow) return 0;
+                    return a.isOpenNow ? -1 : 1;
+                });
 
                 setFeaturedStores(sortedStores);
             } catch (error) {
