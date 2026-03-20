@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
 import { AuthAPI } from '@/lib/api/auth.api';
+import { deleteImage } from '@/lib/api/imageUpload';
 import { toast } from 'sonner';
 import SettingsSidebar from '@/components/vendor/VendorSettingsPage/SettingsSidebar';
 import LoadingState from '@/components/vendor/VendorSettingsPage/LoadingState';
@@ -195,19 +196,27 @@ const VendorSettingsPage = () => {
             return;
         }
 
+        const oldUrl = type === 'logo' ? profile?.logoUrl : profile?.bannerUrl;
+
         try {
             const response = await VendorProfileAPI.uploadVendorImage(file, type);
 
             if (response?.success) {
                 toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
 
+                const newUrl = type === 'logo' ? response.data?.logoUrl : response.data?.bannerUrl;
+
                 if (setFileState) {
-                    const newUrl = type === 'logo' ? response.data?.logoUrl : response.data?.bannerUrl;
                     setFileState(newUrl);
                 }
 
                 await fetchProfile();
-                return response.data?.logoUrl || response.data?.bannerUrl;
+
+                if (oldUrl && oldUrl !== newUrl) {
+                    deleteImage(oldUrl);
+                }
+
+                return newUrl;
             }
         } catch (error) {
             console.error(`Error uploading ${type}:`, error);

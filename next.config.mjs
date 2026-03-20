@@ -30,6 +30,20 @@ const nextConfig = {
         port: '8080',
         pathname: '/api/images/**',
       },
+
+      {
+        protocol: 'https',
+        hostname: 'api.afrochow.ca',
+        pathname: '/api/images/**',
+      },
+
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8080',
+        pathname: '/api/images/**',
+      },
+
       {
         protocol: 'https',
         hostname: 'afrochow-backendnew-production.up.railway.app',

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedState } from "@/hooks/useSavedState";
 import { CustomerAPI } from "@/lib/api/customer.api";
-import { ImageUploadAPI } from "@/lib/api/imageUpload";
-import { toast } from "@/components/ui/toast";
+import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
+import { toast } from "sonner";
 import Image from "next/image";
 import {
     Pencil, Check, CheckCircle2, XCircle, Plus, Trash2, Star,
@@ -208,10 +208,10 @@ export default function ProfilePage() {
                     profileImageUrl: data.profileImageUrl || "",
                 });
             } else {
-                toast.error("Failed to load profile", "No profile data returned");
+                toast.error("Failed to load profile. No profile data returned.");
             }
         } catch (error) {
-            toast.error("Failed to load profile", error.message || "Please try again later");
+            toast.error(error.message || "Failed to load profile. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -253,7 +253,7 @@ export default function ProfilePage() {
             }
         } catch (error) {
             sectionSave.setError();
-            toast.error("Failed to save", error.message || "Please try again");
+            toast.error(error.message || "Failed to save. Please try again.");
         }
     };
 
@@ -281,7 +281,7 @@ export default function ProfilePage() {
             } else throw new Error("Failed to add address");
         } catch (error) {
             addressSave.setError();
-            toast.error("Failed to add address", error.message || "Please try again");
+            toast.error(error.message || "Failed to add address. Please try again.");
         }
     };
 
@@ -297,7 +297,7 @@ export default function ProfilePage() {
             } else throw new Error("Failed to update address");
         } catch (error) {
             addressSave.setError();
-            toast.error("Failed to update address", error.message || "Please try again");
+            toast.error(error.message || "Failed to update address. Please try again.");
         }
     };
 
@@ -309,7 +309,7 @@ export default function ProfilePage() {
                 await fetchProfile();
             } else throw new Error("Failed to delete");
         } catch (error) {
-            toast.error("Failed to delete address", error.message || "Please try again");
+            toast.error(error.message || "Failed to delete address. Please try again.");
         }
     };
 
@@ -320,43 +320,68 @@ export default function ProfilePage() {
                 await fetchProfile();
             } else throw new Error("Failed to set default");
         } catch (error) {
-            toast.error("Failed to set default", error.message || "Please try again");
+            toast.error(error.message || "Failed to set default address. Please try again.");
         }
     };
 
     const handleImageUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
         if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
-            toast.error("Invalid file type", "Please upload JPG, PNG or WebP");
+            toast.error("Invalid file type. Please upload JPG, PNG or WebP.");
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            toast.error("File too large", "Max 5MB");
+            toast.error("File too large. Maximum size is 5MB.");
             return;
         }
+
+        // ✅ Patch 3: capture from profileData, not formData (avoids stale state)
+        const oldImageUrl = profileData?.profileImageUrl || null;
+
         try {
             setUploadingImage(true);
+
             const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(file, "CustomerProfileImage");
             const imageUrl =
                 uploadResponse?.data?.imageUrl ||
                 uploadResponse?.imageUrl ||
                 uploadResponse?.data?.url ||
                 uploadResponse?.url;
-            if (!imageUrl) throw new Error("No URL returned");
+
+            if (!imageUrl) throw new Error("No URL returned from upload");
+
+            // ✅ Patch 3: spread from profileData, not formData
             const updateResponse = await CustomerAPI.updateCustomerProfile({
-                ...formData, profileImageUrl: imageUrl,
+                firstName: profileData.firstName,
+                lastName: profileData.lastName,
+                phone: profileData.phone,
+                defaultDeliveryInstructions: profileData.defaultDeliveryInstructions,
+                profileImageUrl: imageUrl,
             });
+
             if (updateResponse?.success !== false) {
+                // ✅ Patch 1: fire-and-forget with warning log, doesn't block or throw
+                if (oldImageUrl && oldImageUrl !== imageUrl) {
+                    deleteImage(oldImageUrl).catch((err) =>
+                        console.warn("Old image cleanup failed:", err)
+                    );
+                }
+
                 await fetchProfile();
                 setImageError(false);
                 setPhotoSaved(true);
                 setTimeout(() => setPhotoSaved(false), 2000);
-            } else throw new Error("Failed to update profile image");
+            } else {
+                throw new Error("Failed to update profile image");
+            }
         } catch (error) {
-            toast.error("Upload failed", error.message || "Please try again");
+            toast.error(error.message || "Upload failed. Please try again.");
         } finally {
             setUploadingImage(false);
+            // ✅ Patch 2: reset input so re-selecting same file triggers onChange
+            e.target.value = "";
         }
     };
 

@@ -1,21 +1,40 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
+/**
+ * Delete a previously uploaded image by URL.
+ * Silently ignores failures so a deletion error never blocks an upload flow.
+ * @param {string} imageUrl - The full image URL to delete
+ */
+export async function deleteImage(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) return;
+  try {
+    const res = await fetch(
+        `${API_BASE_URL}/images?imageUrl=${encodeURIComponent(imageUrl)}`,
+        { method: 'DELETE' }
+    );
+    if (!res.ok) {
+      console.warn("Image cleanup returned non-OK status:", res.status, imageUrl);
+    }
+  } catch (err) {
+    console.warn("Image cleanup failed:", err);
+  }
+}
+
 export class ImageUploadAPI {
   /**
-   * Upload a registration image
+   * Upload a registration image.
    * @param {File} file - The file to upload
-   * @param {string} category - Image category (e.g., 'CustomerProfileImage', 'VendorLogo', 'ProductImage')
-   * @param {string} signal - Optional abort signal for cancellation
+   * @param {string} category - Image category (e.g. 'VendorProfileImage', 'CustomerProfileImage')
+   * @param {AbortSignal} [signal] - Optional abort signal for cancellation
    * @returns {Promise<Object>} - Response JSON with imageUrl
    *
    * @example
-   * const response = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorLogo');
-   * console.log(response.imageUrl); // "https://cdn.afrochow.com/..."
+   * const response = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorProfileImage');
+   * console.log(response.imageUrl);
    */
-  static async uploadRegistrationImage(file, category = 'CustomerProfileImage', signal) {
-    if (!file) {
-      throw new Error('File is required');
-    }
+  static async uploadRegistrationImage(file, category, signal) {
+    if (!file) throw new Error('File is required');
+    if (!category) throw new Error('Category is required');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -37,24 +56,28 @@ export class ImageUploadAPI {
   }
 
   /**
-   * Upload profile image for authenticated customer
+   * Upload a profile image for an authenticated user.
    * @param {File} file - The profile image file to upload
-   * @param {string} signal - Optional abort signal for cancellation
+   * @param {string} category - Image category (e.g. 'CustomerProfileImage')
+   * @param {string} userId - The user's public ID
+   * @param {AbortSignal} [signal] - Optional abort signal for cancellation
    * @returns {Promise<Object>} - Response JSON with imageUrl
    *
    * @example
-   * const response = await ImageUploadAPI.uploadProfileImage(file);
-   * console.log(response.data.imageUrl); // "http://localhost:8080/api/images/profiles/..."
+   * const response = await ImageUploadAPI.uploadProfileImage(file, 'CustomerProfileImage', userId);
+   * console.log(response.imageUrl);
    */
-  static async uploadProfileImage(file, signal) {
-    if (!file) {
-      throw new Error('File is required');
-    }
+  static async uploadProfileImage(file, category, userId, signal) {
+    if (!file) throw new Error('File is required');
+    if (!category) throw new Error('Category is required');
+    if (!userId) throw new Error('userId is required');
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
+    formData.append('category', category);
+    formData.append('userId', userId);
 
-    const response = await fetch(`${API_BASE_URL}/customer/profile/image`, {
+    const response = await fetch(`${API_BASE_URL}/images/upload/user`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
