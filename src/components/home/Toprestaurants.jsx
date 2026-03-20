@@ -18,41 +18,57 @@ const TopStores = () => {
             try {
                 setLoading(true);
 
+                // Fetch vendors and verified list in parallel.
                 // Use city-specific endpoint when a city is selected — avoids
                 // fetching all vendors and filtering in-memory on the frontend.
-                const response = city
-                    ? await SearchAPI.getVendorsByCity(city)
-                    : await SearchAPI.getTopRatedVendors();
+                const [vendorsResponse, verifiedResponse] = await Promise.all([
+                    city
+                        ? SearchAPI.getVendorsByCity(city)
+                        : SearchAPI.getTopRatedVendors(),
+                    SearchAPI.getVerifiedVendors(),
+                ]);
 
-                const vendors = Array.isArray(response)
-                    ? response
-                    : response?.success && response?.data
-                        ? response.data
+                const vendors = Array.isArray(vendorsResponse)
+                    ? vendorsResponse
+                    : vendorsResponse?.success && vendorsResponse?.data
+                        ? vendorsResponse.data
                         : [];
 
-                const transformedVendors = vendors.map(vendor => ({
-                    storeId: vendor.publicUserId,
-                    vendorPublicId: vendor.publicUserId,
-                    name: vendor.restaurantName,
-                    restaurantName: vendor.restaurantName,
-                    rating: vendor.averageRating || 0,
-                    reviewCount: vendor.reviewCount || 0,
-                    categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
-                    deliveryTime: vendor.estimatedDeliveryMinutes || 30,
-                    deliveryFee: vendor.deliveryFee || 0,
-                    location: vendor.address?.city && vendor.address?.province
-                        ? `${vendor.address.city}, ${vendor.address.province}`
-                        : vendor.address?.city || '',
-                    popularItems: vendor.bannerUrl
-                        ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
-                        : vendor.logoUrl
-                            ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
-                            : [],
-                    isOpenNow: vendor.isOpenNow,
-                    todayHoursFormatted: vendor.todayHoursFormatted,
-                }));
+                const verified = Array.isArray(verifiedResponse)
+                    ? verifiedResponse
+                    : verifiedResponse?.success && verifiedResponse?.data
+                        ? verifiedResponse.data
+                        : [];
 
-                // open first, closed at the bottom
+                // Build a Set of verified vendor IDs for O(1) membership checks.
+                const verifiedIds = new Set(verified.map(v => v.publicUserId));
+
+                // Drop any vendor not present in the verified set.
+                const transformedVendors = vendors
+                    .filter(vendor => verifiedIds.has(vendor.publicUserId))
+                    .map(vendor => ({
+                        storeId: vendor.publicUserId,
+                        vendorPublicId: vendor.publicUserId,
+                        name: vendor.restaurantName,
+                        restaurantName: vendor.restaurantName,
+                        rating: vendor.averageRating || 0,
+                        reviewCount: vendor.reviewCount || 0,
+                        categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
+                        deliveryTime: vendor.estimatedDeliveryMinutes || 30,
+                        deliveryFee: vendor.deliveryFee || 0,
+                        location: vendor.address?.city && vendor.address?.province
+                            ? `${vendor.address.city}, ${vendor.address.province}`
+                            : vendor.address?.city || '',
+                        popularItems: vendor.bannerUrl
+                            ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
+                            : vendor.logoUrl
+                                ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
+                                : [],
+                        isOpenNow: vendor.isOpenNow,
+                        todayHoursFormatted: vendor.todayHoursFormatted,
+                    }));
+
+                // Open first, closed at the bottom.
                 const sortedVendors = transformedVendors.sort((a, b) => {
                     if (a.isOpenNow === b.isOpenNow) return 0;
                     return a.isOpenNow ? -1 : 1;

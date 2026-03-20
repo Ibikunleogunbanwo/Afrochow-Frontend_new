@@ -12,21 +12,21 @@ const DisplayRestaurant = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlSearchQuery = searchParams.get('search') || '';
-    const urlCity = searchParams.get('city') || '';
+    const urlCity       = searchParams.get('city') || '';
     const urlCategoryId = searchParams.get('categoryId') || '';
-    const urlCategory = searchParams.get('category') || '';
+    const urlCategory   = searchParams.get('category') || '';
 
     const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
-    const [cityFilter, setCityFilter] = useState(urlCity);
-    const [isLoading, setIsLoading] = useState(true);
-    const [products, setProducts] = useState([]);
-    const [error, setError] = useState(null);
+    const [cityFilter, setCityFilter]   = useState(urlCity);
+    const [isLoading, setIsLoading]     = useState(true);
+    const [products, setProducts]       = useState([]);
+    const [error, setError]             = useState(null);
     const [categoryName, setCategoryName] = useState('');
 
-    const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
+    const [currentPage, setCurrentPage]     = useState(0);
+    const [totalPages, setTotalPages]       = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-    const [hasMore, setHasMore] = useState(false);
+    const [hasMore, setHasMore]             = useState(false);
     const pageSize = 20;
 
     useEffect(() => {
@@ -57,10 +57,10 @@ const DisplayRestaurant = () => {
                 setIsLoading(true);
                 setError(null);
 
-                let response;
-
+                // Determine which product endpoint to call
+                let productRequest;
                 if (urlCategoryId || urlSearchQuery) {
-                    response = await SearchAPI.searchProductsAdvanced({
+                    productRequest = SearchAPI.searchProductsAdvanced({
                         ...(urlSearchQuery && { query: urlSearchQuery }),
                         ...(urlCity && { city: urlCity }),
                         ...(urlCategoryId && { categoryId: urlCategoryId }),
@@ -68,74 +68,90 @@ const DisplayRestaurant = () => {
                         size: pageSize,
                     });
                 } else if (urlCity || urlCategory) {
-                    response = await SearchAPI.searchProducts({
+                    productRequest = SearchAPI.searchProducts({
                         ...(urlCity && { city: urlCity }),
                         ...(urlCategory && { category: urlCategory }),
                         page: currentPage,
                         size: pageSize,
                     });
                 } else {
-                    response = await SearchAPI.searchProductsAdvanced({
+                    productRequest = SearchAPI.searchProductsAdvanced({
                         page: currentPage,
                         size: pageSize,
                     });
                 }
 
+                // Fetch products and verified vendors in parallel
+                const [response, vendorsResponse] = await Promise.all([
+                    productRequest,
+                    SearchAPI.getVerifiedVendors(),
+                ]);
+
                 if (response?.success && response?.data) {
-                    const pageData = response.data;
+                    const pageData    = response.data;
                     const productList = pageData.content || [];
 
-                    const vendorsResponse = await SearchAPI.getVerifiedVendors();
-                    const vendors = Array.isArray(vendorsResponse) ? vendorsResponse : [];
+                    // Handle both plain array and wrapped response shapes
+                    const vendors = Array.isArray(vendorsResponse)
+                        ? vendorsResponse
+                        : vendorsResponse?.success && vendorsResponse?.data
+                            ? vendorsResponse.data
+                            : [];
 
+                    // Build verified vendor lookup map by publicUserId
                     const vendorMap = vendors.reduce((map, vendor) => {
                         map[vendor.publicUserId] = vendor;
                         return map;
                     }, {});
 
-                    const transformedResults = productList.map(product => {
-                        const vendor = vendorMap[product.vendorPublicId] || {};
-                        return {
-                            storeId: product.vendorPublicId,
-                            publicProductId: product.publicProductId,
-                            vendorPublicId: product.vendorPublicId,
-                            name: product.name,
-                            categories: product.categoryName
-                                ? [product.categoryName]
-                                : ['African Cuisine'],
-                            rating: product.averageRating || 0,
-                            reviewCount: product.reviewCount || 0,
-                            deliveryTime: vendor.estimatedDeliveryMinutes
-                                || product.preparationTimeMinutes
-                                || 30,
-                            location: vendor.address?.city && vendor.address?.province
-                                ? `${vendor.address.city}, ${vendor.address.province}`
-                                : product.vendorCity && product.vendorProvince
-                                    ? `${product.vendorCity}, ${product.vendorProvince}`
-                                    : product.vendorCity || '',
-                            deliveryFee: vendor.deliveryFee || 2.99,
-                            popularItems: [{
+                    // Drop products whose vendor is not in the verified map,
+                    // then merge product data with vendor data
+                    const transformedResults = productList
+                        .filter(product => vendorMap[product.vendorPublicId])
+                        .map(product => {
+                            const vendor = vendorMap[product.vendorPublicId];
+                            return {
+                                storeId: product.vendorPublicId,
+                                publicProductId: product.publicProductId,
+                                vendorPublicId: product.vendorPublicId,
                                 name: product.name,
-                                imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                                price: product.price,
+                                categories: product.categoryName
+                                    ? [product.categoryName]
+                                    : ['African Cuisine'],
+                                rating: product.averageRating || 0,
+                                reviewCount: product.reviewCount || 0,
+                                deliveryTime: vendor.estimatedDeliveryMinutes
+                                    || product.preparationTimeMinutes
+                                    || 30,
+                                location: vendor.address?.city && vendor.address?.province
+                                    ? `${vendor.address.city}, ${vendor.address.province}`
+                                    : product.vendorCity && product.vendorProvince
+                                        ? `${product.vendorCity}, ${product.vendorProvince}`
+                                        : product.vendorCity || '',
+                                deliveryFee: vendor.deliveryFee || 2.99,
+                                popularItems: [{
+                                    name: product.name,
+                                    imageUrl: product.imageUrl || '/image/placeholder.jpg',
+                                    price: product.price,
+                                    description: product.description,
+                                }],
+                                available: product.available !== false,
+                                restaurantName: product.restaurantName || vendor.restaurantName,
+                                categoryName: product.categoryName,
                                 description: product.description,
-                            }],
-                            available: product.available !== false,
-                            restaurantName: product.restaurantName || vendor.restaurantName,
-                            categoryName: product.categoryName,
-                            description: product.description,
-                            price: product.price,
-                            vendorAddressLine: product.vendorAddressLine,
-                            vendorCity: product.vendorCity,
-                            vendorProvince: product.vendorProvince,
-                            vendorPostalCode: product.vendorPostalCode,
-                            vendorCountry: product.vendorCountry,
-                            vendorFormattedAddress: product.vendorFormattedAddress,
-                            isOpenNow: vendor.isOpenNow ?? null,
-                            todayHoursFormatted: vendor.todayHoursFormatted ?? null,
-                        };
-                    });
+                                price: product.price,
+                                vendorAddressLine: product.vendorAddressLine,
+                                vendorCity: product.vendorCity,
+                                vendorProvince: product.vendorProvince,
+                                vendorPostalCode: product.vendorPostalCode,
+                                vendorCountry: product.vendorCountry,
+                                vendorFormattedAddress: product.vendorFormattedAddress,
+                                isOpenNow: vendor.isOpenNow ?? null,
+                                todayHoursFormatted: vendor.todayHoursFormatted ?? null,
+                            };
+                        });
 
+                    // Open first, closed at the bottom
                     const sortedResults = transformedResults.sort((a, b) => {
                         if (a.isOpenNow === b.isOpenNow) return 0;
                         return a.isOpenNow ? -1 : 1;
@@ -166,17 +182,17 @@ const DisplayRestaurant = () => {
         void fetchResults();
     }, [urlCategoryId, urlSearchQuery, urlCity, urlCategory, currentPage]);
 
-    const decodedQuery = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
-    const decodedCity = urlCity ? decodeURIComponent(urlCity) : '';
-    const decodedCategory = urlCategory ? decodeURIComponent(urlCategory) : '';
+    const decodedQuery    = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
+    const decodedCity     = urlCity        ? decodeURIComponent(urlCity)        : '';
+    const decodedCategory = urlCategory    ? decodeURIComponent(urlCategory)    : '';
     const resolvedCategory = categoryName || decodedCategory;
 
     const getPageTitle = () => {
         if (resolvedCategory && decodedCity) return `${resolvedCategory} in ${decodedCity}`;
-        if (resolvedCategory) return resolvedCategory;
-        if (decodedQuery && decodedCity) return `"${decodedQuery}" in ${decodedCity}`;
-        if (decodedQuery) return `Results for "${decodedQuery}"`;
-        if (decodedCity) return `Stores in ${decodedCity}`;
+        if (resolvedCategory)               return resolvedCategory;
+        if (decodedQuery && decodedCity)    return `"${decodedQuery}" in ${decodedCity}`;
+        if (decodedQuery)                   return `Results for "${decodedQuery}"`;
+        if (decodedCity)                    return `Stores in ${decodedCity}`;
         return 'All Products';
     };
 
@@ -196,12 +212,12 @@ const DisplayRestaurant = () => {
 
     const getResultsLabel = () => {
         const count = totalElements;
-        const noun = count === 1 ? 'result' : 'results';
+        const noun  = count === 1 ? 'result' : 'results';
         if (resolvedCategory && decodedCity) return `${count} ${noun} in ${resolvedCategory} — ${decodedCity}`;
-        if (resolvedCategory) return `${count} ${noun} in ${resolvedCategory}`;
-        if (decodedQuery && decodedCity) return `${count} ${noun} for "${decodedQuery}" in ${decodedCity}`;
-        if (decodedQuery) return `${count} ${noun} for "${decodedQuery}"`;
-        if (decodedCity) return `${count} stores in ${decodedCity}`;
+        if (resolvedCategory)               return `${count} ${noun} in ${resolvedCategory}`;
+        if (decodedQuery && decodedCity)    return `${count} ${noun} for "${decodedQuery}" in ${decodedCity}`;
+        if (decodedQuery)                   return `${count} ${noun} for "${decodedQuery}"`;
+        if (decodedCity)                    return `${count} stores in ${decodedCity}`;
         return `${count} products available`;
     };
 
@@ -228,7 +244,7 @@ const DisplayRestaurant = () => {
         } else {
             pages.push(0);
             const startPage = Math.max(1, currentPage - 1);
-            const endPage = Math.min(totalPages - 2, currentPage + 1);
+            const endPage   = Math.min(totalPages - 2, currentPage + 1);
             if (startPage > 1) pages.push('ellipsis-start');
             for (let i = startPage; i <= endPage; i++) pages.push(i);
             if (endPage < totalPages - 2) pages.push('ellipsis-end');

@@ -34,21 +34,24 @@ export const SearchAPI = {
   },
 
   getPopularProductNames: async (limit = 10) => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/products/popular/names?limit=${limit}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/popular/names?limit=${limit}`,
+        { method: 'GET' }
+    );
   },
 
   getPopularProducts: async (limit = 10) => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/products/popular?limit=${limit}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/popular?limit=${limit}`,
+        { method: 'GET' }
+    );
   },
 
   getChefSpecials: async (limit = 10) => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/products/chef-specials?limit=${limit}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/chef-specials?limit=${limit}`,
+        { method: 'GET' }
+    );
   },
 
   getFeaturedProducts: async () => {
@@ -58,17 +61,17 @@ export const SearchAPI = {
   },
 
   getProductsNearMe: async (city) => {
-    return fetchWithCredentials(
-      `${API_BASE_URL}/search/products/near-me?city=${encodeURIComponent(city)}`,
-      { method: 'GET' }
-    );
+    const url = city
+        ? `${API_BASE_URL}/search/products/near-me?city=${encodeURIComponent(city)}`
+        : `${API_BASE_URL}/search/products/near-me`;
+    return fetchWithCredentials(url, { method: 'GET' });
   },
 
   getMonthlyPopularProducts: async (city) => {
-    return fetchWithCredentials(
-      `${API_BASE_URL}/search/products/monthly-popular?city=${encodeURIComponent(city)}`,
-      { method: 'GET' }
-    );
+    const url = city
+        ? `${API_BASE_URL}/search/products/monthly-popular?city=${encodeURIComponent(city)}`
+        : `${API_BASE_URL}/search/products/monthly-popular`;
+    return fetchWithCredentials(url, { method: 'GET' });
   },
 
   getVendorProductsByCategory: async (categoryId) => {
@@ -79,17 +82,26 @@ export const SearchAPI = {
 
   getVendorProducts: async (publicVendorId, page = 0, size = 20) => {
     return fetchWithCredentials(
-      `${API_BASE_URL}/products/vendor/${publicVendorId}?page=${page}&size=${size}`,
-      { method: 'GET' }
+        `${API_BASE_URL}/products/vendor/${publicVendorId}?page=${page}&size=${size}`,
+        { method: 'GET' }
     );
   },
 
   // ================= VENDORS =================
 
-  getTopRatedVendors: async (limit = 12) => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/vendors/top-rated?limit=${limit}`, {
+  // Backend controller takes no params — limit is ignored server-side.
+  getTopRatedVendors: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/search/vendors/top-rated`, {
       method: 'GET',
     });
+  },
+
+  // Uses advanced search endpoint with city filter.
+  getVendorsByCity: async (city) => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/advanced?city=${encodeURIComponent(city)}`,
+        { method: 'GET' }
+    );
   },
 
   getVendorsByCuisine: async (cuisineType) => {
@@ -115,9 +127,10 @@ export const SearchAPI = {
   // ================= CATEGORIES =================
 
   getCategoryByName: async (name) => {
-    return fetchWithCredentials(`${API_BASE_URL}/categories/name/${encodeURIComponent(name)}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/categories/name/${encodeURIComponent(name)}`,
+        { method: 'GET' }
+    );
   },
 
   getAllCategories: async () => {
