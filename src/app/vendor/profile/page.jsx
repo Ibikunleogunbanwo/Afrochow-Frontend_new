@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
 import { AuthAPI } from '@/lib/api/auth.api';
-import { toast } from '@/components/ui/toast';
+import { toast } from 'sonner';
 import SettingsSidebar from '@/components/vendor/VendorSettingsPage/SettingsSidebar';
 import LoadingState from '@/components/vendor/VendorSettingsPage/LoadingState';
 import RestaurantInfoTab from '@/components/vendor/VendorSettingsPage/RestaurantInfoTab';
@@ -80,8 +80,6 @@ const VendorSettingsPage = () => {
                 }
                 setProfile(data);
                 
-                console.log('Data:', data);
-
                 setProfileForm({
                     restaurantName: data.restaurantName || '',
                     description: data.description || '',
@@ -93,7 +91,6 @@ const VendorSettingsPage = () => {
                     minimumOrderAmount: data.minimumOrderAmount || '',
                     estimatedDeliveryMinutes: data.estimatedDeliveryMinutes || '',
                     maxDeliveryDistanceKm: data.maxDeliveryDistanceKm || '',
-                    verified: data.user?.verified || false,
                 });
 
                 if (data.address) {
@@ -124,7 +121,7 @@ const VendorSettingsPage = () => {
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
-            toast.error('Error', error.message || 'Failed to load profile data');
+            toast.error(error.message || 'Failed to load profile data');
         } finally {
             setLoading(false);
         }
@@ -135,13 +132,13 @@ const VendorSettingsPage = () => {
             setSaving(true);
             const res = await VendorProfileAPI.updateVendorProfile(sectionData);
             if (res?.success) {
-                toast.success('Success' || 'Updated successfully');
+                toast.success('Saved successfully');
                 await fetchProfile();
             }
             return res;
         } catch (e) {
             console.error('Error updating section:', e);
-            toast.error('Error', e.message || 'Update failed');
+            toast.error(e.message || 'Update failed');
             throw e;
         } finally {
             setSaving(false);
@@ -202,10 +199,7 @@ const VendorSettingsPage = () => {
             const response = await VendorProfileAPI.uploadVendorImage(file, type);
 
             if (response?.success) {
-                toast.success(
-                    'Success',
-                    `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`
-                );
+                toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
 
                 if (setFileState) {
                     const newUrl = type === 'logo' ? response.data?.logoUrl : response.data?.bannerUrl;
@@ -217,7 +211,7 @@ const VendorSettingsPage = () => {
             }
         } catch (error) {
             console.error(`Error uploading ${type}:`, error);
-            toast.error('Error', error.message || `Failed to upload ${type}`);
+            toast.error(error.message || `Failed to upload ${type}`);
             throw error;
         }
     };

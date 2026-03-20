@@ -1,6 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Controller } from "react-hook-form";
+import { AlertCircle } from "lucide-react";
 
 function TermsCheckbox({ control, error }) {
     return (
@@ -47,9 +48,10 @@ function TermsCheckbox({ control, error }) {
                 </Label>
             </div>
             {error && (
-                <p className="text-sm text-red-600 ml-1 font-medium">
-                    {error.message}
-                </p>
+                <div className="flex items-center gap-1.5 text-red-600 ml-1">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <p className="text-sm font-medium">{error.message}</p>
+                </div>
             )}
         </div>
     );

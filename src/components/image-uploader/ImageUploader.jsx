@@ -77,6 +77,10 @@ function ImageUploader({
     useEffect(() => {
         if (value && typeof value === 'string') {
             setPreview(value);
+        } else if (value instanceof File) {
+            const url = URL.createObjectURL(value);
+            setPreview(url);
+            return () => URL.revokeObjectURL(url);
         } else if (!value) {
             setPreview('');
         }

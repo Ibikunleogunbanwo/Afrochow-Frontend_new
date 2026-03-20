@@ -28,14 +28,16 @@ export default function Step1() {
     formState: { errors },
   } = useReactForm({
     resolver: zodResolver(accountSchema),
+    mode: "onChange",
     defaultValues: {
-      username: state.username,
       email: state.email,
       password: state.password,
       confirmPassword: state.confirmPassword,
       acceptTerms: state.acceptTerms,
     },
   });
+
+  const password = watch("password");
 
   const onSubmit = handleFormSubmit(
     async (data) => saveAndContinue(data, "/register/vendor/step-2"),
@@ -45,6 +47,7 @@ export default function Step1() {
   return (
     <FormContainer
       currentStep={1}
+      totalSteps={4}
       title="Create Your Business Account"
       description="Let's get started with your account credentials"
       fromReview={fromReview}
@@ -55,6 +58,7 @@ export default function Step1() {
           control={control}
           watch={watch}
           errors={errors}
+          password={password}
         />
 
         <FormActions
@@ -62,7 +66,7 @@ export default function Step1() {
           onBack={goBack}
           onContinue={handleSubmit(async (data) => saveAndContinue(data, "/register/vendor/step-2"))}
           onSaveAndReturn={handleSubmit(saveAndReturn)}
-          continueText="Continue to Profile Details"
+          continueText="Continue"
           showBackButton={false}
           isSubmitting={isSubmitting}
         />

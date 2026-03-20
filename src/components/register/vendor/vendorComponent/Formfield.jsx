@@ -21,6 +21,7 @@ export default function FormField({
                                       inputProps = {},
                                       textareaProps = {},
                                       labelExtra,
+                                      rightAdornment,
                                   }) {
     const hasValue = value && value.length > 0;
     const isValid = hasValue && !error;
@@ -46,7 +47,7 @@ export default function FormField({
                     <Input
                         id={id}
                         className={`${Icon ? 'pl-10' : ''} h-11 ${
-                            hasValue && isValid ? 'pr-12' : ''
+                            (hasValue && isValid) || rightAdornment ? 'pr-12' : ''
                         } ${
                             error
                                 ? "border-red-500 focus-visible:ring-red-500"
@@ -54,8 +55,14 @@ export default function FormField({
                         }`}
                         {...inputProps}
                     />
-                    {isValid && showSuccess && (
-                        <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500 shrink-0" />
+                    {rightAdornment ? (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            {rightAdornment}
+                        </div>
+                    ) : (
+                        isValid && showSuccess && (
+                            <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500 shrink-0" />
+                        )
                     )}
                 </div>
             )}
@@ -66,6 +73,8 @@ export default function FormField({
                     <Textarea
                         id={id}
                         className={`${Icon ? 'pl-10' : ''} resize-y ${
+                            isValid && showSuccess ? 'pr-10' : ''
+                        } ${
                             error
                                 ? "border-red-500 focus-visible:ring-red-500"
                                 : "border-gray-300 focus-visible:ring-orange-500 focus-visible:border-orange-500"

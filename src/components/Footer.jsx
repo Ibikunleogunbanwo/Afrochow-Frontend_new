@@ -85,8 +85,8 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/menu" className="text-gray-400 hover:text-orange-500 transition-colors text-sm">
-                    Menu
+                  <Link href="/orders" className="text-gray-400 hover:text-orange-500 transition-colors text-sm">
+                    My Orders
                   </Link>
                 </li>
                 <li>
@@ -126,10 +126,10 @@ const Footer = () => {
                 <li className="flex items-start space-x-3 text-sm">
                   <Mail className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                   <Link
-                      href="mailto:support@afrochow.com"
+                      href="mailto:support@afrochow.ca"
                       className="text-gray-400 hover:text-orange-500 transition-colors"
                   >
-                    support@afrochow.com
+                    support@afrochow.ca
                   </Link>
                 </li>
                 <li className="flex items-start space-x-3 text-sm">
@@ -144,8 +144,8 @@ const Footer = () => {
                 <li className="flex items-start space-x-3 text-sm">
                   <MapPin className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                   <span className="text-gray-400">
-                  123 Food Street, City, ST 12345
-                </span>
+                    583 Carrington Blvd NW, Calgary, AB T3P 2L8
+                  </span>
                 </li>
               </ul>
             </div>
@@ -159,9 +159,11 @@ const Footer = () => {
               <p className="text-sm text-gray-400">
                 © {currentYear} Afrochow. All rights reserved.
               </p>
-              <p className="text-sm text-gray-400">
-                Made with love for African food lovers
-              </p>
+              <div className="flex items-center gap-4">
+                <Link href="/privacy" className="text-xs text-gray-500 hover:text-orange-500 transition-colors">Privacy</Link>
+                <Link href="/terms" className="text-xs text-gray-500 hover:text-orange-500 transition-colors">Terms</Link>
+                <Link href="/cookies" className="text-xs text-gray-500 hover:text-orange-500 transition-colors">Cookies</Link>
+              </div>
             </div>
           </div>
         </div>

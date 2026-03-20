@@ -67,6 +67,31 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
             return
         }
 
+        if (formData.password.length > 128) {
+            toast.error("Password Too Long", { description: "Password must be less than 128 characters" })
+            return
+        }
+
+        if (!/[A-Z]/.test(formData.password)) {
+            toast.error("Password Too Weak", { description: "Password must contain at least one uppercase letter" })
+            return
+        }
+
+        if (!/[a-z]/.test(formData.password)) {
+            toast.error("Password Too Weak", { description: "Password must contain at least one lowercase letter" })
+            return
+        }
+
+        if (!/[0-9]/.test(formData.password)) {
+            toast.error("Password Too Weak", { description: "Password must contain at least one number" })
+            return
+        }
+
+        if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(formData.password)) {
+            toast.error("Password Too Weak", { description: "Password must contain at least one special character (!@#$%^&* etc.)" })
+            return
+        }
+
         if (formData.password !== formData.confirmPassword) {
             toast.error("Passwords Don't Match", { description: "Please make sure both passwords are identical" })
             return

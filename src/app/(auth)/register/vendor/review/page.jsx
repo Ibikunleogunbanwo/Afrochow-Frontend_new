@@ -125,7 +125,7 @@ useEffect(() => {
               </div>
               <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-lg border border-orange-200">
                 <CheckCircle2 className="h-5 w-5 text-orange-600" />
-                <span className="text-sm font-medium text-orange-900">6 of 6 Complete</span>
+                <span className="text-sm font-medium text-orange-900">4 of 4 Complete</span>
               </div>
             </div>
             {/* Progress bar */}
@@ -171,22 +171,12 @@ useEffect(() => {
             </Button>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-xs font-medium text-gray-500 uppercase">Username</span>
-                </div>
-                <p className="text-gray-900 font-medium">{state.username}</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-xs font-medium text-gray-500 uppercase">Email</span>
-                </div>
-                <p className="text-gray-900 font-medium">{state.email}</p>
-              </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Mail className="h-4 w-4 text-gray-400" />
+              <span className="text-xs font-medium text-gray-500 uppercase">Email</span>
             </div>
+            <p className="text-gray-900 font-medium">{state.email}</p>
+            <p className="text-xs text-gray-400 mt-1">Username will be auto-generated from your email</p>
           </CardContent>
         </Card>
 
@@ -229,7 +219,7 @@ useEffect(() => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Profile Photo</p>
-                  <p className="text-xs text-gray-500 mt-1">{state.profileImageFile.name}</p>
+                  <p className="text-xs text-gray-500 mt-1">Uploaded</p>
                 </div>
               </div>
             )}
@@ -274,7 +264,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleEdit(3)}
+              onClick={() => handleEdit(2)}
               disabled={loading}
               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
             >
@@ -323,7 +313,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleEdit(4)}
+              onClick={() => handleEdit(3)}
               disabled={loading}
               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
             >
@@ -442,7 +432,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleEdit(5)}
+              onClick={() => handleEdit(4)}
               disabled={loading}
               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
             >
@@ -586,7 +576,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleEdit(6)}
+              onClick={() => handleEdit(3)}
               disabled={loading}
               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
             >
@@ -651,14 +641,14 @@ useEffect(() => {
               </CardDescription>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <Button
                 variant="outline"
                 onClick={() => router.back()}
                 disabled={loading}
                 className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
-                Back to Address
+                Back
               </Button>
               <Button
                 onClick={() => handleSubmit(state)}

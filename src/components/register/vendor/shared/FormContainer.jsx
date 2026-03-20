@@ -8,7 +8,7 @@ import ReviewBanner from "@/components/register/vendor/vendorComponent/Reviewban
  */
 export default function FormContainer({
   currentStep,
-  totalSteps = 6,
+  totalSteps = 4,
   title,
   description,
   fromReview = false,

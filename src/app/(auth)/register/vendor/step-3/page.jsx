@@ -1,212 +1,555 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useForm as useReactForm } from "react-hook-form";
+import { useForm as useReactForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { restaurantSchema } from "@/lib/schemas/restaurantSchema";
-import { useForm } from "@/app/(auth)/register/vendor/context/Provider";
-import { useRouter } from "next/navigation";
-import { Store, FileText, UtensilsCrossed, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
-import StepIndicator from "@/components/register/StepIndicator";
-import FormField from "@/components/register/vendor/vendorComponent/Formfield";
+import { businessSchema } from "@/lib/schemas/businessSchema";
+import { addressSchema } from "@/lib/schemas/addressSchema";
+import { useStepForm } from "@/components/register/vendor/shared/useStepForm";
+import FormContainer from "@/components/register/vendor/shared/FormContainer";
 import FormActions from "@/components/register/vendor/vendorComponent/FormActions";
-import ReviewBanner from "@/components/register/vendor/vendorComponent/Reviewbanner";
-import { useReviewMode } from "@/components/register/vendor/hooks/Usereviewmode";
-import { toast } from "@/components/ui/toast";
+import FormField from "@/components/register/vendor/vendorComponent/Formfield";
+import ImageUploader from "@/components/image-uploader/ImageUploader";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  FileText, Image as ImageIcon, MapPin, Building2,
+  Mail, Globe, CheckCircle2, AlertCircle, Info, Home, X,
+} from "lucide-react";
+import { CANADIAN_PROVINCES } from "@/lib/schemas/addressSchema";
 
+const step3Schema = businessSchema.merge(addressSchema);
+
+// ── Banner uploader (local preview, accepts initialFile) ──────────────────
+function BannerUploader({ onChange, error, initialFile }) {
+  const [preview, setPreview] = useState(() =>
+    initialFile instanceof File ? URL.createObjectURL(initialFile) : null
+  );
+  const [dragActive, setDragActive] = useState(false);
+  const [fileError, setFileError] = useState(null);
+
+  const processFile = (file) => {
+    if (!file) return;
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setFileError("Please upload a JPG, PNG, or WEBP image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError("Image must be under 5MB");
+      return;
+    }
+    setFileError(null);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(file));
+    onChange?.(file);
+  };
+
+  const handleFileSelect = (e) => processFile(e.target?.files?.[0]);
+
+  const handleRemove = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setFileError(null);
+    onChange?.(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    processFile(e.dataTransfer?.files?.[0]);
+  };
+
+  const displayError = fileError || error;
+
+  return (
+    <div className="space-y-2">
+      <label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
+        <ImageIcon className="h-4 w-4" />
+        Restaurant Banner <span className="text-red-500">*</span>
+        {preview && !displayError && <span className="text-green-600 text-xs font-semibold ml-1">✓</span>}
+      </label>
+      {preview ? (
+        <div className="relative group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="Banner" className={`w-full h-40 object-cover rounded-lg border-2 shadow ${displayError ? "border-red-300" : "border-gray-200"}`} />
+          <button type="button" onClick={handleRemove}
+            className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div
+          className={`relative w-full h-40 rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer bg-gray-50 transition-all ${
+            dragActive ? "border-orange-500 bg-orange-50" : displayError ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-orange-400"
+          }`}
+          onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+        >
+          <input type="file" accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+          <div className="flex flex-col items-center gap-2 text-center px-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${displayError ? "bg-red-100" : "bg-gray-100"}`}>
+              <ImageIcon className={`h-6 w-6 ${displayError ? "text-red-400" : "text-gray-400"}`} />
+            </div>
+            <p className="text-sm font-medium text-gray-700">Drop banner or click to browse</p>
+            <p className="text-xs text-gray-500">PNG, JPG, WEBP · max 5MB · wide images work best</p>
+          </div>
+        </div>
+      )}
+      {displayError && (
+        <div className="flex items-start gap-1.5 text-red-600">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <p className="text-sm">{displayError}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Business License uploader ─────────────────────────────────────────────
+function LicenseUploader({ onChange, error, initialFile }) {
+  const [preview, setPreview] = useState(() => {
+    if (!initialFile) return null;
+    if (initialFile.type === "application/pdf") return "pdf";
+    return URL.createObjectURL(initialFile);
+  });
+  const [fileError, setFileError] = useState(null);
+
+  const processFile = (file) => {
+    if (!file) return;
+    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setFileError("Please upload a PDF, JPG, PNG, or WEBP file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("File must be under 10MB");
+      return;
+    }
+    setFileError(null);
+    if (preview && preview !== "pdf") URL.revokeObjectURL(preview);
+    setPreview(file.type === "application/pdf" ? "pdf" : URL.createObjectURL(file));
+    onChange?.(file, null);
+  };
+
+  const handleFileSelect = (e) => processFile(e.target?.files?.[0]);
+
+  const handleRemove = () => {
+    if (preview && preview !== "pdf") URL.revokeObjectURL(preview);
+    setPreview(null);
+    setFileError(null);
+    onChange?.(null, null);
+  };
+
+  const isPDF = preview === "pdf";
+  const displayError = fileError || error;
+
+  return (
+    <div className="space-y-2">
+      <label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
+        <FileText className="h-4 w-4" />
+        Business License
+        <span className="text-gray-400 font-normal text-xs">(Optional)</span>
+        {preview && !displayError && <span className="text-green-600 text-xs font-semibold ml-1">✓</span>}
+      </label>
+      {preview ? (
+        <div className="relative p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-3">
+            {isPDF ? (
+              <div className="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center shrink-0">
+                <FileText className="h-7 w-7 text-red-600" />
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="License" className="w-14 h-14 object-cover rounded-lg border border-gray-200" />
+            )}
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Document uploaded</p>
+              <p className="text-xs text-gray-500">Helps with faster verification</p>
+            </div>
+            <button type="button" onClick={handleRemove}
+              className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors">
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={`relative border-2 border-dashed rounded-lg bg-gray-50 hover:border-orange-400 transition-all ${displayError ? "border-red-300 bg-red-50" : "border-gray-300"}`}>
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+            onChange={handleFileSelect}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+          <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${displayError ? "bg-red-100" : "bg-gray-100"}`}>
+              <FileText className={`h-6 w-6 ${displayError ? "text-red-400" : "text-gray-400"}`} />
+            </div>
+            <p className="text-sm font-medium text-gray-700">Drop document or click to browse</p>
+            <p className="text-xs text-gray-500 mt-1">PDF, PNG, JPG, WEBP · max 10MB</p>
+          </div>
+        </div>
+      )}
+      {displayError && (
+        <div className="flex items-start gap-1.5 text-red-600">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <p className="text-sm">{displayError}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Address field helper ──────────────────────────────────────────────────
+function AddressField({ id, label, icon: Icon, value, onChange, error, placeholder, maxLength, transform }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-gray-700 font-medium flex items-center gap-2 text-sm">
+        <Icon className="h-4 w-4" />
+        {label}
+        {value && !error && <span className="text-green-600 text-xs font-semibold">✓</span>}
+      </Label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          id={id}
+          placeholder={placeholder}
+          value={value}
+          maxLength={maxLength}
+          onChange={(e) => onChange(transform ? transform(e.target.value) : e.target.value)}
+          className={`pl-9 h-11 ${value && !error ? "pr-10" : ""} ${
+            error ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300 focus-visible:ring-orange-500"
+          }`}
+        />
+        {!error && value && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />}
+      </div>
+      {error && (
+        <div className="flex items-start gap-1.5 text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <p className="text-xs">{error}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Step 3 ───────────────────────────────────────────────────────────
 export default function Step3() {
-  const { state, dispatch } = useForm();
-  const router = useRouter();
-  const { fromReview, isFromReview, navigateToReview, navigateToNextStep } = useReviewMode();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    state,
+    dispatch,
+    fromReview,
+    isSubmitting,
+    saveAndContinue,
+    saveAndReturn,
+    handleFormSubmit,
+    goBack,
+  } = useStepForm();
+
+  const addr = state.address || {};
 
   const {
     register,
     handleSubmit,
+    control,
     watch,
+    setValue,
     formState: { errors },
   } = useReactForm({
-    resolver: zodResolver(restaurantSchema),
+    resolver: zodResolver(step3Schema),
     defaultValues: {
-      restaurantName: state.restaurantName,
-      description: state.description,
-      cuisineType: state.cuisineType,
+      taxId: state.taxId || "",
+      businessLicense: state.businessLicense || null,
+      logoFile: state.logoFile || null,
+      bannerFile: state.bannerFile || null,
+      addressLine: addr.addressLine || "",
+      city: addr.city || "",
+      province: addr.province || "",
+      postalCode: addr.postalCode || "",
+      country: addr.country || "Canada",
+      defaultAddress: addr.defaultAddress ?? true,
     },
   });
 
-  const restaurantName = watch("restaurantName");
-  const description = watch("description");
-  const cuisineType = watch("cuisineType");
+  const defaultAddress = watch("defaultAddress");
 
-  const descriptionLength = description?.length || 0;
-  const maxDescriptionLength = 500;
-
-  const saveAndContinue = async (data) => {
-    setIsSubmitting(true);
-    try {
-      dispatch({ type: "UPDATE", payload: data });
-      navigateToNextStep("/register/vendor/step-4");
-    } catch (error) {
-      console.error("Error saving and continuing:", error);
-      toast.error("Error Saving Progress", error.message || "Failed to save your progress. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const updateAddress = (field, value) => {
+    setValue(field, value, { shouldValidate: true });
+    dispatch({
+      type: "UPDATE",
+      payload: {
+        address: { ...addr, ...watch(), [field]: value },
+      },
+    });
   };
 
-  const saveAndReturn = async (data) => {
-    setIsSubmitting(true);
-    try {
-      dispatch({ type: "UPDATE", payload: data });
-      navigateToReview();
-    } catch (error) {
-      console.error("Error saving and returning:", error);
-      toast.error("Error Saving Changes", error.message || "Failed to save your changes. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleLicenseChange = (file) => {
+    setValue("businessLicense", file);
+    dispatch({ type: "UPDATE", payload: { businessLicense: file } });
   };
 
-  const onSubmit = async (data) => {
-    if (isFromReview()) {
-      await saveAndReturn(data);
-    } else {
-      await saveAndContinue(data);
-    }
+  const handleLogoChange = (fileOrUrl) => {
+    const file = fileOrUrl instanceof File ? fileOrUrl : null;
+    setValue("logoFile", file, { shouldValidate: true });
+    dispatch({ type: "UPDATE", payload: { logoFile: file } });
   };
+
+  const handleBannerChange = (file) => {
+    setValue("bannerFile", file, { shouldValidate: true });
+    dispatch({ type: "UPDATE", payload: { bannerFile: file } });
+  };
+
+  const onSubmit = handleFormSubmit(
+    async (data) => {
+      const payload = {
+        taxId: data.taxId || "",
+        businessLicense: data.businessLicense || null,
+        logoFile: data.logoFile || null,
+        bannerFile: data.bannerFile || null,
+        address: {
+          addressLine: data.addressLine,
+          city: data.city,
+          province: data.province,
+          postalCode: data.postalCode,
+          country: data.country,
+          defaultAddress: data.defaultAddress,
+        },
+      };
+      return saveAndContinue(payload, "/register/vendor/step-4");
+    },
+    async (data) => {
+      const payload = {
+        taxId: data.taxId || "",
+        businessLicense: data.businessLicense || null,
+        logoFile: data.logoFile || null,
+        bannerFile: data.bannerFile || null,
+        address: {
+          addressLine: data.addressLine,
+          city: data.city,
+          province: data.province,
+          postalCode: data.postalCode,
+          country: data.country,
+          defaultAddress: data.defaultAddress,
+        },
+      };
+      return saveAndReturn(payload);
+    }
+  );
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-orange-50/30 to-red-50/20 p-4">
-        <Card className="w-full max-w-md shadow-lg border-gray-200">
-          <StepIndicator currentStep={3} totalSteps={6} />
+    <FormContainer
+      currentStep={3}
+      totalSteps={4}
+      maxWidth="lg"
+      title="Branding & Location"
+      description="Upload your restaurant's visual identity and business address"
+      fromReview={fromReview}
+    >
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
 
-          <div className="p-6 pb-4">
-            <ReviewBanner show={fromReview} />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Restaurant Information
-            </h1>
-            <p className="text-gray-600 text-sm">
-              Share details about your restaurant to attract customers
-            </p>
+        {/* ── BRANDING ── */}
+        <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Branding</p>
+
+        {/* Logo */}
+        <Controller
+          name="logoFile"
+          control={control}
+          render={({ field }) => (
+            <ImageUploader
+              id="logoFile"
+              label="Restaurant Logo"
+              icon={ImageIcon}
+              onChange={handleLogoChange}
+              error={errors.logoFile?.message}
+              size="lg"
+              showSuccess={false}
+              required
+              helpText="Square images work best (recommended: 512×512px)"
+              value={field.value}
+            />
+          )}
+        />
+
+        {/* Banner */}
+        <BannerUploader
+          onChange={handleBannerChange}
+          error={errors.bannerFile?.message}
+          initialFile={state.bannerFile}
+        />
+
+        {/* Business License */}
+        <LicenseUploader
+          onChange={handleLicenseChange}
+          error={errors.businessLicense?.message}
+          initialFile={state.businessLicense}
+        />
+
+        {/* Tax ID */}
+        <FormField
+          label="Tax ID / Business Number"
+          id="taxId"
+          icon={FileText}
+          error={errors.taxId?.message}
+          value={watch("taxId")}
+          helpText="Required before receiving payouts. You can add this later."
+          labelExtra={<span className="text-gray-400 font-normal text-xs">(Optional)</span>}
+          inputProps={{ type: "text", placeholder: "123-456-789", ...register("taxId") }}
+        />
+
+        {/* ── ADDRESS ── */}
+        <div className="pt-3 border-t border-gray-100">
+          <div className="flex items-start gap-2 mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <Info className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-orange-900">Business Address</p>
+              <p className="text-xs text-orange-800 mt-0.5">Ensure your address is accurate — it will be shown publicly to customers.</p>
+            </div>
           </div>
 
-          <form className="px-6 pb-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            {/* Restaurant Name */}
-            <FormField
-                label="Restaurant Name"
-                id="restaurantName"
-                icon={Store}
-                error={errors.restaurantName?.message}
-                value={restaurantName}
-                helpText="This will be displayed to customers on your storefront"
-                inputProps={{
-                  type: "text",
-                  placeholder: "AfroChow Kitchen",
-                  ...register("restaurantName"),
-                }}
-            />
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Location</p>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="description" className="text-gray-700 font-medium flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Description
-                  {description && description.length >= 20 && !errors.description && (
-                      <span className="text-green-600 text-xs font-semibold">✓</span>
-                  )}
-                </Label>
-                <span className={`text-xs ${
-                    descriptionLength > maxDescriptionLength
-                        ? 'text-red-600 font-medium'
-                        : 'text-gray-500'
-                }`}>
-                {descriptionLength}/{maxDescriptionLength}
-              </span>
-              </div>
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Textarea
-                    id="description"
-                    placeholder="Tell customers what makes your restaurant special. Include your story, signature dishes, or unique atmosphere..."
-                    className={`pl-10 min-h-30 resize-y ${
-                        errors.description
-                            ? "border-red-500 focus-visible:ring-red-500"
-                            : "border-gray-300 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+          <div className="space-y-4">
+            <AddressField
+              id="addressLine" label="Street Address" icon={MapPin}
+              value={watch("addressLine")} error={errors.addressLine?.message}
+              placeholder="123 Main Street"
+              onChange={(v) => updateAddress("addressLine", v)}
+            />
+            <AddressField
+              id="city" label="City" icon={Building2}
+              value={watch("city")} error={errors.city?.message}
+              placeholder="Calgary"
+              onChange={(v) => updateAddress("city", v)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              {/* Province — dropdown */}
+              <div className="space-y-1.5">
+                <label htmlFor="province" className="text-gray-700 font-medium flex items-center gap-2 text-sm">
+                  <Globe className="h-4 w-4" />
+                  Province
+                  {watch("province") && !errors.province && <span className="text-green-600 text-xs font-semibold">✓</span>}
+                </label>
+                <select
+                  id="province"
+                  value={watch("province") || ""}
+                  onChange={(e) => updateAddress("province", e.target.value)}
+                  className={`w-full h-11 px-3 text-sm rounded-md border bg-background appearance-none
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50 transition-all
+                    ${errors.province
+                      ? "border-red-500 focus-visible:ring-red-500 bg-red-50/30"
+                      : "border-gray-300 focus-visible:ring-orange-500"
                     }`}
-                    {...register("description")}
-                />
-                {!errors.description && description && description.length >= 20 && (
-                    <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-green-500 shrink-0" />
+                >
+                  <option value="" disabled>Select province</option>
+                  {CANADIAN_PROVINCES.map((code) => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
+                {errors.province && (
+                  <div className="flex items-start gap-1.5 text-red-600">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <p className="text-xs">{errors.province.message}</p>
+                  </div>
                 )}
               </div>
-              {errors.description && (
-                  <div className="flex items-start gap-1.5 text-red-600">
-                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                    <p className="text-sm">{errors.description.message}</p>
-                  </div>
-              )}
-              {!errors.description && (
-                  <p className="text-xs text-gray-500">
-                    A compelling description helps customers discover your restaurant
-                  </p>
-              )}
-            </div>
 
-            {/* Cuisine Type */}
-            <FormField
-                label="Cuisine Type"
-                id="cuisineType"
-                icon={UtensilsCrossed}
-                error={errors.cuisineType?.message}
-                value={cuisineType}
-                helpText="Helps customers find your restaurant when searching by cuisine"
-                inputProps={{
-                  type: "text",
-                  placeholder: "African, Caribbean, Fusion, etc.",
-                  ...register("cuisineType"),
-                }}
+              <AddressField
+                id="postalCode" label="Postal Code" icon={Mail}
+                value={watch("postalCode")} error={errors.postalCode?.message}
+                placeholder="T3P 2L8" maxLength={7}
+                transform={(v) => v.toUpperCase()}
+                onChange={(v) => updateAddress("postalCode", v)}
+              />
+            </div>
+            <p className="text-xs text-gray-500 -mt-2">Postal code format: A1A 1A1</p>
+
+            <AddressField
+              id="country" label="Country" icon={Globe}
+              value={watch("country")} error={errors.country?.message}
+              placeholder="Canada"
+              onChange={(v) => updateAddress("country", v)}
             />
 
-            {/* Tips Section */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            {/* Default Address Toggle */}
+            <div className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+              defaultAddress ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                  defaultAddress ? "bg-orange-100" : "bg-gray-200"
+                }`}>
+                  <Home className={`h-4 w-4 ${defaultAddress ? "text-orange-600" : "text-gray-400"}`} />
+                </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-amber-900 mb-1">
-                    Pro Tips
-                  </h3>
-                  <ul className="text-xs text-amber-800 space-y-1">
-                    <li>• Highlight signature dishes or specialties</li>
-                    <li>• Mention awards, certifications, or unique ingredients</li>
-                    <li>• Keep it authentic and inviting</li>
-                  </ul>
+                  <Label htmlFor="defaultAddress" className="text-gray-900 font-medium cursor-pointer text-sm">
+                    Set as Default Address
+                  </Label>
+                  <p className="text-xs text-gray-500">Use for deliveries and invoices</p>
                 </div>
               </div>
+              <Controller
+                name="defaultAddress"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="defaultAddress"
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      field.onChange(!!checked);
+                      updateAddress("defaultAddress", !!checked);
+                    }}
+                  />
+                )}
+              />
             </div>
+          </div>
+        </div>
 
-            {/* Action Buttons */}
-            <FormActions
-                fromReview={fromReview}
-                onBack={() => router.back()}
-                onContinue={handleSubmit(saveAndContinue)}
-                onSaveAndReturn={handleSubmit(saveAndReturn)}
-                continueText="Continue to Business Details"
-                showBackButton={true}
-                isSubmitting={isSubmitting}
-            />
-
-            {/* Progress Info */}
-            <div className="pt-2 text-center">
-              <p className="text-xs text-gray-500">
-                You are halfway through! Keep going 🎯
-              </p>
-            </div>
-          </form>
-        </Card>
-      </div>
+        <FormActions
+          fromReview={fromReview}
+          onBack={goBack}
+          onContinue={handleSubmit(async (data) => {
+            const payload = {
+              taxId: data.taxId || "",
+              businessLicense: data.businessLicense || null,
+              logoFile: data.logoFile || null,
+              bannerFile: data.bannerFile || null,
+              address: {
+                addressLine: data.addressLine,
+                city: data.city,
+                province: data.province,
+                postalCode: data.postalCode,
+                country: data.country,
+                defaultAddress: data.defaultAddress,
+              },
+            };
+            return saveAndContinue(payload, "/register/vendor/step-4");
+          })}
+          onSaveAndReturn={handleSubmit(async (data) => {
+            const payload = {
+              taxId: data.taxId || "",
+              businessLicense: data.businessLicense || null,
+              logoFile: data.logoFile || null,
+              bannerFile: data.bannerFile || null,
+              address: {
+                addressLine: data.addressLine,
+                city: data.city,
+                province: data.province,
+                postalCode: data.postalCode,
+                country: data.country,
+                defaultAddress: data.defaultAddress,
+              },
+            };
+            return saveAndReturn(payload);
+          })}
+          continueText="Continue"
+          showBackButton={true}
+          isSubmitting={isSubmitting}
+        />
+      </form>
+    </FormContainer>
   );
 }

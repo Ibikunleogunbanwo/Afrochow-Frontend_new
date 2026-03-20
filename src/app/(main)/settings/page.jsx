@@ -86,6 +86,26 @@ export default function SettingsPage() {
             toast.error("Validation Error", "New password must be at least 8 characters");
             return false;
         }
+        if (passwordForm.newPassword.length > 128) {
+            toast.error("Validation Error", "New password must be less than 128 characters");
+            return false;
+        }
+        if (!/[A-Z]/.test(passwordForm.newPassword)) {
+            toast.error("Validation Error", "New password must contain at least one uppercase letter");
+            return false;
+        }
+        if (!/[a-z]/.test(passwordForm.newPassword)) {
+            toast.error("Validation Error", "New password must contain at least one lowercase letter");
+            return false;
+        }
+        if (!/[0-9]/.test(passwordForm.newPassword)) {
+            toast.error("Validation Error", "New password must contain at least one number");
+            return false;
+        }
+        if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(passwordForm.newPassword)) {
+            toast.error("Validation Error", "New password must contain at least one special character");
+            return false;
+        }
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
             toast.error("Validation Error", "New passwords do not match");
             return false;

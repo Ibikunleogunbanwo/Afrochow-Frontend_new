@@ -1,24 +1,34 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { useForm as useReactForm } from "react-hook-form";
+import { useForm as useReactForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema } from "@/lib/schemas/profileSchema";
-import { useForm } from "@/app/(auth)/register/vendor/context/Provider";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import StepIndicator from "@/components/register/StepIndicator";
+import { restaurantSchema } from "@/lib/schemas/restaurantSchema";
+import { useStepForm } from "@/components/register/vendor/shared/useStepForm";
+import FormContainer from "@/components/register/vendor/shared/FormContainer";
 import FormActions from "@/components/register/vendor/vendorComponent/FormActions";
-import ReviewBanner from "@/components/register/vendor/vendorComponent/Reviewbanner";
-import { useReviewMode } from "@/components/register/vendor/hooks/Usereviewmode";
-import Step2Fields from "@/components/register/vendor/steps/Step2Fields";
-import { toast } from "@/components/ui/toast";
+import FormField from "@/components/register/vendor/vendorComponent/Formfield";
+import ImageUploader from "@/components/image-uploader/ImageUploader";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  User, Phone, Camera, Store, UtensilsCrossed, FileText,
+  CheckCircle2, AlertCircle,
+} from "lucide-react";
+
+const step2Schema = profileSchema.merge(restaurantSchema);
 
 export default function Step2() {
-  const { state, dispatch } = useForm();
-  const router = useRouter();
-  const { fromReview, isFromReview, navigateToReview, navigateToNextStep } = useReviewMode();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    state,
+    dispatch,
+    fromReview,
+    isSubmitting,
+    saveAndContinue,
+    saveAndReturn,
+    handleFormSubmit,
+    goBack,
+  } = useStepForm();
 
   const {
     register,
@@ -28,108 +38,170 @@ export default function Step2() {
     setValue,
     formState: { errors },
   } = useReactForm({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(step2Schema),
     defaultValues: {
       firstName: state.firstName,
       lastName: state.lastName,
       phone: state.phone,
-      profileImageFile: null,
+      profileImageFile: state.profileImageFile || null,
+      restaurantName: state.restaurantName,
+      description: state.description,
+      cuisineType: state.cuisineType,
     },
   });
 
-  const saveAndContinue = async (data) => {
-    setIsSubmitting(true);
-    try {
-      dispatch({
-        type: "UPDATE",
-        payload: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone,
-          profileImageFile: data.profileImageFile || null,
-        }
-      });
-      navigateToNextStep("/register/vendor/step-3");
-    } catch (error) {
-      console.error("Error saving and continuing:", error);
-      toast.error("Error Saving Progress", error.message || "Failed to save your progress. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const description = watch("description");
+  const descriptionLength = description?.length || 0;
+  const maxDescriptionLength = 1000;
 
-  const saveAndReturn = async (data) => {
-    setIsSubmitting(true);
-    try {
-      dispatch({
-        type: "UPDATE",
-        payload: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone,
-          profileImageFile: data.profileImageFile || null,
-        }
-      });
-      navigateToReview();
-    } catch (error) {
-      console.error("Error saving and returning:", error);
-      toast.error("Error Saving Changes", error.message || "Failed to save your changes. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const onSubmit = async (data) => {
-    if (isFromReview()) {
-      await saveAndReturn(data);
-    } else {
-      await saveAndContinue(data);
-    }
-  };
+  const onSubmit = handleFormSubmit(
+    async (data) => saveAndContinue(data, "/register/vendor/step-3"),
+    saveAndReturn
+  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-orange-50/30 to-red-50/20 p-4">
-      <Card className="w-full max-w-md shadow-lg border-gray-200">
-        <StepIndicator currentStep={2} totalSteps={6} />
+    <FormContainer
+      currentStep={2}
+      totalSteps={4}
+      title="About You & Your Restaurant"
+      description="Tell us about yourself and your restaurant"
+      fromReview={fromReview}
+    >
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
 
-        <div className="p-6 pb-4">
-          <ReviewBanner show={fromReview} />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Your Profile Information
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Tell us about yourself to personalize your experience
-          </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Your Profile</p>
+
+        <Controller
+          name="profileImageFile"
+          control={control}
+          render={({ field }) => (
+            <ImageUploader
+              id="profileImage"
+              label="Profile Photo"
+              icon={Camera}
+              onChange={(fileOrUrl) => {
+                const file = fileOrUrl instanceof File ? fileOrUrl : null;
+                field.onChange(file);
+                setValue("profileImageFile", file);
+                dispatch({ type: "UPDATE", payload: { profileImageFile: file } });
+              }}
+              error={errors.profileImageFile?.message}
+              size="xl"
+              showSuccess={false}
+              helpText="Upload a clear photo for your profile (optional)"
+              labelExtra={<span className="text-gray-400 font-normal">(optional)</span>}
+              value={field.value}
+            />
+          )}
+        />
+
+        <FormField
+          label="First Name"
+          id="firstName"
+          icon={User}
+          error={errors.firstName?.message}
+          value={watch("firstName")}
+          inputProps={{ type: "text", placeholder: "John", ...register("firstName") }}
+        />
+
+        <FormField
+          label="Last Name"
+          id="lastName"
+          icon={User}
+          error={errors.lastName?.message}
+          value={watch("lastName")}
+          inputProps={{ type: "text", placeholder: "Doe", ...register("lastName") }}
+        />
+
+        <FormField
+          label="Phone Number"
+          id="phone"
+          icon={Phone}
+          error={errors.phone?.message}
+          value={watch("phone")}
+          helpText="Used for account verification and important updates"
+          inputProps={{ type: "tel", placeholder: "+1 (555) 000-0000", ...register("phone") }}
+        />
+
+        <div className="pt-3 border-t border-gray-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Restaurant</p>
+
+          <div className="space-y-5">
+            <FormField
+              label="Restaurant Name"
+              id="restaurantName"
+              icon={Store}
+              error={errors.restaurantName?.message}
+              value={watch("restaurantName")}
+              helpText="This will be displayed to customers on your storefront"
+              inputProps={{ type: "text", placeholder: "AfroChow Kitchen", ...register("restaurantName") }}
+            />
+
+            <FormField
+              label="Cuisine Type"
+              id="cuisineType"
+              icon={UtensilsCrossed}
+              error={errors.cuisineType?.message}
+              value={watch("cuisineType")}
+              helpText="Helps customers find your restaurant when searching by cuisine"
+              inputProps={{ type: "text", placeholder: "African, Caribbean, Fusion…", ...register("cuisineType") }}
+            />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description" className="text-gray-700 font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Description
+                  {description && description.length >= 20 && !errors.description && (
+                    <span className="text-green-600 text-xs font-semibold">✓</span>
+                  )}
+                </Label>
+                <span className={`text-xs ${descriptionLength > maxDescriptionLength ? "text-red-600 font-medium" : "text-gray-500"}`}>
+                  {descriptionLength}/{maxDescriptionLength}
+                </span>
+              </div>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Textarea
+                  id="description"
+                  placeholder="Tell customers what makes your restaurant special…"
+                  className={`pl-10 min-h-28 resize-y ${
+                    !errors.description && description && description.length >= 20 ? "pr-10" : ""
+                  } ${
+                    errors.description
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : "border-gray-300 focus-visible:ring-orange-500"
+                  }`}
+                  {...register("description")}
+                />
+                {!errors.description && description && description.length >= 20 && (
+                  <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-green-500" />
+                )}
+              </div>
+              {errors.description && (
+                <div className="flex items-start gap-1.5 text-red-600">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <p className="text-sm">{errors.description.message}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <form className="px-6 pb-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          <Step2Fields
-            register={register}
-            control={control}
-            watch={watch}
-            setValue={setValue}
-            errors={errors}
-          />
+        <FormActions
+          fromReview={fromReview}
+          onBack={goBack}
+          onContinue={handleSubmit(async (data) => saveAndContinue(data, "/register/vendor/step-3"))}
+          onSaveAndReturn={handleSubmit(saveAndReturn)}
+          continueText="Continue"
+          showBackButton={true}
+          isSubmitting={isSubmitting}
+        />
 
-          {/* Action Buttons */}
-          <FormActions
-            fromReview={fromReview}
-            onBack={() => router.back()}
-            onContinue={handleSubmit(saveAndContinue)}
-            onSaveAndReturn={handleSubmit(saveAndReturn)}
-            continueText="Continue"
-            showBackButton={true}
-            isSubmitting={isSubmitting}
-          />
-
-          {/* Security Info */}
-          <div className="pt-2 text-center">
-            <p className="text-xs text-gray-500">
-              Your information is encrypted and secure
-            </p>
-          </div>
-        </form>
-      </Card>
-    </div>
+        <div className="pt-1 text-center">
+          <p className="text-xs text-gray-500">Your information is encrypted and secure</p>
+        </div>
+      </form>
+    </FormContainer>
   );
 }

@@ -1,38 +1,22 @@
 import { useState } from "react";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import FormField from "@/components/register/vendor/vendorComponent/Formfield";
 import PasswordStrengthIndicator from "@/components/register/vendor/vendorComponent/PasswordStrengthIndicator";
 import TermsCheckbox from "@/components/register/vendor/vendorComponent/TermsCheckbox";
 
 /**
  * Step 1 Form Fields - Account Credentials
- * Modular component for account creation fields
+ * Username is auto-generated from email on the backend.
  */
-export default function Step1Fields({ register, control, watch, errors }) {
-  const [passwordFocused, setPasswordFocused] = useState(false);
+export default function Step1Fields({ register, control, watch, errors, password }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const username = watch("username");
   const email = watch("email");
-  const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
   return (
     <>
-      {/* Username Field */}
-      <FormField
-        label="Username"
-        id="username"
-        icon={User}
-        error={errors.username?.message}
-        value={username}
-        helpText="This will be your unique identifier on the platform"
-        inputProps={{
-          type: "text",
-          placeholder: "johndoe",
-          ...register("username"),
-        }}
-      />
-
       {/* Email Field */}
       <FormField
         label="Email Address"
@@ -40,6 +24,7 @@ export default function Step1Fields({ register, control, watch, errors }) {
         icon={Mail}
         error={errors.email?.message}
         value={email}
+        helpText="This will be your login email"
         inputProps={{
           type: "email",
           placeholder: "you@company.com",
@@ -56,18 +41,30 @@ export default function Step1Fields({ register, control, watch, errors }) {
           error={errors.password?.message}
           value={password}
           showSuccess={false}
+          rightAdornment={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          }
           inputProps={{
-            type: "password",
+            type: showPassword ? "text" : "password",
             placeholder: "Create a strong password",
-            ...register("password", {
-              onBlur: () => setPasswordFocused(false),
-            }),
-            onFocus: () => setPasswordFocused(true),
+            ...register("password"),
           }}
         />
         <PasswordStrengthIndicator
           password={password}
-          visible={passwordFocused || (password?.length > 0)}
+          visible={!!password}
         />
       </div>
 
@@ -78,8 +75,23 @@ export default function Step1Fields({ register, control, watch, errors }) {
         icon={Lock}
         error={errors.confirmPassword?.message}
         value={confirmPassword}
+        rightAdornment={
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((v) => !v)}
+            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+            tabIndex={-1}
+            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+          >
+            {showConfirmPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        }
         inputProps={{
-          type: "password",
+          type: showConfirmPassword ? "text" : "password",
           placeholder: "Re-enter your password",
           ...register("confirmPassword"),
         }}

@@ -34,11 +34,11 @@ export const businessSchema = z.object({
       (value) => {
         // If empty, null, or undefined - it's valid (optional field)
         if (!value || value.trim() === "") return true;
-        
-        // If provided, must be less than 20 characters
-        return value.length <= 20;
+
+        // If provided, must be less than 50 characters
+        return value.length <= 50;
       },
-      { message: "Tax ID must be less than 20 characters" }
+      { message: "Tax ID must be less than 50 characters" }
     )
     .refine(
       (value) => {

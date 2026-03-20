@@ -128,7 +128,6 @@ export const registerVendor = async (vendorData) => {
   );
 
   const payload = {
-    username: vendorData.username,
     email: vendorData.email,
     password: vendorData.password,
     confirmPassword: vendorData.confirmPassword,
@@ -175,6 +174,16 @@ export const registerVendor = async (vendorData) => {
  */
 export const getVendorStatus = async (vendorId) => {
   return apiCall(`/register/vendor/${vendorId}/status`);
+};
+
+/**
+ * Resend email verification
+ */
+export const resendVerificationEmail = async (email) => {
+  return apiCall('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 };
 
 /**

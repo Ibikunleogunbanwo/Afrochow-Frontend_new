@@ -19,6 +19,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { z } from "zod";
+import { passwordSchema } from "@/lib/schemas/accountSchema";
+import { CANADIAN_PROVINCES } from "@/lib/schemas/addressSchema";
+import PasswordStrengthIndicator from "@/components/register/vendor/vendorComponent/PasswordStrengthIndicator";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,26 +68,33 @@ const INITIAL_FORM_DATA = {
 const registrationSchema = z
     .object({
       email: z.string().min(1, "Email is required").email("Enter a valid email address"),
-      password: z
-          .string()
-          .min(8, "Password must be at least 8 characters")
-          .regex(/(?=.*[a-z])/, "Password must contain a lowercase letter")
-          .regex(/(?=.*[A-Z])/, "Password must contain an uppercase letter")
-          .regex(/(?=.*\d)/, "Password must contain a number"),
+      password: passwordSchema,
       confirmPassword: z.string().min(1, "Please confirm your password"),
-      firstName: z.string().min(1, "First name is required"),
-      lastName: z.string().min(1, "Last name is required"),
+      firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
+      lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
       phone: z
           .string()
           .min(10, "Phone number must be at least 10 digits")
           .regex(/^\+?[\d\s\-().]{10,}$/, "Enter a valid phone number"),
+      defaultDeliveryInstructions: z
+          .string()
+          .max(500, "Delivery instructions must be less than 500 characters")
+          .optional()
+          .nullable(),
       acceptTerms: z.boolean().refine((val) => val === true, {
         message: "You must accept the terms and conditions",
       }),
       address: z.object({
-        addressLine: z.string().min(1, "Street address is required"),
-        city: z.string().min(1, "City is required"),
-        province: z.string().min(1, "Province is required"),
+        addressLine: z.string().min(1, "Street address is required").max(200, "Address must be less than 200 characters"),
+        city: z.string().min(1, "City is required").max(100, "City must be less than 100 characters"),
+        province: z
+            .string()
+            .min(1, "Province is required")
+            .toUpperCase()
+            .refine(
+                (val) => CANADIAN_PROVINCES.includes(val),
+                "Please select a valid Canadian province"
+            ),
         postalCode: z
             .string()
             .min(1, "Postal code is required")
@@ -421,6 +431,7 @@ export default function CustomerRegistration() {
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   const [resendLoading, setResendLoading] = useState(false);
@@ -710,24 +721,32 @@ export default function CustomerRegistration() {
                     </Field>
                   </div>
 
-                  <Field
-                      label="Password"
-                      error={err("password")}
-                      required
-                      htmlFor="password"
-                  >
-                    <PasswordField
-                        id="password"
-                        icon={Lock}
-                        name="password"
-                        placeholder="Min. 8 characters"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        hasError={!!err("password")}
-                        disabled={loading}
-                        autoComplete="new-password"
+                  <div className="flex flex-col gap-1">
+                    <Field
+                        label="Password"
+                        error={err("password")}
+                        required
+                        htmlFor="password"
+                    >
+                      <PasswordField
+                          id="password"
+                          icon={Lock}
+                          name="password"
+                          placeholder="Min. 8 characters"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          hasError={!!err("password")}
+                          disabled={loading}
+                          autoComplete="new-password"
+                          onFocus={() => setPasswordFocused(true)}
+                          onBlur={() => setPasswordFocused(false)}
+                      />
+                    </Field>
+                    <PasswordStrengthIndicator
+                        password={formData.password}
+                        visible={passwordFocused || formData.password.length > 0}
                     />
-                  </Field>
+                  </div>
 
                   <Field
                       label="Confirm Password"
