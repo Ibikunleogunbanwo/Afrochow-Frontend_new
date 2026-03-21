@@ -19,7 +19,12 @@ import {
 import { AuthAPI } from "@/lib/api/auth.api";
 import { RegistrationAPI } from "@/lib/api/registration.api";
 import { CustomerAPI } from "@/lib/api/customer.api";
-import {useCart} from "@/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext";
+
+const ROLE_ROUTES = {
+    VENDOR: "/vendor/dashboard",
+    ADMIN: "/admin/dashboard",
+};
 
 export const useAuth = () => {
     const dispatch = useDispatch();
@@ -35,6 +40,7 @@ export const useAuth = () => {
     const email = useSelector(selectEmail);
 
     const { clearCart } = useCart();
+
     const login = async (identifier, password) => {
         dispatch(setLoading(true));
         dispatch(setError(null));
@@ -43,70 +49,58 @@ export const useAuth = () => {
             const result = await AuthAPI.login(identifier, password);
 
             if (!result?.data) {
-                dispatch(setError('Invalid response from server'));
-                return;
+                throw new Error("Invalid response from server");
             }
 
             const userData = result.data;
 
             if (!userData.role || !userData.publicUserId) {
-                dispatch(setError('Invalid user data received'));
-                return;
+                throw new Error("Invalid user data received");
             }
 
             dispatch(setAuth({ user: userData }));
 
-            if (userData.role === 'VENDOR') {
-                router.push('/vendor/dashboard');
-            } else if (userData.role === 'ADMIN') {
-                router.push('/admin/dashboard');
-            } else {
-                router.push('/');
-            }
+            // Route based on role; customers fall back to homepage
+            const destination = ROLE_ROUTES[userData.role] ?? "/";
+            router.push(destination);
 
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Login failed';
+            const errorMessage = err instanceof Error ? err.message : "Login failed";
             dispatch(setError(errorMessage));
-            throw err;
+            throw err; // Re-throw so the modal can show the appropriate toast
         } finally {
             dispatch(setLoading(false));
         }
     };
 
-
-
-
     const logout = async () => {
         try {
             await AuthAPI.logout();
         } catch (err) {
-            console.error('Logout API failed:', err);
+            // Swallow API errors — we still want to clear local state
+            console.error("Logout API call failed:", err);
         } finally {
             dispatch(clearAuth());
             clearCart();
-            router.push('/');
+            router.push("/");
         }
     };
-
-
 
     const registerCustomer = async (data) => {
         try {
             return await RegistrationAPI.registerCustomer(data);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+            const errorMessage = err instanceof Error ? err.message : "Registration failed";
             dispatch(setError(errorMessage));
             throw err;
         }
     };
 
-
-
     const registerVendor = async (data) => {
         try {
             return await RegistrationAPI.registerVendor(data);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+            const errorMessage = err instanceof Error ? err.message : "Registration failed";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -116,7 +110,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.getCustomerProfile();
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
+            const errorMessage = err instanceof Error ? err.message : "Failed to load profile";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -126,7 +120,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.updateCustomerProfile(data);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+            const errorMessage = err instanceof Error ? err.message : "Failed to update profile";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -136,7 +130,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.addAddress(addressData);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to add address';
+            const errorMessage = err instanceof Error ? err.message : "Failed to add address";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -146,7 +140,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.updateAddress(publicAddressId, addressData);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to update address';
+            const errorMessage = err instanceof Error ? err.message : "Failed to update address";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -156,7 +150,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.deleteAddress(publicAddressId);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to delete address';
+            const errorMessage = err instanceof Error ? err.message : "Failed to delete address";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -166,7 +160,7 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.setDefaultAddress(publicAddressId);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to set default address';
+            const errorMessage = err instanceof Error ? err.message : "Failed to set default address";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -176,7 +170,7 @@ export const useAuth = () => {
         try {
             return await AuthAPI.changePassword(currentPassword, newPassword);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to change password';
+            const errorMessage = err instanceof Error ? err.message : "Failed to change password";
             dispatch(setError(errorMessage));
             throw err;
         }
@@ -186,22 +180,27 @@ export const useAuth = () => {
         try {
             return await CustomerAPI.savedAddress();
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to load addresses';
+            const errorMessage = err instanceof Error ? err.message : "Failed to load addresses";
             dispatch(setError(errorMessage));
             throw err;
         }
     };
 
+    /**
+     * Guard for protected pages. Call at the top of a page component.
+     * Redirects unauthenticated users to the sign-in modal trigger,
+     * and users without the required role to /unauthorized.
+     */
     const requireAuth = (requiredRole) => {
         if (isLoading) return false;
 
         if (!isAuthenticated) {
-            router.push(`/?signin=true`);
+            router.push("/?signin=true");
             return false;
         }
 
         if (requiredRole && role !== requiredRole) {
-            router.push('/unauthorized');
+            router.push("/unauthorized");
             return false;
         }
 
@@ -228,7 +227,7 @@ export const useAuth = () => {
         registerVendor,
         requireAuth,
 
-        // Profile management
+        // Profile & address management
         getCustomerProfile,
         updateCustomerProfile,
         addAddress,

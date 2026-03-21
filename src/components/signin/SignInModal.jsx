@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -29,19 +28,14 @@ import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/useAuth"
 
 const formSchema = z.object({
-    email: z.string().email({
-        message: "Invalid email address.",
-    }),
-    password: z.string().min(8, {
-        message: "Password must be at least 8 characters.",
-    }),
+    email: z.string().email({ message: "Invalid email address." }),
+    password: z.string().min(8, { message: "Password must be at least 8 characters." }),
     rememberMe: z.boolean().default(false),
 })
 
 export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick }) {
     const { login, isLoading } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
-    const router = useRouter()
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -52,6 +46,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
         },
     })
 
+    // Pre-fill remembered email on mount
     useEffect(() => {
         const savedEmail = localStorage.getItem("rememberedEmail")
         if (savedEmail) {
@@ -60,33 +55,39 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
         }
     }, [form])
 
-    const onSubmit = async (values) => {
-        try {
-            if (values.rememberMe) {
-                localStorage.setItem("rememberedEmail", values.email)
-            } else {
-                localStorage.removeItem("rememberedEmail")
-            }
+    // Reset password visibility when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setShowPassword(false)
+        }
+    }, [isOpen])
 
+    const onSubmit = async (values) => {
+        if (values.rememberMe) {
+            localStorage.setItem("rememberedEmail", values.email)
+        } else {
+            localStorage.removeItem("rememberedEmail")
+        }
+
+        try {
+            // login() handles role-based routing internally (VENDOR, ADMIN, customer)
             await login(values.email, values.password)
+            toast.success("Welcome back!")
             onClose()
         } catch (err) {
-            console.error("Login failed:", err)
-
-            const errorMessage = err.message?.toLowerCase() || ""
+            const errorMessage = err?.message?.toLowerCase() ?? ""
 
             if (errorMessage.includes("verify") || errorMessage.includes("not verified")) {
                 toast.error("Email Not Verified", {
-                    description: "Please verify your email to continue",
+                    description: "Please check your inbox and verify your email to continue.",
                 })
-                router.push(`/verify-email?email=${encodeURIComponent(values.email)}`)
             } else if (errorMessage.includes("credentials") || errorMessage.includes("invalid")) {
                 toast.error("Invalid Credentials", {
-                    description: "Check your email and password",
+                    description: "Double-check your email and password and try again.",
                 })
             } else {
                 toast.error("Login Failed", {
-                    description: err.message || "Please try again",
+                    description: err?.message || "Something went wrong. Please try again.",
                 })
             }
         }
@@ -102,10 +103,9 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Sign Up Prompt — top */}
                 {onSignUpClick && (
                     <p className="text-center text-sm text-gray-500 -mt-2">
-                        Don&#39;t have an account?{' '}
+                        Don&apos;t have an account?{" "}
                         <button
                             type="button"
                             onClick={onSignUpClick}
@@ -119,6 +119,8 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                 <div className="grid gap-4 py-4">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+                            {/* Email */}
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -129,6 +131,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                             <Input
                                                 placeholder="you@example.com"
                                                 type="email"
+                                                autoComplete="email"
                                                 disabled={isLoading}
                                                 {...field}
                                             />
@@ -137,6 +140,8 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                     </FormItem>
                                 )}
                             />
+
+                            {/* Password */}
                             <FormField
                                 control={form.control}
                                 name="password"
@@ -159,6 +164,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="••••••••"
+                                                    autoComplete="current-password"
                                                     disabled={isLoading}
                                                     className="pr-10"
                                                     {...field}
@@ -180,6 +186,8 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                     </FormItem>
                                 )}
                             />
+
+                            {/* Remember Me */}
                             <FormField
                                 control={form.control}
                                 name="rememberMe"
@@ -198,17 +206,20 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                     </FormItem>
                                 )}
                             />
+
                             <Button
                                 type="submit"
                                 variant="destructive"
                                 className="w-full"
                                 disabled={isLoading}
                             >
-                                {isLoading ? "Signing in..." : "Sign in"}
+                                {isLoading ? "Signing in…" : "Sign in"}
                             </Button>
                         </form>
                     </Form>
+
                     <Separator />
+
                     <Button variant="google" className="w-full" disabled={isLoading}>
                         Sign in with Google
                     </Button>

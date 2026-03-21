@@ -1,141 +1,80 @@
-'use client';
+"use client";
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-    ArrowRight,
-    Flame,
-    Gift,
-    Sprout,
-    Coffee,
-    Cookie,
-    Droplets,
-    ShoppingBasket,
-    ChefHat,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { SearchAPI } from "@/lib/api/search.api";
 import { CardStack } from "@/components/ui/card-stack";
+import CategoryStackCard from "@/components/home/cards/CategoryStackCard";
 
-const iconMap = {
-    "African Kitchen": Flame,
-    "African Soups": Droplets,
-    "Cakes": Gift,
-    "Farm Produce": Sprout,
-    "Pastries": Coffee,
-    "Baked Goods": Cookie,
-    "Soups": Droplets,
-    "Groceries": ShoppingBasket,
-    "default": ChefHat,
-};
+// Module-level cache — persists across mounts without re-hitting the API
+let cachedStackItems = [];
 
-const categoryDescriptions = {
-    "African Kitchen":  "Authentic home-cooked meals delivered fresh",
-    "Groceries":        "African ingredients & pantry essentials",
-    "Farm Produce":     "Fresh fruits, vegetables & more",
-    "Cakes":            "Custom cakes for every occasion",
-    "Soups":            "Rich, hearty soups from across Africa",
-    "African Soups":    "Rich, hearty soups from across Africa",
-    "Pastries":         "Freshly baked treats every day",
-    "Baked Goods":      "Freshly baked treats every day",
-};
-
-const cardGradients = [
-    "from-orange-500 to-red-600",
-    "from-pink-500 to-purple-600",
-    "from-emerald-500 to-teal-600",
-    "from-yellow-500 to-orange-600",
-    "from-blue-500 to-indigo-600",
-    "from-purple-500 to-indigo-700",
-];
-
-const CategoryStackCard = ({ item }) => {
-    const Icon = item.icon || ChefHat;
-    const gradient = cardGradients[item.colorIndex % cardGradients.length];
-
-    return (
-        <Link href={item.path} className="block h-full w-full">
-            <div className={`relative h-full w-full bg-linear-to-br ${gradient} overflow-hidden`}>
-
-                {/* Dot grid */}
-                <div
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                        backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                        backgroundSize: '18px 18px',
-                    }}
-                />
-
-                {/* Glow orbs */}
-                <div className="absolute -top-10 -right-10 w-36 h-36 bg-white/20 rounded-full blur-2xl" />
-                <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white/10 rounded-full blur-xl" />
-
-                {/* Center content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center z-10">
-                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-xl">
-                        <Icon className="w-10 h-10 text-white" strokeWidth={2} />
-                    </div>
-
-                    <div>
-                        <h3 className="text-2xl font-black text-white drop-shadow-md">
-                            {item.title}
-                        </h3>
-                        {item.description && (
-                            <p className="text-sm text-white/80 mt-2 leading-relaxed max-w-xs mx-auto">
-                                {item.description}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 text-white text-sm font-bold hover:bg-white/30 transition-colors">
-                        <span>Explore {item.title}</span>
-                        <ArrowRight className="w-4 h-4" />
-                    </div>
-                </div>
-
-                {/* Bottom fade */}
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-black/20 to-transparent" />
-            </div>
-        </Link>
-    );
-};
+// Breakpoint for mobile layout adjustments
+const MOBILE_BREAKPOINT = 640;
 
 const CategoriesAndBanner = () => {
-    const [stackItems, setStackItems] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
+    const [stackItems, setStackItems]           = useState(cachedStackItems);
+    const [loading, setLoading]                 = useState(cachedStackItems.length === 0);
+    const [error, setError]                     = useState(false);
+    const [isMobile, setIsMobile]               = useState(false);
 
+    // Debounced resize listener — avoids re-renders on every pixel of resize
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 640);
+        let timeout;
+        const check = () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+            }, 150);
+        };
         check();
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
+        window.addEventListener("resize", check);
+        return () => {
+            window.removeEventListener("resize", check);
+            clearTimeout(timeout);
+        };
     }, []);
 
     const loadCategories = useCallback(async () => {
+        // Skip fetch if we already have cached data
+        if (cachedStackItems.length > 0) {
+            setStackItems(cachedStackItems);
+            setLoading(false);
+            return;
+        }
+
         try {
-            setLoadingCategories(true);
+            setLoading(true);
+            setError(false);
+
             const response = await SearchAPI.getAllCategories();
 
-            if (response?.success && response?.data) {
-                // merged into a single .map() — removes the unused `mapped` intermediate variable
+            if (response?.success && Array.isArray(response?.data)) {
                 const items = response.data.map((category, index) => ({
                     id: category.categoryId,
                     title: category.name,
-                    description: categoryDescriptions[category.name] || 'Explore our delicious selection',
-                    icon: iconMap[category.name] || iconMap.default,
+                    // Use description from API — no hardcoded fallback map needed
+                    description: category.description || "Explore our delicious selection",
+                    // Use iconUrl from API — CategoryStackCard falls back to ChefHat if null
+                    iconUrl: category.iconUrl || null,
+                    activeProductCount: category.activeProductCount || 0,
+                    // displayOrder already sorted ASC by the backend query
                     path: `/restaurants?categoryId=${category.categoryId}`,
                     colorIndex: index,
                 }));
 
+                cachedStackItems = items;
                 setStackItems(items);
             } else {
                 setStackItems([]);
             }
-        } catch (error) {
-            console.error('Error fetching categories:', error);
+        } catch (err) {
+            console.error("Error fetching categories:", err);
+            setError(true);
             setStackItems([]);
         } finally {
-            setLoadingCategories(false);
+            setLoading(false);
         }
     }, []);
 
@@ -147,9 +86,9 @@ const CategoriesAndBanner = () => {
     const cardHeight = isMobile ? 260 : 320;
 
     return (
-        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-linear-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
+        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-gradient-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
 
-            {/* Decorative Background */}
+            {/* Decorative background blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200/20 rounded-full blur-3xl" />
                 <div className="absolute bottom-20 left-10 w-96 h-96 bg-red-200/20 rounded-full blur-3xl" />
@@ -160,23 +99,37 @@ const CategoriesAndBanner = () => {
                 {/* Section Header */}
                 <div className="text-center mb-6 md:mb-8">
                     <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
-                        Everything African{' '}
-                        <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
+                        Everything African{" "}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
                             All in One Place
                         </span>
                     </h2>
                     <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                        From sizzling home kitchens that promise amazing African dishes to African grocery stores — find exactly what you&#39;re craving
+                        From sizzling home kitchens that promise amazing African dishes to African grocery
+                        stores — find exactly what you&apos;re craving
                     </p>
                 </div>
 
                 {/* Category Card Stack */}
-                {loadingCategories ? (
+                {loading ? (
                     <div
                         className="w-full bg-gray-100 rounded-2xl animate-pulse flex items-center justify-center"
                         style={{ height: cardHeight + 80 }}
                     >
                         <p className="text-gray-400 text-sm">Loading categories...</p>
+                    </div>
+                ) : error ? (
+                    <div
+                        className="w-full bg-white rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-4"
+                        style={{ height: cardHeight + 80 }}
+                    >
+                        <p className="text-gray-400 text-sm">Failed to load categories.</p>
+                        <button
+                            onClick={loadCategories}
+                            className="px-5 py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors"
+                        >
+                            Retry
+                        </button>
                     </div>
                 ) : stackItems.length > 0 ? (
                     <CardStack
@@ -193,9 +146,7 @@ const CategoriesAndBanner = () => {
                         maxVisible={isMobile ? 5 : 7}
                         depthPx={isMobile ? 80 : 140}
                         activeLiftPx={isMobile ? 14 : 22}
-                        renderCard={(item) => (
-                            <CategoryStackCard item={item} />
-                        )}
+                        renderCard={(item) => <CategoryStackCard item={item} />}
                     />
                 ) : (
                     <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200">
@@ -203,7 +154,7 @@ const CategoriesAndBanner = () => {
                     </div>
                 )}
 
-                {/* Browse all link */}
+                {/* Browse all CTA */}
                 <div className="text-center mt-4">
                     <Link
                         href="/restaurants"

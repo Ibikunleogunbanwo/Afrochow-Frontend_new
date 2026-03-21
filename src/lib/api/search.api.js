@@ -1,5 +1,16 @@
 import { API_BASE_URL, fetchWithCredentials } from './httpClient';
 
+// Shared query string builder — avoids repeating URLSearchParams logic
+const buildQuery = (filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.append(key, String(value));
+    }
+  });
+  return params.toString();
+};
+
 export const SearchAPI = {
   // ================= PRODUCTS =================
 
@@ -9,33 +20,26 @@ export const SearchAPI = {
    * minPrice, maxPrice, isVegetarian, isVegan, isGlutenFree, page, size.
    */
   searchProducts: async (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, String(value));
-      }
-    });
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/search/products/advanced${queryString ? `?${queryString}` : ''}`;
-    return fetchWithCredentials(url, { method: 'GET' });
+    const qs = buildQuery(filters);
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/advanced${qs ? `?${qs}` : ''}`,
+        { method: 'GET' }
+    );
   },
 
   searchProductsAdvanced: async (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, String(value));
-      }
-    });
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/search/products/advanced${queryString ? `?${queryString}` : ''}`;
-    return fetchWithCredentials(url, { method: 'GET' });
+    const qs = buildQuery(filters);
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/advanced${qs ? `?${qs}` : ''}`,
+        { method: 'GET' }
+    );
   },
 
   getProductById: async (publicProductId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/products/${publicProductId}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/products/${publicProductId}`,
+        { method: 'GET' }
+    );
   },
 
   getPopularProductNames: async (limit = 5) => {
@@ -133,15 +137,11 @@ export const SearchAPI = {
   },
 
   searchVendorsAdvanced: async (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, String(value));
-      }
-    });
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/search/vendors/advanced${queryString ? `?${queryString}` : ''}`;
-    return fetchWithCredentials(url, { method: 'GET' });
+    const qs = buildQuery(filters);
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/advanced${qs ? `?${qs}` : ''}`,
+        { method: 'GET' }
+    );
   },
 
   getVendorsByProductName: async (query) => {
@@ -163,6 +163,15 @@ export const SearchAPI = {
   getAllCategories: async () => {
     return fetchWithCredentials(
         `${API_BASE_URL}/categories`,
+        { method: 'GET' }
+    );
+  },
+
+  // ================= LOCATION =================
+
+  getProductsNearCoordinates: async (lat, lng, radiusKm = 25) => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/near-coordinates?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`,
         { method: 'GET' }
     );
   },

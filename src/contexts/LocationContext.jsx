@@ -3,7 +3,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const LocationContext = createContext(undefined);
 
-// Reverse geocode lat/lng to city name using OpenStreetMap Nominatim (free, no API key)
+// Full address object shape returned by Nominatim
+const buildLocationDetails = (address) => ({
+    neighbourhood: address?.neighbourhood || address?.suburb    || null,
+    city:          address?.city          || address?.town      || address?.village || address?.county || null,
+    province:      address?.state         || null,
+    postalCode:    address?.postcode      || null,
+    country:       address?.country       || null,
+    displayName:   null, // set separately from top-level display_name
+});
+
 const reverseGeocode = async (lat, lng) => {
     try {
         const response = await fetch(
@@ -11,50 +20,55 @@ const reverseGeocode = async (lat, lng) => {
             { headers: { 'Accept-Language': 'en' } }
         );
         const data = await response.json();
-        return (
-            data?.address?.city    ||
-            data?.address?.town    ||
-            data?.address?.village ||
-            data?.address?.county  ||
-            null
-        );
+        const details = buildLocationDetails(data?.address || {});
+        details.displayName = data?.display_name || null;
+        return details;
     } catch {
         return null;
     }
 };
 
-// Fallback: IP-based geolocation
-const detectCityFromIP = async () => {
+const detectFromIP = async () => {
     try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        return data?.city || null;
+        return {
+            neighbourhood: null,
+            city:          data?.city     || null,
+            province:      data?.region   || null,
+            postalCode:    data?.postal   || null,
+            country:       data?.country_name || null,
+            displayName:   data?.city     || null,
+        };
     } catch {
         return null;
     }
 };
 
 export const LocationProvider = ({ children }) => {
-    const [city,           setCity]           = useState('Calgary');
-    const [detectedCity,   setDetectedCity]   = useState(null);
-    const [isDetecting,    setIsDetecting]    = useState(false);
-    const [coordinates,    setCoordinates]    = useState(null);
-    const [locationSource, setLocationSource] = useState(null);
+    const [city,            setCity]            = useState('Calgary');
+    const [locationDetails, setLocationDetails] = useState(null);
+    const [isDetecting,     setIsDetecting]     = useState(false);
+    const [coordinates,     setCoordinates]     = useState(null);
+    const [locationSource,  setLocationSource]  = useState(null);
 
     useEffect(() => {
-        const cachedCity = localStorage.getItem('userCity');
+        const cachedCity    = localStorage.getItem('userCity');
+        const cachedDetails = localStorage.getItem('userLocationDetails');
 
         if (cachedCity) {
             setCity(cachedCity);
             setLocationSource('cached');
-            // Re-detect in background to keep location fresh
+            if (cachedDetails) {
+                try { setLocationDetails(JSON.parse(cachedDetails)); } catch {}
+            }
+            // Re-detect in background to keep fresh
             void autoDetectCity();
         } else {
             void autoDetectCity();
         }
     }, []);
 
-    // Try GPS first, fall back to IP
     const autoDetectCity = async () => {
         setIsDetecting(true);
         try {
@@ -70,7 +84,6 @@ export const LocationProvider = ({ children }) => {
         }
     };
 
-    // Request precise GPS location from browser
     const requestPreciseLocation = async () => {
         setIsDetecting(true);
         try {
@@ -78,26 +91,25 @@ export const LocationProvider = ({ children }) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
                     timeout:            8000,
-                    maximumAge:         5 * 60 * 1000, // cache position for 5 minutes
+                    maximumAge:         5 * 60 * 1000,
                 });
             });
 
             const { latitude, longitude } = position.coords;
             setCoordinates({ lat: latitude, lng: longitude });
 
-            const detectedFromGPS = await reverseGeocode(latitude, longitude);
-            if (detectedFromGPS) {
-                setDetectedCity(detectedFromGPS);
-                setCity(detectedFromGPS);
+            const details = await reverseGeocode(latitude, longitude);
+            if (details?.city) {
+                setCity(details.city);
+                setLocationDetails(details);
                 setLocationSource('gps');
-                localStorage.setItem('userCity',       detectedFromGPS);
-                localStorage.setItem('userCitySource', 'gps');
+                localStorage.setItem('userCity',            details.city);
+                localStorage.setItem('userCitySource',      'gps');
+                localStorage.setItem('userLocationDetails', JSON.stringify(details));
             } else {
-                // Reverse geocode failed — fall back to IP
                 await fallbackToIP();
             }
         } catch {
-            // User denied permission or timeout — fall back to IP
             await fallbackToIP();
         } finally {
             setIsDetecting(false);
@@ -105,32 +117,46 @@ export const LocationProvider = ({ children }) => {
     };
 
     const fallbackToIP = async () => {
-        const detectedFromIP = await detectCityFromIP();
-        if (detectedFromIP) {
-            setDetectedCity(detectedFromIP);
-            setCity(detectedFromIP);
+        const details = await detectFromIP();
+        if (details?.city) {
+            setCity(details.city);
+            setLocationDetails(details);
             setLocationSource('ip');
-            localStorage.setItem('userCity',       detectedFromIP);
-            localStorage.setItem('userCitySource', 'ip');
+            localStorage.setItem('userCity',            details.city);
+            localStorage.setItem('userCitySource',      'ip');
+            localStorage.setItem('userLocationDetails', JSON.stringify(details));
         }
-        // If both fail, keep the default 'Calgary'
     };
 
     const updateCity = (newCity) => {
         setCity(newCity);
         setLocationSource('manual');
+        setLocationDetails(prev => ({ ...(prev || {}), city: newCity }));
         localStorage.setItem('userCity',       newCity);
         localStorage.setItem('userCitySource', 'manual');
+    };
+
+    // Build a human-readable location label at whatever granularity is available
+    // e.g. "Bridgeland, Calgary, AB" or just "Calgary, AB" or "Calgary"
+    const getLocationLabel = () => {
+        if (!locationDetails) return city || null;
+        const parts = [
+            locationDetails.neighbourhood,
+            locationDetails.city,
+            locationDetails.province,
+        ].filter(Boolean);
+        return parts.length > 0 ? parts.join(', ') : city || null;
     };
 
     return (
         <LocationContext.Provider
             value={{
                 city,
-                detectedCity,
+                locationDetails,
                 isDetecting,
                 coordinates,
                 locationSource,
+                locationLabel: getLocationLabel(),
                 updateCity,
                 autoDetectCity,
                 requestPreciseLocation,

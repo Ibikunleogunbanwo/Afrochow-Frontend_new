@@ -38,24 +38,34 @@ const safeParseJson = async (response) => {
  * - Silences console noise for 401 on /auth/me (passive auth checks).
  * - Safely handles empty or non-JSON response bodies.
  */
-export const fetchWithCredentials = async (url, options = {}) => {
+export const fetchWithCredentials = async (url, options = {}, retries = 3, retryDelayMs = 1000) => {
   let response;
 
-  try {
-    response = await fetch(url, {
-      ...options,
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-  } catch (networkError) {
-    // Network failure — no response object available
-    console.error('Network Error:', { url, error: networkError.message });
-    const error = new Error('Network error — please check your connection');
-    error.status = undefined;
-    throw error;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      response = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+      break; // success — exit retry loop
+    } catch (networkError) {
+      const isLastAttempt = attempt === retries;
+
+      if (isLastAttempt) {
+        console.error('Network Error —', networkError.message, '| url:', url);
+        const error = new Error('Network error — please check your connection');
+        error.status = undefined;
+        throw error;
+      }
+
+      // Backend not ready yet — wait and retry
+      console.warn(`Network error on attempt ${attempt}/${retries}, retrying in ${retryDelayMs}ms...`, url);
+      await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+    }
   }
 
   const json = await safeParseJson(response);
@@ -66,18 +76,12 @@ export const fetchWithCredentials = async (url, options = {}) => {
     const isSilent = response.status === 401 && url.includes('/auth/me');
 
     if (!isSilent) {
-      console.error('API Error:', {
-        url,
-        status: response.status,
-        statusText: response.statusText,
-        errorMessage,
-        response: json,
-      });
+      console.error('API Error —', response.status, errorMessage, '| url:', url);
     }
 
     const error = new Error(errorMessage);
     error.status = response.status;
-    error.data = json;
+    error.data   = json;
     throw error;
   }
 
