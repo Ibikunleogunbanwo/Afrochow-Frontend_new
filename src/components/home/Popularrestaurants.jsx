@@ -4,7 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Flame, Clock, MapPin, Loader2 } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import { SearchAPI } from '@/lib/api/search.api';
+import { SignInModal } from '@/components/signin/SignInModal';
+import { SignUpModal } from '@/components/register/SignUpModal';
 
 // ── Module-level cache ────────────────────────────────────────────────────────
 const cache = {
@@ -15,7 +19,7 @@ const cache = {
 };
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-const PopularStoreCard = ({ product, priority = false }) => {
+const PopularStoreCard = ({ product, priority = false, onUnauthenticated }) => {
     const {
         vendorPublicId,
         name,
@@ -32,12 +36,20 @@ const PopularStoreCard = ({ product, priority = false }) => {
         location,
     } = product;
 
-    const href = vendorPublicId
-        ? `/restaurant/${vendorPublicId}`
-        : '/restaurants';
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    const handleClick = (e) => {
+        e.preventDefault();
+        if (!isAuthenticated) {
+            onUnauthenticated();
+        } else {
+            router.push(`/restaurant/${vendorPublicId}`);
+        }
+    };
 
     return (
-        <Link href={href} className="group block h-full">
+        <div onClick={handleClick} className="group block h-full cursor-pointer">
             <div className="h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
                 {/* Image */}
@@ -158,7 +170,7 @@ const PopularStoreCard = ({ product, priority = false }) => {
                     )}
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
 
@@ -178,6 +190,8 @@ const PopularStoreSkeleton = () => (
 const PopularStores = () => {
     const [popularStores, setPopularStores] = useState(cache.stores || []);
     const [loading, setLoading]             = useState(!cache.stores);
+    const [showSignIn, setShowSignIn]       = useState(false);
+    const [showSignUp, setShowSignUp]       = useState(false);
 
     const {
         city,
@@ -210,8 +224,6 @@ const PopularStores = () => {
             try {
                 setLoading(true);
 
-                // Use cached vendors if available — avoids refetching
-                // the full vendor list every time city changes
                 let vendors = cache.vendors;
 
                 const productsResponse = await (city
@@ -290,92 +302,108 @@ const PopularStores = () => {
         : city || null;
 
     return (
-        <section className="py-20 bg-white">
-            <div className="container px-4 mx-auto max-w-7xl">
+        <>
+            <section className="py-20 bg-white">
+                <div className="container px-4 mx-auto max-w-7xl">
 
-                {/* Header */}
-                <div className="max-w-3xl mx-auto text-center mb-16">
-                    <div className="inline-flex items-center space-x-2 px-4 py-2 mb-6 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
-                        <Star className="w-4 h-4 text-orange-600 fill-orange-600" />
-                        <span className="text-sm font-semibold text-orange-800">
-                            Customer Favorites
-                        </span>
-                    </div>
-
-                    <h2 className="text-5xl font-black text-gray-900 mb-6 leading-tight">
-                        Popular Home Kitchens and African Stores
-                        <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
-                            Near You
-                        </span>
-                    </h2>
-
-                    <p className="text-xl text-gray-600 mb-6">
-                        Top rated African Kitchens and stores
-                        {city ? ` in ${city}` : ' near you'}
-                    </p>
-
-                    {/* Location row */}
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
-                        {locationLabel && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
-                                <MapPin className="w-3.5 h-3.5" />
-                                {locationLabel}
+                    {/* Header */}
+                    <div className="max-w-3xl mx-auto text-center mb-16">
+                        <div className="inline-flex items-center space-x-2 px-4 py-2 mb-6 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
+                            <Star className="w-4 h-4 text-orange-600 fill-orange-600" />
+                            <span className="text-sm font-semibold text-orange-800">
+                                Customer Favorites
                             </span>
-                        )}
+                        </div>
 
-                        <button
-                            onClick={requestPreciseLocation}
-                            disabled={isDetecting}
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-orange-100 text-orange-700 text-sm font-semibold rounded-full hover:bg-orange-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isDetecting
-                                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Detecting...</>
-                                : <><MapPin className="w-3.5 h-3.5" /> Use my exact location</>
-                            }
-                        </button>
+                        <h2 className="text-5xl font-black text-gray-900 mb-6 leading-tight">
+                            Popular Home Kitchens and African Stores
+                            <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
+                                Near You
+                            </span>
+                        </h2>
+
+                        {/* Location row */}
+                        <div className="flex items-center justify-center gap-3 flex-wrap">
+                            {locationLabel && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    {locationLabel}
+                                </span>
+                            )}
+
+                            <button
+                                onClick={requestPreciseLocation}
+                                disabled={isDetecting}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-orange-100 text-orange-700 text-sm font-semibold rounded-full hover:bg-orange-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDetecting
+                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Detecting...</>
+                                    : <><MapPin className="w-3.5 h-3.5" /> Use my exact location</>
+                                }
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Cards */}
+                    {loading ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {[...Array(8)].map((_, i) => (
+                                <PopularStoreSkeleton key={`skeleton-${i}`} />
+                            ))}
+                        </div>
+                    ) : popularStores.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {popularStores.map((store, index) => (
+                                <PopularStoreCard
+                                    key={store.publicProductId || `product-${index}`}
+                                    product={store}
+                                    priority={index < 4}
+                                    onUnauthenticated={() => setShowSignIn(true)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                            <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-600 text-lg font-semibold mb-1">
+                                No restaurants found{city ? ` in ${city}` : ' near you'}
+                            </p>
+                            <p className="text-gray-400 text-sm mb-6">
+                                Try a different city or enable location access for better results
+                            </p>
+                            <button
+                                onClick={requestPreciseLocation}
+                                disabled={isDetecting}
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50"
+                            >
+                                {isDetecting
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Detecting...</>
+                                    : <><MapPin className="w-4 h-4" /> Detect my location</>
+                                }
+                            </button>
+                        </div>
+                    )}
                 </div>
+            </section>
 
-                {/* Cards */}
-                {loading ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {[...Array(8)].map((_, i) => (
-                            <PopularStoreSkeleton key={`skeleton-${i}`} />
-                        ))}
-                    </div>
-                ) : popularStores.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {popularStores.map((store, index) => (
-                            <PopularStoreCard
-                                key={store.publicProductId || `product-${index}`}
-                                product={store}
-                                priority={index < 4}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                        <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-600 text-lg font-semibold mb-1">
-                            No restaurants found{city ? ` in ${city}` : ' near you'}
-                        </p>
-                        <p className="text-gray-400 text-sm mb-6">
-                            Try a different city or enable location access for better results
-                        </p>
-                        <button
-                            onClick={requestPreciseLocation}
-                            disabled={isDetecting}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50"
-                        >
-                            {isDetecting
-                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Detecting...</>
-                                : <><MapPin className="w-4 h-4" /> Detect my location</>
-                            }
-                        </button>
-                    </div>
-                )}
-            </div>
-        </section>
+            <SignInModal
+                isOpen={showSignIn}
+                onClose={() => setShowSignIn(false)}
+                onSignUpClick={() => {
+                    setShowSignIn(false);
+                    setShowSignUp(true);
+                }}
+            />
+
+            <SignUpModal
+                isOpen={showSignUp}
+                onClose={() => setShowSignUp(false)}
+                onSignInClick={() => {
+                    setShowSignUp(false);
+                    setShowSignIn(true);
+                }}
+            />
+        </>
     );
 };
 

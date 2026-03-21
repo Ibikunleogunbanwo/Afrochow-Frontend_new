@@ -3,18 +3,18 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Flame, Clock, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { SearchAPI } from '@/lib/api/search.api';
+import { SignInModal } from '@/components/signin/SignInModal';
+import { SignUpModal } from '@/components/register/SignUpModal';
 
-// ── Module-level cache — survives component remounts within the same session.
-// When the user navigates back to the home page, the component remounts but
-// finds data already populated, skips the fetch, and renders instantly so
-// the browser can restore the scroll position correctly.
+// ── Module-level cache ────────────────────────────────────────────────────────
 let cachedFeaturedProducts = [];
 
-// ── Product card ──────────────────────────────────────────────────────────────
-const FeaturedProductCard = ({ product, priority = false }) => {
+// ── Card ──────────────────────────────────────────────────────────────────────
+const FeaturedProductCard = ({ product, priority = false, onUnauthenticated }) => {
     const {
-        publicProductId,
         vendorPublicId,
         name,
         restaurantName,
@@ -27,12 +27,20 @@ const FeaturedProductCard = ({ product, priority = false }) => {
         preparationTimeMinutes,
     } = product;
 
-    const href = vendorPublicId
-        ? `/restaurant/${vendorPublicId}`
-        : `/restaurant`;
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    const handleClick = (e) => {
+        e.preventDefault();
+        if (!isAuthenticated) {
+            onUnauthenticated();
+        } else {
+            router.push(`/restaurant/${vendorPublicId}`);
+        }
+    };
 
     return (
-        <Link href={href} className="group block h-full">
+        <div onClick={handleClick} className="group block h-full cursor-pointer">
             <div className="h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
                 {/* Image */}
@@ -43,6 +51,7 @@ const FeaturedProductCard = ({ product, priority = false }) => {
                             alt={name}
                             fill
                             priority={priority}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                             unoptimized
                         />
@@ -61,7 +70,7 @@ const FeaturedProductCard = ({ product, priority = false }) => {
                         </div>
                     )}
 
-                    {/* Order count badge — only shown if meaningful */}
+                    {/* Order count badge */}
                     {totalOrders > 0 && (
                         <div className="absolute top-3 right-3">
                             <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
@@ -89,15 +98,15 @@ const FeaturedProductCard = ({ product, priority = false }) => {
                         </p>
                     )}
 
-                    {/* Rating + reviews + prep time + price */}
+                    {/* Rating + prep time + price */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
 
-                            {/* Rating — display only, not interactive */}
+                            {/* Rating */}
                             <div className="flex items-center gap-1">
                                 <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
                                 <span className="text-xs font-bold text-gray-800">
-                                    {averageRating > 0 ? averageRating.toFixed(1) : '—'}
+                                    {averageRating > 0 ? averageRating.toFixed(1) : '0'}
                                 </span>
                                 {reviewCount > 0 && (
                                     <span className="text-xs text-gray-400">
@@ -126,7 +135,7 @@ const FeaturedProductCard = ({ product, priority = false }) => {
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
 
@@ -142,24 +151,20 @@ const FeaturedProductSkeleton = () => (
     </div>
 );
 
-// ── Main component ─────────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 const FeaturedRestaurants = () => {
     const [featuredProducts, setFeaturedProducts] = useState(cachedFeaturedProducts);
-    const [loading, setLoading] = useState(cachedFeaturedProducts.length === 0);
+    const [loading, setLoading]                   = useState(cachedFeaturedProducts.length === 0);
+    const [showSignIn, setShowSignIn]             = useState(false);
+    const [showSignUp, setShowSignUp]             = useState(false);
 
     useEffect(() => {
-        // Cache hit — data already loaded in this session, skip fetch.
-        // This ensures instant render on back navigation so the browser
-        // can restore scroll position without a loading flash.
         if (cachedFeaturedProducts.length > 0) return;
 
         const fetchFeatured = async () => {
             try {
                 setLoading(true);
 
-                // Backend findFeaturedProducts() already guarantees
-                // isVerified = true AND isActive = true — no vendor
-                // enrichment or frontend filtering needed.
                 const response = await SearchAPI.getFeaturedProducts();
 
                 const products = response?.success && response?.data
@@ -180,66 +185,84 @@ const FeaturedRestaurants = () => {
     }, []);
 
     return (
-        <section className="py-16 bg-white">
-            <div className="container px-4 mx-auto max-w-7xl">
+        <>
+            <section className="py-16 bg-white">
+                <div className="container px-4 mx-auto max-w-7xl">
 
-                {/* Section Header */}
-                <div className="mb-12 text-center">
-                    <div className="inline-flex items-center justify-center px-4 py-2 mb-4 bg-orange-100 rounded-full">
-                        <span className="text-sm font-semibold text-orange-800">Popular Dishes</span>
-                    </div>
-                    <h2 className="text-4xl font-black text-gray-900 mb-4">
-                        Featured Products
-                    </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Discover the most popular African dishes loved by our community
-                    </p>
-                </div>
-
-                {/* Cards Grid */}
-                {loading ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {[...Array(8)].map((_, i) => (
-                            <FeaturedProductSkeleton key={`skeleton-${i}`} />
-                        ))}
-                    </div>
-                ) : featuredProducts.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {featuredProducts.map((product, index) => (
-                                <div
-                                    key={product.publicProductId || `product-${index}`}
-                                    className="animate-fade-in"
-                                    style={{ animationDelay: `${index * 50}ms` }}
-                                >
-                                    <FeaturedProductCard
-                                        product={product}
-                                        priority={index < 4}
-                                    />
-                                </div>
-                            ))}
+                    {/* Header */}
+                    <div className="mb-12 text-center">
+                        <div className="inline-flex items-center justify-center px-4 py-2 mb-4 bg-orange-100 rounded-full">
+                            <span className="text-sm font-semibold text-orange-800">
+                                Popular Dishes
+                            </span>
                         </div>
-
-                        {/* View all CTA */}
-                        <div className="mt-10 text-center">
-                            <Link
-                                href="/restaurants"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
-                            >
-                                <span>View All Products</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-lg font-medium">
-                            No featured products available at the moment
+                        <h2 className="text-4xl font-black text-gray-900 mb-4">
+                            Featured Products
+                        </h2>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Discover the most popular African dishes loved by our community
                         </p>
                     </div>
-                )}
-            </div>
-        </section>
+
+                    {/* Cards */}
+                    {loading ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {[...Array(8)].map((_, i) => (
+                                <FeaturedProductSkeleton key={`skeleton-${i}`} />
+                            ))}
+                        </div>
+                    ) : featuredProducts.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {featuredProducts.map((product, index) => (
+                                    <FeaturedProductCard
+                                        key={product.publicProductId || `product-${index}`}
+                                        product={product}
+                                        priority={index < 4}
+                                        onUnauthenticated={() => setShowSignIn(true)}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* View all CTA */}
+                            <div className="mt-10 text-center">
+                                <Link
+                                    href="/restaurants"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
+                                >
+                                    <span>View All Products</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+                            <p className="text-gray-500 text-lg font-medium">
+                                No featured products available at the moment
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            <SignInModal
+                isOpen={showSignIn}
+                onClose={() => setShowSignIn(false)}
+                onSignUpClick={() => {
+                    setShowSignIn(false);
+                    setShowSignUp(true);
+                }}
+            />
+
+            <SignUpModal
+                isOpen={showSignUp}
+                onClose={() => setShowSignUp(false)}
+                onSignInClick={() => {
+                    setShowSignUp(false);
+                    setShowSignIn(true);
+                }}
+            />
+        </>
     );
 };
 
