@@ -8,18 +8,21 @@ import FeaturedRestaurants from '@/components/home/FeaturedRestaurants';
 import TopRestaurants from '@/components/home/Toprestaurants';
 import PopularRestaurants from '@/components/home/Popularrestaurants';
 import { LocationProvider } from '@/contexts/LocationContext';
+import { AuthModalProvider } from '@/contexts/AuthModalContext';
 
 const Home = () => {
     return (
         <LocationProvider>
-            <div>
-                <HeroSection />
-                <CategoriesAndBanner />
-                <FeaturedRestaurants />
-                <TopRestaurants />
-                <PopularRestaurants />
-                <VendorCTASimple />
-            </div>
+            <AuthModalProvider>
+                <div>
+                    <HeroSection />
+                    <CategoriesAndBanner />
+                    <FeaturedRestaurants />
+                    <TopRestaurants />
+                    <PopularRestaurants />
+                    <VendorCTASimple />
+                </div>
+            </AuthModalProvider>
         </LocationProvider>
     );
 };

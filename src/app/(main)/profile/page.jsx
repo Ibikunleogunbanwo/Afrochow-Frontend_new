@@ -13,6 +13,11 @@ import {
     CalendarDays, ShoppingBag, Coins, Home,
 } from "lucide-react";
 
+// ── Module-level profile cache keyed by publicUserId ─────────────────────────
+// Persists across remounts. Cleared on every mutation so edits always
+// re-fetch and reflect the latest server state.
+const profileCache = {};
+
 const provinces = [
     { value: "AB", label: "Alberta" },
     { value: "BC", label: "British Columbia" },
@@ -93,7 +98,7 @@ function ClearableInput({ value, onChange, onClear, ...props }) {
 
 // ─── Address form block ─────────────────────────────────────────────────────
 
-function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, saveLabel, isSaving, isSaved }) {
+function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, isSaving, isSaved }) {
     return (
         <div className="space-y-3 py-4">
             <ClearableInput
@@ -172,17 +177,17 @@ function SectionRow({ icon: Icon, label, children, onEdit, editing }) {
 export default function ProfilePage() {
     const { user } = useAuth();
 
-    const [profileData, setProfileData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [editingSection, setEditingSection] = useState(null);
+    const [profileData, setProfileData]         = useState(null);
+    const [loading, setLoading]                 = useState(true);
+    const [editingSection, setEditingSection]   = useState(null);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [imageError, setImageError] = useState(false);
-    const [photoSaved, setPhotoSaved] = useState(false);
+    const [uploadingImage, setUploadingImage]   = useState(false);
+    const [imageError, setImageError]           = useState(false);
+    const [photoSaved, setPhotoSaved]           = useState(false);
 
-    const sectionSave   = useSavedState(1200);
-    const addressSave   = useSavedState(1200);
+    const sectionSave = useSavedState(1200);
+    const addressSave = useSavedState(1200);
 
     const [formData, setFormData] = useState({
         firstName: "", lastName: "", phone: "",
@@ -193,20 +198,35 @@ export default function ProfilePage() {
 
     // ── data ──────────────────────────────────────────────────────────────
 
-    const fetchProfile = async () => {
+    const applyProfileData = (data) => {
+        setProfileData(data);
+        setFormData({
+            firstName:                   data.firstName                   || "",
+            lastName:                    data.lastName                    || "",
+            phone:                       data.phone                       || "",
+            defaultDeliveryInstructions: data.defaultDeliveryInstructions || "",
+            profileImageUrl:             data.profileImageUrl             || "",
+        });
+    };
+
+    const fetchProfile = async ({ bustCache = false } = {}) => {
+        const key = user?.publicUserId;
+        if (!key) { setLoading(false); return; }
+
+        // Cache hit — use stored data unless a mutation explicitly busted it
+        if (!bustCache && profileCache[key]) {
+            applyProfileData(profileCache[key]);
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await CustomerAPI.getCustomerProfile();
             if (response?.data || response?.success) {
                 const data = response?.data ?? response;
-                setProfileData(data);
-                setFormData({
-                    firstName: data.firstName || "",
-                    lastName: data.lastName || "",
-                    phone: data.phone || "",
-                    defaultDeliveryInstructions: data.defaultDeliveryInstructions || "",
-                    profileImageUrl: data.profileImageUrl || "",
-                });
+                profileCache[key] = data;   // store in cache
+                applyProfileData(data);
             } else {
                 toast.error("Failed to load profile. No profile data returned.");
             }
@@ -217,9 +237,14 @@ export default function ProfilePage() {
         }
     };
 
+    // Clears the cache for the current user then re-fetches fresh data
+    const invalidateAndRefetch = async () => {
+        if (user?.publicUserId) delete profileCache[user.publicUserId];
+        await fetchProfile({ bustCache: true });
+    };
+
     useEffect(() => {
-        if (user?.publicUserId) void fetchProfile();
-        else setLoading(false);
+        void fetchProfile();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.publicUserId]);
 
@@ -238,14 +263,14 @@ export default function ProfilePage() {
         try {
             sectionSave.setSaving();
             const payload = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                phone: formData.phone,
+                firstName:                   formData.firstName,
+                lastName:                    formData.lastName,
+                phone:                       formData.phone,
                 defaultDeliveryInstructions: formData.defaultDeliveryInstructions,
             };
             const response = await CustomerAPI.updateCustomerProfile(payload);
             if (response?.success !== false) {
-                await fetchProfile();
+                await invalidateAndRefetch();
                 sectionSave.setSaved();
                 setTimeout(() => setEditingSection(null), 1200);
             } else {
@@ -261,11 +286,11 @@ export default function ProfilePage() {
         setEditingSection(null);
         if (profileData) {
             setFormData({
-                firstName: profileData.firstName || "",
-                lastName: profileData.lastName || "",
-                phone: profileData.phone || "",
+                firstName:                   profileData.firstName                   || "",
+                lastName:                    profileData.lastName                    || "",
+                phone:                       profileData.phone                       || "",
                 defaultDeliveryInstructions: profileData.defaultDeliveryInstructions || "",
-                profileImageUrl: profileData.profileImageUrl || "",
+                profileImageUrl:             profileData.profileImageUrl             || "",
             });
         }
     };
@@ -275,7 +300,7 @@ export default function ProfilePage() {
             addressSave.setSaving();
             const response = await CustomerAPI.addAddress(addressForm);
             if (response?.success !== false) {
-                await fetchProfile();
+                await invalidateAndRefetch();
                 addressSave.setSaved();
                 setTimeout(() => { setShowAddressForm(false); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to add address");
@@ -291,7 +316,7 @@ export default function ProfilePage() {
             addressSave.setSaving();
             const response = await CustomerAPI.updateAddress(editingAddressId, addressForm);
             if (response?.success !== false) {
-                await fetchProfile();
+                await invalidateAndRefetch();
                 addressSave.setSaved();
                 setTimeout(() => { setEditingAddressId(null); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to update address");
@@ -306,7 +331,7 @@ export default function ProfilePage() {
         try {
             const response = await CustomerAPI.deleteAddress(publicAddressId);
             if (response?.success !== false) {
-                await fetchProfile();
+                await invalidateAndRefetch();
             } else throw new Error("Failed to delete");
         } catch (error) {
             toast.error(error.message || "Failed to delete address. Please try again.");
@@ -317,7 +342,7 @@ export default function ProfilePage() {
         try {
             const response = await CustomerAPI.setDefaultAddress(addressId);
             if (response?.success !== false) {
-                await fetchProfile();
+                await invalidateAndRefetch();
             } else throw new Error("Failed to set default");
         } catch (error) {
             toast.error(error.message || "Failed to set default address. Please try again.");
@@ -337,7 +362,7 @@ export default function ProfilePage() {
             return;
         }
 
-        // ✅ Patch 3: capture from profileData, not formData (avoids stale state)
+        // Read from profileData (not formData) to avoid stale state
         const oldImageUrl = profileData?.profileImageUrl || null;
 
         try {
@@ -346,30 +371,29 @@ export default function ProfilePage() {
             const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(file, "CustomerProfileImage");
             const imageUrl =
                 uploadResponse?.data?.imageUrl ||
-                uploadResponse?.imageUrl ||
-                uploadResponse?.data?.url ||
+                uploadResponse?.imageUrl       ||
+                uploadResponse?.data?.url      ||
                 uploadResponse?.url;
 
             if (!imageUrl) throw new Error("No URL returned from upload");
 
-            // ✅ Patch 3: spread from profileData, not formData
             const updateResponse = await CustomerAPI.updateCustomerProfile({
-                firstName: profileData.firstName,
-                lastName: profileData.lastName,
-                phone: profileData.phone,
+                firstName:                   profileData.firstName,
+                lastName:                    profileData.lastName,
+                phone:                       profileData.phone,
                 defaultDeliveryInstructions: profileData.defaultDeliveryInstructions,
-                profileImageUrl: imageUrl,
+                profileImageUrl:             imageUrl,
             });
 
             if (updateResponse?.success !== false) {
-                // ✅ Patch 1: fire-and-forget with warning log, doesn't block or throw
+                // Fire-and-forget old image cleanup — doesn't block or throw
                 if (oldImageUrl && oldImageUrl !== imageUrl) {
                     deleteImage(oldImageUrl).catch((err) =>
                         console.warn("Old image cleanup failed:", err)
                     );
                 }
 
-                await fetchProfile();
+                await invalidateAndRefetch();
                 setImageError(false);
                 setPhotoSaved(true);
                 setTimeout(() => setPhotoSaved(false), 2000);
@@ -380,7 +404,7 @@ export default function ProfilePage() {
             toast.error(error.message || "Upload failed. Please try again.");
         } finally {
             setUploadingImage(false);
-            // ✅ Patch 2: reset input so re-selecting same file triggers onChange
+            // Reset input so re-selecting the same file triggers onChange again
             e.target.value = "";
         }
     };
@@ -430,9 +454,9 @@ export default function ProfilePage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { icon: ShoppingBag, label: "Orders", value: profileData.totalOrders ?? 0, color: "text-orange-500 bg-orange-50" },
-                        { icon: Coins,       label: "Points",  value: profileData.loyaltyPoints ?? 0, color: "text-amber-500 bg-amber-50" },
-                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-blue-500 bg-blue-50" },
+                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-orange-500 bg-orange-50" },
+                        { icon: Coins,       label: "Points",    value: profileData.loyaltyPoints     ?? 0, color: "text-amber-500 bg-amber-50"   },
+                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-blue-500 bg-blue-50"     },
                     ].map(s => (
                         <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-4 text-center">
                             <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mx-auto mb-2`}>
@@ -579,13 +603,11 @@ export default function ProfilePage() {
                                 />
                             </div>
                         ) : (
-                            <div>
-                                <p className="text-sm text-gray-900">
-                                    {profileData.phone || (
-                                        <span className="text-gray-400 italic">No phone number added</span>
-                                    )}
-                                </p>
-                            </div>
+                            <p className="text-sm text-gray-900">
+                                {profileData.phone || (
+                                    <span className="text-gray-400 italic">No phone number added</span>
+                                )}
+                            </p>
                         )}
                     </SectionRow>
 
@@ -656,7 +678,6 @@ export default function ProfilePage() {
                                 onClear={handleAddressClear}
                                 onSave={handleAddAddress}
                                 onCancel={() => { setShowAddressForm(false); setAddressForm(emptyAddress()); }}
-                                saveLabel="Save address"
                                 isSaving={addressSave.isSaving}
                                 isSaved={addressSave.isSaved}
                             />
@@ -678,7 +699,6 @@ export default function ProfilePage() {
                                             onClear={handleAddressClear}
                                             onSave={handleUpdateAddress}
                                             onCancel={() => { setEditingAddressId(null); setAddressForm(emptyAddress()); }}
-                                            saveLabel="Update address"
                                             isSaving={addressSave.isSaving}
                                             isSaved={addressSave.isSaved}
                                         />
@@ -716,11 +736,11 @@ export default function ProfilePage() {
                                                     setEditingAddressId(address.publicAddressId);
                                                     setShowAddressForm(false);
                                                     setAddressForm({
-                                                        addressLine: address.addressLine || "",
-                                                        city: address.city || "",
-                                                        province: address.province || "ON",
-                                                        postalCode: address.postalCode || "",
-                                                        country: address.country || "Canada",
+                                                        addressLine:    address.addressLine    || "",
+                                                        city:           address.city           || "",
+                                                        province:       address.province       || "ON",
+                                                        postalCode:     address.postalCode     || "",
+                                                        country:        address.country        || "Canada",
                                                         defaultAddress: address.defaultAddress || false,
                                                     });
                                                 }}

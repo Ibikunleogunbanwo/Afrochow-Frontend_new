@@ -10,7 +10,6 @@ import CategoryStackCard from "@/components/home/cards/CategoryStackCard";
 // Module-level cache — persists across mounts without re-hitting the API
 let cachedStackItems = [];
 
-// Breakpoint for mobile layout adjustments
 const MOBILE_BREAKPOINT = 640;
 
 const CategoriesAndBanner = () => {
@@ -19,7 +18,7 @@ const CategoriesAndBanner = () => {
     const [error, setError]                     = useState(false);
     const [isMobile, setIsMobile]               = useState(false);
 
-    // Debounced resize listener — avoids re-renders on every pixel of resize
+
     useEffect(() => {
         let timeout;
         const check = () => {
@@ -54,12 +53,9 @@ const CategoriesAndBanner = () => {
                 const items = response.data.map((category, index) => ({
                     id: category.categoryId,
                     title: category.name,
-                    // Use description from API — no hardcoded fallback map needed
                     description: category.description || "Explore our delicious selection",
-                    // Use iconUrl from API — CategoryStackCard falls back to ChefHat if null
                     iconUrl: category.iconUrl || null,
                     activeProductCount: category.activeProductCount || 0,
-                    // displayOrder already sorted ASC by the backend query
                     path: `/restaurants?categoryId=${category.categoryId}`,
                     colorIndex: index,
                 }));
@@ -86,7 +82,7 @@ const CategoriesAndBanner = () => {
     const cardHeight = isMobile ? 260 : 320;
 
     return (
-        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-gradient-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
+        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-linear-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
 
             {/* Decorative background blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -100,13 +96,13 @@ const CategoriesAndBanner = () => {
                 <div className="text-center mb-6 md:mb-8">
                     <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
                         Everything African{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
                             All in One Place
                         </span>
                     </h2>
                     <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                        From sizzling home kitchens that promise amazing African dishes to African grocery
-                        stores — find exactly what you&apos;re craving
+                        From sizzling home kitchens that promise amazing African dishes to African
+                        stores find exactly what you&apos;re craving
                     </p>
                 </div>
 

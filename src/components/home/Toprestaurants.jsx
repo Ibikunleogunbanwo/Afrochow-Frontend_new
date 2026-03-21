@@ -8,6 +8,8 @@ import LocationSelector from "@/components/LocationSelector";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { SearchAPI } from "@/lib/api/search.api";
 import { useLocation } from "@/contexts/LocationContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 
 // ── Module-level cache keyed by city ─────────────────────────────────────────
 // Survives component remounts within the same session. Each unique city gets
@@ -24,7 +26,9 @@ const getStoreImage = (vendor) => vendor.bannerUrl || vendor.logoUrl || null;
 const SKELETON_COUNT = 6;
 
 const TopStores = () => {
-    const { city } = useLocation();
+    const { city }           = useLocation();
+    const { isAuthenticated } = useAuth();
+    const { openSignIn }      = useAuthModal();
 
     const cacheKey = getCacheKey(city);
 
@@ -78,24 +82,23 @@ const TopStores = () => {
                     .map((vendor) => {
                         const image = getStoreImage(vendor);
                         return {
-                            vendorPublicId: vendor.publicUserId,
-                            name: vendor.restaurantName,
-                            restaurantName: vendor.restaurantName,
-                            rating: vendor.averageRating || 0,
-                            reviewCount: vendor.reviewCount || 0,
-                            categories: vendor.cuisineType
+                            vendorPublicId:      vendor.publicUserId,
+                            name:                vendor.restaurantName,
+                            restaurantName:      vendor.restaurantName,
+                            rating:              vendor.averageRating || 0,
+                            reviewCount:         vendor.reviewCount   || 0,
+                            categories:          vendor.cuisineType
                                 ? [vendor.cuisineType]
                                 : ["African Cuisine"],
-                            deliveryTime: vendor.estimatedDeliveryMinutes || 30,
-                            deliveryFee: vendor.deliveryFee || 0,
-                            location:
-                                vendor.address?.city && vendor.address?.province
-                                    ? `${vendor.address.city}, ${vendor.address.province}`
-                                    : vendor.address?.city || "",
-                            popularItems: image
+                            deliveryTime:        vendor.estimatedDeliveryMinutes || 30,
+                            deliveryFee:         vendor.deliveryFee || 0,
+                            location:            vendor.address?.city && vendor.address?.province
+                                ? `${vendor.address.city}, ${vendor.address.province}`
+                                : vendor.address?.city || "",
+                            popularItems:        image
                                 ? [{ name: vendor.restaurantName, imageUrl: image }]
                                 : [],
-                            isOpenNow: vendor.isOpenNow,
+                            isOpenNow:           vendor.isOpenNow,
                             todayHoursFormatted: vendor.todayHoursFormatted,
                         };
                     });
@@ -180,7 +183,12 @@ const TopStores = () => {
                                 className="animate-fade-in"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
-                                <StoreCard store={store} priority={index < 3} />
+                                <StoreCard
+                                    store={store}
+                                    priority={index < 3}
+                                    isAuthenticated={isAuthenticated}
+                                    onUnauthenticated={openSignIn}
+                                />
                             </div>
                         ))}
                     </div>
