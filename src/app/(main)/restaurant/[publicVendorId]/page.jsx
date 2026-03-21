@@ -19,7 +19,7 @@ import ProductDetailModal from '@/components/register/vendor/ProductDetailModal'
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
 import ReviewsModal from '@/components/register/vendor/vendorComponent/ReviewsModal';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 const unwrapResponse = (response) => {
     if (response?.success && response?.data) return response.data;
@@ -33,34 +33,47 @@ const SKELETON_COUNTS = {
     relatedProducts: 6,
 };
 
-// ─── component ──────────────────────────────────────────────────────────────
+// ─── Module-level cache keyed by publicVendorId ───────────────────────────────
+// Caches vendor details, products, related vendors and related products together.
+// Reviews are excluded — they are fetched on demand when the modal opens.
+// On back navigation the component remounts, finds the cache populated,
+// skips all fetches and renders instantly so scroll position is restored.
+const vendorCache = {};
+
+// ─── component ────────────────────────────────────────────────────────────────
 
 const VendorProfilePage = () => {
     const params = useParams();
     const publicVendorId = params.publicVendorId;
 
-    const [vendor, setVendor] = useState(null);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [productsLoading, setProductsLoading] = useState(true);
+    const cached = vendorCache[publicVendorId];
+
+    const [vendor, setVendor]               = useState(cached?.vendor || null);
+    const [products, setProducts]           = useState(cached?.products || []);
+    const [relatedVendors, setRelatedVendors] = useState(cached?.relatedVendors || []);
+    const [relatedProducts, setRelatedProducts] = useState(cached?.relatedProducts || []);
+
+    const [loading, setLoading]               = useState(!cached?.vendor);
+    const [productsLoading, setProductsLoading] = useState(!cached?.products);
+    const [relatedLoading, setRelatedLoading]   = useState(!cached?.relatedVendors);
 
     const [selectedProductModal, setSelectedProductModal] = useState(null);
-    const [productModalLoading, setProductModalLoading] = useState(false);
+    const [productModalLoading, setProductModalLoading]   = useState(false);
 
-    const [reviews, setReviews] = useState([]);
+    const [reviews, setReviews]               = useState([]);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
-    const [reviewType, setReviewType] = useState('vendor');
+    const [reviewType, setReviewType]         = useState('vendor');
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [ratingFilter, setRatingFilter] = useState(0);
+    const [ratingFilter, setRatingFilter]     = useState(0);
 
-    const [relatedVendors, setRelatedVendors] = useState([]);
-    const [relatedProducts, setRelatedProducts] = useState([]);
-    const [relatedLoading, setRelatedLoading] = useState(false);
-
-    // ── data fetching ────────────────────────────────────────────────────────
+    // ── data fetching ─────────────────────────────────────────────────────────
 
     const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
         if (!cuisineType) return;
+
+        // Cache hit — already have related content for this vendor
+        if (vendorCache[currentVendorId]?.relatedVendors) return;
+
         try {
             setRelatedLoading(true);
 
@@ -103,6 +116,13 @@ const VendorProfilePage = () => {
                 .filter(p => p.vendorPublicId !== currentVendorId)
                 .slice(0, SKELETON_COUNTS.relatedProducts);
 
+            // Write related content into cache
+            vendorCache[currentVendorId] = {
+                ...vendorCache[currentVendorId],
+                relatedVendors: filteredVendors,
+                relatedProducts: filteredProducts,
+            };
+
             setRelatedVendors(filteredVendors);
             setRelatedProducts(filteredProducts);
         } catch (error) {
@@ -115,12 +135,23 @@ const VendorProfilePage = () => {
     }, []);
 
     const fetchVendorDetails = useCallback(async () => {
+        // Cache hit — skip fetch
+        if (vendorCache[publicVendorId]?.vendor) return;
+
         try {
             setLoading(true);
             const response = await SearchAPI.getVendorDetails(publicVendorId);
             if (response?.success && response?.data) {
-                setVendor(response.data);
-                await fetchRelatedContent(response.data.cuisineType, publicVendorId);
+                const vendorData = response.data;
+
+                // Write vendor into cache
+                vendorCache[publicVendorId] = {
+                    ...vendorCache[publicVendorId],
+                    vendor: vendorData,
+                };
+
+                setVendor(vendorData);
+                await fetchRelatedContent(vendorData.cuisineType, publicVendorId);
             }
         } catch (error) {
             console.error('Error fetching vendor details:', error);
@@ -130,14 +161,23 @@ const VendorProfilePage = () => {
     }, [publicVendorId, fetchRelatedContent]);
 
     const fetchVendorProducts = useCallback(async (page = 0) => {
+        // Cache hit — skip fetch
+        if (vendorCache[publicVendorId]?.products) return;
+
         try {
             setProductsLoading(true);
             const response = await SearchAPI.getVendorProducts(publicVendorId, page, 20);
-            setProducts(
-                response?.success && response?.data
-                    ? response.data
-                    : Array.isArray(response) ? response : []
-            );
+            const productData = response?.success && response?.data
+                ? response.data
+                : Array.isArray(response) ? response : [];
+
+            // Write products into cache
+            vendorCache[publicVendorId] = {
+                ...vendorCache[publicVendorId],
+                products: productData,
+            };
+
+            setProducts(productData);
         } catch (error) {
             console.error('Error fetching vendor products:', error);
             setProducts([]);
@@ -146,6 +186,7 @@ const VendorProfilePage = () => {
         }
     }, [publicVendorId]);
 
+    // Reviews are never cached — always fresh on modal open
     const fetchVendorReviews = useCallback(async (minRating = 0) => {
         try {
             const response = minRating > 0
@@ -169,13 +210,27 @@ const VendorProfilePage = () => {
     }, []);
 
     useEffect(() => {
-        if (publicVendorId) {
-            fetchVendorDetails();
-            fetchVendorProducts();
+        if (!publicVendorId) return;
+
+        // If fully cached — restore state and skip all fetches
+        if (vendorCache[publicVendorId]?.vendor) {
+            const c = vendorCache[publicVendorId];
+            setVendor(c.vendor);
+            setProducts(c.products || []);
+            setRelatedVendors(c.relatedVendors || []);
+            setRelatedProducts(c.relatedProducts || []);
+            setLoading(false);
+            setProductsLoading(false);
+            setRelatedLoading(false);
+            return;
         }
+
+        // Cache miss — fetch everything
+        fetchVendorDetails();
+        fetchVendorProducts();
     }, [publicVendorId, fetchVendorDetails, fetchVendorProducts]);
 
-    // ── event handlers ───────────────────────────────────────────────────────
+    // ── event handlers ────────────────────────────────────────────────────────
 
     const handleProductCardClick = useCallback(async (product) => {
         try {
@@ -216,7 +271,7 @@ const VendorProfilePage = () => {
     const handleCloseProductModal = useCallback(() => setSelectedProductModal(null), []);
     const handleCloseReviewsModal = useCallback(() => setShowReviewsModal(false), []);
 
-    // ── render states ────────────────────────────────────────────────────────
+    // ── render states ─────────────────────────────────────────────────────────
 
     if (loading) {
         return (
@@ -267,7 +322,7 @@ const VendorProfilePage = () => {
         address,
     } = vendor;
 
-    // ── render ───────────────────────────────────────────────────────────────
+    // ── render ────────────────────────────────────────────────────────────────
 
     return (
         <div className="min-h-screen bg-gray-50">

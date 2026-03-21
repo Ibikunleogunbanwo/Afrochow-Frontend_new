@@ -3,15 +3,32 @@ import { API_BASE_URL, fetchWithCredentials } from './httpClient';
 export const SearchAPI = {
   // ================= PRODUCTS =================
 
+  /**
+   * All product browsing goes through /search/products/advanced.
+   * Every param is optional on the backend — query, city, categoryId,
+   * minPrice, maxPrice, isVegetarian, isVegan, isGlutenFree, page, size.
+   */
   searchProducts: async (filters = {}) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value);
+        params.append(key, String(value));
       }
     });
     const queryString = params.toString();
-    const url = `${API_BASE_URL}/products/search${queryString ? `?${queryString}` : ''}`;
+    const url = `${API_BASE_URL}/search/products/advanced${queryString ? `?${queryString}` : ''}`;
+    return fetchWithCredentials(url, { method: 'GET' });
+  },
+
+  searchProductsAdvanced: async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
+    });
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/search/products/advanced${queryString ? `?${queryString}` : ''}`;
     return fetchWithCredentials(url, { method: 'GET' });
   },
 
@@ -21,43 +38,32 @@ export const SearchAPI = {
     });
   },
 
-  searchProductsAdvanced: async (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value);
-      }
-    });
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/search/products/advanced${queryString ? `?${queryString}` : ''}`;
-    return fetchWithCredentials(url, { method: 'GET' });
-  },
-
-  getPopularProductNames: async (limit = 10) => {
+  getPopularProductNames: async (limit = 5) => {
     return fetchWithCredentials(
         `${API_BASE_URL}/search/products/popular/names?limit=${limit}`,
         { method: 'GET' }
     );
   },
 
-  getPopularProducts: async (limit = 10) => {
+  getPopularProducts: async () => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/products/popular?limit=${limit}`,
+        `${API_BASE_URL}/search/products/popular`,
         { method: 'GET' }
     );
   },
 
-  getChefSpecials: async (limit = 10) => {
+  getChefSpecials: async () => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/products/chef-specials?limit=${limit}`,
+        `${API_BASE_URL}/search/products/chef-specials`,
         { method: 'GET' }
     );
   },
 
   getFeaturedProducts: async () => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/products/featured`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/featured`,
+        { method: 'GET' }
+    );
   },
 
   getProductsNearMe: async (city) => {
@@ -75,9 +81,10 @@ export const SearchAPI = {
   },
 
   getVendorProductsByCategory: async (categoryId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/products/category/${categoryId}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/products/category/${categoryId}`,
+        { method: 'GET' }
+    );
   },
 
   getVendorProducts: async (publicVendorId, page = 0, size = 20) => {
@@ -89,37 +96,57 @@ export const SearchAPI = {
 
   // ================= VENDORS =================
 
-  // Backend controller takes no params — limit is ignored server-side.
   getTopRatedVendors: async () => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/vendors/top-rated`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/top-rated`,
+        { method: 'GET' }
+    );
   },
 
-  // Uses advanced search endpoint with city filter.
   getVendorsByCity: async (city) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/advanced?city=${encodeURIComponent(city)}`,
+        `${API_BASE_URL}/search/vendors/advanced?city=${encodeURIComponent(city)}&isVerified=true`,
         { method: 'GET' }
     );
   },
 
   getVendorsByCuisine: async (cuisineType) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/advanced?cuisineType=${encodeURIComponent(cuisineType)}`,
+        `${API_BASE_URL}/search/vendors/advanced?cuisineType=${encodeURIComponent(cuisineType)}&isVerified=true`,
         { method: 'GET' }
     );
   },
 
   getVendorDetails: async (publicVendorId) => {
-    return fetchWithCredentials(`${API_BASE_URL}/search/vendors/${publicVendorId}`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/${publicVendorId}`,
+        { method: 'GET' }
+    );
   },
 
+  // isVerified=true AND isActive handled by the backend /vendors/verified endpoint
   getVerifiedVendors: async () => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/advanced?isVerified=true`,
+        `${API_BASE_URL}/search/vendors/verified`,
+        { method: 'GET' }
+    );
+  },
+
+  searchVendorsAdvanced: async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
+    });
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/search/vendors/advanced${queryString ? `?${queryString}` : ''}`;
+    return fetchWithCredentials(url, { method: 'GET' });
+  },
+
+  getVendorsByProductName: async (query) => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/by-product?query=${encodeURIComponent(query)}`,
         { method: 'GET' }
     );
   },
@@ -134,16 +161,18 @@ export const SearchAPI = {
   },
 
   getAllCategories: async () => {
-    return fetchWithCredentials(`${API_BASE_URL}/categories`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/categories`,
+        { method: 'GET' }
+    );
   },
 
   // ================= STATS =================
 
   getStats: async () => {
-    return fetchWithCredentials(`${API_BASE_URL}/stats`, {
-      method: 'GET',
-    });
+    return fetchWithCredentials(
+        `${API_BASE_URL}/stats`,
+        { method: 'GET' }
+    );
   },
 };

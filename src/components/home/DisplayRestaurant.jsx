@@ -9,29 +9,38 @@ import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
 
 const DisplayRestaurant = () => {
-    const router = useRouter();
+    const router      = useRouter();
     const searchParams = useSearchParams();
-    const urlSearchQuery = searchParams.get('search') || '';
-    const urlCity       = searchParams.get('city') || '';
-    const urlCategoryId = searchParams.get('categoryId') || '';
-    const urlCategory   = searchParams.get('category') || '';
 
-    const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
-    const [cityFilter, setCityFilter]   = useState(urlCity);
-    const [isLoading, setIsLoading]     = useState(true);
-    const [products, setProducts]       = useState([]);
-    const [error, setError]             = useState(null);
+    const urlSearchQuery = searchParams.get('search')     || '';
+    const urlCity        = searchParams.get('city')       || '';
+    const urlCategoryId  = searchParams.get('categoryId') || '';
+    const urlCategory    = searchParams.get('category')   || '';
+
+    const [searchQuery,  setSearchQuery]  = useState(urlSearchQuery);
+    const [cityFilter,   setCityFilter]   = useState(urlCity);
+    const [isLoading,    setIsLoading]    = useState(true);
+    const [products,     setProducts]     = useState([]);
+    const [error,        setError]        = useState(null);
     const [categoryName, setCategoryName] = useState('');
 
-    const [currentPage, setCurrentPage]     = useState(0);
-    const [totalPages, setTotalPages]       = useState(0);
+    const [currentPage,   setCurrentPage]   = useState(0);
+    const [totalPages,    setTotalPages]     = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-    const [hasMore, setHasMore]             = useState(false);
+    const [hasMore,       setHasMore]       = useState(false);
     const pageSize = 20;
 
+    // ── Sync inputs when URL changes (back/forward navigation) ──
+    useEffect(() => { setSearchQuery(urlSearchQuery); }, [urlSearchQuery]);
+    useEffect(() => { setCityFilter(urlCity);         }, [urlCity]);
+
+    // ── Resolve category display name from id ──
     useEffect(() => {
+        if (!urlCategoryId) {
+            setCategoryName('');
+            return;
+        }
         const fetchCategoryName = async () => {
-            if (!urlCategoryId) return;
             try {
                 const response = await SearchAPI.getAllCategories();
                 if (response?.success && response?.data) {
@@ -40,50 +49,30 @@ const DisplayRestaurant = () => {
                     );
                     if (match) setCategoryName(match.name);
                 }
-            } catch (error) {
-                console.error('Error fetching category name:', error);
+            } catch (err) {
+                console.error('Error fetching category name:', err);
             }
         };
         void fetchCategoryName();
     }, [urlCategoryId]);
 
-    useEffect(() => {
-        if (!urlCategoryId) setCategoryName('');
-    }, [urlCategoryId]);
-
+    // ── Main data fetch ──
     useEffect(() => {
         const fetchResults = async () => {
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // Determine which product endpoint to call
-                let productRequest;
-                if (urlCategoryId || urlSearchQuery) {
-                    productRequest = SearchAPI.searchProductsAdvanced({
-                        ...(urlSearchQuery && { query: urlSearchQuery }),
-                        ...(urlCity && { city: urlCity }),
-                        ...(urlCategoryId && { categoryId: urlCategoryId }),
-                        page: currentPage,
-                        size: pageSize,
-                    });
-                } else if (urlCity || urlCategory) {
-                    productRequest = SearchAPI.searchProducts({
-                        ...(urlCity && { city: urlCity }),
-                        ...(urlCategory && { category: urlCategory }),
-                        page: currentPage,
-                        size: pageSize,
-                    });
-                } else {
-                    productRequest = SearchAPI.searchProductsAdvanced({
-                        page: currentPage,
-                        size: pageSize,
-                    });
-                }
-
-                // Fetch products and verified vendors in parallel
+                // All filter combinations go through searchProductsAdvanced
+                // (/search/products/advanced) — every param is optional on the backend.
                 const [response, vendorsResponse] = await Promise.all([
-                    productRequest,
+                    SearchAPI.searchProductsAdvanced({
+                        ...(urlSearchQuery && { query:      urlSearchQuery }),
+                        ...(urlCity        && { city:       urlCity        }),
+                        ...(urlCategoryId  && { categoryId: urlCategoryId  }),
+                        page: currentPage,
+                        size: pageSize,
+                    }),
                     SearchAPI.getVerifiedVendors(),
                 ]);
 
@@ -91,36 +80,33 @@ const DisplayRestaurant = () => {
                     const pageData    = response.data;
                     const productList = pageData.content || [];
 
-                    // Handle both plain array and wrapped response shapes
                     const vendors = Array.isArray(vendorsResponse)
                         ? vendorsResponse
                         : vendorsResponse?.success && vendorsResponse?.data
                             ? vendorsResponse.data
                             : [];
 
-                    // Build verified vendor lookup map by publicUserId
+                    // Build lookup map by publicUserId
                     const vendorMap = vendors.reduce((map, vendor) => {
                         map[vendor.publicUserId] = vendor;
                         return map;
                     }, {});
 
-                    // Drop products whose vendor is not in the verified map,
-                    // then merge product data with vendor data
                     const transformedResults = productList
                         .filter(product => vendorMap[product.vendorPublicId])
                         .map(product => {
                             const vendor = vendorMap[product.vendorPublicId];
                             return {
-                                storeId: product.vendorPublicId,
-                                publicProductId: product.publicProductId,
-                                vendorPublicId: product.vendorPublicId,
-                                name: product.name,
-                                categories: product.categoryName
+                                storeId:          product.vendorPublicId,
+                                publicProductId:  product.publicProductId,
+                                vendorPublicId:   product.vendorPublicId,
+                                name:             product.name,
+                                categories:       product.categoryName
                                     ? [product.categoryName]
                                     : ['African Cuisine'],
-                                rating: product.averageRating || 0,
-                                reviewCount: product.reviewCount || 0,
-                                deliveryTime: vendor.estimatedDeliveryMinutes
+                                rating:           product.averageRating || 0,
+                                reviewCount:      product.reviewCount   || 0,
+                                deliveryTime:     vendor.estimatedDeliveryMinutes
                                     || product.preparationTimeMinutes
                                     || 30,
                                 location: vendor.address?.city && vendor.address?.province
@@ -128,39 +114,39 @@ const DisplayRestaurant = () => {
                                     : product.vendorCity && product.vendorProvince
                                         ? `${product.vendorCity}, ${product.vendorProvince}`
                                         : product.vendorCity || '',
-                                deliveryFee: vendor.deliveryFee || 2.99,
+                                deliveryFee:            vendor.deliveryFee || 2.99,
                                 popularItems: [{
-                                    name: product.name,
-                                    imageUrl: product.imageUrl || '/image/placeholder.jpg',
-                                    price: product.price,
+                                    name:        product.name,
+                                    imageUrl:    product.imageUrl || '/image/placeholder.jpg',
+                                    price:       product.price,
                                     description: product.description,
                                 }],
-                                available: product.available !== false,
-                                restaurantName: product.restaurantName || vendor.restaurantName,
-                                categoryName: product.categoryName,
-                                description: product.description,
-                                price: product.price,
-                                vendorAddressLine: product.vendorAddressLine,
-                                vendorCity: product.vendorCity,
-                                vendorProvince: product.vendorProvince,
-                                vendorPostalCode: product.vendorPostalCode,
-                                vendorCountry: product.vendorCountry,
+                                available:              product.available !== false,
+                                restaurantName:         product.restaurantName || vendor.restaurantName,
+                                categoryName:           product.categoryName,
+                                description:            product.description,
+                                price:                  product.price,
+                                vendorAddressLine:      product.vendorAddressLine,
+                                vendorCity:             product.vendorCity,
+                                vendorProvince:         product.vendorProvince,
+                                vendorPostalCode:       product.vendorPostalCode,
+                                vendorCountry:          product.vendorCountry,
                                 vendorFormattedAddress: product.vendorFormattedAddress,
-                                isOpenNow: vendor.isOpenNow ?? null,
-                                todayHoursFormatted: vendor.todayHoursFormatted ?? null,
+                                isOpenNow:              vendor.isOpenNow          ?? null,
+                                todayHoursFormatted:    vendor.todayHoursFormatted ?? null,
                             };
                         });
 
-                    // Open first, closed at the bottom
-                    const sortedResults = transformedResults.sort((a, b) => {
+                    // Open vendors first
+                    const sortedResults = [...transformedResults].sort((a, b) => {
                         if (a.isOpenNow === b.isOpenNow) return 0;
                         return a.isOpenNow ? -1 : 1;
                     });
 
                     setProducts(sortedResults);
-                    setTotalPages(pageData.totalPages || 0);
+                    setTotalPages(pageData.totalPages      || 0);
                     setTotalElements(pageData.totalElements || 0);
-                    setHasMore(pageData.hasNext || false);
+                    setHasMore(pageData.hasNext            || false);
                 } else {
                     setProducts([]);
                     setTotalPages(0);
@@ -180,12 +166,13 @@ const DisplayRestaurant = () => {
         };
 
         void fetchResults();
-    }, [urlCategoryId, urlSearchQuery, urlCity, urlCategory, currentPage]);
+    }, [urlSearchQuery, urlCity, urlCategoryId, urlCategory, currentPage]);
 
-    const decodedQuery    = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
-    const decodedCity     = urlCity        ? decodeURIComponent(urlCity)        : '';
-    const decodedCategory = urlCategory    ? decodeURIComponent(urlCategory)    : '';
-    const resolvedCategory = categoryName || decodedCategory;
+    // ── Derived display values ──
+    const decodedQuery     = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
+    const decodedCity      = urlCity        ? decodeURIComponent(urlCity)        : '';
+    const decodedCategory  = urlCategory    ? decodeURIComponent(urlCategory)    : '';
+    const resolvedCategory = categoryName   || decodedCategory;
 
     const getPageTitle = () => {
         if (resolvedCategory && decodedCity) return `${resolvedCategory} in ${decodedCity}`;
@@ -236,7 +223,7 @@ const DisplayRestaurant = () => {
     };
 
     const getPageNumbers = () => {
-        const pages = [];
+        const pages          = [];
         const maxPagesToShow = 7;
 
         if (totalPages <= maxPagesToShow) {
@@ -261,7 +248,10 @@ const DisplayRestaurant = () => {
 
     const handleSearch = () => {
         setCurrentPage(0);
-        router.push(`/restaurants?search=${encodeURIComponent(searchQuery)}&city=${encodeURIComponent(cityFilter)}`);
+        const params = new URLSearchParams();
+        if (searchQuery) params.set('search', searchQuery);
+        if (cityFilter)  params.set('city',   cityFilter);
+        router.push(`/restaurants?${params.toString()}`);
     };
 
     const handleClearAll = () => {
@@ -277,7 +267,6 @@ const DisplayRestaurant = () => {
     return (
         <div className="min-h-screen bg-white py-12">
             <div className="container px-4 mx-auto max-w-7xl">
-
                 <div className="mb-12">
 
                     {/* Breadcrumb */}
@@ -335,7 +324,7 @@ const DisplayRestaurant = () => {
                         )}
                     </nav>
 
-                    {/* Dynamic Title */}
+                    {/* Page Title */}
                     <div className="mb-8">
                         <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
                             {getPageTitle()}

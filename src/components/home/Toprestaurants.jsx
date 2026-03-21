@@ -8,12 +8,31 @@ import { ArrowRight, TrendingUp } from 'lucide-react';
 import { SearchAPI } from '@/lib/api/search.api';
 import { useLocation } from '@/contexts/LocationContext';
 
+// ── Module-level cache keyed by city — survives component remounts within
+// the same session. Each unique city gets its own cached result so switching
+// cities still fetches fresh data, but going back to a previously viewed
+// city renders instantly and allows the browser to restore scroll position.
+const storesCache = {};
+
+const getCacheKey = (city) => city ? city.toLowerCase().trim() : '__default__';
+
 const TopStores = () => {
-    const [stores, setStores] = useState([]);
-    const [loading, setLoading] = useState(true);
     const { city } = useLocation();
+    const cacheKey = getCacheKey(city);
+
+    const [stores, setStores] = useState(storesCache[cacheKey] || []);
+    const [loading, setLoading] = useState(!storesCache[cacheKey]);
 
     useEffect(() => {
+        const key = getCacheKey(city);
+
+        // Cache hit — data already loaded for this city, skip fetch.
+        if (storesCache[key]) {
+            setStores(storesCache[key]);
+            setLoading(false);
+            return;
+        }
+
         const fetchTopStores = async () => {
             try {
                 setLoading(true);
@@ -74,6 +93,7 @@ const TopStores = () => {
                     return a.isOpenNow ? -1 : 1;
                 });
 
+                storesCache[key] = sortedVendors;
                 setStores(sortedVendors);
             } catch (error) {
                 console.error('Error fetching top stores:', error);
@@ -98,20 +118,20 @@ const TopStores = () => {
                             <span className="text-sm font-semibold text-orange-800">Top Rated</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
-                            Best Stores
+                            Popular Stores
                             <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
                                 {city ? `in ${city}` : 'Near You'}
                             </span>
                         </h2>
                         <p className="text-lg text-gray-600 max-w-xl">
-                            Discover the highest rated African stores in your area
+                            Discover highly rated African stores in your area
                         </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <LocationSelector />
                         <Link
-                            href="/restaurants"
+                            href="/allstore"
                             className="inline-flex items-center space-x-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                         >
                             <span>View All</span>
@@ -157,7 +177,7 @@ const TopStores = () => {
                             Want to see more amazing stores?
                         </p>
                         <Link
-                            href="/restaurants"
+                            href="/allstore"
                             className="inline-flex items-center space-x-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                         >
                             <span>Explore All Stores</span>
