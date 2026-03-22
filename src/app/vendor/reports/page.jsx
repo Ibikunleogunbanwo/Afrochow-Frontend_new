@@ -23,6 +23,7 @@ import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
 const VendorReportsPage = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [salesLoading, setSalesLoading] = useState(false);
     const [dateRange, setDateRange] = useState('last30days');
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
@@ -31,6 +32,7 @@ const VendorReportsPage = () => {
     const [analytics, setAnalytics] = useState(null);
     const [salesReport, setSalesReport] = useState(null);
     const [popularProducts, setPopularProducts] = useState([]);
+    const [error, setError] = useState(null);
 
     const dateRangeOptions = [
         { value: 'today', label: 'Today' },
@@ -42,6 +44,46 @@ const VendorReportsPage = () => {
         { value: 'custom', label: 'Custom Range' }
     ];
 
+    // Compute start/end ISO strings for a named date range
+    const getDateRange = (range) => {
+        const now = new Date();
+        switch (range) {
+            case 'today': {
+                const start = new Date(now); start.setHours(0, 0, 0, 0);
+                const end   = new Date(now); end.setHours(23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            case 'yesterday': {
+                const d = new Date(now); d.setDate(d.getDate() - 1);
+                const start = new Date(d); start.setHours(0, 0, 0, 0);
+                const end   = new Date(d); end.setHours(23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            case 'last7days': {
+                const start = new Date(now); start.setDate(start.getDate() - 7); start.setHours(0, 0, 0, 0);
+                const end   = new Date(now); end.setHours(23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            case 'last30days': {
+                const start = new Date(now); start.setDate(start.getDate() - 30); start.setHours(0, 0, 0, 0);
+                const end   = new Date(now); end.setHours(23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            case 'thisMonth': {
+                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                const end   = new Date(now); end.setHours(23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            case 'lastMonth': {
+                const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const end   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+                return { start: start.toISOString(), end: end.toISOString() };
+            }
+            default:
+                return null;
+        }
+    };
+
     useEffect(() => {
         fetchAllData();
     }, []);
@@ -49,117 +91,41 @@ const VendorReportsPage = () => {
     const fetchAllData = async () => {
         try {
             setLoading(true);
+            setError(null);
+            const range = getDateRange('last30days');
             await Promise.all([
                 fetchVendorAnalytics(),
-                fetchPopularProducts()
+                fetchPopularProducts(),
+                range ? fetchSalesReport(range.start, range.end) : Promise.resolve(),
             ]);
-        } catch (error) {
-            console.error('Error fetching report data:', error);
+        } catch (err) {
+            console.error('Error fetching report data:', err);
+            setError('Failed to load reports. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     const fetchVendorAnalytics = async () => {
-        try {
-            // TODO: Replace with actual API endpoint
-            // const response = await AuthAPI.getVendorAnalytics();
-            // if (response?.success) {
-            //     setAnalytics(response.data);
-            // }
-
-            // Mock data based on VendorAnalytics structure
-            setAnalytics({
-                totalOrders: 245,
-                deliveredOrders: 220,
-                cancelledOrders: 15,
-                pendingOrders: 10,
-                todayOrders: 12,
-                totalRevenue: 125000.50,
-                todayRevenue: 5200.00,
-                last7DaysRevenue: 32000.00,
-                last30DaysRevenue: 125000.50,
-                totalProducts: 45,
-                activeProducts: 42,
-                totalReviews: 180,
-                averageRating: 4.6
-            });
-        } catch (error) {
-            console.error('Error fetching vendor analytics:', error);
-        }
+        const res = await VendorAnalyticsAPI.getVendorAnalytics();
+        setAnalytics(res?.data ?? null);
     };
 
     const fetchSalesReport = async (start, end) => {
+        setSalesLoading(true);
         try {
-            // TODO: Replace with actual API endpoint
-            // const response = await AuthAPI.getVendorSalesReport(start, end);
-            // if (response?.success) {
-            //     setSalesReport(response.data);
-            // }
-
-            // Mock data based on VendorSalesReport structure
-            setSalesReport({
-                startDate: start,
-                endDate: end,
-                totalOrders: 185,
-                deliveredOrders: 170,
-                totalRevenue: 95000.00,
-                averageOrderValue: 558.82
-            });
-        } catch (error) {
-            console.error('Error fetching sales report:', error);
+            const res = await VendorAnalyticsAPI.getVendorSalesReport(start, end);
+            setSalesReport(res?.data ?? null);
+        } catch (e) {
+            console.error('Error fetching sales report:', e);
+        } finally {
+            setSalesLoading(false);
         }
     };
 
     const fetchPopularProducts = async () => {
-        try {
-            // TODO: Replace with actual API endpoint
-            // const response = await AuthAPI.getVendorPopularProducts();
-            // if (response?.success) {
-            //     setPopularProducts(response.data || []);
-            // }
-
-            // Mock data based on PopularProduct structure
-            setPopularProducts([
-                {
-                    productPublicId: 'prod_001',
-                    productName: 'Jollof Rice with Chicken',
-                    orderCount: 145,
-                    reviewCount: 98,
-                    averageRating: 4.8
-                },
-                {
-                    productPublicId: 'prod_002',
-                    productName: 'Egusi Soup with Pounded Yam',
-                    orderCount: 132,
-                    reviewCount: 85,
-                    averageRating: 4.7
-                },
-                {
-                    productPublicId: 'prod_003',
-                    productName: 'Suya Platter',
-                    orderCount: 118,
-                    reviewCount: 76,
-                    averageRating: 4.9
-                },
-                {
-                    productPublicId: 'prod_004',
-                    productName: 'Fried Rice Special',
-                    orderCount: 95,
-                    reviewCount: 62,
-                    averageRating: 4.5
-                },
-                {
-                    productPublicId: 'prod_005',
-                    productName: 'Pepper Soup',
-                    orderCount: 87,
-                    reviewCount: 54,
-                    averageRating: 4.6
-                }
-            ]);
-        } catch (error) {
-            console.error('Error fetching popular products:', error);
-        }
+        const res = await VendorAnalyticsAPI.getVendorPopularProducts();
+        setPopularProducts(res?.data ?? []);
     };
 
     const handleRefresh = async () => {
@@ -170,38 +136,9 @@ const VendorReportsPage = () => {
 
     const handleDateRangeChange = (value) => {
         setDateRange(value);
-
-        const now = new Date();
-        let start, end;
-
-        switch (value) {
-            case 'today':
-                start = new Date(now.setHours(0, 0, 0, 0));
-                end = new Date(now.setHours(23, 59, 59, 999));
-                break;
-            case 'yesterday':
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                start = new Date(yesterday.setHours(0, 0, 0, 0));
-                end = new Date(yesterday.setHours(23, 59, 59, 999));
-                break;
-            case 'last7days':
-                start = new Date(now.setDate(now.getDate() - 7));
-                end = new Date();
-                break;
-            case 'last30days':
-                start = new Date(now.setDate(now.getDate() - 30));
-                end = new Date();
-                break;
-            case 'custom':
-                return; // Don't fetch until user selects dates
-            default:
-                return;
-        }
-
-        if (start && end) {
-            fetchSalesReport(start.toISOString(), end.toISOString());
-        }
+        if (value === 'custom') return; // wait for user to pick dates
+        const range = getDateRange(value);
+        if (range) fetchSalesReport(range.start, range.end);
     };
 
     const handleCustomDateRangeApply = () => {
@@ -237,6 +174,26 @@ const VendorReportsPage = () => {
                     <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                         <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
                         <p className="text-gray-600">Loading reports...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-6">
+                <div className="max-w-7xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                        <p className="text-gray-700 font-semibold mb-2">Something went wrong</p>
+                        <p className="text-gray-500 text-sm mb-6">{error}</p>
+                        <button
+                            onClick={fetchAllData}
+                            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+                        >
+                            Try again
+                        </button>
                     </div>
                 </div>
             </div>
@@ -462,7 +419,11 @@ const VendorReportsPage = () => {
                         </div>
                     )}
 
-                    {salesReport && (
+                    {salesLoading ? (
+                        <div className="flex items-center justify-center py-10">
+                            <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+                        </div>
+                    ) : salesReport ? (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div className="border-l-4 border-orange-500 pl-4">
                                 <p className="text-sm text-gray-600 mb-1">Total Orders</p>
@@ -481,6 +442,8 @@ const VendorReportsPage = () => {
                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(salesReport.averageOrderValue)}</p>
                             </div>
                         </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-6">Select a date range to view the sales report.</p>
                     )}
                 </div>
 

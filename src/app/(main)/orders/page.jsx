@@ -10,17 +10,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 // ── Status config — matches backend OrderStatus enum ─────────────────────────
 
 const STATUS_CONFIG = {
-    PENDING:          { label: "Pending",          color: "text-amber-700  bg-amber-50  border-amber-200",  icon: Clock },
-    CONFIRMED:        { label: "Confirmed",        color: "text-blue-700   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
-    PREPARING:        { label: "Preparing",        color: "text-orange-700 bg-orange-50 border-orange-200", icon: Clock },
-    READY_FOR_PICKUP: { label: "Ready for pickup", color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
-    OUT_FOR_DELIVERY: { label: "Out for delivery", color: "text-blue-700   bg-blue-50   border-blue-200",   icon: Truck },
-    DELIVERED:        { label: "Delivered",        color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
-    CANCELLED:        { label: "Cancelled",        color: "text-red-700    bg-red-50    border-red-200",    icon: XCircle },
+    PENDING:          { color: "text-amber-700  bg-amber-50  border-amber-200",  icon: Clock },
+    CONFIRMED:        { color: "text-blue-700   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
+    PREPARING:        { color: "text-orange-700 bg-orange-50 border-orange-200", icon: Clock },
+    READY_FOR_PICKUP: { color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    OUT_FOR_DELIVERY: { color: "text-blue-700   bg-blue-50   border-blue-200",   icon: Truck },
+    DELIVERED:        { color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    CANCELLED:        { color: "text-red-700    bg-red-50    border-red-200",    icon: XCircle },
+    REFUNDED:         { color: "text-purple-700 bg-purple-50 border-purple-200", icon: XCircle },
 };
 
 const ACTIVE_STATUSES = new Set(["PENDING", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"]);
@@ -32,13 +34,14 @@ const TABS = [
     { key: "CANCELLED", label: "Cancelled" },
 ];
 
-function StatusBadge({ status }) {
-    const cfg = STATUS_CONFIG[status] || { label: status, color: "text-gray-600 bg-gray-50 border-gray-200", icon: Package };
+function StatusBadge({ status, statusLabel }) {
+    const cfg = STATUS_CONFIG[status] || { color: "text-gray-600 bg-gray-50 border-gray-200", icon: Package };
     const Icon = cfg.icon;
+    const label = statusLabel || status?.replace(/_/g, " ");
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color}`}>
             <Icon className="w-3 h-3 shrink-0" />
-            {cfg.label}
+            {label}
         </span>
     );
 }
@@ -60,7 +63,7 @@ function OrderCard({ order, onCancel, cancelling }) {
                                 : "—"}
                         </p>
                     </div>
-                    <StatusBadge status={order.status} />
+                    <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                 </div>
 
                 {/* Fulfillment type */}
@@ -182,6 +185,11 @@ export default function OrdersPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-2xl mx-auto px-4 space-y-6">
+
+                <Breadcrumb items={[
+                    { label: "Profile",  href: "/profile"  },
+                    { label: "My orders" },
+                ]} />
 
                 {/* Header */}
                 <div>

@@ -5,29 +5,34 @@ import { useParams, useRouter } from "next/navigation";
 import { OrderAPI } from "@/lib/api/order/order.api";
 import {
     CheckCircle2, Clock, MapPin, ShoppingBag,
-    ChevronRight, Loader2, AlertCircle, Truck, Store,
+    ChevronRight, Loader2, AlertCircle, Truck, Store, RefreshCw, XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-    PENDING:           { label: "Pending",          color: "text-amber-600  bg-amber-50  border-amber-200",  icon: Clock },
-    CONFIRMED:         { label: "Confirmed",        color: "text-blue-600   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
-    PREPARING:         { label: "Preparing",        color: "text-orange-600 bg-orange-50 border-orange-200", icon: Clock },
-    READY_FOR_PICKUP:  { label: "Ready for pickup", color: "text-green-600  bg-green-50  border-green-200",  icon: CheckCircle2 },
-    OUT_FOR_DELIVERY:  { label: "Out for delivery", color: "text-blue-600   bg-blue-50   border-blue-200",   icon: Truck },
-    DELIVERED:         { label: "Delivered",        color: "text-green-600  bg-green-50  border-green-200",  icon: CheckCircle2 },
-    CANCELLED:         { label: "Cancelled",        color: "text-red-600    bg-red-50    border-red-200",    icon: AlertCircle },
+    PENDING:           { color: "text-amber-600  bg-amber-50  border-amber-200",  icon: Clock },
+    CONFIRMED:         { color: "text-blue-600   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
+    PREPARING:         { color: "text-orange-600 bg-orange-50 border-orange-200", icon: Clock },
+    READY_FOR_PICKUP:  { color: "text-green-600  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    OUT_FOR_DELIVERY:  { color: "text-blue-600   bg-blue-50   border-blue-200",   icon: Truck },
+    DELIVERED:         { color: "text-green-600  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    CANCELLED:         { color: "text-red-600    bg-red-50    border-red-200",    icon: AlertCircle },
+    REFUNDED:          { color: "text-purple-600 bg-purple-50 border-purple-200", icon: AlertCircle },
 };
 
-function StatusBadge({ status }) {
+// statusLabel comes from backend resolveStatusLabel() — context-aware for pickup vs delivery
+// Falls back to a formatted version of the status enum if not provided
+function StatusBadge({ status, statusLabel }) {
     const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
     const Icon = cfg.icon;
+    const label = statusLabel || status?.replace(/_/g, " ");
     return (
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${cfg.color}`}>
             <Icon className="w-3.5 h-3.5" />
-            {cfg.label}
+            {label}
         </span>
     );
 }
@@ -44,20 +49,56 @@ export default function OrderConfirmationPage() {
     const { publicOrderId } = useParams();
     const router = useRouter();
 
-    const [order, setOrder]   = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError]   = useState(null);
+    const [order, setOrder]           = useState(null);
+    const [loading, setLoading]       = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
+    const [error, setError]           = useState(null);
 
-    useEffect(() => {
-        if (!publicOrderId) return;
-        OrderAPI.getOrder(publicOrderId)
+    const FINAL_STATUSES = new Set(["DELIVERED", "CANCELLED"]);
+
+    const fetchOrder = (opts = {}) => {
+        const { silent = false } = opts;
+        if (silent) setRefreshing(true); else setLoading(true);
+        return OrderAPI.getOrder(publicOrderId)
             .then(res => {
                 if (!res?.data?.publicOrderId) throw new Error("Order not found.");
                 setOrder(res.data);
+                setError(null);
+                return res.data;
             })
             .catch(err => setError(err.message || "Could not load order details."))
-            .finally(() => setLoading(false));
+            .finally(() => { setLoading(false); setRefreshing(false); });
+    };
+
+    // Initial load
+    useEffect(() => {
+        if (!publicOrderId) return;
+        fetchOrder();
     }, [publicOrderId]);
+
+    // Poll every 30s while order is still active
+    useEffect(() => {
+        if (!order || FINAL_STATUSES.has(order.status)) return;
+        const interval = setInterval(() => fetchOrder({ silent: true }), 30_000);
+        return () => clearInterval(interval);
+    }, [order?.status]);
+
+    const handleCancel = async () => {
+        if (!window.confirm("Are you sure you want to cancel this order? Your payment will be refunded.")) return;
+        setCancelling(true);
+        try {
+            const res = await OrderAPI.cancelOrder(publicOrderId);
+            setOrder(res.data);
+            toast.success("Order cancelled");
+        } catch (e) {
+            toast.error("Could not cancel order", {
+                description: e.message || "Please try again or contact support.",
+            });
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     // ── Error state ───────────────────────────────────────────────────────────
     if (!loading && error) {
@@ -121,7 +162,7 @@ export default function OrderConfirmationPage() {
                         </>
                     ) : (
                         <>
-                            <StatusBadge status={order?.status} />
+                            <StatusBadge status={order?.status} statusLabel={order?.statusLabel} />
                             <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${isDelivery ? "text-blue-600" : "text-purple-600"}`}>
                                 {isDelivery
                                     ? <><Truck className="w-4 h-4" /> Delivery</>
@@ -239,20 +280,38 @@ export default function OrderConfirmationPage() {
 
                 {/* ── Actions ────────────────────────────────────────────── */}
                 <div className="flex gap-3">
+                    <button
+                        onClick={() => fetchOrder({ silent: true })}
+                        disabled={refreshing || cancelling}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold shadow-md hover:from-orange-600 hover:to-red-700 transition-all disabled:opacity-70"
+                    >
+                        {refreshing
+                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</>
+                            : <><RefreshCw className="w-4 h-4" /> Refresh status</>
+                        }
+                    </button>
                     <Link
                         href="/orders"
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold shadow-md hover:from-orange-600 hover:to-red-700 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
                     >
-                        Track my order
+                        All orders
                         <ChevronRight className="w-4 h-4" />
                     </Link>
-                    <Link
-                        href="/"
-                        className="flex-1 flex items-center justify-center py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
-                    >
-                        Continue shopping
-                    </Link>
                 </div>
+
+                {/* ── Cancel order ────────────────────────────────────────── */}
+                {order?.canBeCancelled && (
+                    <button
+                        onClick={handleCancel}
+                        disabled={cancelling || refreshing}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 mt-1"
+                    >
+                        {cancelling
+                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Cancelling…</>
+                            : <><XCircle className="w-4 h-4" /> Cancel order</>
+                        }
+                    </button>
+                )}
 
             </div>
         </div>

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSavedState } from "@/hooks/useSavedState";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
     Bell,
     Lock,
@@ -185,6 +186,12 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-red-50 py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <Breadcrumb items={[
+                    { label: "Profile",  href: "/profile" },
+                    { label: "Settings" },
+                ]} />
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900">

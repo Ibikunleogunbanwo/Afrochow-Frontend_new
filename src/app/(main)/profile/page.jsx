@@ -7,6 +7,8 @@ import { CustomerAPI } from "@/lib/api/customer.api";
 import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
 import { toast } from "sonner";
 import Image from "next/image";
+import Link from "next/link";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
     Pencil, Check, CheckCircle2, XCircle, Plus, Trash2, Star,
     Upload, Loader2, MapPin, Phone, Mail, Truck,
@@ -445,6 +447,10 @@ export default function ProfilePage() {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
 
+                <Breadcrumb items={[
+                    { label: "Profile" },
+                ]} />
+
                 {/* Page header */}
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">My Account</h1>
@@ -454,18 +460,30 @@ export default function ProfilePage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-orange-500 bg-orange-50" },
+                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-orange-500 bg-orange-50", href: "/orders" },
                         { icon: Coins,       label: "Points",    value: profileData.loyaltyPoints     ?? 0, color: "text-amber-500 bg-amber-50"   },
                         { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-blue-500 bg-blue-50"     },
-                    ].map(s => (
-                        <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-4 text-center">
-                            <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mx-auto mb-2`}>
-                                <s.icon className="w-4 h-4" />
+                    ].map(s => {
+                        const inner = (
+                            <>
+                                <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mx-auto mb-2`}>
+                                    <s.icon className="w-4 h-4" />
+                                </div>
+                                <div className="text-xl font-bold text-gray-900">{s.value}</div>
+                                <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                            </>
+                        );
+                        return s.href ? (
+                            <Link key={s.label} href={s.href}
+                                className="bg-white border border-gray-200 rounded-2xl p-4 text-center hover:border-orange-300 hover:shadow-sm transition-all">
+                                {inner}
+                            </Link>
+                        ) : (
+                            <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-4 text-center">
+                                {inner}
                             </div>
-                            <div className="text-xl font-bold text-gray-900">{s.value}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* ── Profile card ─────────────────────────────────────── */}

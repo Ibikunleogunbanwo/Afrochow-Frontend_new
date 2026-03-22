@@ -268,9 +268,16 @@ export default function CheckoutPage() {
             router.push(`/order-confirmation/${publicOrderId}`);
 
         } catch (e) {
-            toast.error("Failed to place order", {
-                description: e.message || "Please try again.",
-            });
+            const raw = e.message || "";
+            const description =
+                raw.includes("card was declined") || raw.includes("Your card")
+                    ? raw                                                    // Stripe card errors — safe to show
+                    : raw.includes("minimum amount")
+                    ? raw                                                    // Business rule — safe to show
+                    : raw.includes("not available")
+                    ? raw                                                    // Product unavailable — safe to show
+                    : "Something went wrong processing your payment. Please try again or use a different card.";
+            toast.error("Order could not be placed", { description });
         } finally {
             setPlacing(false);
         }

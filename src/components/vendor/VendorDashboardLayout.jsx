@@ -133,6 +133,7 @@ const VendorDashboardLayout = ({ children }) => {
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 pathname={pathname}
+                onLogout={handleLogout}
             />
 
             {/* Main Content */}

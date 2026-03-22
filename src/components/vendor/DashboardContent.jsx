@@ -1,7 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, Users, Star, Calendar, ChevronDown, Clock, MapPin, Package, Eye, MoreVertical, Phone } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, Users, Star, Calendar, ChevronDown, Clock, MapPin, Package, Eye, MoreVertical, XCircle, Loader2, Truck, Store, User } from 'lucide-react';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
+import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend,
+} from 'recharts';
 
 const DashboardContent = () => {
     // Date filter state
@@ -13,11 +18,25 @@ const DashboardContent = () => {
     // Orders state
     const [recentOrders, setRecentOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Modals
+    const [showAllModal, setShowAllModal]       = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedOrder, setSelectedOrder]     = useState(null);
+    const [detailLoading, setDetailLoading]     = useState(false);
+    const [allModalPage, setAllModalPage]       = useState(1);
+    const ALL_MODAL_PAGE_SIZE = 10;
+
     const [stats, setStats] = useState({
         totalOrders: 0,
         revenue: 0,
         avgOrderValue: 0,
-        rating: 4.8
+        rating: null,
+        // trend data
+        todayOrders: 0,
+        todayRevenue: 0,
+        last7DaysRevenue: 0,
+        last30DaysRevenue: 0,
     });
 
     // Date range options
@@ -33,20 +52,15 @@ const DashboardContent = () => {
 
     useEffect(() => {
         fetchOrders();
-        fetchRevenue();
+        fetchStats();
     }, [dateRange]);
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            let response;
-
-            if (dateRange === 'today') {
-                response = await VendorOrdersAPI.getTodayOrders();
-            } else {
-                response = await VendorOrdersAPI.getVendorOrders();
-            }
-
+            const response = dateRange === 'today'
+                ? await VendorOrdersAPI.getTodayOrders()
+                : await VendorOrdersAPI.getVendorOrders();
             if (response?.success) {
                 setRecentOrders(response.data || []);
             }
@@ -57,21 +71,77 @@ const DashboardContent = () => {
         }
     };
 
-    const fetchRevenue = async () => {
+    const fetchStats = async () => {
         try {
-            const response = await VendorOrdersAPI.getOrdersRevenue();
-            if (response?.success && response.data) {
-                setStats(prev => ({
-                    ...prev,
-                    totalOrders: response.data.totalOrders || 0,
-                    revenue: response.data.totalRevenue || 0,
-                    avgOrderValue: response.data.averageOrderValue || 0
-                }));
-            }
+            const [revenueRes, analyticsRes, allOrdersRes] = await Promise.allSettled([
+                VendorOrdersAPI.getOrdersRevenue(),
+                VendorAnalyticsAPI.getVendorAnalytics(),
+                VendorOrdersAPI.getVendorOrders(), // fallback for totals
+            ]);
+
+            const revenue   = revenueRes.status   === 'fulfilled' ? revenueRes.value?.data   : null;
+            const analytics = analyticsRes.status === 'fulfilled' ? analyticsRes.value?.data : null;
+            const allOrders = allOrdersRes.status === 'fulfilled' ? (allOrdersRes.value?.data ?? []) : [];
+
+            // Compute from order list as fallback when stats endpoint is unavailable
+            const delivered       = allOrders.filter(o => o.status === 'DELIVERED');
+            const computedRevenue = delivered.reduce((s, o) => s + (o.totalAmount ?? 0), 0);
+            const computedAvg     = delivered.length > 0 ? computedRevenue / delivered.length : 0;
+
+            setStats(prev => ({
+                ...prev,
+                totalOrders:       revenue?.totalOrders       ?? allOrders.length,
+                revenue:           revenue?.totalRevenue       ?? computedRevenue,
+                avgOrderValue:     revenue?.averageOrderValue  ?? computedAvg,
+                rating:            analytics?.averageRating    ?? prev.rating,
+                todayOrders:       analytics?.todayOrders      ?? prev.todayOrders,
+                last7DaysRevenue:  analytics?.last7DaysRevenue ?? prev.last7DaysRevenue,
+                last30DaysRevenue: analytics?.last30DaysRevenue ?? prev.last30DaysRevenue,
+            }));
         } catch (error) {
-            // Error fetching revenue
+            // silently fail
         }
     };
+
+    const viewOrderDetail = async (publicOrderId) => {
+        setDetailLoading(true);
+        setShowDetailModal(true);
+        setSelectedOrder(null);
+        try {
+            const res = await VendorOrdersAPI.getVendorOrderById(publicOrderId);
+            if (res?.success) setSelectedOrder(res.data);
+        } catch (e) {
+            setShowDetailModal(false);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const formatCurrency = (v) =>
+        `$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const formatDate = (d) => {
+        if (!d) return '—';
+        return new Date(d).toLocaleString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const formatAddress = (addr) => {
+        if (!addr) return null;
+        if (typeof addr === 'string') return addr;
+        return addr.formattedAddress ||
+            [addr.addressLine, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ');
+    };
+
+    // Compute % change: last 7 days vs the 7 days before that (derived from 30-day total)
+    const computeTrend = (last7, last30) => {
+        if (!last30 || last30 === 0) return null;
+        const prev7 = (last30 - last7) * (7 / 23); // approx previous 7-day window
+        if (!prev7 || prev7 === 0) return null;
+        return (((last7 - prev7) / prev7) * 100).toFixed(1);
+    };
+
+    const revenueTrend    = computeTrend(stats.last7DaysRevenue, stats.last30DaysRevenue);
+    const todayOrdersDiff = stats.todayOrders;
 
     const handleOrderAction = async (orderId, action) => {
         try {
@@ -101,7 +171,7 @@ const DashboardContent = () => {
 
             if (response?.success) {
                 await fetchOrders();
-                await fetchRevenue();
+                await fetchStats();
             }
         } catch (error) {
             // Error performing order action
@@ -120,32 +190,34 @@ const DashboardContent = () => {
         {
             name: "Total Orders",
             value: stats.totalOrders.toString(),
-            change: "+12%",
-            trend: "up",
+            change: todayOrdersDiff > 0 ? `+${todayOrdersDiff} today` : "—",
+            trend: todayOrdersDiff > 0 ? "up" : "neutral",
             icon: ShoppingBag,
             color: "orange"
         },
         {
-            name: "Revenue",
-            value: `$${stats.revenue.toFixed(2)}`,
-            change: "+8.2%",
-            trend: "up",
+            name: "Total Revenue",
+            value: `$${parseFloat(stats.revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            change: revenueTrend !== null
+                ? `${revenueTrend > 0 ? '+' : ''}${revenueTrend}% vs prev 7d`
+                : "—",
+            trend: revenueTrend !== null ? (revenueTrend >= 0 ? "up" : "down") : "neutral",
             icon: DollarSign,
             color: "green"
         },
         {
             name: "Avg Order Value",
-            value: `$${stats.avgOrderValue.toFixed(2)}`,
-            change: "-2.4%",
-            trend: "down",
+            value: `$${parseFloat(stats.avgOrderValue || 0).toFixed(2)}`,
+            change: "—",
+            trend: "neutral",
             icon: Users,
             color: "blue"
         },
         {
             name: "Rating",
-            value: stats.rating.toFixed(1),
-            change: "+0.2",
-            trend: "up",
+            value: stats.rating !== null ? parseFloat(stats.rating).toFixed(1) : "—",
+            change: "—",
+            trend: "neutral",
             icon: Star,
             color: "yellow"
         },
@@ -170,39 +242,68 @@ const DashboardContent = () => {
 
     const getStatusConfig = (status) => {
         const configs = {
-            new: {
+            PENDING: {
                 bg: 'bg-blue-100',
                 text: 'text-blue-700',
                 border: 'border-blue-200',
                 label: 'New Order',
                 pulse: true
             },
-            preparing: {
+            CONFIRMED: {
+                bg: 'bg-indigo-100',
+                text: 'text-indigo-700',
+                border: 'border-indigo-200',
+                label: 'Confirmed',
+                pulse: false
+            },
+            PREPARING: {
                 bg: 'bg-yellow-100',
                 text: 'text-yellow-700',
                 border: 'border-yellow-200',
                 label: 'Preparing',
                 pulse: false
             },
-            ready: {
+            READY_FOR_PICKUP: {
                 bg: 'bg-green-100',
                 text: 'text-green-700',
                 border: 'border-green-200',
                 label: 'Ready',
                 pulse: false
             },
-            delivered: {
+            OUT_FOR_DELIVERY: {
+                bg: 'bg-orange-100',
+                text: 'text-orange-700',
+                border: 'border-orange-200',
+                label: 'Out for Delivery',
+                pulse: false
+            },
+            DELIVERED: {
                 bg: 'bg-gray-100',
                 text: 'text-gray-700',
                 border: 'border-gray-200',
                 label: 'Delivered',
                 pulse: false
-            }
+            },
+            CANCELLED: {
+                bg: 'bg-red-100',
+                text: 'text-red-700',
+                border: 'border-red-200',
+                label: 'Cancelled',
+                pulse: false
+            },
         };
-        return configs[status] || configs.new;
+        return configs[status] ?? configs.PENDING;
+    };
+
+    // Generate avatar initials from order ID (e.g. "ORD-A1B2" → "A1")
+    const getOrderInitials = (publicOrderId) => {
+        if (!publicOrderId) return '?';
+        const parts = publicOrderId.split('-');
+        return (parts[parts.length - 1] ?? publicOrderId).slice(0, 2).toUpperCase();
     };
 
     return (
+        <>
         <div className="space-y-6">
 
             {/* Page Header with Date Filter */}
@@ -290,7 +391,8 @@ const DashboardContent = () => {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {statsDisplay.map((stat) => {
                     const Icon = stat.icon;
-                    const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
+                    const TrendIcon = stat.trend === 'up' ? TrendingUp : stat.trend === 'down' ? TrendingDown : null;
+                    const trendColor = stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-400';
 
                     return (
                         <div key={stat.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
@@ -298,10 +400,8 @@ const DashboardContent = () => {
                                 <div className={`w-12 h-12 bg-${stat.color}-100 rounded-xl flex items-center justify-center`}>
                                     <Icon className={`w-6 h-6 text-${stat.color}-600`} />
                                 </div>
-                                <div className={`flex items-center space-x-1 text-sm font-semibold ${
-                                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                    <TrendIcon className="w-4 h-4" />
+                                <div className={`flex items-center space-x-1 text-sm font-semibold ${trendColor}`}>
+                                    {TrendIcon && <TrendIcon className="w-4 h-4" />}
                                     <span>{stat.change}</span>
                                 </div>
                             </div>
@@ -314,34 +414,106 @@ const DashboardContent = () => {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Revenue Chart */}
+                {/* Revenue Bar Chart */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">Revenue Overview</h2>
-                        <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
-                    </div>
-                    <div className="h-64 flex items-center justify-center bg-linear-to-br from-orange-50 to-red-50 rounded-xl border-2 border-dashed border-orange-200">
-                        <div className="text-center">
-                            <DollarSign className="w-12 h-12 text-orange-400 mx-auto mb-2" />
-                            <p className="text-gray-400 font-semibold">Revenue Chart</p>
-                            <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Revenue Overview</h2>
+                            <p className="text-xs text-gray-500 mt-0.5">Across time periods</p>
                         </div>
+                        <DollarSign className="w-5 h-5 text-orange-400" />
                     </div>
+                    {stats.last30DaysRevenue > 0 || stats.last7DaysRevenue > 0 || stats.todayRevenue > 0 ? (
+                        <ResponsiveContainer width="100%" height={240}>
+                            <BarChart
+                                data={[
+                                    { period: 'Today',      revenue: parseFloat((stats.todayRevenue     || 0).toFixed(2)) },
+                                    { period: 'Last 7 Days', revenue: parseFloat((stats.last7DaysRevenue  || 0).toFixed(2)) },
+                                    { period: 'Last 30 Days',revenue: parseFloat((stats.last30DaysRevenue || 0).toFixed(2)) },
+                                ]}
+                                margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                                <XAxis dataKey="period" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                <YAxis
+                                    tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`}
+                                    tick={{ fontSize: 11, fill: '#6b7280' }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={55}
+                                />
+                                <Tooltip
+                                    formatter={(value) => [`$${parseFloat(value).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`, 'Revenue']}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    cursor={{ fill: '#fff7ed' }}
+                                />
+                                <Bar dataKey="revenue" fill="#f97316" radius={[6, 6, 0, 0]} maxBarSize={72} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-60 flex flex-col items-center justify-center text-gray-300">
+                            <DollarSign className="w-10 h-10 mb-2" />
+                            <p className="text-sm font-medium">No revenue data yet</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Orders Chart */}
+                {/* Orders Donut Chart */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">Orders Trend</h2>
-                        <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
-                    </div>
-                    <div className="h-64 flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-dashed border-blue-200">
-                        <div className="text-center">
-                            <ShoppingBag className="w-12 h-12 text-blue-400 mx-auto mb-2" />
-                            <p className="text-gray-400 font-semibold">Orders Chart</p>
-                            <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Order Breakdown</h2>
+                            <p className="text-xs text-gray-500 mt-0.5">Status distribution</p>
                         </div>
+                        <ShoppingBag className="w-5 h-5 text-blue-400" />
                     </div>
+                    {(() => {
+                        const delivered  = recentOrders.filter(o => o.status === 'DELIVERED').length;
+                        const cancelled  = recentOrders.filter(o => o.status === 'CANCELLED').length;
+                        const active     = recentOrders.filter(o => ['PENDING','CONFIRMED','PREPARING','READY_FOR_PICKUP','OUT_FOR_DELIVERY'].includes(o.status)).length;
+                        const hasData    = delivered + cancelled + active > 0;
+                        const pieData    = [
+                            { name: 'Delivered', value: delivered, color: '#22c55e' },
+                            { name: 'Active',    value: active,    color: '#f97316' },
+                            { name: 'Cancelled', value: cancelled, color: '#ef4444' },
+                        ].filter(d => d.value > 0);
+
+                        return hasData ? (
+                            <ResponsiveContainer width="100%" height={240}>
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={90}
+                                        paddingAngle={3}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={index} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        formatter={(value, name) => [value, name]}
+                                        contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend
+                                        formatter={(value, entry) => (
+                                            <span style={{ color: '#374151', fontSize: '13px' }}>
+                                                {value} ({entry.payload.value})
+                                            </span>
+                                        )}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-60 flex flex-col items-center justify-center text-gray-300">
+                                <ShoppingBag className="w-10 h-10 mb-2" />
+                                <p className="text-sm font-medium">No orders yet</p>
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -354,7 +526,10 @@ const DashboardContent = () => {
                             <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
                             <p className="text-sm text-gray-600 mt-1">Manage your latest orders</p>
                         </div>
-                        <button className="px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
+                        <button
+                            onClick={() => { setAllModalPage(1); setShowAllModal(true); }}
+                            className="px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                        >
                             View All
                         </button>
                     </div>
@@ -362,36 +537,52 @@ const DashboardContent = () => {
 
                 {/* Orders List */}
                 <div className="p-4 space-y-4">
-                    {recentOrders.map((order) => {
+                    {loading && (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+                        </div>
+                    )}
+                    {!loading && recentOrders.length === 0 && (
+                        <div className="text-center py-12 text-gray-400">
+                            <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                            <p className="font-semibold">No orders yet</p>
+                            <p className="text-sm mt-1">Orders will appear here once customers place them.</p>
+                        </div>
+                    )}
+                    {!loading && recentOrders.map((order) => {
                         const statusConfig = getStatusConfig(order.status);
+                        const orderTime = order.orderTime
+                            ? new Date(order.orderTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                            : '—';
 
                         return (
                             <div
-                                key={order.id}
+                                key={order.publicOrderId}
                                 className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-lg transition-all group"
                             >
                                 {/* Order Header */}
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                                         {/* Avatar */}
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                                            {order.avatar}
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                            {getOrderInitials(order.publicOrderId)}
                                         </div>
 
-                                        {/* Customer Info */}
+                                        {/* Order Info */}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-1">
-                                                <h3 className="font-bold text-gray-900 truncate">{order.customer}</h3>
-                                                <span className="text-xs font-bold text-gray-500">{order.id}</span>
+                                                <h3 className="font-bold text-gray-900 truncate font-mono">
+                                                    #{order.publicOrderId}
+                                                </h3>
                                             </div>
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                                 <div className="flex items-center text-xs sm:text-sm text-gray-600">
                                                     <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1.5 text-gray-400 shrink-0" />
-                                                    <span className="truncate">{order.time}</span>
+                                                    <span className="truncate">{orderTime}</span>
                                                 </div>
                                                 <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                                                    <Phone className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1.5 text-gray-400 shrink-0" />
-                                                    <span className="truncate">{order.phone}</span>
+                                                    <Package className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1.5 text-gray-400 shrink-0" />
+                                                    <span>{order.fulfillmentType === 'DELIVERY' ? 'Delivery' : 'Pickup'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -419,14 +610,14 @@ const DashboardContent = () => {
                                 <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
                                     <div className="flex items-center text-sm font-semibold text-gray-700 mb-3">
                                         <Package className="w-4 h-4 mr-2 text-gray-400 shrink-0" />
-                                        <span>{order.items.length} {order.items.length === 1 ? 'Item' : 'Items'}</span>
+                                        <span>{(order.orderLines ?? []).length} {(order.orderLines ?? []).length === 1 ? 'Item' : 'Items'}</span>
                                     </div>
                                     <div className="space-y-2">
-                                        {order.items.map((item, idx) => (
+                                        {(order.orderLines ?? []).map((item, idx) => (
                                             <div key={idx} className="flex items-center justify-between text-xs sm:text-sm">
-                        <span className="text-gray-700 truncate">
-                          <span className="font-semibold text-gray-900">{item.qty}x</span> {item.name}
-                        </span>
+                                                <span className="text-gray-700 truncate">
+                                                    <span className="font-semibold text-gray-900">{item.quantity}x</span> {item.productNameAtPurchase}
+                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -437,19 +628,28 @@ const DashboardContent = () => {
                                     {/* Address */}
                                     <div className="flex items-center text-xs sm:text-sm text-gray-600 min-w-0">
                                         <MapPin className="w-4 h-4 mr-1.5 text-gray-400 shrink-0" />
-                                        <span className="truncate">{order.address}</span>
+                                        <span className="truncate">
+                                            {order.deliveryAddress?.formattedAddress
+                                                || order.deliveryAddress?.addressLine
+                                                || (order.fulfillmentType === 'PICKUP' ? 'Pickup' : '—')}
+                                        </span>
                                     </div>
 
                                     {/* Price & Button */}
                                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0">
                                         <div className="text-left sm:text-right">
                                             <div className="text-xl sm:text-2xl font-black text-gray-900">
-                                                ${order.amount.toFixed(2)}
+                                                ${parseFloat(order.totalAmount ?? 0).toFixed(2)}
                                             </div>
-                                            <div className="text-xs text-gray-500">{order.estimatedTime}</div>
+                                            <div className="text-xs text-gray-500">
+                                                {order.estimatedDeliveryTime ?? ''}
+                                            </div>
                                         </div>
 
-                                        <button className="px-3 sm:px-4 py-2 sm:py-2.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg flex items-center space-x-2 whitespace-nowrap">
+                                        <button
+                                            onClick={() => viewOrderDetail(order.publicOrderId)}
+                                            className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg flex items-center space-x-2 whitespace-nowrap"
+                                        >
                                             <Eye className="w-4 h-4" />
                                             <span className="text-sm">View</span>
                                         </button>
@@ -462,6 +662,216 @@ const DashboardContent = () => {
             </div>
 
         </div>
+
+        {/* ── View All Orders Modal ──────────────────────────────────────── */}
+        {showAllModal && (() => {
+            const totalPages  = Math.max(1, Math.ceil(recentOrders.length / ALL_MODAL_PAGE_SIZE));
+            const pageOrders  = recentOrders.slice(
+                (allModalPage - 1) * ALL_MODAL_PAGE_SIZE,
+                allModalPage * ALL_MODAL_PAGE_SIZE
+            );
+            const start = recentOrders.length === 0 ? 0 : (allModalPage - 1) * ALL_MODAL_PAGE_SIZE + 1;
+            const end   = Math.min(allModalPage * ALL_MODAL_PAGE_SIZE, recentOrders.length);
+
+            return (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">All Orders</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {recentOrders.length === 0
+                                        ? 'No orders'
+                                        : `Showing ${start}–${end} of ${recentOrders.length}`}
+                                </p>
+                            </div>
+                            <button onClick={() => setShowAllModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Order list */}
+                        <div className="overflow-y-auto flex-1 p-4 space-y-3">
+                            {recentOrders.length === 0 ? (
+                                <div className="text-center py-12 text-gray-400">
+                                    <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                                    <p className="font-semibold">No orders yet</p>
+                                </div>
+                            ) : pageOrders.map((order) => {
+                                const cfg = getStatusConfig(order.status);
+                                return (
+                                    <div key={order.publicOrderId}
+                                        className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                                {getOrderInitials(order.publicOrderId)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-gray-900 font-mono text-sm truncate">#{order.publicOrderId}</p>
+                                                <p className="text-xs text-gray-500">{formatDate(order.orderTime)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+                                                {cfg.label}
+                                            </span>
+                                            <span className="font-bold text-gray-900">${parseFloat(order.totalAmount ?? 0).toFixed(2)}</span>
+                                            <button
+                                                onClick={() => { setShowAllModal(false); viewOrderDetail(order.publicOrderId); }}
+                                                className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination footer */}
+                        {totalPages > 1 && (
+                            <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+                                <button
+                                    onClick={() => setAllModalPage(p => Math.max(1, p - 1))}
+                                    disabled={allModalPage === 1}
+                                    className="px-4 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    ← Prev
+                                </button>
+                                <div className="flex items-center gap-1.5">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                                        <button
+                                            key={pg}
+                                            onClick={() => setAllModalPage(pg)}
+                                            className={`w-8 h-8 text-sm font-semibold rounded-lg transition-colors ${
+                                                pg === allModalPage
+                                                    ? 'bg-orange-600 text-white'
+                                                    : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            {pg}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setAllModalPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={allModalPage === totalPages}
+                                    className="px-4 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        })()}
+
+        {/* ── Order Detail Modal ─────────────────────────────────────────── */}
+        {showDetailModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+                    {/* Header */}
+                    <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between shrink-0">
+                        <h2 className="text-lg font-bold text-gray-900">Order Details</h2>
+                        <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                            <XCircle className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div className="overflow-y-auto p-6">
+                        {detailLoading ? (
+                            <div className="flex items-center justify-center py-16">
+                                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                            </div>
+                        ) : selectedOrder ? (
+                            <div className="space-y-5">
+                                {/* ID, time, badges */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                    <span className="font-mono text-gray-500">{selectedOrder.publicOrderId}</span>
+                                    <span className="text-gray-500">{formatDate(selectedOrder.orderTime)}</span>
+                                </div>
+                                <div className="flex gap-2 flex-wrap">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusConfig(selectedOrder.status).bg} ${getStatusConfig(selectedOrder.status).text}`}>
+                                        {selectedOrder.statusLabel || getStatusConfig(selectedOrder.status).label}
+                                    </span>
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${selectedOrder.fulfillmentType === 'DELIVERY' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                                        {selectedOrder.fulfillmentType === 'DELIVERY'
+                                            ? <><Truck className="w-3 h-3" /> Delivery</>
+                                            : <><Store className="w-3 h-3" /> Pickup</>
+                                        }
+                                    </span>
+                                </div>
+
+                                {/* Customer / address */}
+                                <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <User className="w-4 h-4" /> Customer
+                                    </h3>
+                                    {selectedOrder.customerName && <p className="text-gray-700">{selectedOrder.customerName}</p>}
+                                    {selectedOrder.deliveryAddress && (
+                                        <p className="flex items-start gap-2 text-gray-600">
+                                            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                                            {formatAddress(selectedOrder.deliveryAddress)}
+                                        </p>
+                                    )}
+                                    {selectedOrder.specialInstructions && (
+                                        <p className="text-gray-600 italic">Note: {selectedOrder.specialInstructions}</p>
+                                    )}
+                                </div>
+
+                                {/* Items */}
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                                        <Package className="w-4 h-4" /> Items
+                                    </h3>
+                                    <div className="space-y-2">
+                                        {(selectedOrder.orderLines || []).map((line, i) => (
+                                            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{line.productNameAtPurchase}</p>
+                                                    <p className="text-gray-500 text-xs">Qty {line.quantity}</p>
+                                                </div>
+                                                <p className="font-semibold text-gray-900">{formatCurrency(line.lineTotal)}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Totals */}
+                                <div className="border-t border-gray-100 pt-4 space-y-1.5 text-sm">
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Subtotal</span><span>{formatCurrency(selectedOrder.subtotal)}</span>
+                                    </div>
+                                    {selectedOrder.deliveryFee > 0 && (
+                                        <div className="flex justify-between text-gray-600">
+                                            <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> Delivery fee</span>
+                                            <span>{formatCurrency(selectedOrder.deliveryFee)}</span>
+                                        </div>
+                                    )}
+                                    {selectedOrder.tax > 0 && (
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>{selectedOrder.taxLabel || 'Tax'}</span>
+                                            <span>{formatCurrency(selectedOrder.tax)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
+                                        <span>Total</span>
+                                        <span>{formatCurrency(selectedOrder.totalAmount)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-center text-gray-400 py-12">Could not load order details.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

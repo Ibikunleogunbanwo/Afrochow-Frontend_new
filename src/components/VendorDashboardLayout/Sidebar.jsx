@@ -11,10 +11,9 @@ import {
     BarChart3,
     HelpCircle,
     Store,
-    ChevronDown
+    LogOut,
 } from 'lucide-react';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
-import ProfileDropdown from '@/components/VendorDashboardLayout/ProfileDropdown';
 
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/vendor/dashboard', badge: null },
@@ -77,29 +76,27 @@ const Sidebar = ({ pathname, user, profileOpen, onProfileToggle, onLogout, profi
                 </nav>
 
                 {/* Bottom User Section */}
-                <div className="shrink-0 p-4 border-t border-gray-200">
-                    <div className="relative" ref={profileRef}>
-                        <button
-                            onClick={onProfileToggle}
-                            className="flex items-center w-full px-4 py-3 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                            aria-expanded={profileOpen}
-                            aria-label="User menu"
-                        >
-                            <AvatarDisplay user={user} size="default" />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                            </div>
-                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-                        </button>
+                <div className="shrink-0 p-4 border-t border-gray-200 space-y-2">
+                    {/* User info */}
+                    <Link
+                        href="/vendor/profile"
+                        className="flex items-center w-full px-4 py-3 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                        <AvatarDisplay user={user} size="default" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        </div>
+                    </Link>
 
-                        {/* Profile Dropdown */}
-                        <ProfileDropdown
-                            isOpen={profileOpen}
-                            onLogout={onLogout}
-                            onClose={onProfileToggle}
-                        />
-                    </div>
+                    {/* Logout — always visible */}
+                    <button
+                        onClick={onLogout}
+                        className="flex items-center w-full px-4 py-2.5 space-x-3 text-sm font-semibold text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span>Log out</span>
+                    </button>
                 </div>
             </div>
         </aside>
