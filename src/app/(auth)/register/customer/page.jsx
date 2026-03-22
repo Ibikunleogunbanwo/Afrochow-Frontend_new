@@ -121,6 +121,7 @@ async function uploadProfileImage(base64String) {
 
   const formData = new FormData();
   formData.append("file", file); // backend expects @RequestPart("file")
+  formData.append("category", "CustomerProfileImage");
 
   const response = await fetch(`${API_BASE_URL}/images/upload/registration`, {
     method: "POST",
