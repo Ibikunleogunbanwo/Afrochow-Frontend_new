@@ -363,10 +363,10 @@ function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, 
             <div>
               <h2 className="text-2xl font-bold text-green-600">Account Created!</h2>
               <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                We sent a verification link to{" "}
+                We sent a verification code to{" "}
                 <span className="font-semibold text-gray-700">{email}</span>.
                 <br />
-                Check your inbox to activate your account.
+                Enter the code to activate your account.
               </p>
             </div>
             <div className="w-full bg-amber-50 border border-amber-100 rounded-lg p-3 text-sm text-amber-700">

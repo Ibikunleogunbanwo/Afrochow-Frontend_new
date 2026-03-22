@@ -18,16 +18,19 @@ import {
 } from "lucide-react";
 
 const PROVINCIAL_TAX = {
-    AB: { rate: 0.05,    label: "GST",      province: "Alberta" },
+    AB: { rate: 0.05,    label: "GST",       province: "Alberta" },
     BC: { rate: 0.12,    label: "GST + PST", province: "British Columbia" },
     MB: { rate: 0.12,    label: "GST + PST", province: "Manitoba" },
     NB: { rate: 0.15,    label: "HST",       province: "New Brunswick" },
     NL: { rate: 0.15,    label: "HST",       province: "Newfoundland and Labrador" },
     NS: { rate: 0.15,    label: "HST",       province: "Nova Scotia" },
+    NT: { rate: 0.05,    label: "GST",       province: "Northwest Territories" },
+    NU: { rate: 0.05,    label: "GST",       province: "Nunavut" },
     ON: { rate: 0.13,    label: "HST",       province: "Ontario" },
     PE: { rate: 0.15,    label: "HST",       province: "Prince Edward Island" },
     QC: { rate: 0.14975, label: "GST + QST", province: "Quebec" },
     SK: { rate: 0.11,    label: "GST + PST", province: "Saskatchewan" },
+    YT: { rate: 0.05,    label: "GST",       province: "Yukon" },
 };
 
 const PROVINCES = [
@@ -37,10 +40,13 @@ const PROVINCES = [
     { value: "NB", label: "New Brunswick" },
     { value: "NL", label: "Newfoundland and Labrador" },
     { value: "NS", label: "Nova Scotia" },
+    { value: "NT", label: "Northwest Territories" },
+    { value: "NU", label: "Nunavut" },
     { value: "ON", label: "Ontario" },
     { value: "PE", label: "Prince Edward Island" },
     { value: "QC", label: "Quebec" },
     { value: "SK", label: "Saskatchewan" },
+    { value: "YT", label: "Yukon" },
 ];
 
 export default function CheckoutPage() {
@@ -96,6 +102,10 @@ export default function CheckoutPage() {
                 const v = vendorRes.value.data;
                 setVendorData(v);
                 if (!v.offersDelivery && v.offersPickup) setFulfillment("pickup");
+            } else {
+                toast.error("Could not load restaurant details", {
+                    description: "Please go back and try again.",
+                });
             }
         } catch (e) {
             toast.error("Could not load checkout data", { description: e.message });
@@ -126,7 +136,7 @@ export default function CheckoutPage() {
 
     const belowMinimum = fulfillment === "delivery" &&
         vendorData?.minimumOrderAmount > 0 &&
-        cartTotal < vendorData.minimumOrderAmount;
+        (cartTotal + deliveryFee) < vendorData.minimumOrderAmount;
 
     const cardComplete =
         cardholderName.trim() !== "" &&
@@ -189,7 +199,7 @@ export default function CheckoutPage() {
         // 2 — Validate minimum order
         if (belowMinimum) {
             toast.error("Minimum order not met", {
-                description: `Add $${(vendorData.minimumOrderAmount - cartTotal).toFixed(2)} more to proceed.`,
+                description: `Add $${(vendorData.minimumOrderAmount - cartTotal - deliveryFee).toFixed(2)} more to proceed.`,
             });
             return;
         }
@@ -226,27 +236,29 @@ export default function CheckoutPage() {
             // 5 — Tokenize card via Stripe.js — card data never touches our backend
             const paymentMethodId = await createPaymentMethod(cardholderName);
 
-            // 6 — Build order payload
+            // 6 — Build order payload — field names must match OrderRequestDto exactly
             const orderPayload = {
-                vendorPublicId:    vendorId,
-                fulfillmentType:   fulfillment.toUpperCase(), // "DELIVERY" | "PICKUP"
-                deliveryNote:      deliveryNote || null,
+                vendorPublicId:  vendorId,
+                fulfillmentType: fulfillment.toUpperCase(), // "DELIVERY" | "PICKUP"
+                specialInstructions: deliveryNote || null,  // backend field: specialInstructions
                 paymentMethodId,
-                items: cartItems.map(item => ({
-                    publicProductId: item.publicProductId,
+                orderLines: cartItems.map(item => ({        // backend field: orderLines
+                    productPublicId: item.publicProductId,  // backend field: productPublicId
                     quantity:        item.quantity,
                 })),
-                ...(fulfillment === "delivery" && { deliveryAddressId }),
+                ...(fulfillment === "delivery" && {
+                    deliveryAddressPublicId: deliveryAddressId, // backend field: deliveryAddressPublicId
+                }),
             };
 
-            // 7 — POST /customer/orders
+            // 7 — POST /customer/orders  →  ApiResponse<OrderResponseDto>
             const orderRes = await OrderAPI.createOrder(orderPayload);
 
-            if (!orderRes?.data?.publicOrderId && !orderRes?.publicOrderId) {
+            if (!orderRes?.data?.publicOrderId) {
                 throw new Error("Order was not created. Please try again.");
             }
 
-            const publicOrderId = orderRes?.data?.publicOrderId ?? orderRes?.publicOrderId;
+            const publicOrderId = orderRes.data.publicOrderId;
 
             // 8 — Success
             clearCart();

@@ -141,7 +141,7 @@ const AdminDashboardLayout = ({ children }) => {
         const fetchData = async () => {
             try {
                 const adminData = await AdminAPI.getAdminData();
-                setAdminData(adminData);
+                setAdminData(adminData?.data ?? adminData);
                 console.log("Fetched adminData:", adminData); // correct place
             } catch (err) {
                 console.error(err);

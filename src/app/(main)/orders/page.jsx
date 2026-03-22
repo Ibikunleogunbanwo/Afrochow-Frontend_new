@@ -1,257 +1,262 @@
 "use client";
 
-import { useState } from "react";
-import { Package, Clock, CheckCircle, XCircle, ChevronDown, MapPin, Phone } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { OrderAPI } from "@/lib/api/order/order.api";
+import { useAuth } from "@/hooks/useAuth";
+import {
+    Package, Clock, CheckCircle2, XCircle, Truck,
+    Store, ChevronRight, AlertCircle, Loader2,
+} from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
-export default function OrdersPage() {
-    const [selectedTab, setSelectedTab] = useState("all");
+// ── Status config — matches backend OrderStatus enum ─────────────────────────
 
-    const orders = [
-        {
-            id: "ORD-2024-001",
-            date: "2024-01-10",
-            restaurant: "Mama's Kitchen",
-            items: ["Jollof Rice with Chicken", "Fried Plantain"],
-            total: 32.50,
-            status: "delivered",
-            estimatedTime: "Delivered at 2:30 PM",
-            address: "123 Main St, New York, NY"
-        },
-        {
-            id: "ORD-2024-002",
-            date: "2024-01-11",
-            restaurant: "African Delights",
-            items: ["Egusi Soup with Fufu", "Suya Platter"],
-            total: 45.00,
-            status: "in_progress",
-            estimatedTime: "Arriving in 15 mins",
-            address: "123 Main St, New York, NY"
-        },
-        {
-            id: "ORD-2024-003",
-            date: "2024-01-08",
-            restaurant: "Lagos Cuisine",
-            items: ["Pounded Yam with Egusi"],
-            total: 28.99,
-            status: "cancelled",
-            estimatedTime: "Cancelled",
-            address: "123 Main St, New York, NY"
-        }
-    ];
+const STATUS_CONFIG = {
+    PENDING:          { label: "Pending",          color: "text-amber-700  bg-amber-50  border-amber-200",  icon: Clock },
+    CONFIRMED:        { label: "Confirmed",        color: "text-blue-700   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
+    PREPARING:        { label: "Preparing",        color: "text-orange-700 bg-orange-50 border-orange-200", icon: Clock },
+    READY_FOR_PICKUP: { label: "Ready for pickup", color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    OUT_FOR_DELIVERY: { label: "Out for delivery", color: "text-blue-700   bg-blue-50   border-blue-200",   icon: Truck },
+    DELIVERED:        { label: "Delivered",        color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
+    CANCELLED:        { label: "Cancelled",        color: "text-red-700    bg-red-50    border-red-200",    icon: XCircle },
+};
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "delivered":
-                return "text-green-600 bg-green-100";
-            case "in_progress":
-                return "text-orange-600 bg-orange-100";
-            case "cancelled":
-                return "text-red-600 bg-red-100";
-            default:
-                return "text-gray-600 bg-gray-100";
-        }
-    };
+const ACTIVE_STATUSES = new Set(["PENDING", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"]);
 
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case "delivered":
-                return <CheckCircle className="w-5 h-5" />;
-            case "in_progress":
-                return <Clock className="w-5 h-5" />;
-            case "cancelled":
-                return <XCircle className="w-5 h-5" />;
-            default:
-                return <Package className="w-5 h-5" />;
-        }
-    };
+const TABS = [
+    { key: "all",      label: "All" },
+    { key: "active",   label: "Active" },
+    { key: "DELIVERED", label: "Delivered" },
+    { key: "CANCELLED", label: "Cancelled" },
+];
 
-    const getStatusText = (status) => {
-        switch (status) {
-            case "delivered":
-                return "Delivered";
-            case "in_progress":
-                return "In Progress";
-            case "cancelled":
-                return "Cancelled";
-            default:
-                return "Unknown";
-        }
-    };
+function StatusBadge({ status }) {
+    const cfg = STATUS_CONFIG[status] || { label: status, color: "text-gray-600 bg-gray-50 border-gray-200", icon: Package };
+    const Icon = cfg.icon;
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color}`}>
+            <Icon className="w-3 h-3 shrink-0" />
+            {cfg.label}
+        </span>
+    );
+}
 
-    const filteredOrders = orders.filter(order => {
-        if (selectedTab === "all") return true;
-        return order.status === selectedTab;
-    });
+function OrderCard({ order, onCancel, cancelling }) {
+    const isActive  = ACTIVE_STATUSES.has(order.status);
+    const isDelivery = order.fulfillmentType === "DELIVERY";
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-red-50 py-8">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div className="p-5">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900">
-                        My Orders
-                    </h1>
-                    <p className="text-gray-600 mt-2">
-                        Track and manage your food orders
-                    </p>
-                </div>
-
-                {/* Tabs */}
-                <div className="mb-8 flex flex-wrap gap-2">
-                    {[
-                        { key: "all", label: "All Orders" },
-                        { key: "in_progress", label: "In Progress" },
-                        { key: "delivered", label: "Delivered" },
-                        { key: "cancelled", label: "Cancelled" }
-                    ].map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setSelectedTab(tab.key)}
-                            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                                selectedTab === tab.key
-                                    ? "bg-linear-to-r from-orange-600 to-orange-500 text-white shadow-lg"
-                                    : "bg-white text-gray-600 hover:bg-gray-50 shadow-md"
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Orders List */}
-                {filteredOrders.length === 0 ? (
-                    // Empty State
-                    <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                        <div className="w-32 h-32 bg-linear-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Package className="w-16 h-16 text-orange-600" />
-                        </div>
-                        <h2 className="text-2xl font-black text-gray-900 mb-4">
-                            No orders found
-                        </h2>
-                        <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                            You haven't placed any orders yet. Start exploring delicious African cuisine!
+                <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="min-w-0">
+                        <p className="font-bold text-gray-900 truncate">{order.vendorName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 font-mono">
+                            #{order.publicOrderId} · {order.orderTime
+                                ? new Date(order.orderTime).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
+                                : "—"}
                         </p>
                     </div>
-                ) : (
-                    // Orders
-                    <div className="space-y-4">
-                        {filteredOrders.map((order) => (
-                            <div
-                                key={order.id}
-                                className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden"
-                            >
-                                <div className="p-6">
-                                    {/* Order Header */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 className="text-xl font-black text-gray-900 mb-1">
-                                                {order.restaurant}
-                                            </h3>
-                                            <p className="text-sm text-gray-500">
-                                                Order ID: {order.id} • {order.date}
-                                            </p>
-                                        </div>
-                                        <div className={`flex items-center space-x-2 px-4 py-2 rounded-full font-semibold ${getStatusColor(order.status)}`}>
-                                            {getStatusIcon(order.status)}
-                                            <span>{getStatusText(order.status)}</span>
-                                        </div>
-                                    </div>
+                    <StatusBadge status={order.status} />
+                </div>
 
-                                    {/* Order Items */}
-                                    <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Order Items:</p>
-                                        <ul className="space-y-1">
-                                            {order.items.map((item, idx) => (
-                                                <li key={idx} className="text-sm text-gray-600 flex items-center">
-                                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-2"></span>
-                                                    {item}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
+                {/* Fulfillment type */}
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3">
+                    {isDelivery
+                        ? <><Truck className="w-3.5 h-3.5" /> Delivery</>
+                        : <><Store className="w-3.5 h-3.5" /> Pickup</>
+                    }
+                </div>
 
-                                    {/* Order Details */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-linear-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                                                <Clock className="w-5 h-5 text-blue-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 font-medium">Status</p>
-                                                <p className="text-sm font-semibold text-gray-900">{order.estimatedTime}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-linear-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
-                                                <MapPin className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 font-medium">Delivery Address</p>
-                                                <p className="text-sm font-semibold text-gray-900">{order.address}</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                {/* Total */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                    <span className="text-sm text-gray-500">Total</span>
+                    <span className="text-lg font-black text-orange-600">
+                        ${order.totalAmount?.toFixed(2) ?? "—"}
+                    </span>
+                </div>
 
-                                    {/* Order Total */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                        <span className="text-gray-600 font-medium">Total Amount</span>
-                                        <span className="text-2xl font-black text-orange-600">
-                                            ${order.total.toFixed(2)}
-                                        </span>
-                                    </div>
+                {/* Actions */}
+                <div className="flex gap-2 mt-3">
+                    <Link
+                        href={`/order-confirmation/${order.publicOrderId}`}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
+                    >
+                        View details
+                        <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                    {order.canBeCancelled && (
+                        <button
+                            onClick={() => onCancel(order.publicOrderId)}
+                            disabled={cancelling === order.publicOrderId}
+                            className="px-4 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                            {cancelling === order.publicOrderId
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : "Cancel"
+                            }
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-2 mt-4">
-                                        {order.status === "in_progress" && (
-                                            <button className="flex-1 px-4 py-3 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg">
-                                                Track Order
-                                            </button>
-                                        )}
-                                        {order.status === "delivered" && (
-                                            <>
-                                                <button className="flex-1 px-4 py-3 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg">
-                                                    Reorder
-                                                </button>
-                                                <button className="flex-1 px-4 py-3 bg-white border-2 border-orange-300 text-orange-600 font-bold rounded-xl hover:bg-orange-50 transition-all shadow-md">
-                                                    Leave Review
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === "cancelled" && (
-                                            <button className="flex-1 px-4 py-3 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg">
-                                                Reorder
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function OrdersPage() {
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
+    const router = useRouter();
+
+    const [orders, setOrders]       = useState([]);
+    const [loading, setLoading]     = useState(true);
+    const [error, setError]         = useState(null);
+    const [tab, setTab]             = useState("all");
+    const [cancelling, setCancelling] = useState(null); // publicOrderId being cancelled
+
+    useEffect(() => {
+        if (authLoading) return;
+        if (!isAuthenticated) { router.push("/"); return; }
+
+        OrderAPI.getMyOrders()
+            .then(res => setOrders(res?.data ?? []))
+            .catch(err => setError(err.message || "Could not load orders."))
+            .finally(() => setLoading(false));
+    }, [isAuthenticated, authLoading, router]);
+
+    const handleCancel = async (publicOrderId) => {
+        setCancelling(publicOrderId);
+        try {
+            const res = await OrderAPI.cancelOrder(publicOrderId);
+            setOrders(prev => prev.map(o =>
+                o.publicOrderId === publicOrderId ? { ...o, ...res.data, canBeCancelled: false } : o
+            ));
+        } catch (e) {
+            toast.error("Could not cancel order", { description: e.message });
+        } finally {
+            setCancelling(null);
+        }
+    };
+
+    const filtered = orders.filter(o => {
+        if (tab === "all")    return true;
+        if (tab === "active") return ACTIVE_STATUSES.has(o.status);
+        return o.status === tab;
+    });
+
+    const totalSpent   = orders.filter(o => o.status === "DELIVERED").reduce((s, o) => s + (o.totalAmount ?? 0), 0);
+    const completedCount = orders.filter(o => o.status === "DELIVERED").length;
+    const activeCount  = orders.filter(o => ACTIVE_STATUSES.has(o.status)).length;
+
+    // ── Loading ───────────────────────────────────────────────────────────────
+    if (authLoading || loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+            </div>
+        );
+    }
+
+    // ── Error ─────────────────────────────────────────────────────────────────
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="text-center space-y-3 max-w-sm">
+                    <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
+                    <p className="text-sm text-gray-600">{error}</p>
+                    <button
+                        onClick={() => { setError(null); setLoading(true); OrderAPI.getMyOrders().then(res => setOrders(res?.data ?? [])).catch(e => setError(e.message)).finally(() => setLoading(false)); }}
+                        className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                        Try again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-2xl mx-auto px-4 space-y-6">
+
+                {/* Header */}
+                <div>
+                    <h1 className="text-3xl font-black text-gray-900">My Orders</h1>
+                    <p className="text-gray-500 text-sm mt-1">Track and manage your orders</p>
+                </div>
+
+                {/* Stats */}
+                {orders.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { label: "Total",     value: orders.length },
+                            { label: "Active",    value: activeCount },
+                            { label: "Spent",     value: `$${totalSpent.toFixed(2)}` },
+                        ].map(s => (
+                            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+                                <p className="text-2xl font-black bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">{s.value}</p>
+                                <p className="text-xs text-gray-500 mt-1">{s.label}</p>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Order Stats */}
-                {orders.length > 0 && (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white rounded-2xl shadow-md p-6 text-center">
-                            <div className="text-3xl font-black bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                {orders.length}
-                            </div>
-                            <p className="text-gray-600 font-medium mt-2">Total Orders</p>
-                        </div>
-                        <div className="bg-white rounded-2xl shadow-md p-6 text-center">
-                            <div className="text-3xl font-black bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                {orders.filter(o => o.status === "delivered").length}
-                            </div>
-                            <p className="text-gray-600 font-medium mt-2">Completed</p>
-                        </div>
-                        <div className="bg-white rounded-2xl shadow-md p-6 text-center">
-                            <div className="text-3xl font-black bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                ${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}
-                            </div>
-                            <p className="text-gray-600 font-medium mt-2">Total Spent</p>
-                        </div>
+                {/* Tabs */}
+                <div className="flex gap-2 flex-wrap">
+                    {TABS.map(t => (
+                        <button
+                            key={t.key}
+                            onClick={() => setTab(t.key)}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                tab === t.key
+                                    ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
+                                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                            }`}
+                        >
+                            {t.label}
+                            {t.key === "active" && activeCount > 0 && (
+                                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">{activeCount}</span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Orders */}
+                {filtered.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+                        <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="font-semibold text-gray-700">
+                            {tab === "all" ? "No orders yet" : `No ${tab.toLowerCase().replace("_", " ")} orders`}
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                            {tab === "all" && "Start exploring delicious African cuisine!"}
+                        </p>
+                        {tab === "all" && (
+                            <Link
+                                href="/"
+                                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
+                            >
+                                Browse restaurants
+                            </Link>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {filtered.map(order => (
+                            <OrderCard
+                                key={order.publicOrderId}
+                                order={order}
+                                onCancel={handleCancel}
+                                cancelling={cancelling}
+                            />
+                        ))}
                     </div>
                 )}
+
             </div>
         </div>
     );

@@ -42,7 +42,7 @@ export default function RegistrationSuccessScreen({
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="font-semibold text-orange-600 mt-0.5">2.</span>
-                            <span>Click the verification link in your email</span>
+                            <span>Enter the verification code from your email</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="font-semibold text-orange-600 mt-0.5">3.</span>
@@ -102,7 +102,7 @@ export default function RegistrationSuccessScreen({
                 </div>
 
                 <p className="text-xs text-gray-500 mt-6">
-                    The verification link will expire in 24 hours
+                    The verification code will expire in 24 hours
                 </p>
             </div>
         </div>

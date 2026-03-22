@@ -20,13 +20,13 @@ export const OrderAPI = {
      *
      * @param {Object} payload
      * @param {string}   payload.vendorPublicId
-     * @param {string}   payload.fulfillmentType       "DELIVERY" | "PICKUP"
-     * @param {string}   [payload.deliveryAddressId]   publicAddressId — required when DELIVERY
-     * @param {string}   [payload.deliveryNote]        optional instructions or pickup note
-     * @param {string}   payload.paymentMethodId       Stripe payment method token
-     * @param {Array}    payload.items                 [{ publicProductId, quantity }]
+     * @param {string}   payload.fulfillmentType              "DELIVERY" | "PICKUP"
+     * @param {string}   [payload.deliveryAddressPublicId]    required when DELIVERY
+     * @param {string}   [payload.specialInstructions]        optional note to vendor
+     * @param {string}   payload.paymentMethodId              Stripe payment method token
+     * @param {Array}    payload.orderLines                   [{ productPublicId, quantity }]
      *
-     * @returns {Promise<OrderResponseDto>}
+     * @returns {Promise<ApiResponse<OrderResponseDto>>}  response.data.publicOrderId
      */
     createOrder: async (payload) => {
         return fetchWithCredentials(`${API_BASE_URL}/customer/orders`, {
@@ -40,7 +40,7 @@ export const OrderAPI = {
 
     /**
      * Get all orders for the authenticated customer.
-     * @returns {Promise<OrderSummaryResponseDto[]>}
+     * @returns {Promise<ApiResponse<OrderSummaryResponseDto[]>>}  response.data
      */
     getMyOrders: async () => {
         return fetchWithCredentials(`${API_BASE_URL}/customer/orders`, {
@@ -50,7 +50,7 @@ export const OrderAPI = {
 
     /**
      * Get all active (in-progress) orders for the authenticated customer.
-     * @returns {Promise<OrderSummaryResponseDto[]>}
+     * @returns {Promise<ApiResponse<OrderSummaryResponseDto[]>>}  response.data
      */
     getActiveOrders: async () => {
         return fetchWithCredentials(`${API_BASE_URL}/customer/orders/active`, {
@@ -61,7 +61,7 @@ export const OrderAPI = {
     /**
      * Get full details of a specific order by ID.
      * @param {string} publicOrderId
-     * @returns {Promise<OrderResponseDto>}
+     * @returns {Promise<ApiResponse<OrderResponseDto>>}  response.data
      */
     getOrder: async (publicOrderId) => {
         return fetchWithCredentials(
@@ -75,7 +75,7 @@ export const OrderAPI = {
     /**
      * Cancel an order. Only valid when status is PENDING or CONFIRMED.
      * @param {string} publicOrderId
-     * @returns {Promise<OrderResponseDto>}
+     * @returns {Promise<ApiResponse<OrderResponseDto>>}  response.data
      */
     cancelOrder: async (publicOrderId) => {
         return fetchWithCredentials(
@@ -88,7 +88,7 @@ export const OrderAPI = {
 
     /**
      * Get total order count for the authenticated customer.
-     * @returns {Promise<{ totalOrders: number }>}
+     * @returns {Promise<ApiResponse<{ totalOrders: number }>>}  response.data
      */
     getOrderCount: async () => {
         return fetchWithCredentials(`${API_BASE_URL}/customer/orders/stats/count`, {
