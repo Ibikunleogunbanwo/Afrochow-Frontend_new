@@ -8,7 +8,6 @@ import {
     MapPin,
     Clock,
     Truck,
-    ShoppingBag,
     ChevronRight,
     Home,
     Store,

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star, Flame, Clock, MapPin, Store } from "lucide-react";
+import { Star, Flame, Clock, MapPin, Store,Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // ── Badge sub-components ──────────────────────────────────────────────────────
