@@ -1,17 +1,22 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import {
     DollarSign,
     TrendingUp,
-    TrendingDown,
-    Calendar,
-    Download,
     Package,
     ShoppingBag,
-    Clock,
     RefreshCw,
-    AlertCircle
+    LayoutDashboard,
+    ChevronRight,
+    CheckCircle2,
+    User,
+    CalendarDays,
+    UtensilsCrossed,
+    Truck,
+    Store,
+    MapPin,
 } from 'lucide-react';
 
 const VendorEarningsPage = () => {
@@ -79,16 +84,38 @@ const VendorEarningsPage = () => {
             const response = await VendorOrdersAPI.getVendorOrders();
             if (response?.success) {
                 const orders = response.data || [];
-                const deliveredOrders = orders.filter(order => order.orderStatus === 'DELIVERED');
-                setRecentOrders(deliveredOrders.slice(0, 10));
+                // Backend uses 'status' not 'orderStatus'
+                const deliveredOrders = orders.filter(o => o.status === 'DELIVERED' || o.orderStatus === 'DELIVERED');
+                const top10 = deliveredOrders.slice(0, 10);
 
-                if (stats.totalOrders > 0) {
-                    const avgValue = stats.totalRevenue / stats.totalOrders;
-                    setStats(prev => ({
-                        ...prev,
-                        averageOrderValue: avgValue
-                    }));
-                }
+                // Compute avg directly from this order list to avoid race condition with stats state
+                const totalRevenue = deliveredOrders.reduce((sum, o) => sum + (o.totalAmount ?? 0), 0);
+                const avg = deliveredOrders.length > 0 ? totalRevenue / deliveredOrders.length : 0;
+                setStats(prev => ({ ...prev, averageOrderValue: avg }));
+
+                // Enrich each order with full detail (customerName, fulfillmentType, address, etc.)
+                // Same call the dashboard modal uses — fired in parallel for all orders at once.
+                const detailResults = await Promise.allSettled(
+                    top10.map(o => VendorOrdersAPI.getVendorOrderById(o.publicOrderId))
+                );
+
+                const enriched = top10.map((order, i) => {
+                    const result = detailResults[i];
+                    if (result.status === 'fulfilled' && result.value?.success) {
+                        const d = result.value.data;
+                        return {
+                            ...order,
+                            customerName:        d.customerName        ?? order.customerName,
+                            fulfillmentType:     d.fulfillmentType     ?? order.fulfillmentType,
+                            deliveryAddress:     d.deliveryAddress     ?? order.deliveryAddress,
+                            specialInstructions: d.specialInstructions ?? order.specialInstructions,
+                            orderLines:          d.orderLines          ?? order.orderLines,
+                        };
+                    }
+                    return order;
+                });
+
+                setRecentOrders(enriched);
             }
         } catch (error) {
             console.error('Error fetching recent orders:', error);
@@ -102,18 +129,25 @@ const VendorEarningsPage = () => {
     };
 
     const formatCurrency = (amount) => {
-        return `$${parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `CA$${parseFloat(amount || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleString('en-US', {
+        return new Date(dateString).toLocaleString('en-CA', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const formatAddress = (addr) => {
+        if (!addr) return null;
+        if (typeof addr === 'string') return addr;
+        return addr.formattedAddress ||
+            [addr.addressLine, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ');
     };
 
     const calculateGrowth = () => {
@@ -162,56 +196,65 @@ const VendorEarningsPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Earnings & Analytics</h1>
-                        <p className="text-gray-600">Track your revenue and order statistics</p>
-                    </div>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
-                    >
-                        <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
-                        <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-                    </button>
+        <div className="space-y-6">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Dashboard
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <span className="font-semibold text-gray-900">Earnings</span>
+            </nav>
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-black text-gray-900">Earnings</h1>
+                    <p className="text-gray-600 mt-1">Track your revenue and order statistics</p>
                 </div>
+                <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50"
+                >
+                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Refreshing…' : 'Refresh'}
+                </button>
+            </div>
 
-                {loading ? (
-                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                        <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
-                        <p className="text-gray-600">Loading earnings data...</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            {statCards.map((stat, index) => (
-                                <div key={index} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`${stat.iconBg} rounded-lg p-3`}>
-                                            <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
-                                        </div>
-                                        {stat.trend === 'up' && (
-                                            <div className="flex items-center gap-1 text-green-600 text-sm font-semibold">
-                                                <TrendingUp className="h-4 w-4" />
-                                                <span>+{calculateGrowth()}%</span>
-                                            </div>
-                                        )}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mb-4" />
+                    <p className="text-sm text-gray-500">Loading earnings data…</p>
+                </div>
+            ) : (
+                <>
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {statCards.map((stat, index) => (
+                            <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className={`w-11 h-11 ${stat.iconBg} rounded-xl flex items-center justify-center`}>
+                                        <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
                                     </div>
-                                    <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
-                                    <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                                    <p className="text-xs text-gray-500">{stat.description}</p>
+                                    {stat.trend === 'up' && (
+                                        <div className="flex items-center gap-1 text-green-600 text-xs font-semibold">
+                                            <TrendingUp className="h-3.5 w-3.5" />
+                                            +{calculateGrowth()}%
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
+                                <p className="text-sm text-gray-500 mb-0.5">{stat.title}</p>
+                                <p className="text-2xl font-black text-gray-900 mb-1">{stat.value}</p>
+                                <p className="text-xs text-gray-400">{stat.description}</p>
+                            </div>
+                        ))}
+                    </div>
 
-                        {/* Revenue Breakdown */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6">Revenue Breakdown</h2>
+                    {/* Revenue Breakdown */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-5">Revenue Breakdown</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="border-l-4 border-green-500 pl-4">
                                     <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
@@ -235,122 +278,138 @@ const VendorEarningsPage = () => {
                             </div>
                         </div>
 
-                        {/* Order Statistics */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6">Order Statistics</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-purple-50 rounded-lg p-6">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="bg-purple-100 rounded-full p-3">
-                                            <ShoppingBag className="h-8 w-8 text-purple-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600">Total Orders</p>
-                                            <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-gray-600">All completed orders</p>
+                    {/* Order Statistics */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Order Statistics</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-purple-50 rounded-xl p-5 flex items-center gap-4">
+                                <div className="bg-purple-100 rounded-xl p-3 shrink-0">
+                                    <ShoppingBag className="h-6 w-6 text-purple-600" />
                                 </div>
-                                <div className="bg-orange-50 rounded-lg p-6">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="bg-orange-100 rounded-full p-3">
-                                            <DollarSign className="h-8 w-8 text-orange-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600">Revenue per Order</p>
-                                            <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-gray-600">Average value per order</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Delivered Orders */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-900">Recent Delivered Orders</h2>
-                                <span className="text-sm text-gray-500">{recentOrders.length} orders</span>
-                            </div>
-
-                            {recentOrders.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No delivered orders yet</h3>
-                                    <p className="text-gray-600">Delivered orders will appear here</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead className="bg-gray-50 border-b border-gray-200">
-                                            <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                    Order ID
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                    Customer
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                    Date
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                    Items
-                                                </th>
-                                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                    Amount
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {recentOrders.map((order) => (
-                                                <tr key={order.publicOrderId} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className="text-sm font-medium text-gray-900">
-                                                            #{order.publicOrderId?.slice(-8)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className="text-sm text-gray-900">{order.customerName || 'N/A'}</span>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <Calendar className="h-4 w-4" />
-                                                            {formatDate(order.createdAt)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className="text-sm text-gray-900">{order.itemCount || 0}</span>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-right">
-                                                        <span className="text-sm font-semibold text-gray-900">
-                                                            {formatCurrency(order.totalAmount)}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Info Banner */}
-                        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h3 className="font-semibold text-blue-900 mb-1">About Your Earnings</h3>
-                                    <p className="text-sm text-blue-800">
-                                        Revenue statistics are updated in real-time based on delivered orders.
-                                        Today's revenue includes all orders delivered today. Average order value is calculated
-                                        from your total revenue divided by total completed orders.
-                                    </p>
+                                    <p className="text-xs text-gray-500">Total Orders</p>
+                                    <p className="text-2xl font-black text-gray-900">{stats.totalOrders}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">All delivered orders</p>
+                                </div>
+                            </div>
+                            <div className="bg-orange-50 rounded-xl p-5 flex items-center gap-4">
+                                <div className="bg-orange-100 rounded-xl p-3 shrink-0">
+                                    <DollarSign className="h-6 w-6 text-orange-600" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500">Avg Order Value</p>
+                                    <p className="text-2xl font-black text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Per order average</p>
                                 </div>
                             </div>
                         </div>
-                    </>
-                )}
-            </div>
+                    </div>
+
+                    {/* Recent Delivered Orders */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">Recent Delivered Orders</h2>
+                                <p className="text-xs text-gray-400 mt-0.5">Latest {recentOrders.length} completed orders</p>
+                            </div>
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-full">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                {recentOrders.length} delivered
+                            </span>
+                        </div>
+
+                        {recentOrders.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <Package className="h-14 w-14 text-gray-200 mb-4" />
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">No delivered orders yet</h3>
+                                <p className="text-sm text-gray-500">Delivered orders will appear here</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-100">
+                                {recentOrders.map((order, idx) => {
+                                    const isPickup = order.fulfillmentType === 'PICKUP' || order.fulfillmentType === 'pickup';
+                                    return (
+                                        <div key={order.publicOrderId ?? idx} className="px-6 py-5 hover:bg-gray-50 transition-colors">
+                                            {/* Top row: order ID + badge + amount */}
+                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-mono text-sm font-bold text-gray-900">
+                                                        #{order.publicOrderId?.slice(-8) ?? '—'}
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                                                        <CheckCircle2 className="w-3 h-3" /> Delivered
+                                                    </span>
+                                                    {isPickup ? (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                                                            <Store className="w-3 h-3" /> Pickup
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                                            <Truck className="w-3 h-3" /> Delivery
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-lg font-black text-gray-900 whitespace-nowrap shrink-0">
+                                                    {formatCurrency(order.totalAmount)}
+                                                </span>
+                                            </div>
+
+                                            {/* Meta row: customer + date + address */}
+                                            <div className="flex flex-col gap-1 mb-3 text-sm">
+                                                <div className="flex flex-wrap gap-x-5 gap-y-1">
+                                                    <span className="flex items-center gap-1.5 text-gray-600">
+                                                        <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                        <span className="font-medium text-gray-800">{order.customerName || '—'}</span>
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5 text-gray-500">
+                                                        <CalendarDays className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                        {formatDate(order.orderTime ?? order.createdAt)}
+                                                    </span>
+                                                </div>
+                                                {formatAddress(order.deliveryAddress) && (
+                                                    <span className="flex items-start gap-1.5 text-gray-500 text-xs">
+                                                        <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                                                        {formatAddress(order.deliveryAddress)}
+                                                    </span>
+                                                )}
+                                                {order.specialInstructions && (
+                                                    <span className="text-xs text-gray-400 italic pl-5">
+                                                        Note: {order.specialInstructions}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Items */}
+                                            {order.itemNames?.length > 0 ? (
+                                                <div className="flex items-start gap-1.5">
+                                                    <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {order.itemNames.map((name, i) => (
+                                                            <span key={i} className="text-xs font-medium text-gray-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
+                                                                {name}
+                                                            </span>
+                                                        ))}
+                                                        {order.itemCount > order.itemNames.length && (
+                                                            <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                                +{order.itemCount - order.itemNames.length} more
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : order.itemCount > 0 ? (
+                                                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                                                    <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+                                                    {order.itemCount} item{order.itemCount !== 1 ? 's' : ''}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 };

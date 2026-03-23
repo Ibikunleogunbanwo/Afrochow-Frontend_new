@@ -7,6 +7,7 @@ import { ChevronRight, Home } from 'lucide-react';
 import StoreCard from '@/components/home/cards/storeCard';
 import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
+import { PromotionsAPI } from '@/lib/api';
 
 const DisplayRestaurant = () => {
     const router      = useRouter();
@@ -28,6 +29,7 @@ const DisplayRestaurant = () => {
     const [totalPages,    setTotalPages]     = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [hasMore,       setHasMore]       = useState(false);
+    const [promoMap,      setPromoMap]       = useState({});
     const pageSize = 20;
 
     // ── Sync inputs when URL changes (back/forward navigation) ──
@@ -93,9 +95,8 @@ const DisplayRestaurant = () => {
                     }, {});
 
                     const transformedResults = productList
-                        .filter(product => vendorMap[product.vendorPublicId])
                         .map(product => {
-                            const vendor = vendorMap[product.vendorPublicId];
+                            const vendor = vendorMap[product.vendorPublicId] || {};
                             return {
                                 storeId:          product.vendorPublicId,
                                 publicProductId:  product.publicProductId,
@@ -134,6 +135,11 @@ const DisplayRestaurant = () => {
                                 vendorFormattedAddress: product.vendorFormattedAddress,
                                 isOpenNow:              vendor.isOpenNow          ?? null,
                                 todayHoursFormatted:    vendor.todayHoursFormatted ?? null,
+                                offersPickup:           vendor.offersPickup        ?? false,
+                                isVegetarian:           product.isVegetarian       || false,
+                                isVegan:                product.isVegan            || false,
+                                isGlutenFree:           product.isGlutenFree       || false,
+                                isSpicy:                product.isSpicy            || false,
                             };
                         });
 
@@ -147,6 +153,22 @@ const DisplayRestaurant = () => {
                     setTotalPages(pageData.totalPages      || 0);
                     setTotalElements(pageData.totalElements || 0);
                     setHasMore(pageData.hasNext            || false);
+
+                    // Fetch active promos in the background — never blocks product rendering
+                    PromotionsAPI.getActivePromotions()
+                        .then(res => {
+                            const list = res?.success && Array.isArray(res.data)
+                                ? res.data
+                                : Array.isArray(res) ? res : [];
+                            setPromoMap(list.reduce((map, p) => {
+                                if (p.vendorPublicId) {
+                                    if (!map[p.vendorPublicId]) map[p.vendorPublicId] = [];
+                                    map[p.vendorPublicId].push(p);
+                                }
+                                return map;
+                            }, {}));
+                        })
+                        .catch(() => { /* promos are optional — silently skip */ });
                 } else {
                     setProducts([]);
                     setTotalPages(0);
@@ -437,7 +459,11 @@ const DisplayRestaurant = () => {
                                     className="animate-fade-up"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    <StoreCard store={product} priority={index < 3} />
+                                    <StoreCard
+                                    store={product}
+                                    priority={index < 3}
+                                    promotions={promoMap[product.vendorPublicId] || []}
+                                />
                                 </div>
                             ))}
                         </div>

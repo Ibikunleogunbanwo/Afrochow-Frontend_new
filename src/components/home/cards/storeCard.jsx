@@ -3,14 +3,28 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
-import { Heart, Star, Clock, Truck, MapPin } from 'lucide-react';
+import { Heart, Star, Clock, Truck, MapPin, Store } from 'lucide-react';
 import Image from 'next/image';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { SignInModal } from "@/components/signin/SignInModal";
 import { SignUpModal } from "@/components/register/SignUpModal";
 
-const StoreCard = ({ store, isLoading = false, priority = false }) => {
+// Returns the most prominent active promo label, or null
+const getPromoBadge = (promotions) => {
+    if (!promotions?.length) return null;
+    const active = promotions.filter(p => p.isActive !== false);
+    if (!active.length) return null;
+    const free = active.find(p => p.type === 'FREE_DELIVERY');
+    if (free) return { label: '🚚 Free Delivery', bg: 'bg-blue-500' };
+    const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
+    const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    return null;
+};
+
+const StoreCard = ({ store, isLoading = false, priority = false, promotions = [] }) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -40,6 +54,11 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
         vendorPublicId,
         isOpenNow,
         todayHoursFormatted,
+        offersPickup,
+        isVegan,
+        isVegetarian,
+        isGlutenFree,
+        isSpicy,
     } = store;
 
     const imageUrl = popularItems?.length > 0
@@ -132,6 +151,16 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                         }`}>
                             {isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
                         </div>
+
+                        {/* Promo Badge */}
+                        {(() => {
+                            const promo = getPromoBadge(promotions);
+                            return promo ? (
+                                <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-lg ${promo.bg}`}>
+                                    {promo.label}
+                                </div>
+                            ) : null;
+                        })()}
                     </div>
 
                     {/* Content Container */}
@@ -164,6 +193,32 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                             </div>
                         )}
 
+                        {/* Dietary badges */}
+                        {(isVegan || isVegetarian || isGlutenFree || isSpicy) && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {isVegan && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                        🌱 Vegan
+                                    </span>
+                                )}
+                                {isVegetarian && !isVegan && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                        🥬 Vegetarian
+                                    </span>
+                                )}
+                                {isGlutenFree && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                                        🌾 Gluten-Free
+                                    </span>
+                                )}
+                                {isSpicy && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                                        🌶️ Spicy
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
                         {/* Info Grid */}
                         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
 
@@ -192,23 +247,36 @@ const StoreCard = ({ store, isLoading = false, priority = false }) => {
                             </div>
                         </div>
 
-                        {/* Delivery Fee & Location */}
-                        {(deliveryFee !== undefined || location) && (
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
-                                {deliveryFee !== undefined && (
-                                    <span className="font-semibold text-orange-600">
-                                        {deliveryFee === 0 || deliveryFee === '0'
-                                            ? '🎉 Free Delivery'
-                                            : `$${deliveryFee} delivery fee`}
-                                    </span>
-                                )}
-                                {location && (
-                                    <span className="text-gray-400 line-clamp-1 max-w-[120px]">
-                                        {location}
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                        {/* Delivery fee + location + fulfilment — always rendered for consistent card height */}
+                        <div className="pt-2 border-t border-gray-50 space-y-2 text-xs">
+                            {(deliveryFee !== undefined || location) && (
+                                <div className="flex items-center justify-between">
+                                    {deliveryFee !== undefined && (
+                                        <span className="font-semibold text-orange-600">
+                                            {deliveryFee === 0 || deliveryFee === '0'
+                                                ? '🎉 Free Delivery'
+                                                : `CA$${deliveryFee} delivery`}
+                                        </span>
+                                    )}
+                                    {location && (
+                                        <span className="text-gray-400 line-clamp-1 max-w-[100px]">
+                                            {location}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {offersPickup ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-50 text-teal-700 font-semibold rounded-full border border-teal-100">
+                                    <Store className="w-3 h-3 shrink-0" />
+                                    Store pickup available
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 text-gray-400 font-medium rounded-full border border-gray-100">
+                                    <Truck className="w-3 h-3 shrink-0" />
+                                    Delivery only
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Hover Arrow Indicator */}
@@ -259,6 +327,7 @@ StoreCard.propTypes = {
     }),
     isLoading: PropTypes.bool,
     priority: PropTypes.bool,
+    promotions: PropTypes.array,
 };
 
 export default StoreCard;

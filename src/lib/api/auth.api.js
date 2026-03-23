@@ -78,6 +78,15 @@ export const AuthAPI = {
     }
   },
 
+  // ─── User profile ──────────────────────────────────────────────────────────
+
+  updateUserProfile: async (fields) => {
+    return fetchWithCredentials(`${API_BASE_URL}/user/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(fields),
+    });
+  },
+
   // ─── Passwords ─────────────────────────────────────────────────────────────
 
   changePassword: async (currentPassword, newPassword) => {

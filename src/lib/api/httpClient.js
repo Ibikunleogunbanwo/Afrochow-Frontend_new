@@ -29,6 +29,35 @@ const safeParseJson = async (response) => {
   }
 };
 
+// Tracks whether a token refresh is already in flight so concurrent 401s
+// all await the same single refresh call rather than each spawning one.
+let _refreshPromise = null;
+
+/**
+ * Attempt to refresh the access token once.
+ * Returns true on success, false if the refresh token itself is expired/invalid.
+ */
+const tryRefreshToken = async () => {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+
+  return _refreshPromise;
+};
+
 /**
  * Wrapper for fetch with credentials and response unwrapping.
  *
@@ -37,6 +66,8 @@ const safeParseJson = async (response) => {
  *   from network failures (status undefined).
  * - Silences console noise for 401 on /auth/me (passive auth checks).
  * - Safely handles empty or non-JSON response bodies.
+ * - On 401, automatically attempts a token refresh and retries the
+ *   original request once before throwing.
  */
 export const fetchWithCredentials = async (url, options = {}, retries = 3, retryDelayMs = 1000) => {
   let response;
@@ -66,6 +97,31 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
       console.warn(`Network error on attempt ${attempt}/${retries}, retrying in ${retryDelayMs}ms...`, url);
       await new Promise(resolve => setTimeout(resolve, retryDelayMs));
     }
+  }
+
+  // ── 401 handling: refresh token then retry once ──────────────────────────
+  // Skip refresh attempt for auth endpoints to avoid infinite loops.
+  const isAuthEndpoint = url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/logout');
+
+  if (response.status === 401 && !isAuthEndpoint) {
+    const refreshed = await tryRefreshToken();
+
+    if (refreshed) {
+      // Retry the original request with the new access-token cookie
+      try {
+        response = await fetch(url, {
+          ...options,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        });
+      } catch {
+        // Network error on retry — fall through to error handling below
+      }
+    }
+    // If refresh failed, fall through and throw the 401 error below
   }
 
   const json = await safeParseJson(response);

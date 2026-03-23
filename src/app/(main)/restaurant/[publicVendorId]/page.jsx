@@ -11,9 +11,12 @@ import {
     ShoppingBag,
     ChevronRight,
     Home,
+    Store,
+    BadgeCheck,
 } from 'lucide-react';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
+import { PromotionsAPI } from '@/lib/api';
 import StoreCard from '@/components/home/cards/storeCard';
 import ProductDetailModal from '@/components/register/vendor/ProductDetailModal';
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
@@ -50,6 +53,7 @@ const VendorProfilePage = () => {
 
     const [vendor, setVendor]               = useState(cached?.vendor || null);
     const [products, setProducts]           = useState(cached?.products || []);
+    const [vendorPromos, setVendorPromos]   = useState(cached?.vendorPromos || []);
     const [relatedVendors, setRelatedVendors] = useState(cached?.relatedVendors || []);
     const [relatedProducts, setRelatedProducts] = useState(cached?.relatedProducts || []);
 
@@ -106,6 +110,7 @@ const VendorProfilePage = () => {
                             : [],
                     isOpenNow: v.isOpenNow,
                     todayHoursFormatted: v.todayHoursFormatted,
+                    offersPickup: v.offersPickup ?? false,
                 }));
 
             const productList = productsRes?.success && productsRes?.data
@@ -141,6 +146,7 @@ const VendorProfilePage = () => {
         try {
             setLoading(true);
             const response = await SearchAPI.getVendorDetails(publicVendorId);
+
             if (response?.success && response?.data) {
                 const vendorData = response.data;
 
@@ -148,9 +154,25 @@ const VendorProfilePage = () => {
                 vendorCache[publicVendorId] = {
                     ...vendorCache[publicVendorId],
                     vendor: vendorData,
+                    vendorPromos: [],
                 };
 
                 setVendor(vendorData);
+
+                // Fetch vendor promos in the background — never blocks page render
+                PromotionsAPI.getVendorPromotions(publicVendorId)
+                    .then(res => {
+                        const promos = res?.success && Array.isArray(res.data)
+                            ? res.data
+                            : Array.isArray(res) ? res : [];
+                        vendorCache[publicVendorId] = {
+                            ...vendorCache[publicVendorId],
+                            vendorPromos: promos,
+                        };
+                        setVendorPromos(promos);
+                    })
+                    .catch(() => { /* promos are optional */ });
+
                 await fetchRelatedContent(vendorData.cuisineType, publicVendorId);
             }
         } catch (error) {
@@ -171,13 +193,43 @@ const VendorProfilePage = () => {
                 ? response.data
                 : Array.isArray(response) ? response : [];
 
-            // Write products into cache
-            vendorCache[publicVendorId] = {
-                ...vendorCache[publicVendorId],
-                products: productData,
-            };
-
+            // Render cards immediately with list data
             setProducts(productData);
+
+            // Enrich each product with full details (dietary flags etc.) in the background.
+            // The list endpoint returns a lighter DTO that omits isVegetarian/isVegan/isGlutenFree/isSpicy.
+            // Promise.allSettled ensures one failed fetch never blocks the rest.
+            if (productData.length > 0) {
+                Promise.allSettled(
+                    productData.map(p => SearchAPI.getProductById(p.publicProductId))
+                ).then(results => {
+                    const enriched = productData.map((product, i) => {
+                        const result = results[i];
+                        if (result.status === 'fulfilled' && result.value?.success && result.value?.data) {
+                            const d = result.value.data;
+                            return {
+                                ...product,
+                                isVegetarian: d.isVegetarian ?? product.isVegetarian ?? false,
+                                isVegan:      d.isVegan      ?? product.isVegan      ?? false,
+                                isGlutenFree: d.isGlutenFree ?? product.isGlutenFree ?? false,
+                                isSpicy:      d.isSpicy      ?? product.isSpicy      ?? false,
+                            };
+                        }
+                        return product;
+                    });
+
+                    vendorCache[publicVendorId] = {
+                        ...vendorCache[publicVendorId],
+                        products: enriched,
+                    };
+                    setProducts(enriched);
+                });
+            } else {
+                vendorCache[publicVendorId] = {
+                    ...vendorCache[publicVendorId],
+                    products: productData,
+                };
+            }
         } catch (error) {
             console.error('Error fetching vendor products:', error);
             setProducts([]);
@@ -217,6 +269,7 @@ const VendorProfilePage = () => {
             const c = vendorCache[publicVendorId];
             setVendor(c.vendor);
             setProducts(c.products || []);
+            setVendorPromos(c.vendorPromos || []);
             setRelatedVendors(c.relatedVendors || []);
             setRelatedProducts(c.relatedProducts || []);
             setLoading(false);
@@ -408,7 +461,7 @@ const VendorProfilePage = () => {
                                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 mb-2">
                                         {restaurantName}
                                         {isVerified && (
-                                            <span className="ml-2 text-blue-600" title="Verified">✓</span>
+                                            <BadgeCheck className="inline-block ml-2 w-6 h-6 text-blue-500 shrink-0" title="Verified vendor" />
                                         )}
                                     </h1>
                                     <p className="text-lg text-gray-600 mb-3">{cuisineType}</p>
@@ -476,12 +529,12 @@ const VendorProfilePage = () => {
                                 )}
 
                                 {offersPickup && (
-                                    <div className="flex items-start space-x-3">
-                                        <ShoppingBag className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                                    <div className="flex items-start space-x-3 p-3 bg-teal-50 rounded-xl border border-teal-100">
+                                        <Store className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Pickup</p>
-                                            <p className="text-sm text-gray-600">
-                                                Available • {preparationTime} min prep
+                                            <p className="text-sm font-semibold text-teal-900">Store pickup available</p>
+                                            <p className="text-xs text-teal-600 mt-0.5">
+                                                Skip delivery — pick up your order in {preparationTime ?? '—'} min
                                             </p>
                                         </div>
                                     </div>
@@ -522,6 +575,7 @@ const VendorProfilePage = () => {
                                 <ProductCard
                                     key={product.publicProductId}
                                     product={product}
+                                    promotions={vendorPromos}
                                     onViewReviews={() => handleViewProductReviews(product)}
                                     onCardClick={() => handleProductCardClick(product)}
                                 />
@@ -574,6 +628,7 @@ const VendorProfilePage = () => {
                                     <ProductCard
                                         key={product.publicProductId}
                                         product={product}
+                                        promotions={vendorPromos}
                                         onViewReviews={() => handleViewProductReviews(product)}
                                         onCardClick={() => handleProductCardClick(product)}
                                     />

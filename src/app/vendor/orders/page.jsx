@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { toast } from 'sonner';
 import {
     Clock, Package, CheckCircle, XCircle, Truck, Search,
     Filter, ChevronDown, Eye, DollarSign, User, MapPin,
-    Calendar, Loader2, Store, RefreshCw,
+    Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight,
 } from 'lucide-react';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -115,7 +116,7 @@ const formatDate = (d) => {
     });
 };
 const formatCurrency = (v) =>
-    `$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `CA$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatAddress = (addr) => {
     if (!addr) return null;
@@ -289,6 +290,16 @@ const VendorOrdersPage = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
+
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+                    <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        Dashboard
+                    </Link>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                    <span className="font-semibold text-gray-900">Orders</span>
+                </nav>
 
                 {/* Header */}
                 <div className="mb-8 flex items-start justify-between">

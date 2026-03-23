@@ -1,57 +1,66 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV === 'development';
+
 const nextConfig = {
   reactCompiler: true,
 
   allowedDevOrigins: ["10.0.0.149"],
 
   images: {
+    // In development, bypass Next.js image optimisation entirely so the
+    // local backend (localhost:8080) is served directly to the browser
+    // without hitting Next's private-IP security block.
+    // In production, optimisation is active and remotePatterns are enforced.
+    unoptimized: isDev,
 
     qualities: [70, 75, 80],
 
     remotePatterns: [
+      // Cloudinary
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
         pathname: '/**',
       },
-      {
-        protocol: "https",
-        hostname: "ui-avatars.com",
-      },
 
-      {
-        protocol: "https",
-        hostname: "picsum.photos",
-      },
-
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '8080',
-        pathname: '/api/images/**',
-      },
-
+      // AWS S3 (any region / any bucket)
       {
         protocol: 'https',
-        hostname: 'api.afrochow.ca',
-        pathname: '/api/images/**',
+        hostname: '**.amazonaws.com',
+        pathname: '/**',
       },
 
+      // Backend — local dev
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '8080',
-        pathname: '/api/images/**',
+        pathname: '/**',
       },
 
+      // Backend — production Railway
       {
         protocol: 'https',
         hostname: 'afrochow-backendnew-production.up.railway.app',
-        pathname: '/api/images/**',
+        pathname: '/**',
       },
+
+      // Backend — custom domain
+      {
+        protocol: 'https',
+        hostname: 'api.afrochow.ca',
+        pathname: '/**',
+      },
+
+      // Stock / placeholder image providers
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
         pathname: '/**',
       },
       {

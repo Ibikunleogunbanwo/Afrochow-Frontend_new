@@ -5,18 +5,21 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SearchAPI } from "@/lib/api/search.api";
+import { PromotionsAPI } from "@/lib/api";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import FeaturedProductCard from "@/components/home/cards/FeaturedProductCard";
 import FeaturedProductSkeleton from "@/components/home/cards/FeaturedProductSkeleton";
 
 // Module-level cache — persists across re-renders without hitting the API again
 let cachedFeaturedProducts = [];
+let cachedFeaturedPromoMap = {};
 
 const FeaturedRestaurants = () => {
     const { isAuthenticated } = useAuth();
     const { openSignIn }      = useAuthModal();
 
     const [featuredProducts, setFeaturedProducts] = useState(cachedFeaturedProducts);
+    const [promoMap, setPromoMap]                 = useState(cachedFeaturedPromoMap);
     const [loading, setLoading]                   = useState(cachedFeaturedProducts.length === 0);
     const [error, setError]                       = useState(false);
     const [retryCount, setRetry]                  = useState(0);
@@ -24,6 +27,7 @@ const FeaturedRestaurants = () => {
     useEffect(() => {
         if (cachedFeaturedProducts.length > 0) {
             setFeaturedProducts(cachedFeaturedProducts);
+            setPromoMap(cachedFeaturedPromoMap);
             setLoading(false);
             return;
         }
@@ -42,8 +46,53 @@ const FeaturedRestaurants = () => {
                             ? response
                             : [];
 
-                cachedFeaturedProducts = products;
+                // Render cards immediately with list data
                 setFeaturedProducts(products);
+
+                // Enrich with full product details (dietary flags) in the background.
+                // The featured endpoint returns a lighter DTO without isVegetarian/isVegan/isGlutenFree/isSpicy.
+                if (products.length > 0) {
+                    Promise.allSettled(
+                        products.map(p => SearchAPI.getProductById(p.publicProductId))
+                    ).then(results => {
+                        const enriched = products.map((product, i) => {
+                            const result = results[i];
+                            if (result.status === 'fulfilled' && result.value?.success && result.value?.data) {
+                                const d = result.value.data;
+                                return {
+                                    ...product,
+                                    isVegetarian: d.isVegetarian ?? product.isVegetarian ?? false,
+                                    isVegan:      d.isVegan      ?? product.isVegan      ?? false,
+                                    isGlutenFree: d.isGlutenFree ?? product.isGlutenFree ?? false,
+                                    isSpicy:      d.isSpicy      ?? product.isSpicy      ?? false,
+                                };
+                            }
+                            return product;
+                        });
+                        cachedFeaturedProducts = enriched;
+                        setFeaturedProducts(enriched);
+                    });
+                } else {
+                    cachedFeaturedProducts = products;
+                }
+
+                // Fetch active promos in the background — never blocks product rendering
+                PromotionsAPI.getActivePromotions()
+                    .then(res => {
+                        const list = res?.success && Array.isArray(res.data)
+                            ? res.data
+                            : Array.isArray(res) ? res : [];
+                        const map = list.reduce((m, p) => {
+                            if (p.vendorPublicId) {
+                                if (!m[p.vendorPublicId]) m[p.vendorPublicId] = [];
+                                m[p.vendorPublicId].push(p);
+                            }
+                            return m;
+                        }, {});
+                        cachedFeaturedPromoMap = map;
+                        setPromoMap(map);
+                    })
+                    .catch(() => { /* promos are optional */ });
             } catch (err) {
                 console.error("Error fetching featured products:", err);
                 setError(true);
@@ -58,6 +107,7 @@ const FeaturedRestaurants = () => {
 
     const handleRetry = () => {
         cachedFeaturedProducts = [];
+        cachedFeaturedPromoMap = {};
         setError(false);
         setRetry((n) => n + 1);
     };
@@ -110,6 +160,7 @@ const FeaturedRestaurants = () => {
                                     priority={index < 4}
                                     isAuthenticated={isAuthenticated}
                                     onUnauthenticated={openSignIn}
+                                    promotions={promoMap[product.vendorPublicId] || []}
                                 />
                             ))}
                         </div>

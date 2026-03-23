@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star, Flame, Clock, MapPin } from "lucide-react";
+import { Star, Flame, Clock, MapPin, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // ── Badge sub-components ──────────────────────────────────────────────────────
@@ -33,9 +33,24 @@ const OpenStatusBadge = ({ isOpen }) => (
     </div>
 );
 
+// ── Promo badge helper ────────────────────────────────────────────────────────
+
+const getPromoBadge = (promotions) => {
+    if (!promotions?.length) return null;
+    const active = promotions.filter(p => p.isActive !== false);
+    if (!active.length) return null;
+    const free = active.find(p => p.type === 'FREE_DELIVERY');
+    if (free) return { label: '🚚 Free Delivery', bg: 'bg-blue-500' };
+    const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
+    const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    return null;
+};
+
 // ── Card ──────────────────────────────────────────────────────────────────────
 
-const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauthenticated }) => {
+const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauthenticated, promotions = [] }) => {
     const router = useRouter();
 
     const handleClick = (e) => {
@@ -85,63 +100,117 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                     {product.categoryName && <CategoryBadge category={product.categoryName} />}
                     {product.totalOrders > 0 && <OrdersBadge totalOrders={product.totalOrders} />}
                     {product.isOpenNow !== null && <OpenStatusBadge isOpen={product.isOpenNow} />}
+
+                    {/* Promo Badge */}
+                    {(() => {
+                        const promo = getPromoBadge(promotions);
+                        return promo ? (
+                            <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-sm ${promo.bg}`}>
+                                {promo.label}
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
 
                 {/* Content */}
-                <div className="p-4">
-                    <h3 className="text-sm font-bold text-gray-900 truncate mb-0.5">
-                        {product.name}
-                    </h3>
+                <div className="p-4 flex flex-col">
+                    {/* Variable content — grows to fill available space */}
+                    <div className="flex-1">
+                        <h3 className="text-sm font-bold text-gray-900 truncate mb-0.5">
+                            {product.name}
+                        </h3>
 
-                    {product.restaurantName && (
-                        <p className="text-xs text-orange-500 font-medium truncate mb-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 shrink-0" /> {product.restaurantName}
-                        </p>
-                    )}
+                        {product.restaurantName && (
+                            <p className="text-xs text-orange-500 font-medium truncate mb-1 flex items-center gap-1">
+                                <MapPin className="w-3 h-3 shrink-0" /> {product.restaurantName}
+                            </p>
+                        )}
 
-                    {product.location && (
-                        <p className="text-xs text-gray-400 truncate mb-3">{product.location}</p>
-                    )}
+                        {product.location && (
+                            <p className="text-xs text-gray-400 truncate mb-3">{product.location}</p>
+                        )}
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
 
-                            {/* Rating */}
-                            <div className="flex items-center gap-1">
-                                <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-                                <span className="text-xs font-bold text-gray-800">
-                                    {product.averageRating > 0 ? product.averageRating.toFixed(1) : "0"}
-                                </span>
-                                {product.reviewCount > 0 && (
-                                    <span className="text-xs text-gray-400">
-                                        ({product.reviewCount >= 1000
-                                        ? `${(product.reviewCount / 1000).toFixed(1)}k`
-                                        : product.reviewCount})
+                                {/* Rating */}
+                                <div className="flex items-center gap-1">
+                                    <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                                    <span className="text-xs font-bold text-gray-800">
+                                        {product.averageRating > 0 ? product.averageRating.toFixed(1) : "0"}
                                     </span>
+                                    {product.reviewCount > 0 && (
+                                        <span className="text-xs text-gray-400">
+                                            ({product.reviewCount >= 1000
+                                            ? `${(product.reviewCount / 1000).toFixed(1)}k`
+                                            : product.reviewCount})
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Prep time */}
+                                {product.preparationTimeMinutes > 0 && (
+                                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                                        <Clock className="w-3 h-3" /> {product.preparationTimeMinutes} min
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Prep time */}
-                            {product.preparationTimeMinutes > 0 && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400">
-                                    <Clock className="w-3 h-3" /> {product.preparationTimeMinutes} min
-                                </div>
+                            {/* Price */}
+                            {product.price != null && (
+                                <span className="text-sm font-bold text-gray-900">
+                                    ${Number(product.price).toFixed(2)}
+                                </span>
                             )}
                         </div>
 
-                        {/* Price */}
-                        {product.price != null && (
-                            <span className="text-sm font-bold text-gray-900">
-                                ${Number(product.price).toFixed(2)}
-                            </span>
+                        {/* Dietary badges */}
+                        {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {product.isVegan && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                        🌱 Vegan
+                                    </span>
+                                )}
+                                {product.isVegetarian && !product.isVegan && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                        🥬 Vegetarian
+                                    </span>
+                                )}
+                                {product.isGlutenFree && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                                        🌾 Gluten-Free
+                                    </span>
+                                )}
+                                {product.isSpicy && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                                        🌶️ Spicy
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {product.todayHoursFormatted && (
+                            <p className="text-[11px] text-gray-400 mt-2 truncate">
+                                {product.todayHoursFormatted}
+                            </p>
                         )}
                     </div>
 
-                    {product.todayHoursFormatted && (
-                        <p className="text-[11px] text-gray-400 mt-2 truncate">
-                            {product.todayHoursFormatted}
-                        </p>
-                    )}
+                    {/* Fulfilment — always rendered so all cards share the same bottom height */}
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                        {product.offersPickup ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-teal-50 text-teal-700 text-xs font-semibold rounded-xl border border-teal-100 w-full justify-center">
+                                <Store className="w-3.5 h-3.5 shrink-0" />
+                                Store pickup available
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 text-gray-400 text-xs font-medium rounded-xl border border-gray-100 w-full justify-center">
+                                <Truck className="w-3.5 h-3.5 shrink-0" />
+                                Delivery only
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

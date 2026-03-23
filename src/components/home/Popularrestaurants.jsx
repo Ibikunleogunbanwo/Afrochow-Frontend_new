@@ -6,6 +6,7 @@ import { useLocation } from "@/contexts/LocationContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { SearchAPI } from "@/lib/api/search.api";
+import { PromotionsAPI } from "@/lib/api";
 import PopularStoreCard from "@/components/home/cards/PopularStoreCard";
 import PopularStoreSkeleton from "@/components/home/cards/PopularStoreSkeleton";
 
@@ -17,10 +18,11 @@ const SKELETON_COUNT = MAX_POPULAR;
 // `vendors` persists across city changes — verified vendor list rarely changes.
 // `scrollY` restores scroll position on remount.
 const cache = {
-    stores:  null,
-    vendors: null,
-    city:    null,
-    scrollY: 0,
+    stores:   null,
+    vendors:  null,
+    promoMap: null,
+    city:     null,
+    scrollY:  0,
 };
 
 // ── Detect location button ────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ const PopularStores = () => {
     const { city, isDetecting, locationSource, requestPreciseLocation, coordinates }  = useLocation();
 
     const [popularStores, setPopularStores] = useState(cache.stores || []);
+    const [promoMap, setPromoMap]           = useState(cache.promoMap || {});
     const [loading, setLoading]             = useState(!cache.stores);
     const [error, setError]                 = useState(false);
     const [retryCount, setRetry]            = useState(0);
@@ -67,6 +70,7 @@ const PopularStores = () => {
         const isCacheValid = cache.stores && cache.city === city;
         if (isCacheValid) {
             setPopularStores(cache.stores);
+            setPromoMap(cache.promoMap || {});
             setLoading(false);
             setError(false);
             return;
@@ -125,10 +129,9 @@ const PopularStores = () => {
                 }, {});
 
                 const transformed = productList
-                    .filter((product) => vendorMap[product.vendorPublicId])
                     .slice(0, MAX_POPULAR)
                     .map((product) => {
-                        const vendor = vendorMap[product.vendorPublicId];
+                        const vendor = vendorMap[product.vendorPublicId] || {};
                         return {
                             publicProductId:        product.publicProductId,
                             vendorPublicId:         product.vendorPublicId,
@@ -151,6 +154,11 @@ const PopularStores = () => {
                             isOpenNow:           vendor.isOpenNow           ?? null,
                             todayHoursFormatted: vendor.todayHoursFormatted ?? null,
                             deliveryFee:         vendor.deliveryFee         || 2.99,
+                            offersPickup:        vendor.offersPickup        ?? false,
+                            isVegetarian:        product.isVegetarian       || false,
+                            isVegan:             product.isVegan            || false,
+                            isGlutenFree:        product.isGlutenFree       || false,
+                            isSpicy:             product.isSpicy            || false,
                         };
                     });
 
@@ -160,9 +168,54 @@ const PopularStores = () => {
                     return a.isOpenNow ? -1 : 1;
                 });
 
-                cache.stores = sorted;
-                cache.city   = city;
+                // Render cards immediately
                 setPopularStores(sorted);
+
+                // Enrich with full product details (dietary flags) in the background.
+                if (sorted.length > 0) {
+                    Promise.allSettled(
+                        sorted.map(p => SearchAPI.getProductById(p.publicProductId))
+                    ).then(results => {
+                        const enriched = sorted.map((product, i) => {
+                            const result = results[i];
+                            if (result.status === 'fulfilled' && result.value?.success && result.value?.data) {
+                                const d = result.value.data;
+                                return {
+                                    ...product,
+                                    isVegetarian: d.isVegetarian ?? product.isVegetarian ?? false,
+                                    isVegan:      d.isVegan      ?? product.isVegan      ?? false,
+                                    isGlutenFree: d.isGlutenFree ?? product.isGlutenFree ?? false,
+                                    isSpicy:      d.isSpicy      ?? product.isSpicy      ?? false,
+                                };
+                            }
+                            return product;
+                        });
+                        cache.stores = enriched;
+                        cache.city   = city;
+                        setPopularStores(enriched);
+                    });
+                } else {
+                    cache.stores = sorted;
+                    cache.city   = city;
+                }
+
+                // Fetch active promos in the background — never blocks store rendering
+                PromotionsAPI.getActivePromotions()
+                    .then(res => {
+                        const list = res?.success && Array.isArray(res.data)
+                            ? res.data
+                            : Array.isArray(res) ? res : [];
+                        const map = list.reduce((m, p) => {
+                            if (p.vendorPublicId) {
+                                if (!m[p.vendorPublicId]) m[p.vendorPublicId] = [];
+                                m[p.vendorPublicId].push(p);
+                            }
+                            return m;
+                        }, {});
+                        cache.promoMap = map;
+                        setPromoMap(map);
+                    })
+                    .catch(() => { /* promos are optional */ });
             } catch (err) {
                 console.error("PopularStores fetch error:", {
                     status:  err.status,
@@ -181,8 +234,9 @@ const PopularStores = () => {
     }, [city, coordinates?.lat, coordinates?.lng, retryCount]);
 
     const handleRetry = () => {
-        cache.stores = null;
-        cache.city   = null;
+        cache.stores   = null;
+        cache.promoMap = null;
+        cache.city     = null;
         setError(false);
         setRetry((n) => n + 1);
     };
@@ -248,6 +302,7 @@ const PopularStores = () => {
                                 priority={index < 4}
                                 isAuthenticated={isAuthenticated}
                                 onUnauthenticated={openSignIn}
+                                promotions={promoMap[store.vendorPublicId] || []}
                             />
                         ))}
                     </div>

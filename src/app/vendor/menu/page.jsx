@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star, LayoutDashboard, ChevronRight } from 'lucide-react';
 import { getVendorProducts, createProduct, updateProduct, deleteProduct, toggleProductAvailability, uploadProductImage } from '@/lib/api/vendorProducts';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { SearchAPI } from '@/lib/api/search.api';
@@ -87,31 +88,10 @@ const VendorMenuPage = () => {
             if (productImage && typeof productImage !== 'string') {
                 try {
                     setUploadingImage(true);
-                    console.log('Uploading product image with category "products"...');
+                    // Same endpoint as vendor profile — POST /images/upload/registration
                     const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(productImage, 'products');
-                    console.log('Image upload response:', uploadResponse);
-
-                    // Check multiple possible locations for imageUrl in the response
-                    if (uploadResponse?.success) {
-                        // Try data.imageUrl first
-                        if (uploadResponse?.data?.imageUrl) {
-                            imageUrl = uploadResponse.data.imageUrl;
-                            console.log('Image URL extracted from data.imageUrl:', imageUrl);
-                        }
-                        // Try imageUrl directly in response
-                        else if (uploadResponse?.imageUrl) {
-                            imageUrl = uploadResponse.imageUrl;
-                            console.log('Image URL extracted from imageUrl:', imageUrl);
-                        }
-                        // Try data as a string (might be the URL itself)
-                        else if (typeof uploadResponse?.data === 'string' && uploadResponse.data.startsWith('http')) {
-                            imageUrl = uploadResponse.data;
-                            console.log('Image URL extracted from data string:', imageUrl);
-                        }
-                        else {
-                            console.log('Could not find imageUrl in response. Full response:', uploadResponse);
-                        }
-                    }
+                    // uploadRegistrationImage always normalises the URL to response.imageUrl
+                    imageUrl = uploadResponse.imageUrl;
                 } catch (imgError) {
                     console.error('Error uploading product image:', imgError);
                 } finally {
@@ -124,9 +104,6 @@ const VendorMenuPage = () => {
                 ...formData,
                 imageUrl
             };
-
-            console.log('Creating product with data:', productData);
-            console.log('Image URL being sent:', productData.imageUrl);
 
             const response = await createProduct(productData);
             if (response?.success) {
@@ -143,16 +120,20 @@ const VendorMenuPage = () => {
         try {
             if (!selectedProduct?.publicProductId) return;
 
-            let imageUrl = formData.imageUrl;
+            // If productImage is already a string it means handleImageUpload already
+            // uploaded it and returned the new URL via onChange — use that.
+            // If it's a File the user picked a new image without an immediate upload,
+            // so we upload it here.  Fall back to formData.imageUrl if no image at all.
+            let imageUrl = typeof productImage === 'string' && productImage
+                ? productImage
+                : formData.imageUrl;
 
-            // Upload new image if a file is selected
+            // Upload new image if a File was selected (create-style flow)
             if (productImage && typeof productImage !== 'string') {
                 try {
                     setUploadingImage(true);
                     const uploadResponse = await ImageUploadAPI.uploadRegistrationImage(productImage, 'products');
-                    if (uploadResponse?.success && uploadResponse?.data?.imageUrl) {
-                        imageUrl = uploadResponse.data.imageUrl;
-                    }
+                    imageUrl = uploadResponse.imageUrl;
                 } catch (imgError) {
                     console.error('Error uploading product image:', imgError);
                 } finally {
@@ -210,16 +191,16 @@ const VendorMenuPage = () => {
         try {
             setUploadingImage(true);
             const response = await ImageUploadAPI.uploadRegistrationImage(file, 'products');
-            if (response?.success && response.data?.imageUrl) {
+            if (response?.imageUrl) {
                 // Update the product with the new image URL
                 if (publicProductId) {
                     await updateProduct(publicProductId, {
                         ...formData,
-                        imageUrl: response.data.imageUrl
+                        imageUrl: response.imageUrl
                     });
                     await fetchProducts();
                 }
-                return response.data.imageUrl;
+                return response.imageUrl;
             }
             return null;
         } catch (error) {
@@ -293,11 +274,21 @@ const VendorMenuPage = () => {
 
     return (
         <div className="space-y-6">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Dashboard
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <span className="font-semibold text-gray-900">Products</span>
+            </nav>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900">Product Management</h1>
-                    <p className="text-gray-600 mt-1">Manage your products and menu items</p>
+                    <h1 className="text-3xl font-black text-gray-900">Products</h1>
+                    <p className="text-gray-600 mt-1">Manage your product catalogue</p>
                 </div>
                 <button
                     onClick={() => {
@@ -403,8 +394,8 @@ const VendorMenuPage = () => {
                                     </button>
                                 </div>
 
-                                {/* Actions Menu */}
-                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {/* Actions Menu — always visible on mobile, hover-reveal on desktop */}
+                                <div className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                     <div className="flex space-x-2">
                                         <button
                                             onClick={() => openEditModal(product)}
@@ -427,7 +418,7 @@ const VendorMenuPage = () => {
                                 <div className="flex items-start justify-between mb-2">
                                     <h3 className="font-bold text-gray-900 text-lg">{product.name}</h3>
                                     <span className="text-xl font-black text-orange-600">
-                                        ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                        CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
                                     </span>
                                 </div>
 

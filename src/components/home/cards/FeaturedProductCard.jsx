@@ -4,7 +4,20 @@ import Image from "next/image";
 import { Star, Flame, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUnauthenticated }) => {
+const getPromoBadge = (promotions) => {
+    if (!promotions?.length) return null;
+    const active = promotions.filter(p => p.isActive !== false);
+    if (!active.length) return null;
+    const free = active.find(p => p.type === 'FREE_DELIVERY');
+    if (free) return { label: '🚚 Free Delivery', bg: 'bg-blue-500' };
+    const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
+    const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    return null;
+};
+
+const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUnauthenticated, promotions = [] }) => {
     const {
         vendorPublicId,
         name,
@@ -16,6 +29,10 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         totalOrders,
         categoryName,
         preparationTimeMinutes,
+        isVegan,
+        isVegetarian,
+        isGlutenFree,
+        isSpicy,
     } = product;
 
     const router = useRouter();
@@ -71,6 +88,16 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             </span>
                         </div>
                     )}
+
+                    {/* Promo Badge */}
+                    {(() => {
+                        const promo = getPromoBadge(promotions);
+                        return promo ? (
+                            <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-sm ${promo.bg}`}>
+                                {promo.label}
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
 
                 {/* Content */}
@@ -83,9 +110,35 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
 
                     {/* Restaurant name */}
                     {restaurantName && (
-                        <p className="text-xs text-gray-400 truncate mb-3">
+                        <p className="text-xs text-gray-400 truncate mb-2">
                             {restaurantName}
                         </p>
+                    )}
+
+                    {/* Dietary badges */}
+                    {(isVegan || isVegetarian || isGlutenFree || isSpicy) && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                            {isVegan && (
+                                <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded-full">
+                                    🌱 Vegan
+                                </span>
+                            )}
+                            {isVegetarian && !isVegan && (
+                                <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded-full">
+                                    🥬 Vegetarian
+                                </span>
+                            )}
+                            {isGlutenFree && (
+                                <span className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded-full">
+                                    🌾 Gluten-Free
+                                </span>
+                            )}
+                            {isSpicy && (
+                                <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-medium rounded-full">
+                                    🌶️ Spicy
+                                </span>
+                            )}
+                        </div>
                     )}
 
                     {/* Rating + prep time + price */}

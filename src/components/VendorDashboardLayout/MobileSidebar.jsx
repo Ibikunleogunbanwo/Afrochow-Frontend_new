@@ -16,7 +16,7 @@ import {
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/vendor/dashboard', badge: null },
     { name: 'Profile', icon: UserCircle, href: '/vendor/profile', badge: null },
-    { name: 'Create Product Menu', icon: UtensilsCrossed, href: '/vendor/menu', badge: null },
+    { name: 'Products', icon: UtensilsCrossed, href: '/vendor/menu', badge: null },
     { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: 5 },
     { name: 'View Earnings', icon: DollarSign, href: '/vendor/earnings', badge: null },
     { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: 3 },

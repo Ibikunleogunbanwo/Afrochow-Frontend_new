@@ -53,14 +53,13 @@ const TopStores = () => {
                 setLoading(true);
                 setError(false);
 
-                // Fetch vendors and verified list in parallel.
                 // Use city-specific endpoint when a city is selected.
-                const [vendorsResponse, verifiedResponse] = await Promise.all([
-                    city
-                        ? SearchAPI.getVendorsByCity(city)
-                        : SearchAPI.getTopRatedVendors(),
-                    SearchAPI.getVerifiedVendors(),
-                ]);
+                // Both getVendorsByCity and getTopRatedVendors already return
+                // verified vendors — no need to cross-reference getVerifiedVendors().
+                const vendorsResponse = await (city
+                    ? SearchAPI.getVendorsByCity(city)
+                    : SearchAPI.getTopRatedVendors()
+                );
 
                 const vendors = Array.isArray(vendorsResponse)
                     ? vendorsResponse
@@ -68,20 +67,11 @@ const TopStores = () => {
                         ? vendorsResponse.data
                         : [];
 
-                const verified = Array.isArray(verifiedResponse)
-                    ? verifiedResponse
-                    : verifiedResponse?.success && verifiedResponse?.data
-                        ? verifiedResponse.data
-                        : [];
-
-                // Set for O(1) membership checks
-                const verifiedIds = new Set(verified.map((v) => v.publicUserId));
-
                 const transformedVendors = vendors
-                    .filter((vendor) => verifiedIds.has(vendor.publicUserId))
                     .map((vendor) => {
                         const image = getStoreImage(vendor);
                         return {
+                            storeId:             vendor.publicUserId,
                             vendorPublicId:      vendor.publicUserId,
                             name:                vendor.restaurantName,
                             restaurantName:      vendor.restaurantName,
@@ -100,6 +90,8 @@ const TopStores = () => {
                                 : [],
                             isOpenNow:           vendor.isOpenNow,
                             todayHoursFormatted: vendor.todayHoursFormatted,
+                            offersPickup:        vendor.offersPickup ?? false,
+                            offersDelivery:      vendor.offersDelivery ?? true,
                         };
                     });
 

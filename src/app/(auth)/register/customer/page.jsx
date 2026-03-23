@@ -135,7 +135,8 @@ async function uploadProfileImage(base64String) {
   }
 
   const data = await response.json();
-  return data.imageUrl; // e.g. "/images/profile-xyz.jpg"
+  // Normalise: backend may wrap under data.data.imageUrl (new) or data.imageUrl (old)
+  return data?.data?.imageUrl ?? data?.imageUrl;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

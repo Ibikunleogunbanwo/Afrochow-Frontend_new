@@ -81,10 +81,14 @@ export class ImageUploadAPI {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Image upload failed');
+      throw new Error(data?.data?.message ?? data?.message ?? 'Image upload failed');
     }
 
-    return data;
+    // Normalise wrapped response: backend may return { data: { imageUrl } } or { imageUrl }
+    const imageUrl = data?.data?.imageUrl ?? data?.imageUrl;
+    if (!imageUrl) throw new Error('Image upload succeeded but no URL was returned');
+
+    return { ...data, imageUrl };
   }
 }
 

@@ -3,7 +3,20 @@ import React from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
 
-const ProductCard = ({ product, onViewReviews, onCardClick }) => {
+const getPromoBadge = (promotions) => {
+    if (!promotions?.length) return null;
+    const active = promotions.filter(p => p.isActive !== false);
+    if (!active.length) return null;
+    const free = active.find(p => p.type === 'FREE_DELIVERY');
+    if (free) return { label: '🚚 Free Delivery', bg: 'bg-blue-500' };
+    const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
+    const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    return null;
+};
+
+const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) => {
     return (
         <div
             onClick={onCardClick}
@@ -23,6 +36,16 @@ const ProductCard = ({ product, onViewReviews, onCardClick }) => {
                         <span className="text-6xl">🍲</span>
                     </div>
                 )}
+                {/* Promo Badge — top-left */}
+                {(() => {
+                    const promo = getPromoBadge(promotions);
+                    return promo ? (
+                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-md ${promo.bg}`}>
+                            {promo.label}
+                        </div>
+                    ) : null;
+                })()}
+
                 {!product.available && (
                     <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
                         Unavailable
@@ -42,6 +65,32 @@ const ProductCard = ({ product, onViewReviews, onCardClick }) => {
                         <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded">
                             {product.categoryName}
                         </span>
+                    )}
+
+                    {/* Dietary badges */}
+                    {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                            {product.isVegan && (
+                                <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                    🌱 Vegan
+                                </span>
+                            )}
+                            {product.isVegetarian && !product.isVegan && (
+                                <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                    🥬 Vegetarian
+                                </span>
+                            )}
+                            {product.isGlutenFree && (
+                                <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                                    🌾 Gluten-Free
+                                </span>
+                            )}
+                            {product.isSpicy && (
+                                <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                                    🌶️ Spicy
+                                </span>
+                            )}
+                        </div>
                     )}
                 </div>
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, Users, Star, Calendar, ChevronDown, Clock, MapPin, Package, Eye, MoreVertical, XCircle, Loader2, Truck, Store, User } from 'lucide-react';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
@@ -8,6 +8,59 @@ import {
     PieChart, Pie, Cell, Legend,
 } from 'recharts';
 
+// ── Date filtering helpers ────────────────────────────────────────────────────
+
+const startOf = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0);          return x; };
+const endOf   = (d) => { const x = new Date(d); x.setHours(23, 59, 59, 999);     return x; };
+
+const getDateBounds = (range) => {
+    const now = new Date();
+    switch (range) {
+        case 'today':      return { start: startOf(now), end: endOf(now) };
+        case 'yesterday': {
+            const y = new Date(now); y.setDate(y.getDate() - 1);
+            return { start: startOf(y), end: endOf(y) };
+        }
+        case 'last7days': {
+            const s = new Date(now); s.setDate(s.getDate() - 6);
+            return { start: startOf(s), end: endOf(now) };
+        }
+        case 'last30days': {
+            const s = new Date(now); s.setDate(s.getDate() - 29);
+            return { start: startOf(s), end: endOf(now) };
+        }
+        case 'thisMonth':
+            return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: endOf(now) };
+        case 'lastMonth': {
+            const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const e = new Date(now.getFullYear(), now.getMonth(), 0);
+            return { start: s, end: endOf(e) };
+        }
+        default: return null;
+    }
+};
+
+/** Client-side filter — uses orderTime (falls back to createdAt) on each order. */
+const filterOrdersByDateRange = (orders, range, customStart, customEnd) => {
+    if (range === 'custom') {
+        if (!customStart || !customEnd) return orders;
+        const s = new Date(customStart + 'T00:00:00');
+        const e = new Date(customEnd   + 'T23:59:59');
+        return orders.filter(o => {
+            const d = new Date(o.orderTime ?? o.createdAt ?? 0);
+            return d >= s && d <= e;
+        });
+    }
+    const bounds = getDateBounds(range);
+    if (!bounds) return orders;
+    return orders.filter(o => {
+        const d = new Date(o.orderTime ?? o.createdAt ?? 0);
+        return d >= bounds.start && d <= bounds.end;
+    });
+};
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 const DashboardContent = () => {
     // Date filter state
     const [dateRange, setDateRange] = useState('today');
@@ -15,8 +68,8 @@ const DashboardContent = () => {
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
 
-    // Orders state
-    const [recentOrders, setRecentOrders] = useState([]);
+    // Orders state — full list from API; filtered client-side by dateRange
+    const [allOrders, setAllOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Modals
@@ -27,13 +80,9 @@ const DashboardContent = () => {
     const [allModalPage, setAllModalPage]       = useState(1);
     const ALL_MODAL_PAGE_SIZE = 10;
 
+    // Only holds values we can't derive from the order list (rating, chart trend data)
     const [stats, setStats] = useState({
-        totalOrders: 0,
-        revenue: 0,
-        avgOrderValue: 0,
         rating: null,
-        // trend data
-        todayOrders: 0,
         todayRevenue: 0,
         last7DaysRevenue: 0,
         last30DaysRevenue: 0,
@@ -50,19 +99,20 @@ const DashboardContent = () => {
         { value: 'custom', label: 'Custom Range' },
     ];
 
-    useEffect(() => {
-        fetchOrders();
-        fetchStats();
-    }, [dateRange]);
+    // Fetch all orders once on mount; filtering is done client-side.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { fetchOrders(); fetchStats(); }, []);
+
+    // Reset pagination whenever the date filter changes.
+    useEffect(() => { setAllModalPage(1); }, [dateRange]);
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const response = dateRange === 'today'
-                ? await VendorOrdersAPI.getTodayOrders()
-                : await VendorOrdersAPI.getVendorOrders();
+            // Always fetch the full order list; date filtering is done client-side.
+            const response = await VendorOrdersAPI.getVendorOrders();
             if (response?.success) {
-                setRecentOrders(response.data || []);
+                setAllOrders(response.data || []);
             }
         } catch (error) {
             // Error fetching orders
@@ -73,30 +123,20 @@ const DashboardContent = () => {
 
     const fetchStats = async () => {
         try {
-            const [revenueRes, analyticsRes, allOrdersRes] = await Promise.allSettled([
+            const [revenueRes, analyticsRes] = await Promise.allSettled([
                 VendorOrdersAPI.getOrdersRevenue(),
                 VendorAnalyticsAPI.getVendorAnalytics(),
-                VendorOrdersAPI.getVendorOrders(), // fallback for totals
             ]);
-
             const revenue   = revenueRes.status   === 'fulfilled' ? revenueRes.value?.data   : null;
             const analytics = analyticsRes.status === 'fulfilled' ? analyticsRes.value?.data : null;
-            const allOrders = allOrdersRes.status === 'fulfilled' ? (allOrdersRes.value?.data ?? []) : [];
 
-            // Compute from order list as fallback when stats endpoint is unavailable
-            const delivered       = allOrders.filter(o => o.status === 'DELIVERED');
-            const computedRevenue = delivered.reduce((s, o) => s + (o.totalAmount ?? 0), 0);
-            const computedAvg     = delivered.length > 0 ? computedRevenue / delivered.length : 0;
-
+            // Only store values we can't derive from the order list
             setStats(prev => ({
                 ...prev,
-                totalOrders:       revenue?.totalOrders       ?? allOrders.length,
-                revenue:           revenue?.totalRevenue       ?? computedRevenue,
-                avgOrderValue:     revenue?.averageOrderValue  ?? computedAvg,
                 rating:            analytics?.averageRating    ?? prev.rating,
-                todayOrders:       analytics?.todayOrders      ?? prev.todayOrders,
-                last7DaysRevenue:  analytics?.last7DaysRevenue ?? prev.last7DaysRevenue,
-                last30DaysRevenue: analytics?.last30DaysRevenue ?? prev.last30DaysRevenue,
+                todayRevenue:      analytics?.todayRevenue     ?? revenue?.todayRevenue     ?? prev.todayRevenue,
+                last7DaysRevenue:  analytics?.last7DaysRevenue ?? revenue?.last7DaysRevenue ?? prev.last7DaysRevenue,
+                last30DaysRevenue: analytics?.last30DaysRevenue ?? revenue?.last30DaysRevenue ?? prev.last30DaysRevenue,
             }));
         } catch (error) {
             // silently fail
@@ -118,7 +158,7 @@ const DashboardContent = () => {
     };
 
     const formatCurrency = (v) =>
-        `$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        `CA$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const formatDate = (d) => {
         if (!d) return '—';
@@ -140,8 +180,17 @@ const DashboardContent = () => {
         return (((last7 - prev7) / prev7) * 100).toFixed(1);
     };
 
+    // ── Client-side filtered data ─────────────────────────────────────────────
+    const filteredOrders = useMemo(
+        () => filterOrdersByDateRange(allOrders, dateRange, customStartDate, customEndDate),
+        [allOrders, dateRange, customStartDate, customEndDate]
+    );
+
+    const filteredDelivered = filteredOrders.filter(o => o.status === 'DELIVERED');
+    const filteredRevenue   = filteredDelivered.reduce((s, o) => s + (o.totalAmount ?? 0), 0);
+    const filteredAvg       = filteredDelivered.length > 0 ? filteredRevenue / filteredDelivered.length : 0;
+
     const revenueTrend    = computeTrend(stats.last7DaysRevenue, stats.last30DaysRevenue);
-    const todayOrdersDiff = stats.todayOrders;
 
     const handleOrderAction = async (orderId, action) => {
         try {
@@ -189,15 +238,15 @@ const DashboardContent = () => {
     const statsDisplay = [
         {
             name: "Total Orders",
-            value: stats.totalOrders.toString(),
-            change: todayOrdersDiff > 0 ? `+${todayOrdersDiff} today` : "—",
-            trend: todayOrdersDiff > 0 ? "up" : "neutral",
+            value: filteredOrders.length.toString(),
+            change: "—",
+            trend: "neutral",
             icon: ShoppingBag,
             color: "orange"
         },
         {
             name: "Total Revenue",
-            value: `$${parseFloat(stats.revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            value: `CA$${filteredRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             change: revenueTrend !== null
                 ? `${revenueTrend > 0 ? '+' : ''}${revenueTrend}% vs prev 7d`
                 : "—",
@@ -207,7 +256,7 @@ const DashboardContent = () => {
         },
         {
             name: "Avg Order Value",
-            value: `$${parseFloat(stats.avgOrderValue || 0).toFixed(2)}`,
+            value: `CA$${filteredAvg.toFixed(2)}`,
             change: "—",
             trend: "neutral",
             icon: Users,
@@ -436,14 +485,14 @@ const DashboardContent = () => {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                                 <XAxis dataKey="period" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                                 <YAxis
-                                    tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`}
+                                    tickFormatter={(v) => v >= 1000 ? `CA$${(v / 1000).toFixed(1)}k` : `CA$${v}`}
                                     tick={{ fontSize: 11, fill: '#6b7280' }}
                                     axisLine={false}
                                     tickLine={false}
                                     width={55}
                                 />
                                 <Tooltip
-                                    formatter={(value) => [`$${parseFloat(value).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`, 'Revenue']}
+                                    formatter={(value) => [`CA$${parseFloat(value).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`, 'Revenue']}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     cursor={{ fill: '#fff7ed' }}
                                 />
@@ -468,9 +517,9 @@ const DashboardContent = () => {
                         <ShoppingBag className="w-5 h-5 text-blue-400" />
                     </div>
                     {(() => {
-                        const delivered  = recentOrders.filter(o => o.status === 'DELIVERED').length;
-                        const cancelled  = recentOrders.filter(o => o.status === 'CANCELLED').length;
-                        const active     = recentOrders.filter(o => ['PENDING','CONFIRMED','PREPARING','READY_FOR_PICKUP','OUT_FOR_DELIVERY'].includes(o.status)).length;
+                        const delivered  = filteredOrders.filter(o => o.status === 'DELIVERED').length;
+                        const cancelled  = filteredOrders.filter(o => o.status === 'CANCELLED').length;
+                        const active     = filteredOrders.filter(o => ['PENDING','CONFIRMED','PREPARING','READY_FOR_PICKUP','OUT_FOR_DELIVERY'].includes(o.status)).length;
                         const hasData    = delivered + cancelled + active > 0;
                         const pieData    = [
                             { name: 'Delivered', value: delivered, color: '#22c55e' },
@@ -542,14 +591,14 @@ const DashboardContent = () => {
                             <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
                         </div>
                     )}
-                    {!loading && recentOrders.length === 0 && (
+                    {!loading && filteredOrders.length === 0 && (
                         <div className="text-center py-12 text-gray-400">
                             <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-40" />
                             <p className="font-semibold">No orders yet</p>
                             <p className="text-sm mt-1">Orders will appear here once customers place them.</p>
                         </div>
                     )}
-                    {!loading && recentOrders.map((order) => {
+                    {!loading && filteredOrders.map((order) => {
                         const statusConfig = getStatusConfig(order.status);
                         const orderTime = order.orderTime
                             ? new Date(order.orderTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -610,17 +659,21 @@ const DashboardContent = () => {
                                 <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
                                     <div className="flex items-center text-sm font-semibold text-gray-700 mb-3">
                                         <Package className="w-4 h-4 mr-2 text-gray-400 shrink-0" />
-                                        <span>{(order.orderLines ?? []).length} {(order.orderLines ?? []).length === 1 ? 'Item' : 'Items'}</span>
+                                        <span>
+                                            {order.itemCount ?? 0} {(order.itemCount ?? 0) === 1 ? 'Item' : 'Items'}
+                                        </span>
                                     </div>
-                                    <div className="space-y-2">
-                                        {(order.orderLines ?? []).map((item, idx) => (
-                                            <div key={idx} className="flex items-center justify-between text-xs sm:text-sm">
-                                                <span className="text-gray-700 truncate">
-                                                    <span className="font-semibold text-gray-900">{item.quantity}x</span> {item.productNameAtPurchase}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {order.itemNames?.length > 0 ? (
+                                        <div className="space-y-1.5">
+                                            {order.itemNames.map((name, idx) => (
+                                                <div key={idx} className="text-xs sm:text-sm text-gray-700 truncate">
+                                                    • {name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-gray-400 italic">Tap View to see order items</p>
+                                    )}
                                 </div>
 
                                 {/* Order Footer */}
@@ -639,7 +692,7 @@ const DashboardContent = () => {
                                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0">
                                         <div className="text-left sm:text-right">
                                             <div className="text-xl sm:text-2xl font-black text-gray-900">
-                                                ${parseFloat(order.totalAmount ?? 0).toFixed(2)}
+                                                CA${parseFloat(order.totalAmount ?? 0).toFixed(2)}
                                             </div>
                                             <div className="text-xs text-gray-500">
                                                 {order.estimatedDeliveryTime ?? ''}
@@ -665,13 +718,13 @@ const DashboardContent = () => {
 
         {/* ── View All Orders Modal ──────────────────────────────────────── */}
         {showAllModal && (() => {
-            const totalPages  = Math.max(1, Math.ceil(recentOrders.length / ALL_MODAL_PAGE_SIZE));
-            const pageOrders  = recentOrders.slice(
+            const totalPages  = Math.max(1, Math.ceil(filteredOrders.length / ALL_MODAL_PAGE_SIZE));
+            const pageOrders  = filteredOrders.slice(
                 (allModalPage - 1) * ALL_MODAL_PAGE_SIZE,
                 allModalPage * ALL_MODAL_PAGE_SIZE
             );
-            const start = recentOrders.length === 0 ? 0 : (allModalPage - 1) * ALL_MODAL_PAGE_SIZE + 1;
-            const end   = Math.min(allModalPage * ALL_MODAL_PAGE_SIZE, recentOrders.length);
+            const start = filteredOrders.length === 0 ? 0 : (allModalPage - 1) * ALL_MODAL_PAGE_SIZE + 1;
+            const end   = Math.min(allModalPage * ALL_MODAL_PAGE_SIZE, filteredOrders.length);
 
             return (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -682,9 +735,9 @@ const DashboardContent = () => {
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900">All Orders</h2>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    {recentOrders.length === 0
+                                    {filteredOrders.length === 0
                                         ? 'No orders'
-                                        : `Showing ${start}–${end} of ${recentOrders.length}`}
+                                        : `Showing ${start}–${end} of ${filteredOrders.length}`}
                                 </p>
                             </div>
                             <button onClick={() => setShowAllModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -694,7 +747,7 @@ const DashboardContent = () => {
 
                         {/* Order list */}
                         <div className="overflow-y-auto flex-1 p-4 space-y-3">
-                            {recentOrders.length === 0 ? (
+                            {filteredOrders.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400">
                                     <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-40" />
                                     <p className="font-semibold">No orders yet</p>
@@ -717,7 +770,7 @@ const DashboardContent = () => {
                                             <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
                                                 {cfg.label}
                                             </span>
-                                            <span className="font-bold text-gray-900">${parseFloat(order.totalAmount ?? 0).toFixed(2)}</span>
+                                            <span className="font-bold text-gray-900">CA${parseFloat(order.totalAmount ?? 0).toFixed(2)}</span>
                                             <button
                                                 onClick={() => { setShowAllModal(false); viewOrderDetail(order.publicOrderId); }}
                                                 className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"

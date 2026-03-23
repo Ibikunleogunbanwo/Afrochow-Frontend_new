@@ -49,10 +49,18 @@ export class ImageUploadAPI {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Image upload failed');
+      throw new Error(
+        data?.data?.message ?? data?.message ?? 'Image upload failed'
+      );
     }
 
-    return data;
+    // Normalise: backend may wrap the URL under data.data.imageUrl (new format)
+    // or return it flat as data.imageUrl (old format). Always surface it at the
+    // top level so every caller can simply do `response.imageUrl`.
+    const imageUrl = data?.data?.imageUrl ?? data?.imageUrl;
+    if (!imageUrl) throw new Error('Image upload succeeded but no URL was returned');
+
+    return { ...data, imageUrl };
   }
 
   /**
@@ -61,7 +69,7 @@ export class ImageUploadAPI {
    * @param {string} category - Image category (e.g. 'CustomerProfileImage')
    * @param {string} userId - The user's public ID
    * @param {AbortSignal} [signal] - Optional abort signal for cancellation
-   * @returns {Promise<Object>} - Response JSON with imageUrl
+   * @returns {Promise<Object>} - Response JSON with imageUrl always at the top level
    *
    * @example
    * const response = await ImageUploadAPI.uploadProfileImage(file, 'CustomerProfileImage', userId);
@@ -86,9 +94,14 @@ export class ImageUploadAPI {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Profile image upload failed');
+      throw new Error(
+        data?.data?.message ?? data?.message ?? 'Profile image upload failed'
+      );
     }
 
-    return data;
+    const imageUrl = data?.data?.imageUrl ?? data?.imageUrl;
+    if (!imageUrl) throw new Error('Profile image upload succeeded but no URL was returned');
+
+    return { ...data, imageUrl };
   }
 }

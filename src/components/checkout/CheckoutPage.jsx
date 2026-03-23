@@ -7,6 +7,7 @@ import { useStripePayment } from "@/hooks/useStripePayment";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { SearchAPI } from "@/lib/api/search.api";
 import { OrderAPI } from "@/lib/api/order/order.api";
+import { PromotionsAPI } from "@/lib/api/promotions.api";
 import StripeCardFields from "@/components/home/cards/StripeCardFields";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
     MapPin, ChevronRight, Plus, Truck, FileText,
-    ShoppingBag, Check, ChevronDown, Clock, AlertCircle,
+    ShoppingBag, Check, ChevronDown, Clock, AlertCircle, Tag, X,
 } from "lucide-react";
 
 const PROVINCIAL_TAX = {
@@ -69,6 +70,13 @@ export default function CheckoutPage() {
         postalCode: "", country: "Canada", defaultAddress: false,
     });
     const [deliveryNote, setDeliveryNote] = useState("");
+
+    // Promo code
+    const [promoInput,   setPromoInput]   = useState("");
+    const [promoCode,    setPromoCode]    = useState("");   // applied code
+    const [promoPreview, setPromoPreview] = useState(null); // server response
+    const [promoLoading, setPromoLoading] = useState(false);
+    const [promoError,   setPromoError]   = useState("");
 
     // Stripe card fields state
     const [cardholderName, setCardholderName]   = useState("");
@@ -131,8 +139,10 @@ export default function CheckoutPage() {
 
     const vendorDeliveryFee = vendorData?.deliveryFee ?? 0;
     const deliveryFee       = fulfillment === "delivery" ? vendorDeliveryFee : 0;
+    const discountAmount    = promoPreview?.discountAmount ?? 0;
+    // Tax mirrors backend: calculated on full subtotal+delivery, discount applied after
     const taxAmount         = (cartTotal + deliveryFee) * taxInfo.rate;
-    const total             = cartTotal + deliveryFee + taxAmount;
+    const total             = Math.max(0, cartTotal + deliveryFee + taxAmount - discountAmount);
 
     const belowMinimum = fulfillment === "delivery" &&
         vendorData?.minimumOrderAmount > 0 &&
@@ -188,6 +198,41 @@ export default function CheckoutPage() {
     const handleNewAddressChange = (e) => {
         const { name, value, type, checked } = e.target;
         setNewAddress(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    };
+
+    const handleApplyPromo = async () => {
+        const code = promoInput.trim().toUpperCase();
+        if (!code) return;
+        setPromoLoading(true);
+        setPromoError("");
+        try {
+            const res = await PromotionsAPI.previewPromotion({
+                promoCode:       code,
+                vendorPublicId:  vendorId,
+                subtotal:        cartTotal,
+            });
+            if (res?.success && res.data) {
+                setPromoPreview(res.data);
+                setPromoCode(code);
+            } else {
+                setPromoError("Invalid or expired promo code.");
+                setPromoPreview(null);
+                setPromoCode("");
+            }
+        } catch (err) {
+            setPromoError(err.message || "Invalid or expired promo code.");
+            setPromoPreview(null);
+            setPromoCode("");
+        } finally {
+            setPromoLoading(false);
+        }
+    };
+
+    const handleRemovePromo = () => {
+        setPromoInput("");
+        setPromoCode("");
+        setPromoPreview(null);
+        setPromoError("");
     };
 
     const handlePlaceOrder = async () => {
@@ -246,6 +291,7 @@ export default function CheckoutPage() {
                     productPublicId: item.publicProductId,  // backend field: productPublicId
                     quantity:        item.quantity,
                 })),
+                ...(promoCode && { promoCode }),             // applied promo code (if any)
                 ...(fulfillment === "delivery" && {
                     deliveryAddressPublicId: deliveryAddressId, // backend field: deliveryAddressPublicId
                 }),
@@ -573,6 +619,66 @@ export default function CheckoutPage() {
                             </div>
                         </div>
 
+                        {/* Promo code */}
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
+                                    <Tag className="w-3.5 h-3.5 text-orange-500" />
+                                </div>
+                                <h2 className="text-sm font-semibold text-gray-900">Promo code</h2>
+                                <span className="text-xs text-gray-400">Optional</span>
+                            </div>
+                            <div className="p-4">
+                                {promoPreview ? (
+                                    <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="w-4 h-4 text-green-600 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-green-800">{promoCode}</p>
+                                                <p className="text-xs text-green-600">
+                                                    {promoPreview.title} · −CA${promoPreview.discountAmount?.toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleRemovePromo}
+                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors rounded"
+                                            aria-label="Remove promo code"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={promoInput}
+                                            onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                                            onKeyDown={e => e.key === "Enter" && handleApplyPromo()}
+                                            placeholder="e.g. SAVE10"
+                                            disabled={promoLoading}
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 uppercase placeholder:normal-case tracking-widest disabled:opacity-50"
+                                        />
+                                        <button
+                                            onClick={handleApplyPromo}
+                                            disabled={!promoInput.trim() || promoLoading}
+                                            className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            {promoLoading ? (
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            ) : "Apply"}
+                                        </button>
+                                    </div>
+                                )}
+                                {promoError && (
+                                    <p className="mt-2 text-xs text-red-500 flex items-center gap-1.5">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        {promoError}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Payment — Stripe hosted fields */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -654,7 +760,7 @@ export default function CheckoutPage() {
                             <div className="px-5 py-4 border-t border-gray-100 space-y-2.5">
                                 <div className="flex justify-between text-sm text-gray-600">
                                     <span>Subtotal</span>
-                                    <span>${cartTotal.toFixed(2)}</span>
+                                    <span>CA${cartTotal.toFixed(2)}</span>
                                 </div>
 
                                 {fulfillment === "delivery" && (
@@ -666,7 +772,7 @@ export default function CheckoutPage() {
                                         <span>
                                             {vendorDeliveryFee === 0
                                                 ? <span className="text-gray-500">Free</span>
-                                                : `$${vendorDeliveryFee.toFixed(2)}`
+                                                : `CA$${vendorDeliveryFee.toFixed(2)}`
                                             }
                                         </span>
                                     </div>
@@ -680,12 +786,22 @@ export default function CheckoutPage() {
                                             {fulfillment === "pickup" && " · vendor"})
                                         </span>
                                     </span>
-                                    <span>${taxAmount.toFixed(2)}</span>
+                                    <span>CA${taxAmount.toFixed(2)}</span>
                                 </div>
+
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-sm text-green-600 font-medium">
+                                        <span className="flex items-center gap-1.5">
+                                            <Tag className="w-3.5 h-3.5" />
+                                            {promoCode}
+                                        </span>
+                                        <span>−CA${discountAmount.toFixed(2)}</span>
+                                    </div>
+                                )}
 
                                 <div className="pt-2 border-t border-gray-100 flex justify-between">
                                     <span className="text-sm font-semibold text-gray-900">Total</span>
-                                    <span className="text-sm font-bold text-gray-900">${total.toFixed(2)} CAD</span>
+                                    <span className="text-sm font-bold text-gray-900">CA${total.toFixed(2)}</span>
                                 </div>
 
                                 {fulfillment === "delivery" && vendorData?.minimumOrderAmount > 0 && (
@@ -732,7 +848,7 @@ export default function CheckoutPage() {
                                             Placing order...
                                         </>
                                     ) : (
-                                        `Place order · $${total.toFixed(2)}`
+                                        `Place order · CA$${total.toFixed(2)}`
                                     )}
                                 </button>
                                 <p className="text-xs text-gray-400 text-center mt-3">
