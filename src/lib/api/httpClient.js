@@ -24,7 +24,6 @@ const safeParseJson = async (response) => {
   try {
     return JSON.parse(text);
   } catch {
-    // Server returned non-JSON (HTML error page, plain text, etc.)
     return { message: text };
   }
 };
@@ -67,7 +66,8 @@ const tryRefreshToken = async () => {
  * - Silences console noise for 401 on /auth/me (passive auth checks).
  * - Safely handles empty or non-JSON response bodies.
  * - On 401, automatically attempts a token refresh and retries the
- *   original request once before throwing.
+ *   original request once before throwing — EXCEPT for /auth/me which
+ *   is a passive check and should never trigger a refresh attempt.
  */
 export const fetchWithCredentials = async (url, options = {}, retries = 3, retryDelayMs = 1000) => {
   let response;
@@ -82,7 +82,7 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
           ...options.headers,
         },
       });
-      break; // success — exit retry loop
+      break;
     } catch (networkError) {
       const isLastAttempt = attempt === retries;
 
@@ -93,21 +93,27 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
         throw error;
       }
 
-      // Backend not ready yet — wait and retry
       console.warn(`Network error on attempt ${attempt}/${retries}, retrying in ${retryDelayMs}ms...`, url);
       await new Promise(resolve => setTimeout(resolve, retryDelayMs));
     }
   }
 
-  // ── 401 handling: refresh token then retry once ──────────────────────────
-  // Skip refresh attempt for auth endpoints to avoid infinite loops.
-  const isAuthEndpoint = url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/logout');
+  // ── 401 handling ─────────────────────────────────────────────────────────
+  // Skip refresh for:
+  //   - /auth/me      → passive check, 401 means no session, just clear auth
+  //   - /auth/refresh → already refreshing, avoid infinite loop
+  //   - /auth/login   → credentials wrong, refresh won't help
+  //   - /auth/logout  → session already gone
+  const skipRefresh =
+      url.includes('/auth/me') ||
+      url.includes('/auth/refresh') ||
+      url.includes('/auth/login') ||
+      url.includes('/auth/logout');
 
-  if (response.status === 401 && !isAuthEndpoint) {
+  if (response.status === 401 && !skipRefresh) {
     const refreshed = await tryRefreshToken();
 
     if (refreshed) {
-      // Retry the original request with the new access-token cookie
       try {
         response = await fetch(url, {
           ...options,
@@ -129,6 +135,7 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
   if (!response.ok || json.success === false) {
     const errorMessage = extractErrorMessage(json, `Request failed (${response.status})`);
 
+    // Silence 401 on /auth/me — it's an expected outcome of a passive check
     const isSilent = response.status === 401 && url.includes('/auth/me');
 
     if (!isSilent) {
