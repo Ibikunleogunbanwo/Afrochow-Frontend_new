@@ -1,226 +1,223 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    TrendingUp,
-    TrendingDown,
-    ShoppingBag,
-    DollarSign,
-    Users,
-    Calendar,
-    ChevronDown,
-    Clock,
-    Store,
-    Eye,
-    CheckCircle,
-    XCircle,
-    AlertCircle,
-    Loader2,
+    ShoppingBag, DollarSign, Users, Calendar,
+    ChevronDown, Clock, Store, Eye, CheckCircle,
+    XCircle, AlertCircle, Loader2, TrendingUp, ShieldOff,
 } from 'lucide-react';
-import { AdminVendorsAPI } from '@/lib/api/admin.api';
-import { AdminUsersAPI } from '@/lib/api/admin.api';
+import {
+    AreaChart, Area, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
+import { AdminVendorsAPI, AdminAnalyticsAPI, AdminUsersAPI } from '@/lib/api/admin.api';
 
+/* ─── helpers ──────────────────────────────────────────────────────────── */
+const fmt$ = (n) =>
+    n != null ? `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '—';
+const fmtN = (n) =>
+    n != null ? Number(n).toLocaleString() : '—';
+const is403 = (msg = '') =>
+    msg.toLowerCase().includes('permission') ||
+    msg.toLowerCase().includes('access') ||
+    msg.toLowerCase().includes('forbidden') ||
+    msg.toLowerCase().includes('403');
+
+const DATE_OPTIONS = [
+    { value: 'today',     label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'last7days', label: 'Last 7 Days' },
+    { value: 'last30days',label: 'Last 30 Days' },
+    { value: 'thisMonth', label: 'This Month' },
+    { value: 'lastMonth', label: 'Last Month' },
+    { value: 'custom',    label: 'Custom Range' },
+];
+
+/* ─── custom tooltip ────────────────────────────────────────────────────── */
+const ChartTooltip = ({ active, payload, label, isCurrency }) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2 text-xs">
+            <p className="font-semibold text-gray-700 mb-1">{label}</p>
+            {payload.map((p) => (
+                <p key={p.dataKey} style={{ color: p.color }}>
+                    {p.name}: {isCurrency ? fmt$(p.value) : fmtN(p.value)}
+                </p>
+            ))}
+        </div>
+    );
+};
+
+/* ─── main component ────────────────────────────────────────────────────── */
 const AdminDashboardContent = () => {
-    const [dateRange, setDateRange] = useState('today');
+    const [dateRange, setDateRange]         = useState('last30days');
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [customStartDate, setCustomStartDate] = useState('');
-    const [customEndDate, setCustomEndDate] = useState('');
+    const [customStart, setCustomStart]     = useState('');
+    const [customEnd, setCustomEnd]         = useState('');
 
-    // Real data state
-    const [userStats, setUserStats] = useState(null);
-    const [vendors, setVendors] = useState([]);
+    const [platform, setPlatform]           = useState(null);
+    const [trends, setTrends]               = useState([]);
+    const [userStats, setUserStats]         = useState(null);
     const [pendingVendors, setPendingVendors] = useState([]);
-    const [loadingStats, setLoadingStats] = useState(true);
-    const [loadingVendors, setLoadingVendors] = useState(true);
-    const [actionLoading, setActionLoading] = useState({});
 
-    const dateRangeOptions = [
-        { value: 'today', label: 'Today' },
-        { value: 'yesterday', label: 'Yesterday' },
-        { value: 'last7days', label: 'Last 7 Days' },
-        { value: 'last30days', label: 'Last 30 Days' },
-        { value: 'thisMonth', label: 'This Month' },
-        { value: 'lastMonth', label: 'Last Month' },
-        { value: 'custom', label: 'Custom Range' },
-    ];
+    const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+    const [loadingVendors, setLoadingVendors]      = useState(true);
+    const [analyticsError, setAnalyticsError]      = useState(null);
+    const [vendorError, setVendorError]            = useState(null);
+    const [actionLoading, setActionLoading]        = useState({});
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            setLoadingStats(true);
-            try {
-                const res = await AdminUsersAPI.getStats();
-                setUserStats(res?.data ?? res);
-            } catch {
-                setUserStats(null);
-            } finally {
-                setLoadingStats(false);
-            }
-        };
-
-        const fetchVendors = async () => {
-            setLoadingVendors(true);
-            try {
-                const [allRes, pendingRes] = await Promise.all([
-                    AdminVendorsAPI.getAll(),
-                    AdminVendorsAPI.getPending(),
-                ]);
-                const allData = allRes?.data ?? allRes ?? [];
-                const pendingData = pendingRes?.data ?? pendingRes ?? [];
-                setVendors(Array.isArray(allData) ? allData : []);
-                setPendingVendors(Array.isArray(pendingData) ? pendingData : []);
-            } catch {
-                setVendors([]);
-                setPendingVendors([]);
-            } finally {
-                setLoadingVendors(false);
-            }
-        };
-
-        fetchStats();
-        fetchVendors();
+    /* fetch analytics + users in parallel */
+    const fetchAnalytics = useCallback(async () => {
+        setLoadingAnalytics(true);
+        setAnalyticsError(null);
+        try {
+            const [platformRes, trendsRes, statsRes] = await Promise.all([
+                AdminAnalyticsAPI.getPlatform(),
+                AdminAnalyticsAPI.getTrends(),
+                AdminUsersAPI.getStats(),
+            ]);
+            setPlatform(platformRes?.data ?? platformRes ?? null);
+            const rawTrends = trendsRes?.data ?? trendsRes ?? [];
+            setTrends(Array.isArray(rawTrends) ? rawTrends : []);
+            setUserStats(statsRes?.data ?? statsRes ?? null);
+        } catch (e) {
+            setAnalyticsError(e.message || 'Failed to load analytics');
+        } finally {
+            setLoadingAnalytics(false);
+        }
     }, []);
 
-    const activeVendors = vendors.filter(v => v.active || v.isActive);
+    /* fetch pending vendors separately so a 403 here doesn't kill the whole page */
+    const fetchVendors = useCallback(async () => {
+        setLoadingVendors(true);
+        setVendorError(null);
+        try {
+            const res = await AdminVendorsAPI.getPending();
+            const data = res?.data ?? res ?? [];
+            setPendingVendors(Array.isArray(data) ? data : []);
+        } catch (e) {
+            setVendorError(e.message || 'Failed to load vendors');
+        } finally {
+            setLoadingVendors(false);
+        }
+    }, []);
 
+    useEffect(() => {
+        fetchAnalytics();
+        fetchVendors();
+    }, [fetchAnalytics, fetchVendors]);
+
+    /* date filter label */
+    const dateLabel = (() => {
+        if (dateRange === 'custom' && customStart && customEnd) return `${customStart} – ${customEnd}`;
+        return DATE_OPTIONS.find(o => o.value === dateRange)?.label ?? 'Last 30 Days';
+    })();
+
+    /* stat cards */
     const stats = [
         {
-            name: "Total Users",
-            value: loadingStats ? '—' : (userStats?.totalUsers ?? userStats?.total ?? '—').toLocaleString(),
-            change: null,
-            icon: Users,
+            name:  'Total Users',
+            value: loadingAnalytics ? null : fmtN(userStats?.totalUsers),
+            icon:  Users,
         },
         {
-            name: "Active Vendors",
-            value: loadingVendors ? '—' : activeVendors.length.toLocaleString(),
-            change: null,
-            icon: Store,
+            name:  'Active Vendors',
+            value: loadingAnalytics ? null : fmtN(platform?.activeVendors ?? userStats?.totalVendors),
+            icon:  Store,
         },
         {
-            name: "Platform Revenue",
-            value: "—",
-            change: null,
-            icon: DollarSign,
+            name:  'Platform Revenue',
+            value: loadingAnalytics ? null : fmt$(platform?.totalRevenue),
+            icon:  DollarSign,
         },
         {
-            name: "Total Orders",
-            value: "—",
-            change: null,
-            icon: ShoppingBag,
+            name:  'Total Orders',
+            value: loadingAnalytics ? null : fmtN(platform?.totalOrders),
+            icon:  ShoppingBag,
         },
     ];
 
-    const getDateRangeDisplay = () => {
-        if (dateRange === 'custom' && customStartDate && customEndDate) {
-            return `${customStartDate} - ${customEndDate}`;
-        }
-        return dateRangeOptions.find(opt => opt.value === dateRange)?.label || 'Today';
-    };
-
-    const handleDateRangeChange = (value) => {
-        setDateRange(value);
-        if (value !== 'custom') setShowDatePicker(false);
-        else setShowDatePicker(true);
-    };
-
-    const applyCustomDateRange = () => {
-        if (customStartDate && customEndDate) setShowDatePicker(false);
-    };
-
+    /* vendor actions */
     const handleVendorAction = async (vendor, action) => {
         const key = `${vendor.publicVendorId}-${action}`;
-        setActionLoading(prev => ({ ...prev, [key]: true }));
+        setActionLoading(p => ({ ...p, [key]: true }));
         try {
-            if (action === 'verify') {
-                await AdminVendorsAPI.verify(vendor.publicVendorId);
-            } else if (action === 'reject') {
-                await AdminVendorsAPI.deactivate(vendor.publicVendorId);
-            }
-            // Remove from pending list after action
-            setPendingVendors(prev => prev.filter(v => v.publicVendorId !== vendor.publicVendorId));
-            // Refresh full vendor list
-            const allRes = await AdminVendorsAPI.getAll();
-            const allData = allRes?.data ?? allRes ?? [];
-            setVendors(Array.isArray(allData) ? allData : []);
-        } catch {
-            // silently fail — error visible via network tab
+            if (action === 'verify')  await AdminVendorsAPI.verify(vendor.publicVendorId);
+            if (action === 'reject')  await AdminVendorsAPI.deactivate(vendor.publicVendorId);
+            setPendingVendors(p => p.filter(v => v.publicVendorId !== vendor.publicVendorId));
+        } catch (e) {
+            alert(e.message || `Failed: ${action}`);
         } finally {
-            setActionLoading(prev => ({ ...prev, [key]: false }));
+            setActionLoading(p => ({ ...p, [key]: false }));
         }
     };
 
-    const getInitials = (name) => {
-        if (!name) return '?';
-        return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    };
+    const getInitials = (name) =>
+        (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+    /* normalise trend rows to a consistent shape */
+    const revenueData = trends.map(t => ({
+        label:   t.period ?? t.date ?? t.month ?? '',
+        revenue: t.revenue ?? t.totalRevenue ?? 0,
+    }));
+    const userGrowthData = trends.map(t => ({
+        label: t.period ?? t.date ?? t.month ?? '',
+        users: t.newUsers ?? t.userCount ?? t.users ?? 0,
+    }));
 
     return (
         <div className="space-y-6">
 
-            {/* Page Header with Date Filter */}
+            {/* ── Header + date filter ─────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Welcome back! Here&apos;s your platform overview.</p>
+                    <p className="text-gray-600 mt-1">Here&apos;s your platform overview.</p>
                 </div>
 
                 <div className="relative">
                     <button
-                        onClick={() => setShowDatePicker(!showDatePicker)}
-                        className="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all font-medium text-gray-700 min-w-50 justify-between"
+                        onClick={() => setShowDatePicker(v => !v)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all font-medium text-gray-700 min-w-48 justify-between"
                     >
-                        <div className="flex items-center space-x-2">
-                            <Calendar className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm">{getDateRangeDisplay()}</span>
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm">{dateLabel}</span>
                         </div>
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                     </button>
 
                     {showDatePicker && (
-                        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+                        <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
                             <div className="p-2">
-                                {dateRangeOptions.map((option) => (
+                                {DATE_OPTIONS.map(o => (
                                     <button
-                                        key={option.value}
-                                        onClick={() => handleDateRangeChange(option.value)}
+                                        key={o.value}
+                                        onClick={() => { setDateRange(o.value); if (o.value !== 'custom') setShowDatePicker(false); }}
                                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                            dateRange === option.value
+                                            dateRange === o.value
                                                 ? 'bg-gray-100 text-gray-900 font-semibold'
                                                 : 'text-gray-700 hover:bg-gray-50'
                                         }`}
-                                    >
-                                        {option.label}
-                                    </button>
+                                    >{o.label}</button>
                                 ))}
                             </div>
-
                             {dateRange === 'custom' && (
-                                <div className="p-4 border-t border-gray-200">
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
-                                            <input
-                                                type="date"
-                                                value={customStartDate}
-                                                onChange={(e) => setCustomStartDate(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-700 mb-1">End Date</label>
-                                            <input
-                                                type="date"
-                                                value={customEndDate}
-                                                onChange={(e) => setCustomEndDate(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm"
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={applyCustomDateRange}
-                                            disabled={!customStartDate || !customEndDate}
-                                            className="w-full px-4 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Apply Range
-                                        </button>
+                                <div className="p-4 border-t border-gray-200 space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
+                                        <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">End Date</label>
+                                        <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
+                                    </div>
+                                    <button
+                                        onClick={() => { if (customStart && customEnd) setShowDatePicker(false); }}
+                                        disabled={!customStart || !customEnd}
+                                        className="w-full px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                                    >Apply Range</button>
                                 </div>
                             )}
                         </div>
@@ -228,77 +225,153 @@ const AdminDashboardContent = () => {
                 </div>
             </div>
 
-            {/* Stats Grid */}
+            {/* ── Stat cards ───────────────────────────────────────────── */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat) => {
-                    const Icon = stat.icon;
+                {stats.map(s => {
+                    const Icon = s.icon;
                     return (
-                        <div key={stat.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                                    <Icon className="w-6 h-6 text-gray-700" />
-                                </div>
+                        <div key={s.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                                <Icon className="w-6 h-6 text-gray-700" />
                             </div>
-                            <p className="text-sm text-gray-600 mb-1">{stat.name}</p>
-                            <p className="text-3xl font-black text-gray-900">{stat.value}</p>
+                            <p className="text-sm text-gray-600 mb-1">{s.name}</p>
+                            {s.value === null ? (
+                                <div className="h-9 w-24 bg-gray-100 animate-pulse rounded-lg" />
+                            ) : (
+                                <p className="text-3xl font-black text-gray-900">{s.value}</p>
+                            )}
                         </div>
                     );
                 })}
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">Platform Revenue</h2>
-                        <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
-                    </div>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                        <div className="text-center">
-                            <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-400 font-semibold">Revenue Chart</p>
-                            <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
-                        </div>
+            {/* analytics error */}
+            {analyticsError && (
+                <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
+                    is403(analyticsError)
+                        ? 'bg-gray-50 border-gray-200 text-gray-600'
+                        : 'bg-red-50 border-red-200 text-red-700'
+                }`}>
+                    {is403(analyticsError) ? <ShieldOff className="w-4 h-4 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+                    <div>
+                        <p className="font-semibold mb-0.5">{is403(analyticsError) ? 'Analytics permission denied' : 'Analytics unavailable'}</p>
+                        <p>{is403(analyticsError) ? 'Update @PreAuthorize to hasAnyRole(\'ADMIN\', \'SUPERADMIN\') on the analytics controller.' : analyticsError}</p>
                     </div>
                 </div>
+            )}
 
+            {/* ── Charts ───────────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Platform Revenue */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">User Growth</h2>
-                        <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
-                    </div>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                        <div className="text-center">
-                            <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-400 font-semibold">Growth Chart</p>
-                            <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Platform Revenue</h2>
+                            {platform?.totalRevenue != null && (
+                                <p className="text-2xl font-black text-gray-900 mt-0.5">{fmt$(platform.totalRevenue)}</p>
+                            )}
                         </div>
+                        <TrendingUp className="w-5 h-5 text-gray-400" />
                     </div>
+                    {loadingAnalytics ? (
+                        <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
+                    ) : revenueData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={192}>
+                            <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%"  stopColor="#111827" stopOpacity={0.15} />
+                                        <stop offset="95%" stopColor="#111827" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                                <YAxis tickFormatter={n => `$${n >= 1000 ? `${(n/1000).toFixed(0)}k` : n}`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={48} />
+                                <Tooltip content={<ChartTooltip isCurrency />} />
+                                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#111827" strokeWidth={2} fill="url(#revenueGrad)" dot={false} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-48 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                            <p className="text-sm text-gray-400">No trend data available</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* User Growth */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">User Growth</h2>
+                            {userStats?.totalUsers != null && (
+                                <p className="text-2xl font-black text-gray-900 mt-0.5">{fmtN(userStats.totalUsers)} total</p>
+                            )}
+                        </div>
+                        <Users className="w-5 h-5 text-gray-400" />
+                    </div>
+                    {loadingAnalytics ? (
+                        <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
+                    ) : userGrowthData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={192}>
+                            <BarChart data={userGrowthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36} />
+                                <Tooltip content={<ChartTooltip />} />
+                                <Bar dataKey="users" name="New Users" fill="#111827" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-48 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                            <p className="text-sm text-gray-400">No trend data available</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Pending Vendor Approvals */}
+            {/* ── Pending vendor approvals ──────────────────────────────── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900">Pending Vendor Approvals</h2>
-                            <p className="text-sm text-gray-600 mt-1">
-                                {loadingVendors
-                                    ? 'Loading...'
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Pending Vendor Approvals</h2>
+                        <p className="text-sm text-gray-600 mt-1">
+                            {loadingVendors
+                                ? 'Loading…'
+                                : vendorError
+                                    ? 'Unable to load'
                                     : `${pendingVendors.length} vendor${pendingVendors.length !== 1 ? 's' : ''} awaiting verification`}
-                            </p>
-                        </div>
-                        <a href="/admin/vendors" className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                            View All
-                        </a>
+                        </p>
                     </div>
+                    <a href="/admin/vendors" className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        View All
+                    </a>
                 </div>
 
                 <div className="p-4 space-y-4">
                     {loadingVendors ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+                        </div>
+                    ) : vendorError ? (
+                        <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm m-2 ${
+                            is403(vendorError)
+                                ? 'bg-gray-50 border-gray-200 text-gray-600'
+                                : 'bg-red-50 border-red-200 text-red-700'
+                        }`}>
+                            <ShieldOff className="w-4 h-4 mt-0.5 shrink-0" />
+                            <div>
+                                <p className="font-semibold mb-0.5">
+                                    {is403(vendorError) ? 'Permission denied' : 'Failed to load pending vendors'}
+                                </p>
+                                <p className="text-xs">
+                                    {is403(vendorError)
+                                        ? 'Update AdminVendorManagementController: @PreAuthorize("hasAnyRole(\'ADMIN\', \'SUPERADMIN\')")'
+                                        : vendorError}
+                                </p>
+                                <button onClick={fetchVendors} className="mt-2 text-xs font-semibold underline">
+                                    Retry
+                                </button>
+                            </div>
                         </div>
                     ) : pendingVendors.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -307,93 +380,55 @@ const AdminDashboardContent = () => {
                             <p className="text-sm text-gray-400 mt-1">No vendors pending approval</p>
                         </div>
                     ) : (
-                        pendingVendors.map((vendor) => {
-                            const verifyKey  = `${vendor.publicVendorId}-verify`;
-                            const rejectKey  = `${vendor.publicVendorId}-reject`;
+                        pendingVendors.map(vendor => {
+                            const verifyKey   = `${vendor.publicVendorId}-verify`;
+                            const rejectKey   = `${vendor.publicVendorId}-reject`;
                             const isVerifying = actionLoading[verifyKey];
                             const isRejecting = actionLoading[rejectKey];
                             const anyLoading  = isVerifying || isRejecting;
-
                             return (
-                                <div
-                                    key={vendor.publicVendorId}
-                                    className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-lg transition-all group"
-                                >
-                                    {/* Header */}
+                                <div key={vendor.publicVendorId} className="p-4 sm:p-5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all">
                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0">
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0">
                                                 {getInitials(vendor.restaurantName)}
                                             </div>
-
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-1">
-                                                    <h3 className="font-bold text-gray-900 truncate">{vendor.restaurantName || 'Unnamed Vendor'}</h3>
-                                                    <span className="text-xs font-mono text-gray-400">{vendor.publicVendorId}</span>
-                                                </div>
-                                                <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                                                    <Clock className="w-3 h-3 mr-1.5 text-gray-400 shrink-0" />
-                                                    <span>Awaiting verification</span>
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-gray-900 truncate">{vendor.restaurantName || 'Unnamed Vendor'}</p>
+                                                <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span>Applied {vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Pending badge */}
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border-2 border-yellow-200 shrink-0">
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200 shrink-0">
                                             <AlertCircle className="w-3.5 h-3.5" />
-                                            Pending Approval
+                                            Pending
                                         </span>
                                     </div>
 
-                                    {/* Details */}
-                                    <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 space-y-2">
-                                        {vendor.cuisineType && (
-                                            <div className="flex items-center justify-between text-xs sm:text-sm">
-                                                <span className="text-gray-600 font-medium">Cuisine:</span>
-                                                <span className="text-gray-900 font-semibold">{vendor.cuisineType}</span>
-                                            </div>
-                                        )}
-                                        {vendor.createdAt && (
-                                            <div className="flex items-center justify-between text-xs sm:text-sm">
-                                                <span className="text-gray-600 font-medium">Applied:</span>
-                                                <span className="text-gray-900 font-semibold">
-                                                    {new Date(vendor.createdAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {vendor.cuisineType && (
+                                        <div className="bg-gray-50 rounded-xl px-3 py-2 mb-4 flex items-center justify-between text-xs">
+                                            <span className="text-gray-500">Cuisine</span>
+                                            <span className="font-semibold text-gray-900">{vendor.cuisineType}</span>
+                                        </div>
+                                    )}
 
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <button
-                                            onClick={() => handleVendorAction(vendor, 'verify')}
-                                            disabled={anyLoading}
-                                            className="flex-1 px-4 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
-                                        >
-                                            {isVerifying
-                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                : <CheckCircle className="w-4 h-4" />
-                                            }
-                                            <span className="text-sm">Approve</span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleVendorAction(vendor, 'verify')} disabled={anyLoading}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors">
+                                            {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                            Approve
                                         </button>
-                                        <button
-                                            onClick={() => handleVendorAction(vendor, 'reject')}
-                                            disabled={anyLoading}
-                                            className="flex-1 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
-                                        >
-                                            {isRejecting
-                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                : <Eye className="w-4 h-4" />
-                                            }
-                                            <span className="text-sm">Review</span>
+                                        <button onClick={() => handleVendorAction(vendor, 'reject')} disabled={anyLoading}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                                            <Eye className="w-4 h-4" />
+                                            Review
                                         </button>
-                                        <button
-                                            onClick={() => handleVendorAction(vendor, 'reject')}
-                                            disabled={anyLoading}
-                                            className="px-4 py-2.5 bg-white border-2 border-red-200 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
-                                        >
-                                            <XCircle className="w-4 h-4" />
-                                            <span className="text-sm">Reject</span>
+                                        <button onClick={() => handleVendorAction(vendor, 'reject')} disabled={anyLoading}
+                                            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 disabled:opacity-50 transition-colors">
+                                            {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                            Reject
                                         </button>
                                     </div>
                                 </div>
@@ -402,7 +437,6 @@ const AdminDashboardContent = () => {
                     )}
                 </div>
             </div>
-
         </div>
     );
 };
