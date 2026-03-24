@@ -2,23 +2,32 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Star, LayoutDashboard, ChevronRight, Search, RefreshCw, Eye, EyeOff, Trash2 } from 'lucide-react';
+import {
+    Star, LayoutDashboard, ChevronRight, Search,
+    RefreshCw, Eye, EyeOff, Trash2, CalendarDays,
+} from 'lucide-react';
 import { AdminReviewsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 
 const StarRating = ({ rating }) => (
     <div className="flex items-center gap-0.5">
-        {[1,2,3,4,5].map(i => (
+        {[1, 2, 3, 4, 5].map(i => (
             <Star key={i} className={`w-3.5 h-3.5 ${i <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
         ))}
     </div>
 );
 
+// Resolve the correct ID field from whatever the backend returns
+const resolveId = (r) => r.reviewId ?? r.publicReviewId ?? r.id;
+
 export default function AdminReviewsPage() {
     const [reviews, setReviews]         = useState([]);
     const [stats, setStats]             = useState(null);
-    const [filter, setFilter]           = useState('all');
+    const [filter, setFilter]           = useState('all'); // 'all' | 'hidden'
     const [search, setSearch]           = useState('');
+    const [dateFrom, setDateFrom]       = useState('');
+    const [dateTo, setDateTo]           = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading]         = useState(true);
     const [error, setError]             = useState(null);
     const [actionLoading, setActionLoading] = useState({});
@@ -49,31 +58,33 @@ export default function AdminReviewsPage() {
     useEffect(() => { fetchReviews(); fetchStats(); }, [fetchReviews, fetchStats]);
 
     const doAction = async (id, fn, label) => {
+        if (!id && id !== 0) {
+            alert('Unable to perform action: review ID is missing.');
+            return;
+        }
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
             await fn(id);
-            // Optimistically update local state so hide/restore flips immediately
-            // without waiting for a full refetch (backend may not return `hidden` field).
+            // Optimistic update — flip isVisible flag or remove the row
             if (label === 'hide') {
                 setReviews(prev => prev.map(r =>
-                    (r.publicReviewId ?? r.id) === id ? { ...r, hidden: true } : r
+                    resolveId(r) === id ? { ...r, isVisible: false } : r
                 ));
             } else if (label === 'show') {
                 if (filter === 'hidden') {
-                    // Remove the restored review from the hidden list
-                    setReviews(prev => prev.filter(r => (r.publicReviewId ?? r.id) !== id));
+                    setReviews(prev => prev.filter(r => resolveId(r) !== id));
                 } else {
                     setReviews(prev => prev.map(r =>
-                        (r.publicReviewId ?? r.id) === id ? { ...r, hidden: false } : r
+                        resolveId(r) === id ? { ...r, isVisible: true } : r
                     ));
                 }
             } else if (label === 'delete') {
-                setReviews(prev => prev.filter(r => (r.publicReviewId ?? r.id) !== id));
+                setReviews(prev => prev.filter(r => resolveId(r) !== id));
             }
             await fetchStats();
         } catch (e) {
             alert(e.message || `Failed: ${label}`);
-            await fetchReviews(); // revert to real server state on error
+            await fetchReviews(); // revert to server truth on error
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
         }
@@ -84,20 +95,38 @@ export default function AdminReviewsPage() {
         await doAction(id, AdminReviewsAPI.delete, 'delete');
     };
 
+    const clearDateFilter = () => { setDateFrom(''); setDateTo(''); setShowDatePicker(false); };
+
     const filtered = reviews.filter(r => {
-        if (!search) return true;
-        const q = search.toLowerCase();
-        return (
-            r.comment?.toLowerCase().includes(q) ||
-            r.customerName?.toLowerCase().includes(q) ||
-            r.vendorName?.toLowerCase().includes(q) ||
-            r.productName?.toLowerCase().includes(q)
-        );
+        // text search
+        if (search) {
+            const q = search.toLowerCase();
+            const match =
+                r.comment?.toLowerCase().includes(q) ||
+                r.userName?.toLowerCase().includes(q) ||
+                r.restaurantName?.toLowerCase().includes(q) ||
+                r.productName?.toLowerCase().includes(q);
+            if (!match) return false;
+        }
+        // date filter
+        if (dateFrom || dateTo) {
+            const created = r.createdAt ? new Date(r.createdAt) : null;
+            if (!created) return false;
+            if (dateFrom && created < new Date(dateFrom)) return false;
+            if (dateTo) {
+                const toEnd = new Date(dateTo);
+                toEnd.setHours(23, 59, 59, 999);
+                if (created > toEnd) return false;
+            }
+        }
+        return true;
     });
 
     const formatDate = (d) => d
         ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'N/A';
+
+    const dateFilterActive = !!(dateFrom || dateTo);
 
     return (
         <div className="space-y-6">
@@ -117,41 +146,79 @@ export default function AdminReviewsPage() {
                     <h1 className="text-3xl font-black text-gray-900">Review Moderation</h1>
                     <p className="text-gray-500 mt-1">Hide, restore, or remove inappropriate reviews</p>
                 </div>
-                <button onClick={() => { fetchReviews(); fetchStats(); }} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                <button
+                    onClick={() => { fetchReviews(); fetchStats(); }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                >
                     <RefreshCw className="h-4 w-4" />
                     Refresh
                 </button>
             </div>
 
-            {/* Stats */}
-            {stats && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {[
-                        { label: 'Total Reviews', value: stats.totalReviews ?? stats.total ?? reviews.length,                       filterKey: 'all' },
-                        { label: 'Avg Rating',    value: stats.averageRating != null ? Number(stats.averageRating).toFixed(1) : '—', filterKey: null },
-                        { label: 'Hidden',        value: stats.hiddenReviews ?? stats.hidden ?? 0,                                   filterKey: 'hidden' },
-                        { label: 'This Month',    value: stats.thisMonth ?? stats.monthly ?? 0,                                      filterKey: null },
-                    ].map(s => (
-                        s.filterKey ? (
+            {/* Stats cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {/* Total Reviews — clickable filter */}
+                <button
+                    onClick={() => { setFilter('all'); clearDateFilter(); }}
+                    className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
+                        filter === 'all' && !dateFilterActive ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                    }`}
+                >
+                    <p className="text-2xl font-black text-gray-900">
+                        {stats ? (stats.totalReviews ?? stats.total ?? reviews.length) : reviews.length}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Total Reviews</p>
+                </button>
+
+                {/* Hidden — clickable filter */}
+                <button
+                    onClick={() => { setFilter('hidden'); clearDateFilter(); }}
+                    className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
+                        filter === 'hidden' ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                    }`}
+                >
+                    <p className="text-2xl font-black text-gray-900">
+                        {stats ? (stats.hiddenReviews ?? stats.hidden ?? 0) : 0}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Hidden</p>
+                </button>
+
+                {/* Date filter card */}
+                <div className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${
+                    dateFilterActive ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                }`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                            <CalendarDays className="w-4 h-4 text-gray-500" />
+                            <p className="text-xs font-semibold text-gray-700">Filter by Date</p>
+                        </div>
+                        {dateFilterActive && (
                             <button
-                                key={s.label}
-                                onClick={() => setFilter(s.filterKey)}
-                                className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
-                                    filter === s.filterKey ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
-                                }`}
-                            >
-                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                            </button>
-                        ) : (
-                            <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                            </div>
-                        )
-                    ))}
+                                onClick={clearDateFilter}
+                                className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                            >Clear</button>
+                        )}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <input
+                            type="date"
+                            value={dateFrom}
+                            onChange={e => setDateFrom(e.target.value)}
+                            style={{ color: 'black', backgroundColor: 'white' }}
+                            className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            placeholder="From"
+                        />
+                        <input
+                            type="date"
+                            value={dateTo}
+                            onChange={e => setDateTo(e.target.value)}
+                            style={{ color: 'black', backgroundColor: 'white' }}
+                            className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            placeholder="To"
+                        />
+                    </div>
                 </div>
-            )}
+            </div>
 
             {/* Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -161,7 +228,7 @@ export default function AdminReviewsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search reviews…"
+                            placeholder="Search by reviewer, store, or product…"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             style={{ color: 'black', backgroundColor: 'white' }}
@@ -169,14 +236,17 @@ export default function AdminReviewsPage() {
                         />
                     </div>
                     <div className="flex gap-2">
-                        {['all', 'hidden'].map(f => (
+                        {[
+                            { key: 'all',    label: 'All Reviews' },
+                            { key: 'hidden', label: 'Hidden' },
+                        ].map(f => (
                             <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={`px-4 py-2 text-sm font-semibold rounded-xl capitalize transition-colors ${
-                                    filter === f ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                key={f.key}
+                                onClick={() => setFilter(f.key)}
+                                className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
+                                    filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
-                            >{f === 'all' ? 'All Reviews' : 'Hidden'}</button>
+                            >{f.label}</button>
                         ))}
                     </div>
                 </div>
@@ -195,54 +265,89 @@ export default function AdminReviewsPage() {
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-100">
-                        {filtered.map(r => (
-                            <div key={r.publicReviewId ?? r.id} className={`px-5 py-4 hover:bg-gray-50 transition-colors ${r.hidden ? 'opacity-60' : ''}`}>
-                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <StarRating rating={r.rating ?? 0} />
-                                            {r.hidden && (
-                                                <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200">Hidden</span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-gray-900 mb-1">{r.comment || <span className="text-gray-400 italic">No comment</span>}</p>
-                                        <p className="text-xs text-gray-400">
-                                            {r.customerName || 'Unknown'} · {r.vendorName || r.productName || 'Unknown'} · {formatDate(r.createdAt)}
-                                        </p>
-                                    </div>
+                        {filtered.map(r => {
+                            const rid = resolveId(r);
+                            // isVisible: false means hidden; treat undefined as visible
+                            const isHidden = r.isVisible === false;
+                            return (
+                                <div
+                                    key={rid ?? Math.random()}
+                                    className={`px-5 py-4 hover:bg-gray-50 transition-colors ${isHidden ? 'opacity-60' : ''}`}
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            {/* Rating + hidden badge */}
+                                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                <StarRating rating={r.rating ?? 0} />
+                                                {isHidden && (
+                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                                                        Hidden
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        {r.hidden ? (
+                                            {/* Comment */}
+                                            <p className="text-sm text-gray-900 mb-2">
+                                                {r.comment || <span className="text-gray-400 italic">No comment</span>}
+                                            </p>
+
+                                            {/* Reviewer · Store/Product · Date */}
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
+                                                <span className="font-medium text-gray-700">
+                                                    {r.userName || 'Unknown reviewer'}
+                                                </span>
+                                                <span className="text-gray-300">·</span>
+                                                {r.restaurantName && (
+                                                    <span>🏪 {r.restaurantName}</span>
+                                                )}
+                                                {r.productName && (
+                                                    <>
+                                                        {r.restaurantName && <span className="text-gray-300">·</span>}
+                                                        <span>📦 {r.productName}</span>
+                                                    </>
+                                                )}
+                                                {!r.restaurantName && !r.productName && (
+                                                    <span>Unknown store</span>
+                                                )}
+                                                <span className="text-gray-300">·</span>
+                                                <span>{formatDate(r.createdAt)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {isHidden ? (
+                                                <button
+                                                    onClick={() => doAction(rid, AdminReviewsAPI.show, 'show')}
+                                                    disabled={!!actionLoading[rid + 'show']}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Restore
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => doAction(rid, AdminReviewsAPI.hide, 'hide')}
+                                                    disabled={!!actionLoading[rid + 'hide']}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <EyeOff className="w-3.5 h-3.5" />
+                                                    Hide
+                                                </button>
+                                            )}
                                             <button
-                                                onClick={() => doAction(r.publicReviewId ?? r.id, AdminReviewsAPI.show, 'show')}
-                                                disabled={!!actionLoading[(r.publicReviewId ?? r.id) + 'show']}
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                onClick={() => handleDelete(rid)}
+                                                disabled={!!actionLoading[rid + 'delete']}
+                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                                title="Delete review"
                                             >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                Restore
+                                                <Trash2 className="w-3.5 h-3.5" />
                                             </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => doAction(r.publicReviewId ?? r.id, AdminReviewsAPI.hide, 'hide')}
-                                                disabled={!!actionLoading[(r.publicReviewId ?? r.id) + 'hide']}
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                <EyeOff className="w-3.5 h-3.5" />
-                                                Hide
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => handleDelete(r.publicReviewId ?? r.id)}
-                                            disabled={!!actionLoading[(r.publicReviewId ?? r.id) + 'delete']}
-                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                            title="Delete review"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

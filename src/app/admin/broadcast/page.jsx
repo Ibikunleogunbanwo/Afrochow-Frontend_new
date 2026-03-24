@@ -2,41 +2,54 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Megaphone, LayoutDashboard, ChevronRight, Send, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+    Megaphone, LayoutDashboard, ChevronRight, Send,
+    CheckCircle, AlertCircle, RefreshCw,
+    ShoppingBag, Truck, CreditCard, Tag, Shield, Bell,
+} from 'lucide-react';
 import { AdminNotificationsAPI } from '@/lib/api/admin.api';
 
-const AUDIENCE_OPTIONS = [
-    { value: 'ALL',      label: 'All Users' },
-    { value: 'CUSTOMER', label: 'Customers only' },
-    { value: 'VENDOR',   label: 'Vendors only' },
-    { value: 'ADMIN',    label: 'Admins only' },
+// NotificationType enum values from the backend
+const NOTIFICATION_TYPES = [
+    { value: 'SYSTEM_ALERT',    label: 'System Alert',    icon: Shield,      desc: 'General platform-wide announcements' },
+    { value: 'PROMO',           label: 'Promotion',       icon: Tag,         desc: 'Promotional offers and discount codes' },
+    { value: 'NEW_ORDER',       label: 'New Order',       icon: ShoppingBag, desc: 'New order activity notifications' },
+    { value: 'ORDER_UPDATE',    label: 'Order Update',    icon: Bell,        desc: 'Changes to existing order status' },
+    { value: 'DELIVERY_UPDATE', label: 'Delivery Update', icon: Truck,       desc: 'Delivery and logistics updates' },
+    { value: 'PAYMENT_SUCCESS', label: 'Payment',         icon: CreditCard,  desc: 'Payment confirmation notifications' },
 ];
 
 export default function AdminBroadcastPage() {
-    const [form, setForm] = useState({ title: '', message: '', audience: 'ALL' });
+    const [form, setForm]     = useState({ title: '', message: '', type: 'SYSTEM_ALERT' });
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError]     = useState(null);
 
     const handleSend = async (e) => {
         e.preventDefault();
-        if (!form.title.trim() || !form.message.trim()) {
-            setError('Title and message are required');
-            return;
-        }
+        if (!form.title.trim()) { setError('Title is required'); return; }
+        if (!form.message.trim()) { setError('Message is required'); return; }
+        if (!form.type) { setError('Notification type is required'); return; }
+
         setSending(true);
         setError(null);
         setSuccess(false);
         try {
-            await AdminNotificationsAPI.broadcast(form);
+            await AdminNotificationsAPI.broadcast({
+                title:   form.title.trim(),
+                message: form.message.trim(),
+                type:    form.type,
+            });
             setSuccess(true);
-            setForm({ title: '', message: '', audience: 'ALL' });
+            setForm({ title: '', message: '', type: 'SYSTEM_ALERT' });
         } catch (err) {
             setError(err.message || 'Failed to send broadcast');
         } finally {
             setSending(false);
         }
     };
+
+    const selectedType = NOTIFICATION_TYPES.find(t => t.value === form.type);
 
     return (
         <div className="space-y-6 max-w-2xl">
@@ -53,7 +66,7 @@ export default function AdminBroadcastPage() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-gray-900">Broadcast Notification</h1>
-                <p className="text-gray-500 mt-1">Send a push notification to all or specific groups of users</p>
+                <p className="text-gray-500 mt-1">Send a notification to all users on the platform</p>
             </div>
 
             {/* Form */}
@@ -71,28 +84,42 @@ export default function AdminBroadcastPage() {
                     </div>
                 )}
 
+                {/* Notification Type */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Audience</label>
-                    <div className="flex flex-wrap gap-2">
-                        {AUDIENCE_OPTIONS.map(opt => (
-                            <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => setForm(f => ({ ...f, audience: opt.value }))}
-                                className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
-                                    form.audience === opt.value
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Notification Type <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {NOTIFICATION_TYPES.map(opt => {
+                            const Icon = opt.icon;
+                            const active = form.type === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setForm(f => ({ ...f, type: opt.value }))}
+                                    className={`flex items-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-xl border transition-all text-left ${
+                                        active
+                                            ? 'bg-gray-900 text-white border-gray-900'
+                                            : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4 shrink-0" />
+                                    {opt.label}
+                                </button>
+                            );
+                        })}
                     </div>
+                    {selectedType && (
+                        <p className="text-xs text-gray-400 mt-2">{selectedType.desc}</p>
+                    )}
                 </div>
 
+                {/* Title */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Title <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
                         value={form.title}
@@ -105,8 +132,11 @@ export default function AdminBroadcastPage() {
                     <p className="text-xs text-gray-400 mt-1 text-right">{form.title.length}/100</p>
                 </div>
 
+                {/* Message */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Message <span className="text-red-500">*</span>
+                    </label>
                     <textarea
                         value={form.message}
                         onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
@@ -119,6 +149,7 @@ export default function AdminBroadcastPage() {
                     <p className="text-xs text-gray-400 mt-1 text-right">{form.message.length}/500</p>
                 </div>
 
+                {/* Submit */}
                 <div className="pt-2">
                     <button
                         type="submit"
@@ -138,7 +169,8 @@ export default function AdminBroadcastPage() {
                     <div>
                         <p className="text-sm font-semibold text-gray-700 mb-1">About broadcasts</p>
                         <ul className="text-xs text-gray-500 space-y-1">
-                            <li>· Notifications are sent to all users matching the selected audience</li>
+                            <li>· Notifications are sent to all users on the platform</li>
+                            <li>· Choose the notification type that best matches your message</li>
                             <li>· Users will receive in-app notifications</li>
                             <li>· Broadcasts cannot be undone after sending</li>
                         </ul>
