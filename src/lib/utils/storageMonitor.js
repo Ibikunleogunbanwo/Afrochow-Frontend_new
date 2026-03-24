@@ -172,9 +172,4 @@ export function installStorageDebugTools() {
     }
   };
 
-  console.log('🔧 Storage debug tools installed:');
-  console.log('  - storageDebug.printUsage()');
-  console.log('  - storageDebug.printVendor()');
-  console.log('  - storageDebug.printLargest()');
-  console.log('  - storageDebug.clearVendor()');
 }

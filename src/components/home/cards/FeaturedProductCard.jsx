@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Star, Flame, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
 
 const getPromoBadge = (promotions) => {
@@ -38,6 +38,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     } = product;
 
     const router = useRouter();
+    const [imgError, setImgError] = useState(false);
 
     const handleClick = (e) => {
         e.preventDefault();
@@ -54,16 +55,17 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
 
                 {/* Image */}
                 <div className="relative h-48 bg-linear-to-br from-gray-100 to-gray-200">
-                    {resolveImageUrl(product.imageUrl) ? (
+                    {resolveImageUrl(product.imageUrl) && !imgError ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={resolveImageUrl(product.imageUrl)}
                             alt={product.name}
                             className="w-full h-full object-cover"
+                            onError={() => setImgError(true)}
                         />
-                    ) :(
-                        <div className="absolute inset-0 flex items-center justify-center bg-orange-50">
-                            <Flame className="w-10 h-10 text-orange-300" />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                            <Flame className="w-10 h-10 text-gray-300" />
                         </div>
                     )}
 
