@@ -244,7 +244,7 @@ export default function CheckoutPage() {
         // 2 — Validate minimum order
         if (belowMinimum) {
             toast.error("Minimum order not met", {
-                description: `Add $${(vendorData.minimumOrderAmount - cartTotal - deliveryFee).toFixed(2)} more to proceed.`,
+                description: `Add CA$${(vendorData.minimumOrderAmount - cartTotal - deliveryFee).toFixed(2)} more to proceed.`,
             });
             return;
         }
@@ -362,8 +362,8 @@ export default function CheckoutPage() {
                         <AlertCircle className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
                         <p className="text-sm text-gray-700">
                             Minimum order for {vendorData.restaurantName} is{" "}
-                            <span className="font-semibold">${vendorData.minimumOrderAmount.toFixed(2)}</span>.
-                            Add <span className="font-semibold">${(vendorData.minimumOrderAmount - cartTotal).toFixed(2)}</span> more to proceed.
+                            <span className="font-semibold">CA${vendorData.minimumOrderAmount.toFixed(2)}</span>.
+                            Add <span className="font-semibold">CA${(vendorData.minimumOrderAmount - cartTotal).toFixed(2)}</span> more to proceed.
                         </p>
                     </div>
                 )}
@@ -387,7 +387,7 @@ export default function CheckoutPage() {
                                         value:    "delivery",
                                         label:    "Delivery",
                                         sub:      vendorData?.offersDelivery
-                                            ? vendorDeliveryFee === 0 ? "Free delivery" : `+$${vendorDeliveryFee.toFixed(2)}`
+                                            ? vendorDeliveryFee === 0 ? "Free delivery" : `+CA$${vendorDeliveryFee.toFixed(2)}`
                                             : "Not available",
                                         disabled: !vendorData?.offersDelivery,
                                     },
@@ -750,7 +750,7 @@ export default function CheckoutPage() {
                                             <p className="text-xs text-gray-400">Qty {item.quantity}</p>
                                         </div>
                                         <p className="text-sm font-medium text-gray-900 shrink-0">
-                                            ${(item.price * item.quantity).toFixed(2)}
+                                            CA${(item.price * item.quantity).toFixed(2)}
                                         </p>
                                     </div>
                                 ))}
@@ -806,7 +806,7 @@ export default function CheckoutPage() {
 
                                 {fulfillment === "delivery" && vendorData?.minimumOrderAmount > 0 && (
                                     <p className={`text-xs ${belowMinimum ? "text-red-500" : "text-gray-400"}`}>
-                                        Minimum order: ${vendorData.minimumOrderAmount.toFixed(2)}
+                                        Minimum order: CA${vendorData.minimumOrderAmount.toFixed(2)}
                                     </p>
                                 )}
                             </div>
@@ -818,7 +818,7 @@ export default function CheckoutPage() {
                                         <AlertCircle className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
                                         <div className="text-xs text-gray-600 space-y-0.5">
                                             {belowMinimum && (
-                                                <p>Minimum order of ${vendorData.minimumOrderAmount.toFixed(2)} not met.</p>
+                                                <p>Minimum order of CA${vendorData.minimumOrderAmount.toFixed(2)} not met.</p>
                                             )}
                                             {!cardComplete && (
                                                 <p>Please complete your card details.</p>

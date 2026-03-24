@@ -11,13 +11,13 @@ import {
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const ORDER_STATUSES = {
-    PENDING:          { label: 'Awaiting confirmation', color: 'bg-yellow-500', textColor: 'text-yellow-700', bgColor: 'bg-yellow-50' },
-    CONFIRMED:        { label: 'Confirmed',             color: 'bg-blue-500',   textColor: 'text-blue-700',   bgColor: 'bg-blue-50'   },
-    PREPARING:        { label: 'Preparing',             color: 'bg-purple-500', textColor: 'text-purple-700', bgColor: 'bg-purple-50' },
-    READY_FOR_PICKUP: { label: 'Ready',                 color: 'bg-green-500',  textColor: 'text-green-700',  bgColor: 'bg-green-50'  },
-    OUT_FOR_DELIVERY: { label: 'Out for delivery',      color: 'bg-indigo-500', textColor: 'text-indigo-700', bgColor: 'bg-indigo-50' },
-    DELIVERED:        { label: 'Delivered',             color: 'bg-gray-500',   textColor: 'text-gray-700',   bgColor: 'bg-gray-50'   },
-    CANCELLED:        { label: 'Cancelled',             color: 'bg-red-500',    textColor: 'text-red-700',    bgColor: 'bg-red-50'    },
+    PENDING:          { label: 'Awaiting confirmation', color: 'bg-gray-500',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    CONFIRMED:        { label: 'Confirmed',             color: 'bg-gray-600',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    PREPARING:        { label: 'Preparing',             color: 'bg-gray-700',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    READY_FOR_PICKUP: { label: 'Ready',                 color: 'bg-gray-800',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    OUT_FOR_DELIVERY: { label: 'Out for delivery',      color: 'bg-gray-900',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    DELIVERED:        { label: 'Delivered',             color: 'bg-gray-500',  textColor: 'text-gray-700', bgColor: 'bg-gray-50' },
+    CANCELLED:        { label: 'Cancelled',             color: 'bg-red-500',   textColor: 'text-red-700',  bgColor: 'bg-red-50'  },
 };
 
 const ACTIVE_STATUSES = new Set(['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY']);
@@ -140,7 +140,7 @@ function FulfillmentBadge({ type }) {
     const isDelivery = type === 'DELIVERY';
     return (
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium
-            ${isDelivery ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+            ${isDelivery ? 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-700'}`}>
             {isDelivery ? <Truck className="h-3 w-3" /> : <Store className="h-3 w-3" />}
             {isDelivery ? 'Delivery' : 'Pickup'}
         </span>
@@ -167,7 +167,7 @@ function StatusDropdown({ order, onStatusChange, loading }) {
             <button
                 onClick={() => setOpen(o => !o)}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60"
             >
                 {loading
                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -184,7 +184,7 @@ function StatusDropdown({ order, onStatusChange, loading }) {
                             className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors
                                 ${opt.danger
                                     ? 'text-red-600 hover:bg-red-50'
-                                    : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700'
+                                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                 }`}
                         >
                             {opt.label}
@@ -293,7 +293,7 @@ const VendorOrdersPage = () => {
 
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-                    <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                    <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                         <LayoutDashboard className="w-3.5 h-3.5" />
                         Dashboard
                     </Link>
@@ -331,7 +331,7 @@ const VendorOrdersPage = () => {
                                 placeholder="Search by order ID or customer name…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                             />
                         </div>
                         <div className="relative">
@@ -339,7 +339,7 @@ const VendorOrdersPage = () => {
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none cursor-pointer"
+                                className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
                                 style={{ color: 'black', backgroundColor: 'white' }}
                             >
                                 <option value="ALL">All orders</option>
@@ -359,7 +359,7 @@ const VendorOrdersPage = () => {
                 {/* Orders list */}
                 {loading ? (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <Loader2 className="h-10 w-10 text-orange-500 animate-spin mx-auto mb-4" />
+                        <Loader2 className="h-10 w-10 text-gray-400 animate-spin mx-auto mb-4" />
                         <p className="text-gray-500">Loading orders…</p>
                     </div>
                 ) : filteredOrders.length === 0 ? (
@@ -537,7 +537,7 @@ const VendorOrdersPage = () => {
                                                 className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60
                                                     ${opt.danger
                                                         ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                                                        : 'bg-orange-600 text-white hover:bg-orange-700'
+                                                        : 'bg-gray-900 text-white hover:bg-gray-800'
                                                     }`}
                                             >
                                                 {actionLoading === selectedOrder.publicOrderId

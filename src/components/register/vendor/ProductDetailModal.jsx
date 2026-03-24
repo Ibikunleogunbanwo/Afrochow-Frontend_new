@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Clock, Star } from 'lucide-react';
+import { X, Loader2, Clock, Star, Pencil } from 'lucide-react';
 import { useCart } from "@/contexts/CartContext";
 
 const Tag = ({ text }) => (
@@ -17,6 +17,7 @@ const ProductDetailModal = ({
                                 isStoreOpen,
                                 onClose,
                                 onViewReviews,
+                                onWriteReview,
                             }) => {
     const [quantity, setQuantity] = useState(1);
     const [cartError, setCartError] = useState(null);
@@ -91,7 +92,7 @@ const ProductDetailModal = ({
         if (addedSuccess) return '✓ Added to Cart!';
         if (!available) return 'Currently Unavailable';
         if (!isStoreOpen) return '🕐 Store is currently closed';
-        return `Add to Order • $${totalPrice}`;
+        return `Add to Order • CA$${totalPrice}`;
     };
 
     return (
@@ -190,14 +191,25 @@ const ProductDetailModal = ({
 
                     {/* Rating */}
                     {averageRating > 0 && (
-                        <button
-                            onClick={onViewReviews}
-                            className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
-                        >
-                            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                            <span className="text-xs text-gray-500 underline">({reviewCount || 0} reviews)</span>
-                        </button>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <button
+                                onClick={onViewReviews}
+                                className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors"
+                            >
+                                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                                <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                                <span className="text-xs text-gray-500 underline">({reviewCount || 0} reviews)</span>
+                            </button>
+                            {onWriteReview && (
+                                <button
+                                    onClick={onWriteReview}
+                                    className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                    Write a Review
+                                </button>
+                            )}
+                        </div>
                     )}
 
                     {/* Cart Error */}

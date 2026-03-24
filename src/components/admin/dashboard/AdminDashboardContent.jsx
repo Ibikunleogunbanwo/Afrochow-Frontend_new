@@ -154,7 +154,6 @@ const AdminDashboardContent = () => {
         setDateRange(value);
         if (value !== 'custom') {
             setShowDatePicker(false);
-            console.log('Fetching data for:', value);
         } else {
             setShowDatePicker(true);
         }
@@ -163,7 +162,6 @@ const AdminDashboardContent = () => {
     const applyCustomDateRange = () => {
         if (customStartDate && customEndDate) {
             setShowDatePicker(false);
-            console.log('Fetching data from', customStartDate, 'to', customEndDate);
         }
     };
 
@@ -229,7 +227,7 @@ const AdminDashboardContent = () => {
                 <div className="relative">
                     <button
                         onClick={() => setShowDatePicker(!showDatePicker)}
-                        className="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-all font-medium text-gray-700 min-w-50 justify-between"
+                        className="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all font-medium text-gray-700 min-w-50 justify-between"
                     >
                         <div className="flex items-center space-x-2">
                             <Calendar className="w-5 h-5 text-gray-400" />
@@ -248,7 +246,7 @@ const AdminDashboardContent = () => {
                                         onClick={() => handleDateRangeChange(option.value)}
                                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                                             dateRange === option.value
-                                                ? 'bg-orange-100 text-orange-700'
+                                                ? 'bg-gray-100 text-gray-900 font-semibold'
                                                 : 'text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
@@ -268,7 +266,7 @@ const AdminDashboardContent = () => {
                                                 type="date"
                                                 value={customStartDate}
                                                 onChange={(e) => setCustomStartDate(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm"
                                             />
                                         </div>
                                         <div>
@@ -279,13 +277,13 @@ const AdminDashboardContent = () => {
                                                 type="date"
                                                 value={customEndDate}
                                                 onChange={(e) => setCustomEndDate(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm"
                                             />
                                         </div>
                                         <button
                                             onClick={applyCustomDateRange}
                                             disabled={!customStartDate || !customEndDate}
-                                            className="w-full px-4 py-2 bg-linear-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full px-4 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Apply Range
                                         </button>
@@ -306,8 +304,8 @@ const AdminDashboardContent = () => {
                     return (
                         <div key={stat.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-4">
-                                <div className={`w-12 h-12 bg-${stat.color}-100 rounded-xl flex items-center justify-center`}>
-                                    <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+                                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                    <Icon className="w-6 h-6 text-gray-700" />
                                 </div>
                                 <div className={`flex items-center space-x-1 text-sm font-semibold ${
                                     stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
@@ -331,9 +329,9 @@ const AdminDashboardContent = () => {
                         <h2 className="text-lg font-bold text-gray-900">Platform Revenue</h2>
                         <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
                     </div>
-                    <div className="h-64 flex items-center justify-center bg-linear-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-dashed border-green-200">
+                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                         <div className="text-center">
-                            <DollarSign className="w-12 h-12 text-green-400 mx-auto mb-2" />
+                            <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                             <p className="text-gray-400 font-semibold">Revenue Chart</p>
                             <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
                         </div>
@@ -346,9 +344,9 @@ const AdminDashboardContent = () => {
                         <h2 className="text-lg font-bold text-gray-900">User Growth</h2>
                         <span className="text-sm text-gray-500">{getDateRangeDisplay()}</span>
                     </div>
-                    <div className="h-64 flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-dashed border-blue-200">
+                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                         <div className="text-center">
-                            <Users className="w-12 h-12 text-blue-400 mx-auto mb-2" />
+                            <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                             <p className="text-gray-400 font-semibold">Growth Chart</p>
                             <p className="text-xs text-gray-400 mt-1">Chart visualization will go here</p>
                         </div>
@@ -365,7 +363,7 @@ const AdminDashboardContent = () => {
                             <h2 className="text-xl font-bold text-gray-900">Recent Activities</h2>
                             <p className="text-sm text-gray-600 mt-1">Actions requiring your attention</p>
                         </div>
-                        <button className="px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
+                        <button className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
                             View All
                         </button>
                     </div>
@@ -381,13 +379,13 @@ const AdminDashboardContent = () => {
                         return (
                             <div
                                 key={activity.id}
-                                className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-lg transition-all group"
+                                className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-lg transition-all group"
                             >
                                 {/* Activity Header */}
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                                         {/* Avatar */}
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0">
                                             {activity.avatar}
                                         </div>
 

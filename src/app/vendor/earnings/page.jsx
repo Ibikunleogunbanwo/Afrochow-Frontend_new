@@ -161,8 +161,8 @@ const VendorEarningsPage = () => {
             title: 'Total Revenue',
             value: formatCurrency(stats.totalRevenue),
             icon: DollarSign,
-            iconBg: 'bg-green-100',
-            iconColor: 'text-green-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             description: 'All-time earnings',
             trend: null
         },
@@ -170,8 +170,8 @@ const VendorEarningsPage = () => {
             title: "Today's Revenue",
             value: formatCurrency(stats.todayRevenue),
             icon: TrendingUp,
-            iconBg: 'bg-blue-100',
-            iconColor: 'text-blue-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             description: 'Earnings today',
             trend: calculateGrowth() > 0 ? 'up' : 'neutral'
         },
@@ -179,8 +179,8 @@ const VendorEarningsPage = () => {
             title: 'Total Orders',
             value: stats.totalOrders.toLocaleString(),
             icon: ShoppingBag,
-            iconBg: 'bg-purple-100',
-            iconColor: 'text-purple-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             description: 'All completed orders',
             trend: null
         },
@@ -188,8 +188,8 @@ const VendorEarningsPage = () => {
             title: 'Average Order Value',
             value: formatCurrency(stats.averageOrderValue),
             icon: Package,
-            iconBg: 'bg-orange-100',
-            iconColor: 'text-orange-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             description: 'Per order average',
             trend: null
         }
@@ -199,7 +199,7 @@ const VendorEarningsPage = () => {
         <div className="space-y-6">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Dashboard
                 </Link>
@@ -216,7 +216,7 @@ const VendorEarningsPage = () => {
                 <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
                     <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                     {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -225,7 +225,7 @@ const VendorEarningsPage = () => {
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mb-4" />
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-400 border-t-transparent mb-4" />
                     <p className="text-sm text-gray-500">Loading earnings data…</p>
                 </div>
             ) : (
@@ -256,12 +256,12 @@ const VendorEarningsPage = () => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h2 className="text-lg font-bold text-gray-900 mb-5">Revenue Breakdown</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="border-l-4 border-green-500 pl-4">
+                                <div className="border-l-4 border-gray-300 pl-4">
                                     <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
                                     <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">All-time earnings</p>
                                 </div>
-                                <div className="border-l-4 border-blue-500 pl-4">
+                                <div className="border-l-4 border-gray-300 pl-4">
                                     <p className="text-sm text-gray-600 mb-1">Today's Revenue</p>
                                     <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todayRevenue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">
@@ -270,7 +270,7 @@ const VendorEarningsPage = () => {
                                             : 'No revenue yet'}
                                     </p>
                                 </div>
-                                <div className="border-l-4 border-orange-500 pl-4">
+                                <div className="border-l-4 border-gray-300 pl-4">
                                     <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
                                     <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">Per order average</p>
@@ -282,20 +282,14 @@ const VendorEarningsPage = () => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Order Statistics</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="bg-purple-50 rounded-xl p-5 flex items-center gap-4">
-                                <div className="bg-purple-100 rounded-xl p-3 shrink-0">
-                                    <ShoppingBag className="h-6 w-6 text-purple-600" />
-                                </div>
+                            <div className="bg-gray-50 rounded-xl p-5 flex items-center gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500">Total Orders</p>
                                     <p className="text-2xl font-black text-gray-900">{stats.totalOrders}</p>
                                     <p className="text-xs text-gray-500 mt-0.5">All delivered orders</p>
                                 </div>
                             </div>
-                            <div className="bg-orange-50 rounded-xl p-5 flex items-center gap-4">
-                                <div className="bg-orange-100 rounded-xl p-3 shrink-0">
-                                    <DollarSign className="h-6 w-6 text-orange-600" />
-                                </div>
+                            <div className="bg-gray-50 rounded-xl p-5 flex items-center gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500">Avg Order Value</p>
                                     <p className="text-2xl font-black text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
@@ -312,7 +306,7 @@ const VendorEarningsPage = () => {
                                 <h2 className="text-lg font-bold text-gray-900">Recent Delivered Orders</h2>
                                 <p className="text-xs text-gray-400 mt-0.5">Latest {recentOrders.length} completed orders</p>
                             </div>
-                            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-full">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-full">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 {recentOrders.length} delivered
                             </span>
@@ -336,15 +330,15 @@ const VendorEarningsPage = () => {
                                                     <span className="font-mono text-sm font-bold text-gray-900">
                                                         #{order.publicOrderId?.slice(-8) ?? '—'}
                                                     </span>
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                         <CheckCircle2 className="w-3 h-3" /> Delivered
                                                     </span>
                                                     {isPickup ? (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                             <Store className="w-3 h-3" /> Pickup
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                             <Truck className="w-3 h-3" /> Delivery
                                                         </span>
                                                     )}
@@ -382,10 +376,10 @@ const VendorEarningsPage = () => {
                                             {/* Items */}
                                             {order.itemNames?.length > 0 ? (
                                                 <div className="flex items-start gap-1.5">
-                                                    <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                                                    <UtensilsCrossed className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {order.itemNames.map((name, i) => (
-                                                            <span key={i} className="text-xs font-medium text-gray-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
+                                                            <span key={i} className="text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
                                                                 {name}
                                                             </span>
                                                         ))}

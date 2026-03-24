@@ -17,16 +17,16 @@ const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/vendor/dashboard', badge: null },
     { name: 'Profile', icon: UserCircle, href: '/vendor/profile', badge: null },
     { name: 'Products', icon: UtensilsCrossed, href: '/vendor/menu', badge: null },
-    { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: 5 },
+    { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: null },
     { name: 'View Earnings', icon: DollarSign, href: '/vendor/earnings', badge: null },
-    { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: 3 },
+    { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: null },
     { name: 'Promotions', icon: Gift, href: '/vendor/promotions', badge: null },
     { name: 'View Reports', icon: BarChart3, href: '/vendor/reports', badge: null },
     { name: 'Help', icon: HelpCircle, href: '/vendor/help', badge: null },
 ];
 
 
-const MobileSidebar = ({ isOpen, onClose, pathname, onLogout }) => {
+const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {} }) => {
     if (!isOpen) return null;
 
     return (
@@ -63,6 +63,7 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout }) => {
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
+                        const badge = badgeCounts[item.href] ?? item.badge;
 
                         return (
                             <Link
@@ -81,12 +82,12 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout }) => {
                                     <Icon className="w-5 h-5" />
                                     <span>{item.name}</span>
                                 </div>
-                                {item.badge && (
+                                {badge > 0 && (
                                     <span className={`
                                         px-2 py-0.5 text-xs font-bold rounded-full
                                         ${isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'}
                                     `}>
-                                        {item.badge}
+                                        {badge > 99 ? '99+' : badge}
                                     </span>
                                 )}
                             </Link>

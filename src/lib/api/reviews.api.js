@@ -47,4 +47,31 @@ export const ReviewsAPI = {
       method: 'GET',
     });
   },
+
+  // ================= CUSTOMER REVIEWS (authenticated) =================
+
+  createReview: (data) =>
+    fetchWithCredentials(`${API_BASE_URL}/customer/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateReview: (reviewId, data) =>
+    fetchWithCredentials(`${API_BASE_URL}/customer/reviews/${reviewId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteMyReview: (reviewId) =>
+    fetchWithCredentials(`${API_BASE_URL}/customer/reviews/${reviewId}`, {
+      method: 'DELETE',
+    }),
+
+  getMyReviews: () =>
+    fetchWithCredentials(`${API_BASE_URL}/customer/reviews`),
+
+  markHelpful: (reviewId) =>
+    fetchWithCredentials(`${API_BASE_URL}/reviews/${reviewId}/helpful`, {
+      method: 'PATCH',
+    }),
 };

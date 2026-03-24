@@ -238,7 +238,7 @@ const VendorPromotionsPage = () => {
         if (now < start) return { label: 'Scheduled', color: 'bg-blue-500' };
         if (now > end)   return { label: 'Expired',   color: 'bg-red-500'  };
         if (promotion.usageLimit && promotion.usedCount >= promotion.usageLimit)
-            return { label: 'Limit Reached', color: 'bg-orange-500' };
+            return { label: 'Limit Reached', color: 'bg-gray-500' };
         return { label: 'Active', color: 'bg-green-500' };
     };
 
@@ -269,7 +269,7 @@ const VendorPromotionsPage = () => {
 
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Dashboard
                 </Link>
@@ -287,8 +287,8 @@ const VendorPromotionsPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <div className="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center">
-                            <Tag className="w-5 h-5 text-orange-600" />
+                        <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <Tag className="w-5 h-5 text-gray-700" />
                         </div>
                     </div>
                     <p className="text-sm text-gray-500 mb-0.5">Total Promotions</p>
@@ -297,8 +297,8 @@ const VendorPromotionsPage = () => {
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
-                            <Users className="w-5 h-5 text-green-600" />
+                        <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <Users className="w-5 h-5 text-gray-700" />
                         </div>
                     </div>
                     <p className="text-sm text-gray-500 mb-0.5">Total Usage</p>
@@ -309,8 +309,8 @@ const VendorPromotionsPage = () => {
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <div className="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-purple-600" />
+                        <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-gray-700" />
                         </div>
                     </div>
                     <p className="text-sm text-gray-500 mb-0.5">Scheduled</p>
@@ -338,7 +338,7 @@ const VendorPromotionsPage = () => {
                                 placeholder="Search promotions…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                                 style={{ color: 'black', backgroundColor: 'white' }}
                             />
                         </div>
@@ -349,7 +349,7 @@ const VendorPromotionsPage = () => {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none cursor-pointer"
+                                className="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-300 focus:border-transparent appearance-none cursor-pointer"
                                 style={{ color: 'black', backgroundColor: 'white' }}
                             >
                                 <option value="all">All Status</option>
@@ -362,7 +362,7 @@ const VendorPromotionsPage = () => {
 
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-5 py-2 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                     >
                         <Plus className="h-4 w-4" />
                         Create Promotion
@@ -373,7 +373,7 @@ const VendorPromotionsPage = () => {
                 <div className="p-5">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-16">
-                            <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mb-4" />
+                            <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-400 border-t-transparent mb-4" />
                             <p className="text-sm text-gray-500">Loading promotions…</p>
                         </div>
                     ) : filteredPromotions.length === 0 ? (
@@ -397,14 +397,14 @@ const VendorPromotionsPage = () => {
                                 return (
                                     <div
                                         key={promotion.id || promotion.code}
-                                        className="border border-gray-100 rounded-xl p-5 hover:border-orange-200 hover:shadow-sm transition-all"
+                                        className="border border-gray-100 rounded-xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
                                     >
                                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                                             {/* Left — info */}
                                             <div className="flex-1">
                                                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                    <div className="bg-orange-100 rounded-lg p-1.5">
-                                                        <Tag className="h-4 w-4 text-orange-600" />
+                                                    <div className="bg-gray-100 rounded-lg p-1.5">
+                                                        <Tag className="h-4 w-4 text-gray-600" />
                                                     </div>
                                                     <h3 className="text-base font-bold text-gray-900">{promotion.name}</h3>
                                                     <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
@@ -446,7 +446,7 @@ const VendorPromotionsPage = () => {
                                                         </div>
                                                         <div className="w-full bg-gray-100 rounded-full h-1.5">
                                                             <div
-                                                                className="bg-orange-500 h-1.5 rounded-full transition-all"
+                                                                className="bg-gray-700 h-1.5 rounded-full transition-all"
                                                                 style={{ width: `${Math.min(usagePercent, 100)}%` }}
                                                             />
                                                         </div>
@@ -518,7 +518,7 @@ const VendorPromotionsPage = () => {
                                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                     placeholder="e.g. SUMMER25"
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all uppercase"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all uppercase"
                                 />
                             </div>
 
@@ -531,7 +531,7 @@ const VendorPromotionsPage = () => {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g. Summer Sale"
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                 />
                             </div>
 
@@ -544,7 +544,7 @@ const VendorPromotionsPage = () => {
                                     placeholder="Describe the promotion…"
                                     rows={3}
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all resize-none"
                                 />
                             </div>
 
@@ -556,7 +556,7 @@ const VendorPromotionsPage = () => {
                                         value={formData.discountType}
                                         onChange={(e) => setFormData({ ...formData, discountType: e.target.value, discountValue: '' })}
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     >
                                         {Object.entries(DISCOUNT_TYPES).map(([key, label]) => (
                                             <option key={key} value={key}>{label}</option>
@@ -577,7 +577,7 @@ const VendorPromotionsPage = () => {
                                             onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
                                             placeholder={formData.discountType === 'PERCENTAGE' ? 'e.g. 25' : 'e.g. 10.00'}
                                             style={{ color: 'black', backgroundColor: 'white' }}
-                                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                         />
                                     </div>
                                 )}
@@ -603,7 +603,7 @@ const VendorPromotionsPage = () => {
                                         onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
                                         placeholder="0.00"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                                 <div>
@@ -614,7 +614,7 @@ const VendorPromotionsPage = () => {
                                         onChange={(e) => setFormData({ ...formData, maxDiscountAmount: e.target.value })}
                                         placeholder="Optional"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                             </div>
@@ -628,7 +628,7 @@ const VendorPromotionsPage = () => {
                                         value={formData.startDate}
                                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                                 <div>
@@ -638,7 +638,7 @@ const VendorPromotionsPage = () => {
                                         value={formData.endDate}
                                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                             </div>
@@ -653,7 +653,7 @@ const VendorPromotionsPage = () => {
                                         onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
                                         placeholder="Unlimited"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                                 <div>
@@ -664,7 +664,7 @@ const VendorPromotionsPage = () => {
                                         onChange={(e) => setFormData({ ...formData, usagePerCustomer: e.target.value })}
                                         placeholder="1"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                             </div>
@@ -678,7 +678,7 @@ const VendorPromotionsPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${formData.isActive ? 'bg-orange-600' : 'bg-gray-300'}`}
+                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${formData.isActive ? 'bg-gray-900' : 'bg-gray-300'}`}
                                 >
                                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-8' : 'translate-x-1'}`} />
                                 </button>
@@ -703,7 +703,7 @@ const VendorPromotionsPage = () => {
                                     !formData.startDate ||
                                     !formData.endDate
                                 }
-                                className="px-5 py-2.5 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-5 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? 'Saving…' : showCreateModal ? 'Create Promotion' : 'Update Promotion'}
                             </button>

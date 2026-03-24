@@ -55,8 +55,8 @@ const ReviewsPage = () => {
             value: vendorRating > 0 ? vendorRating.toFixed(1) : '—',
             sub: `${vendorReviews.length} review${vendorReviews.length !== 1 ? 's' : ''}`,
             icon: Store,
-            iconBg: 'bg-orange-100',
-            iconColor: 'text-orange-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             stars: Math.round(vendorRating),
         },
         {
@@ -64,8 +64,8 @@ const ReviewsPage = () => {
             value: productRating > 0 ? productRating.toFixed(1) : '—',
             sub: `${productReviews.length} review${productReviews.length !== 1 ? 's' : ''}`,
             icon: Package,
-            iconBg: 'bg-blue-100',
-            iconColor: 'text-blue-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             stars: Math.round(productRating),
         },
         {
@@ -73,8 +73,8 @@ const ReviewsPage = () => {
             value: (vendorReviews.length + productReviews.length).toString(),
             sub: 'Keep it up!',
             icon: Award,
-            iconBg: 'bg-green-100',
-            iconColor: 'text-green-600',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-700',
             stars: null,
         },
     ];
@@ -84,7 +84,7 @@ const ReviewsPage = () => {
 
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Dashboard
                 </Link>
@@ -116,7 +116,7 @@ const ReviewsPage = () => {
                                     {renderStars(s.stars)}
                                     <span className="text-xs text-gray-500">{s.sub}</span>
                                   </div>
-                                : <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
+                                : <div className="flex items-center gap-1.5 text-xs text-gray-700 font-semibold">
                                     <TrendingUp className="w-3.5 h-3.5" />
                                     {s.sub}
                                   </div>
@@ -141,14 +141,14 @@ const ReviewsPage = () => {
                                 onClick={() => setActiveTab(id)}
                                 className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-colors ${
                                     activeTab === id
-                                        ? 'border-orange-500 text-orange-600'
+                                        ? 'border-gray-900 text-gray-900'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
                                 <Icon className="w-4 h-4" />
                                 <span>{label}</span>
                                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                    activeTab === id ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
+                                    activeTab === id ? 'bg-gray-200 text-gray-900' : 'bg-gray-100 text-gray-600'
                                 }`}>{count}</span>
                             </button>
                         ))}
@@ -159,7 +159,7 @@ const ReviewsPage = () => {
                 <div className="p-6">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-16">
-                            <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mb-4" />
+                            <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-400 border-t-transparent mb-4" />
                             <p className="text-sm text-gray-500">Loading reviews…</p>
                         </div>
                     ) : currentReviews.length === 0 ? (
@@ -176,19 +176,19 @@ const ReviewsPage = () => {
                         <div className="space-y-3">
                             {currentReviews.map((review, index) => (
                                 <div
-                                    key={review.id || review.publicReviewId || `review-${index}`}
-                                    className="border border-gray-100 rounded-xl p-5 hover:border-orange-200 hover:shadow-sm transition-all"
+                                    key={review.reviewId || review.id || review.publicReviewId || `review-${index}`}
+                                    className="border border-gray-100 rounded-xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
                                 >
                                     {/* Header row */}
                                     <div className="flex items-start justify-between gap-3 mb-3">
                                         <div className="flex items-start gap-3 flex-1 min-w-0">
                                             {/* Avatar */}
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                                                 <User className="h-4 w-4 text-white" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-semibold text-gray-900 text-sm truncate">
-                                                    {review.customerName || 'Anonymous Customer'}
+                                                    {review.userName || review.customerName || 'Anonymous Customer'}
                                                 </p>
                                                 {activeTab === 'products' && review.productName && (
                                                     <p className="text-xs text-gray-500 truncate mt-0.5">
@@ -211,8 +211,8 @@ const ReviewsPage = () => {
                                                 {formatDate(review.createdAt)}
                                             </div>
                                             {review.verified && (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
                                                     {activeTab === 'vendor' ? 'Verified' : 'Verified Purchase'}
                                                 </span>
                                             )}

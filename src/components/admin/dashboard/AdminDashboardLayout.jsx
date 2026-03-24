@@ -142,7 +142,6 @@ const AdminDashboardLayout = ({ children }) => {
             try {
                 const adminData = await AdminAPI.getAdminData();
                 setAdminData(adminData?.data ?? adminData);
-                console.log("Fetched adminData:", adminData); // correct place
             } catch (err) {
                 console.error(err);
             }
@@ -177,7 +176,7 @@ const AdminDashboardLayout = ({ children }) => {
 
                     {/* Logo */}
                     <div className="flex items-center shrink-0 px-6 py-5 border-b border-gray-200">
-                        <Shield className="w-8 h-8 text-orange-600" />
+                        <Shield className="w-8 h-8 text-gray-900" />
                         <div className="ml-3">
                             <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
                             <p className="text-xs text-gray-500">Admin Dashboard</p>
@@ -197,8 +196,8 @@ const AdminDashboardLayout = ({ children }) => {
                                     className={`
                     flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all
                     ${isActive
-                                        ? 'bg-linear-to-r from-orange-600 to-red-600 text-white shadow-lg'
-                                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                                        ? 'bg-gray-900 text-white'
+                                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                     }
                   `}
                                 >
@@ -209,7 +208,7 @@ const AdminDashboardLayout = ({ children }) => {
                                     {item.badge && (
                                         <span className={`
                       px-2 py-0.5 text-xs font-bold rounded-full
-                      ${isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'}
+                      ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}
                     `}>
                       {item.badge}
                     </span>
@@ -225,7 +224,7 @@ const AdminDashboardLayout = ({ children }) => {
                             onClick={() => setProfileOpen(!profileOpen)}
                             className="flex items-center w-full px-4 py-3 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                         >
-                            <div className="w-10 h-10 bg-linear-to-br from-orange-600 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                            <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold">
                                 {admin.name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -272,7 +271,7 @@ const AdminDashboardLayout = ({ children }) => {
                         {/* Mobile Logo */}
                         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
                             <div className="flex items-center">
-                                <Shield className="w-8 h-8 text-orange-600" />
+                                <Shield className="w-8 h-8 text-gray-900" />
                                 <div className="ml-3">
                                     <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
                                     <p className="text-xs text-gray-500">Admin Dashboard</p>
@@ -297,8 +296,8 @@ const AdminDashboardLayout = ({ children }) => {
                                         className={`
                       flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all
                       ${isActive
-                                            ? 'bg-linear-to-r from-orange-600 to-red-600 text-white shadow-lg'
-                                            : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                         }
                     `}
                                     >
@@ -309,7 +308,7 @@ const AdminDashboardLayout = ({ children }) => {
                                         {item.badge && (
                                             <span className={`
                         px-2 py-0.5 text-xs font-bold rounded-full
-                        ${isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'}
+                        ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}
                       `}>
                         {item.badge}
                       </span>
@@ -322,7 +321,7 @@ const AdminDashboardLayout = ({ children }) => {
                         {/* Mobile User Section with Logout */}
                         <div className="shrink-0 p-4 border-t border-gray-200">
                             <div className="flex items-center px-4 py-3 space-x-3 mb-2">
-                                <div className="w-10 h-10 bg-linear-to-br from-orange-600 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold">
                                     {admin.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -367,7 +366,7 @@ const AdminDashboardLayout = ({ children }) => {
                                         <input
                                             type="text"
                                             placeholder="Search users, vendors, orders..."
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                                         />
                                     </div>
                                 </div>
@@ -399,7 +398,7 @@ const AdminDashboardLayout = ({ children }) => {
                                                     <div
                                                         key={notification.id}
                                                         className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 ${
-                                                            notification.unread ? 'bg-orange-50' : ''
+                                                            notification.unread ? 'bg-gray-50' : ''
                                                         }`}
                                                     >
                                                         <p className="text-sm text-gray-900">{notification.text}</p>
@@ -408,7 +407,7 @@ const AdminDashboardLayout = ({ children }) => {
                                                 ))}
                                             </div>
                                             <div className="px-4 py-3 text-center border-t border-gray-200">
-                                                <Link href="/admin/notifications" className="text-sm text-orange-600 font-semibold hover:text-orange-700">
+                                                <Link href="/admin/notifications" className="text-sm text-gray-700 font-semibold hover:text-gray-900">
                                                     View all notifications
                                                 </Link>
                                             </div>
@@ -418,7 +417,7 @@ const AdminDashboardLayout = ({ children }) => {
 
                                 {/* Profile - Mobile */}
                                 <div className="lg:hidden">
-                                    <button className="w-10 h-10 bg-linear-to-br from-orange-600 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    <button className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold">
                                         {admin.name.charAt(0)}
                                     </button>
                                 </div>

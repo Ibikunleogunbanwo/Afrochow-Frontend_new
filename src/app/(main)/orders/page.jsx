@@ -78,7 +78,7 @@ function OrderCard({ order, onCancel, cancelling }) {
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <span className="text-sm text-gray-500">Total</span>
                     <span className="text-lg font-black text-orange-600">
-                        ${order.totalAmount?.toFixed(2) ?? "—"}
+                        CA${order.totalAmount?.toFixed(2) ?? "—"}
                     </span>
                 </div>
 
@@ -203,7 +203,7 @@ export default function OrdersPage() {
                         {[
                             { label: "Total",     value: orders.length },
                             { label: "Active",    value: activeCount },
-                            { label: "Spent",     value: `$${totalSpent.toFixed(2)}` },
+                            { label: "Spent",     value: `CA$${totalSpent.toFixed(2)}` },
                         ].map(s => (
                             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
                                 <p className="text-2xl font-black bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">{s.value}</p>

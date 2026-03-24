@@ -135,8 +135,12 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
   if (!response.ok || json.success === false) {
     const errorMessage = extractErrorMessage(json, `Request failed (${response.status})`);
 
-    // Silence 401 on /auth/me — it's an expected outcome of a passive check
-    const isSilent = response.status === 401 && url.includes('/auth/me');
+    // Silence 401 on /auth/me — it's an expected outcome of a passive check.
+    // Callers can also pass options.silent = true to suppress console noise
+    // for endpoints where errors are handled gracefully (e.g. notifications).
+    const isSilent =
+        (response.status === 401 && url.includes('/auth/me')) ||
+        options.silent === true;
 
     if (!isSilent) {
       console.error('API Error —', response.status, errorMessage, '| url:', url);

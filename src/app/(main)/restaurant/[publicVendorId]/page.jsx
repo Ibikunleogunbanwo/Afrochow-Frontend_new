@@ -20,6 +20,7 @@ import StoreCard from '@/components/home/cards/storeCard';
 import ProductDetailModal from '@/components/register/vendor/ProductDetailModal';
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
 import ReviewsModal from '@/components/register/vendor/vendorComponent/ReviewsModal';
+import WriteReviewModal from '@/components/register/vendor/vendorComponent/WriteReviewModal';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,9 @@ const VendorProfilePage = () => {
     const [reviewType, setReviewType]         = useState('vendor');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [ratingFilter, setRatingFilter]     = useState(0);
+
+    const [showWriteReview, setShowWriteReview]       = useState(false);
+    const [writeReviewProduct, setWriteReviewProduct] = useState(null);
 
     // ── data fetching ─────────────────────────────────────────────────────────
 
@@ -323,6 +327,21 @@ const VendorProfilePage = () => {
     const handleCloseProductModal = useCallback(() => setSelectedProductModal(null), []);
     const handleCloseReviewsModal = useCallback(() => setShowReviewsModal(false), []);
 
+    const handleWriteVendorReview = useCallback(() => {
+        setWriteReviewProduct(null);
+        setShowWriteReview(true);
+    }, []);
+
+    const handleWriteProductReview = useCallback((product) => {
+        setWriteReviewProduct(product);
+        setShowWriteReview(true);
+    }, []);
+
+    const handleReviewSuccess = useCallback(() => {
+        if (showReviewsModal && reviewType === 'vendor') fetchVendorReviews(ratingFilter);
+        if (showReviewsModal && reviewType === 'product') fetchProductReviews(writeReviewProduct?.publicProductId);
+    }, [showReviewsModal, reviewType, fetchVendorReviews, fetchProductReviews, ratingFilter, writeReviewProduct]);
+
     // ── render states ─────────────────────────────────────────────────────────
 
     if (loading) {
@@ -465,20 +484,28 @@ const VendorProfilePage = () => {
                                     </h1>
                                     <p className="text-lg text-gray-600 mb-3">{cuisineType}</p>
 
-                                    <button
-                                        onClick={handleViewVendorReviews}
-                                        className="inline-flex items-center space-x-2 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
-                                    >
-                                        <div className="flex items-center space-x-1">
-                                            <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                                            <span className="text-xl font-bold text-gray-900">
-                                                {averageRating?.toFixed(1) || '0.0'}
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <button
+                                            onClick={handleViewVendorReviews}
+                                            className="inline-flex items-center space-x-2 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            <div className="flex items-center space-x-1">
+                                                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                                                <span className="text-xl font-bold text-gray-900">
+                                                    {averageRating?.toFixed(1) || '0.0'}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm text-gray-600">
+                                                ({reviewCount || 0} reviews)
                                             </span>
-                                        </div>
-                                        <span className="text-sm text-gray-600">
-                                            ({reviewCount || 0} reviews)
-                                        </span>
-                                    </button>
+                                        </button>
+                                        <button
+                                            onClick={handleWriteVendorReview}
+                                            className="px-3 py-1.5 text-sm font-semibold text-orange-600 border border-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                                        >
+                                            Write a Review
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className={`self-start shrink-0 px-3 py-1.5 rounded-full font-bold text-xs md:text-sm whitespace-nowrap ${
@@ -521,7 +548,7 @@ const VendorProfilePage = () => {
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Delivery</p>
                                             <p className="text-sm text-gray-600">
-                                                ${deliveryFee?.toFixed(2)} • {estimatedDeliveryMinutes} min
+                                                CA${deliveryFee?.toFixed(2)} • {estimatedDeliveryMinutes} min
                                             </p>
                                         </div>
                                     </div>
@@ -545,7 +572,7 @@ const VendorProfilePage = () => {
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Min Delivery Order</p>
                                             <p className="text-sm text-gray-600">
-                                                ${minimumOrderAmount?.toFixed(2)}
+                                                CA${minimumOrderAmount?.toFixed(2)}
                                             </p>
                                         </div>
                                     </div>
@@ -650,6 +677,7 @@ const VendorProfilePage = () => {
                         handleCloseProductModal();
                         handleViewProductReviews(selectedProductModal);
                     }}
+                    onWriteReview={() => handleWriteProductReview(selectedProductModal)}
                 />
             )}
 
@@ -664,8 +692,24 @@ const VendorProfilePage = () => {
                     productName={selectedProduct?.name}
                     ratingFilter={ratingFilter}
                     onRatingFilterChange={handleRatingFilterChange}
+                    onWriteReview={
+                        reviewType === 'product'
+                            ? () => handleWriteProductReview(selectedProduct)
+                            : handleWriteVendorReview
+                    }
+                    onMarkHelpful={(reviewId) => ReviewsAPI.markHelpful(reviewId)}
                 />
             )}
+
+            {/* Write Review Modal */}
+            <WriteReviewModal
+                isOpen={showWriteReview}
+                onClose={() => setShowWriteReview(false)}
+                vendorPublicId={publicVendorId}
+                vendorName={vendor?.restaurantName}
+                product={writeReviewProduct}
+                onSuccess={handleReviewSuccess}
+            />
         </div>
     );
 };

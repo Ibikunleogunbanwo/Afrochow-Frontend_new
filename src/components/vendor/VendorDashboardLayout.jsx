@@ -11,6 +11,7 @@ import MobileSidebar from '@/components/VendorDashboardLayout/MobileSidebar';
 import NotificationDropdown from '@/components/VendorDashboardLayout/NotificationDropdown';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
 import {useAuth} from "@/hooks/useAuth";
+import { useVendorNotifications } from "@/hooks/useVendorNotifications";
 
 const VendorDashboardLayout = ({ children }) => {
     const pathname = usePathname();
@@ -26,12 +27,14 @@ const VendorDashboardLayout = ({ children }) => {
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
 
+    const { notifications, unreadCount, loading: notifsLoading, markRead, markAllRead, deleteOne } = useVendorNotifications();
 
-    const notifications = [
-        { id: 1, text: "New order #12345 received", time: "2 min ago", unread: true },
-        { id: 2, text: "Payment processed successfully", time: "1 hour ago", unread: true },
-        { id: 3, text: "New review from John Doe", time: "3 hours ago", unread: false },
-    ];
+    // Derive per-tab badge counts from unread notifications
+    const badgeCounts = {
+        '/vendor/orders':        notifications.filter(n => n.unread && n.href === '/vendor/orders').length        || null,
+        '/vendor/reviews':       notifications.filter(n => n.unread && n.href === '/vendor/reviews').length       || null,
+        '/vendor/notifications': unreadCount || null,
+    };
 
     const router = useRouter();
 
@@ -66,7 +69,7 @@ const VendorDashboardLayout = ({ children }) => {
         } catch (err) {
             toast.error("Session expired. Please log in again.");
             setProfile(null);
-            router.push("/login");
+            router.push("/?signin=true");
         } finally {
             setLoading(false);
         }
@@ -126,6 +129,7 @@ const VendorDashboardLayout = ({ children }) => {
                 onProfileToggle={toggleProfile}
                 onLogout={handleLogout}
                 profileRef={profileRef}
+                badgeCounts={badgeCounts}
             />
 
             {/* Mobile Sidebar */}
@@ -134,6 +138,7 @@ const VendorDashboardLayout = ({ children }) => {
                 onClose={() => setSidebarOpen(false)}
                 pathname={pathname}
                 onLogout={handleLogout}
+                badgeCounts={badgeCounts}
             />
 
             {/* Main Content */}
@@ -176,15 +181,22 @@ const VendorDashboardLayout = ({ children }) => {
                                         aria-expanded={notificationsOpen}
                                     >
                                         <Bell className="w-6 h-6" />
-                                        {notifications.filter(n => n.unread).length > 0 && (
-                                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-black bg-red-500 text-white rounded-full flex items-center justify-center leading-none">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
                                         )}
                                     </button>
 
                                     <NotificationDropdown
                                         isOpen={notificationsOpen}
                                         notifications={notifications}
+                                        unreadCount={unreadCount}
+                                        loading={notifsLoading}
                                         onClose={() => setNotificationsOpen(false)}
+                                        onMarkRead={markRead}
+                                        onMarkAllRead={markAllRead}
+                                        onDelete={deleteOne}
                                     />
                                 </div>
 

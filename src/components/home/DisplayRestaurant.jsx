@@ -9,6 +9,63 @@ import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
 import { PromotionsAPI } from '@/lib/api';
 
+// Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
+// Avoids timezone bugs where the backend calculates isOpenNow in UTC
+// but vendor hours are stored in their local timezone.
+const computeIsOpenNow = (todayHoursFormatted) => {
+    if (!todayHoursFormatted) return null;
+    // 24-hour: "Open 09:00 - 22:00" or "09:00 - 22:00"
+    const m24 = todayHoursFormatted.match(/^(?:open\s+)?(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/i);
+    if (m24) {
+        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
+        const o = parseInt(m24[1]) * 60 + parseInt(m24[2]);
+        const c = parseInt(m24[3]) * 60 + parseInt(m24[4]);
+        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
+    }
+    // 12-hour: "06:00 AM - 10:00 PM"
+    const m12 = todayHoursFormatted.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (m12) {
+        const to24 = (h, m, p) => { let hr = parseInt(h); const mn = parseInt(m); if (p.toUpperCase()==='PM'&&hr!==12) hr+=12; if (p.toUpperCase()==='AM'&&hr===12) hr=0; return hr*60+mn; };
+        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
+        const o = to24(m12[1], m12[2], m12[3]); const c = to24(m12[4], m12[5], m12[6]);
+        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
+    }
+    return null;
+};
+
+// Extract today's formatted hours from weeklySchedule using browser local day.
+const computeTodayHoursFromSchedule = (weeklySchedule) => {
+    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const today = days[new Date().getDay()];
+    const cap = today.charAt(0).toUpperCase() + today.slice(1);
+    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
+    if (!day) return null;
+    if (!(day.isOpen ?? day.open ?? false)) return 'Closed today';
+    const ot = day.openTime ?? day.open_time ?? day.startTime;
+    const ct = day.closeTime ?? day.close_time ?? day.endTime;
+    if (!ot || !ct) return null;
+    return `${ot} - ${ct}`;
+};
+
+// Compute from full weeklySchedule object using browser local day (most accurate).
+const computeIsOpenFromSchedule = (weeklySchedule) => {
+    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const today = days[new Date().getDay()];
+    const cap = today.charAt(0).toUpperCase() + today.slice(1);
+    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
+    if (!day) return null;
+    if (!(day.isOpen ?? day.open ?? false)) return false;
+    const ot = day.openTime ?? day.open_time ?? day.startTime;
+    const ct = day.closeTime ?? day.close_time ?? day.endTime;
+    if (!ot || !ct) return null;
+    const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
+    const o = toMins(ot), c = toMins(ct);
+    return c > o ? cur >= o && cur < c : cur >= o || cur < c;
+};
+
 const DisplayRestaurant = () => {
     const router      = useRouter();
     const searchParams = useSearchParams();
@@ -133,8 +190,8 @@ const DisplayRestaurant = () => {
                                 vendorPostalCode:       product.vendorPostalCode,
                                 vendorCountry:          product.vendorCountry,
                                 vendorFormattedAddress: product.vendorFormattedAddress,
-                                isOpenNow:              vendor.isOpenNow          ?? null,
-                                todayHoursFormatted:    vendor.todayHoursFormatted ?? null,
+                                isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? computeIsOpenNow(vendor.todayHoursFormatted) ?? vendor.isOpenNow ?? null,
+                                todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? vendor.todayHoursFormatted ?? null,
                                 offersPickup:           vendor.offersPickup        ?? false,
                                 isVegetarian:           product.isVegetarian       || false,
                                 isVegan:                product.isVegan            || false,
@@ -143,11 +200,9 @@ const DisplayRestaurant = () => {
                             };
                         });
 
-                    // Open vendors first
-                    const sortedResults = [...transformedResults].sort((a, b) => {
-                        if (a.isOpenNow === b.isOpenNow) return 0;
-                        return a.isOpenNow ? -1 : 1;
-                    });
+                    // Open first → unknown (null) → closed last
+                    const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
+                    const sortedResults = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
 
                     setProducts(sortedResults);
                     setTotalPages(pageData.totalPages      || 0);

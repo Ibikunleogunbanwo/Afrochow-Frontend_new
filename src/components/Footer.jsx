@@ -94,6 +94,11 @@ const Footer = () => {
                     About Us
                   </Link>
                 </li>
+                <li>
+                  <Link href="/help" className="text-gray-400 hover:text-orange-500 transition-colors text-sm">
+                    Help & Support
+                  </Link>
+                </li>
               </ul>
             </div>
 

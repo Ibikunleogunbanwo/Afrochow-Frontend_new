@@ -93,10 +93,7 @@ export default function Step2() {
       if (!imageUrl) throw new Error("No URL returned from upload");
 
       if (oldImageUrl && oldImageUrl !== imageUrl) {
-        console.log("🗑️ Attempting to delete old image:", oldImageUrl);
         await deleteImage(oldImageUrl);
-        console.log("✅ Old image deleted successfully:", oldImageUrl);
-
       }
 
       setValue("profileImageUrl", imageUrl);

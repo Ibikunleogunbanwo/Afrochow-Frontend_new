@@ -34,7 +34,7 @@ const provinces = [
 ];
 
 const INPUT_CLS =
-    "w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-gray-900 bg-white transition";
+    "w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 text-gray-900 bg-white transition";
 
 const emptyAddress = () => ({
     addressLine: "", city: "", province: "ON",
@@ -50,7 +50,7 @@ function EditActions({ onSave, onCancel, isSaving = false, isSaved = false }) {
                 onClick={onSave}
                 disabled={isSaving || isSaved}
                 className={`flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:cursor-not-allowed
-                    ${isSaved ? "bg-green-500" : "bg-orange-500 hover:bg-orange-600 disabled:opacity-60"}`}
+                    ${isSaved ? "bg-green-500" : "bg-gray-900 hover:bg-gray-800 disabled:opacity-60"}`}
             >
                 {isSaving ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
@@ -138,7 +138,7 @@ function AddressFormBlock({ form, onChange, onClear, onSave, onCancel, isSaving,
                     type="checkbox"
                     checked={form.defaultAddress}
                     onChange={e => onChange("defaultAddress", e.target.checked)}
-                    className="w-4 h-4 rounded accent-orange-500"
+                    className="w-4 h-4 rounded accent-gray-900"
                 />
                 <span className="text-sm text-gray-700 font-medium">Set as default delivery address</span>
             </label>
@@ -153,8 +153,8 @@ function SectionRow({ icon: Icon, label, children, onEdit, editing }) {
     return (
         <div className="px-6 py-5 border-b border-gray-100 last:border-0">
             <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-4 h-4 text-orange-500" />
+                <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
@@ -163,7 +163,7 @@ function SectionRow({ icon: Icon, label, children, onEdit, editing }) {
                 {onEdit && !editing && (
                     <button
                         onClick={onEdit}
-                        className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-colors"
+                        className="shrink-0 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
                         title={`Edit ${label}`}
                     >
                         <Pencil className="w-4 h-4" />
@@ -424,7 +424,7 @@ export default function ProfilePage() {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <div className="w-10 h-10 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-sm text-gray-500">Loading your profile…</p>
                 </div>
             </div>
@@ -460,9 +460,9 @@ export default function ProfilePage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-orange-500 bg-orange-50", href: "/orders" },
-                        { icon: Coins,       label: "Points",    value: profileData.loyaltyPoints     ?? 0, color: "text-amber-500 bg-amber-50"   },
-                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-blue-500 bg-blue-50"     },
+                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-gray-700 bg-gray-100", href: "/orders" },
+                        { icon: Coins,       label: "Points",    value: profileData.loyaltyPoints     ?? 0, color: "text-gray-700 bg-gray-100"   },
+                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-gray-700 bg-gray-100"   },
                     ].map(s => {
                         const inner = (
                             <>
@@ -475,7 +475,7 @@ export default function ProfilePage() {
                         );
                         return s.href ? (
                             <Link key={s.label} href={s.href}
-                                className="bg-white border border-gray-200 rounded-2xl p-4 text-center hover:border-orange-300 hover:shadow-sm transition-all">
+                                className="bg-white border border-gray-200 rounded-2xl p-4 text-center hover:border-gray-400 hover:shadow-sm transition-all">
                                 {inner}
                             </Link>
                         ) : (
@@ -497,7 +497,7 @@ export default function ProfilePage() {
                             <div className="relative shrink-0">
                                 {uploadingImage && (
                                     <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center z-10">
-                                        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 )}
                                 {photoSaved && (
@@ -506,7 +506,7 @@ export default function ProfilePage() {
                                     </div>
                                 )}
                                 {profileData.profileImageUrl && !imageError ? (
-                                    <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-orange-100">
+                                    <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-200">
                                         <Image
                                             src={profileData.profileImageUrl}
                                             alt="Profile"
@@ -517,13 +517,13 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center ring-2 ring-orange-100">
+                                    <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center ring-2 ring-gray-200">
                                         <span className="text-2xl font-bold text-white">{initials}</span>
                                     </div>
                                 )}
                                 <label
                                     htmlFor="profile-image-upload"
-                                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center cursor-pointer transition-colors shadow"
+                                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-900 hover:bg-gray-700 rounded-full flex items-center justify-center cursor-pointer transition-colors shadow"
                                     title="Change photo"
                                 >
                                     <Upload className="w-3.5 h-3.5 text-white" />
@@ -570,15 +570,15 @@ export default function ProfilePage() {
                                         </p>
                                         {profileData.loyaltyPoints > 0 && (
                                             <div className="flex items-center gap-1 mt-0.5">
-                                                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                                <span className="text-xs text-amber-600 font-medium">
+                                                <Star className="w-3.5 h-3.5 text-gray-400 fill-gray-400" />
+                                                <span className="text-xs text-gray-500 font-medium">
                                                     {profileData.loyaltyPoints} loyalty points
                                                 </span>
                                             </div>
                                         )}
                                         <button
                                             onClick={() => setEditingSection("name")}
-                                            className="flex items-center gap-1.5 mt-2 text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors"
+                                            className="flex items-center gap-1.5 mt-2 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
                                         >
                                             <Pencil className="w-3.5 h-3.5" />
                                             Edit name
@@ -680,7 +680,7 @@ export default function ProfilePage() {
                                 setEditingAddressId(null);
                                 setAddressForm(emptyAddress());
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-orange-500 hover:text-white hover:bg-orange-500 border border-orange-200 hover:border-orange-500 rounded-xl transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:text-white hover:bg-gray-900 border border-gray-200 hover:border-gray-900 rounded-xl transition-all"
                         >
                             <Plus className="w-4 h-4" />
                             Add address
@@ -688,8 +688,8 @@ export default function ProfilePage() {
                     </div>
 
                     {showAddressForm && (
-                        <div className="px-6 bg-orange-50/40 border-b border-gray-100">
-                            <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide pt-4 mb-1">New address</p>
+                        <div className="px-6 bg-gray-50 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-4 mb-1">New address</p>
                             <AddressFormBlock
                                 form={addressForm}
                                 onChange={handleAddressChange}
@@ -709,8 +709,8 @@ export default function ProfilePage() {
                                 className={idx < profileData.addresses.length - 1 ? "border-b border-gray-100" : ""}
                             >
                                 {editingAddressId === address.publicAddressId ? (
-                                    <div className="px-6 bg-orange-50/40">
-                                        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide pt-4 mb-1">Edit address</p>
+                                    <div className="px-6 bg-gray-50">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-4 mb-1">Edit address</p>
                                         <AddressFormBlock
                                             form={addressForm}
                                             onChange={handleAddressChange}
@@ -723,26 +723,26 @@ export default function ProfilePage() {
                                     </div>
                                 ) : (
                                     <div className="px-6 py-4 flex items-start gap-3">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${address.defaultAddress ? "bg-orange-100" : "bg-gray-100"}`}>
-                                            <MapPin className={`w-4 h-4 ${address.defaultAddress ? "text-orange-500" : "text-gray-500"}`} />
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${address.defaultAddress ? "bg-gray-900" : "bg-gray-100"}`}>
+                                            <MapPin className={`w-4 h-4 ${address.defaultAddress ? "text-white" : "text-gray-500"}`} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <p className="text-sm font-semibold text-gray-900">{address.addressLine}</p>
                                                 {address.defaultAddress && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-orange-100 text-orange-600 rounded-full font-medium">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded-full font-medium border border-gray-200">
                                                         <Check className="w-3 h-3" />
                                                         Default
                                                     </span>
                                                 )}
                                             </div>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                {address.city}, {address.province} {address.postalCode} — {address.country}
+                                                {address.city}, {address.province} {address.postalCode} · {address.country}
                                             </p>
                                             {!address.defaultAddress && (
                                                 <button
                                                     onClick={() => handleSetDefaultAddress(address.publicAddressId)}
-                                                    className="text-xs text-orange-500 hover:text-orange-600 font-medium mt-1 transition-colors"
+                                                    className="text-xs text-gray-500 hover:text-gray-800 font-medium mt-1 transition-colors"
                                                 >
                                                     Set as default
                                                 </button>
@@ -762,7 +762,7 @@ export default function ProfilePage() {
                                                         defaultAddress: address.defaultAddress || false,
                                                     });
                                                 }}
-                                                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-colors"
+                                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
                                                 title="Edit address"
                                             >
                                                 <Pencil className="w-4 h-4" />
@@ -789,7 +789,7 @@ export default function ProfilePage() {
                                 <p className="text-xs text-gray-400 mb-4">Add a delivery address to speed up checkout</p>
                                 <button
                                     onClick={() => setShowAddressForm(true)}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Add your first address

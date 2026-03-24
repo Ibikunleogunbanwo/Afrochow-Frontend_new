@@ -36,7 +36,7 @@ const DAYS = [
 ];
 
 const INPUT_CLS =
-    'w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-gray-900 bg-white transition placeholder:text-gray-400';
+    'w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 text-gray-900 bg-white transition placeholder:text-gray-400';
 const INPUT_ERR_CLS =
     'w-full px-4 py-2.5 text-sm border border-red-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-300 text-gray-900 bg-white transition placeholder:text-gray-400';
 const NO_SPIN =
@@ -74,6 +74,23 @@ const capitaliseKeys = (hours = {}) =>
 const timeToMins = (t) => {
     const [h, m] = (t || '00:00').split(':').map(Number);
     return h * 60 + m;
+};
+
+// Compute open/closed from hoursForm using the browser's local clock.
+// Avoids timezone bugs where the backend isOpenNow uses UTC but hours are in local time.
+const computeIsOpenFromHours = (hoursForm) => {
+    if (!hoursForm) return null;
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = dayNames[new Date().getDay()];
+    const day = hoursForm[today];
+    if (!day?.isOpen) return false;
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const openMins    = timeToMins(day.openTime);
+    const closeMins   = timeToMins(day.closeTime);
+    return closeMins > openMins
+        ? currentMins >= openMins && currentMins < closeMins
+        : currentMins >= openMins || currentMins < closeMins;
 };
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -187,7 +204,7 @@ function Breadcrumb({ crumbs }) {
                     {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />}
                     {c.href ? (
                         <Link href={c.href}
-                            className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                            className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                             {c.icon && <c.icon className="w-3.5 h-3.5" />}
                             {c.label}
                         </Link>
@@ -218,7 +235,7 @@ function FieldError({ msg }) {
     );
 }
 
-function Toggle({ checked, onChange, colorOn = 'bg-orange-500' }) {
+function Toggle({ checked, onChange, colorOn = 'bg-gray-900' }) {
     return (
         <button type="button" onClick={() => onChange(!checked)}
             className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${checked ? colorOn : 'bg-gray-300'}`}>
@@ -231,7 +248,7 @@ function SaveBar({ saving, onSave, onCancel, disabled }) {
     return (
         <div className="flex items-center gap-2 pt-5 border-t border-gray-100 mt-6">
             <button onClick={onSave} disabled={saving || disabled}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 {saving ? 'Saving…' : 'Save changes'}
             </button>
@@ -268,7 +285,7 @@ function ImageDropZone({ label, hint, currentUrl, uploading, onFile, onRemove, a
                 <div className={`${containerCls} overflow-hidden border-2 border-gray-200`}>
                     {uploading && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70">
-                            <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                            <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
                         </div>
                     )}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -281,7 +298,7 @@ function ImageDropZone({ label, hint, currentUrl, uploading, onFile, onRemove, a
             ) : (
                 /* ── Drop zone ──────────────────────────────────────────────── */
                 <div className={`${containerCls} border-2 border-dashed bg-gray-50 transition-all
-                    ${uploading ? 'border-orange-400 bg-orange-50/40 cursor-wait' : 'border-gray-300 hover:border-orange-400 cursor-pointer'}`}>
+                    ${uploading ? 'border-gray-500 bg-gray-50 cursor-wait' : 'border-gray-300 hover:border-gray-500 cursor-pointer'}`}>
                     {/* Full-width hidden file input — works on all mobile browsers */}
                     {!uploading && (
                         <input type="file" accept="image/jpeg,image/png,image/webp"
@@ -291,8 +308,8 @@ function ImageDropZone({ label, hint, currentUrl, uploading, onFile, onRemove, a
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center pointer-events-none">
                         {uploading ? (
                             <>
-                                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-                                <p className="text-sm text-orange-600 font-medium">Uploading…</p>
+                                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                                <p className="text-sm text-gray-600 font-medium">Uploading…</p>
                             </>
                         ) : (
                             <>
@@ -589,7 +606,7 @@ export default function VendorProfilePage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
             </div>
         );
     }
@@ -624,7 +641,7 @@ export default function VendorProfilePage() {
                     {/* Banner + logo: logo is absolutely anchored to the banner bottom */}
                     <div className="relative">
                         {/* Banner */}
-                        <div className="h-36 sm:h-48 relative bg-gradient-to-r from-orange-500 to-red-600 overflow-hidden">
+                        <div className="h-36 sm:h-48 relative bg-gray-900 overflow-hidden">
                             {bannerUrl
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 ? <img src={bannerUrl} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
@@ -648,8 +665,8 @@ export default function VendorProfilePage() {
                             {logoUrl
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                                    <Store className="w-10 h-10 text-orange-500" />
+                                : <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                    <Store className="w-10 h-10 text-gray-400" />
                                   </div>
                             }
                         </div>
@@ -663,10 +680,16 @@ export default function VendorProfilePage() {
                                 <h1 className="text-xl sm:text-2xl font-black text-gray-900 break-words">
                                     {profile?.restaurantName || 'Your Restaurant'}
                                 </h1>
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 ${profile?.isOpenNow ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${profile?.isOpenNow ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                    {profile?.isOpenNow ? 'Open Now' : 'Closed'}
-                                </span>
+                                {(() => {
+                                    const isOpen = computeIsOpenFromHours(hoursForm);
+                                    if (isOpen === null) return null;
+                                    return (
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 ${isOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                            {isOpen ? 'Open Now' : 'Closed'}
+                                        </span>
+                                    );
+                                })()}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
                                 {profile?.cuisineType && <span className="font-medium">{profile.cuisineType}</span>}
@@ -689,22 +712,16 @@ export default function VendorProfilePage() {
                         {/* Stats row */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {[
-                                { label: 'Orders',   value: totalOrders,  icon: ShoppingBag, color: 'text-orange-600 bg-orange-50' },
-                                { label: 'Revenue',  value: `$${parseFloat(totalRevenue).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-green-600 bg-green-50' },
-                                { label: 'Products', value: totalProducts, icon: Package,     color: 'text-blue-600 bg-blue-50' },
-                                { label: 'Rating',   value: avgRating > 0 ? parseFloat(avgRating).toFixed(1) : '—', icon: Star, color: 'text-yellow-600 bg-yellow-50' },
-                            ].map(s => {
-                                const Icon = s.icon;
-                                return (
-                                    <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center">
-                                        <div className={`w-8 h-8 rounded-lg ${s.color} flex items-center justify-center mx-auto mb-1.5`}>
-                                            <Icon className="w-4 h-4" />
-                                        </div>
-                                        <p className="text-lg font-black text-gray-900 leading-none">{s.value}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                                    </div>
-                                );
-                            })}
+                                { label: 'Orders',   value: totalOrders },
+                                { label: 'Revenue',  value: `CA$${parseFloat(totalRevenue).toLocaleString('en-CA', { minimumFractionDigits: 2 })}` },
+                                { label: 'Products', value: totalProducts },
+                                { label: 'Rating',   value: avgRating > 0 ? parseFloat(avgRating).toFixed(1) : '—' },
+                            ].map(s => (
+                                <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                                    <p className="text-lg font-black text-gray-900 leading-none">{s.value}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -718,7 +735,7 @@ export default function VendorProfilePage() {
                             <button key={id} onClick={() => setActiveTab(id)}
                                 className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px
                                     ${activeTab === id
-                                        ? 'border-orange-500 text-orange-600 bg-orange-50/40'
+                                        ? 'border-gray-900 text-gray-900'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
                                 <Icon className="w-4 h-4" />
                                 {label}
@@ -733,7 +750,7 @@ export default function VendorProfilePage() {
                             {/* Basic details */}
                             <section>
                                 <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Store className="w-4 h-4 text-orange-500" /> Basic Details
+                                    Basic Details
                                 </h3>
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     <div>
@@ -782,7 +799,7 @@ export default function VendorProfilePage() {
                             {/* Services */}
                             <section>
                                 <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                    <Truck className="w-4 h-4 text-orange-500" /> Services
+                                    Services
                                 </h3>
                                 {infoErrors.services && (
                                     <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
@@ -792,10 +809,10 @@ export default function VendorProfilePage() {
                                 )}
                                 <div className="space-y-3">
                                     {/* Delivery */}
-                                    <div className={`rounded-xl border-2 p-4 transition-colors ${infoForm.offersDelivery ? 'border-orange-200 bg-orange-50/40' : 'border-gray-200 bg-gray-50'}`}>
+                                    <div className={`rounded-xl border-2 p-4 transition-colors ${infoForm.offersDelivery ? 'border-gray-400 bg-white' : 'border-gray-200 bg-gray-50'}`}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <Truck className={`w-5 h-5 ${infoForm.offersDelivery ? 'text-orange-500' : 'text-gray-400'}`} />
+                                                <Truck className={`w-5 h-5 ${infoForm.offersDelivery ? 'text-gray-700' : 'text-gray-400'}`} />
                                                 <div>
                                                     <p className="text-sm font-semibold text-gray-900">Delivery</p>
                                                     <p className="text-xs text-gray-500">Deliver orders to customers</p>
@@ -809,7 +826,7 @@ export default function VendorProfilePage() {
                                         </div>
 
                                         {infoForm.offersDelivery && (
-                                            <div className="grid sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-orange-100">
+                                            <div className="grid sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
                                                 <div>
                                                     <Label required>Delivery fee (CAD)</Label>
                                                     <input type="number" min={0} step="0.01"
@@ -846,10 +863,10 @@ export default function VendorProfilePage() {
                                     </div>
 
                                     {/* Pickup */}
-                                    <div className={`rounded-xl border-2 p-4 transition-colors ${infoForm.offersPickup ? 'border-green-200 bg-green-50/40' : 'border-gray-200 bg-gray-50'}`}>
+                                    <div className={`rounded-xl border-2 p-4 transition-colors ${infoForm.offersPickup ? 'border-gray-400 bg-white' : 'border-gray-200 bg-gray-50'}`}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <Store className={`w-5 h-5 ${infoForm.offersPickup ? 'text-green-600' : 'text-gray-400'}`} />
+                                                <Store className={`w-5 h-5 ${infoForm.offersPickup ? 'text-gray-700' : 'text-gray-400'}`} />
                                                 <div>
                                                     <p className="text-sm font-semibold text-gray-900">Pickup</p>
                                                     <p className="text-xs text-gray-500">Customers collect in-person</p>
@@ -868,7 +885,7 @@ export default function VendorProfilePage() {
                             {/* Address */}
                             <section>
                                 <h3 className="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-orange-500" /> Address
+                                    Address
                                 </h3>
                                 <p className="text-xs text-gray-500 mb-4">
                                     Leave blank to keep the existing address unchanged.
@@ -926,9 +943,9 @@ export default function VendorProfilePage() {
                     {/* ── Tab: Operating Hours ──────────────────────── */}
                     {activeTab === 'hours' && (
                         <div className="p-5 sm:p-8">
-                            <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-                                <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                                <p className="text-xs text-blue-700 leading-relaxed">
+                            <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                                <Info className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                     Toggle a day on to mark it as open, then set opening and closing times.
                                     At least one day must be open. Closing time must be after opening time.
                                 </p>
@@ -946,7 +963,7 @@ export default function VendorProfilePage() {
                                     const day = hoursForm[key] ?? { isOpen: false, openTime: '09:00', closeTime: '22:00' };
                                     const closeErr = hoursErrors[`${key}_closeTime`];
                                     return (
-                                        <div key={key} className={`rounded-xl border-2 p-3 sm:p-4 transition-all ${day.isOpen ? 'border-orange-200 bg-orange-50/30' : 'border-gray-200 bg-gray-50'}`}>
+                                        <div key={key} className={`rounded-xl border-2 p-3 sm:p-4 transition-all ${day.isOpen ? 'border-gray-400 bg-white' : 'border-gray-200 bg-gray-50'}`}>
                                             {/* Row 1 — toggle + day name (always visible) */}
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="flex items-center gap-3">
@@ -968,12 +985,12 @@ export default function VendorProfilePage() {
                                                     <div className="flex items-center gap-2">
                                                         <input type="time" value={day.openTime}
                                                             onChange={e => updateHoursField(key, 'openTime', e.target.value)}
-                                                            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-900 bg-white" />
+                                                            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-900 bg-white" />
                                                         <span className="text-xs text-gray-400 shrink-0 font-medium">to</span>
                                                         <input type="time" value={day.closeTime}
                                                             onChange={e => updateHoursField(key, 'closeTime', e.target.value)}
                                                             className={`flex-1 min-w-0 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 text-gray-900 bg-white
-                                                                ${closeErr ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-orange-400'}`} />
+                                                                ${closeErr ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-gray-400'}`} />
                                                     </div>
                                                     {closeErr && (
                                                         <div className="flex items-center gap-1.5 mt-1.5">
@@ -1012,7 +1029,7 @@ export default function VendorProfilePage() {
                             {/* Logo */}
                             <section className="space-y-3">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">Restaurant Logo</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Logo</p>
                                     <p className="text-xs text-gray-500">Square images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
                                 {/* Full-width on mobile, square on md+ */}
@@ -1036,7 +1053,7 @@ export default function VendorProfilePage() {
                             {/* Banner */}
                             <section className="space-y-3">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">Restaurant Banner</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Banner</p>
                                     <p className="text-xs text-gray-500">Wide / landscape images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
                                 <ImageDropZone

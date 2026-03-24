@@ -97,7 +97,7 @@ const CartPage = () => {
                                             )}
                                         </div>
                                         <p className="text-sm font-bold text-gray-900 shrink-0">
-                                            ${(item.price * item.quantity).toFixed(2)}
+                                            CA${(item.price * item.quantity).toFixed(2)}
                                         </p>
                                     </div>
 
@@ -123,7 +123,7 @@ const CartPage = () => {
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <p className="text-xs text-gray-400">${item.price.toFixed(2)} each</p>
+                                            <p className="text-xs text-gray-400">CA${item.price.toFixed(2)} each</p>
                                             <button
                                                 onClick={() => removeFromCart(item.publicProductId)}
                                                 className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -147,7 +147,7 @@ const CartPage = () => {
                     <div className="px-6 py-4 space-y-2.5">
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-                            <span>${cartTotal.toFixed(2)}</span>
+                            <span>CA${cartTotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
                             <span>Delivery fee</span>
@@ -159,7 +159,7 @@ const CartPage = () => {
                         </div>
                         <div className="pt-2.5 border-t border-gray-100 flex justify-between">
                             <span className="text-sm font-semibold text-gray-900">Estimated total</span>
-                            <span className="text-sm font-bold text-gray-900">${cartTotal.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-gray-900">CA${cartTotal.toFixed(2)}</span>
                         </div>
                     </div>
 

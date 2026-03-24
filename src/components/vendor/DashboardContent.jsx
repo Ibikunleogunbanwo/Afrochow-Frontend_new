@@ -242,7 +242,7 @@ const DashboardContent = () => {
             change: "—",
             trend: "neutral",
             icon: ShoppingBag,
-            color: "orange"
+            color: "gray"
         },
         {
             name: "Total Revenue",
@@ -292,37 +292,37 @@ const DashboardContent = () => {
     const getStatusConfig = (status) => {
         const configs = {
             PENDING: {
-                bg: 'bg-blue-100',
-                text: 'text-blue-700',
-                border: 'border-blue-200',
+                bg: 'bg-gray-100',
+                text: 'text-gray-700',
+                border: 'border-gray-300',
                 label: 'New Order',
                 pulse: true
             },
             CONFIRMED: {
-                bg: 'bg-indigo-100',
-                text: 'text-indigo-700',
-                border: 'border-indigo-200',
+                bg: 'bg-gray-100',
+                text: 'text-gray-700',
+                border: 'border-gray-200',
                 label: 'Confirmed',
                 pulse: false
             },
             PREPARING: {
-                bg: 'bg-yellow-100',
-                text: 'text-yellow-700',
-                border: 'border-yellow-200',
+                bg: 'bg-gray-200',
+                text: 'text-gray-700',
+                border: 'border-gray-300',
                 label: 'Preparing',
                 pulse: false
             },
             READY_FOR_PICKUP: {
-                bg: 'bg-green-100',
-                text: 'text-green-700',
-                border: 'border-green-200',
+                bg: 'bg-gray-300',
+                text: 'text-gray-800',
+                border: 'border-gray-400',
                 label: 'Ready',
                 pulse: false
             },
             OUT_FOR_DELIVERY: {
-                bg: 'bg-orange-100',
-                text: 'text-orange-700',
-                border: 'border-orange-200',
+                bg: 'bg-gray-200',
+                text: 'text-gray-700',
+                border: 'border-gray-300',
                 label: 'Out for Delivery',
                 pulse: false
             },
@@ -366,7 +366,7 @@ const DashboardContent = () => {
                 <div className="relative">
                     <button
                         onClick={() => setShowDatePicker(!showDatePicker)}
-                        className="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-all font-medium text-gray-700 min-w-50 justify-between"
+                        className="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 transition-all font-medium text-gray-700 min-w-50 justify-between"
                     >
                         <div className="flex items-center space-x-2">
                             <Calendar className="w-5 h-5 text-gray-400" />
@@ -385,7 +385,7 @@ const DashboardContent = () => {
                                         onClick={() => handleDateRangeChange(option.value)}
                                         className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                                             dateRange === option.value
-                                                ? 'bg-orange-100 text-orange-700'
+                                                ? 'bg-gray-900 text-white'
                                                 : 'text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
@@ -406,7 +406,7 @@ const DashboardContent = () => {
                                                 value={customStartDate}
                                                 onChange={(e) => setCustomStartDate(e.target.value)}
                                                 style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
                                             />
                                         </div>
                                         <div>
@@ -418,13 +418,13 @@ const DashboardContent = () => {
                                                 value={customEndDate}
                                                 onChange={(e) => setCustomEndDate(e.target.value)}
                                                 style={{ color: 'black', backgroundColor: 'white' }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
                                             />
                                         </div>
                                         <button
                                             onClick={applyCustomDateRange}
                                             disabled={!customStartDate || !customEndDate}
-                                            className="w-full px-4 py-2 bg-linear-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full px-4 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Apply Range
                                         </button>
@@ -446,15 +446,12 @@ const DashboardContent = () => {
                     return (
                         <div key={stat.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-4">
-                                <div className={`w-12 h-12 bg-${stat.color}-100 rounded-xl flex items-center justify-center`}>
-                                    <Icon className={`w-6 h-6 text-${stat.color}-600`} />
-                                </div>
+                                <p className="text-sm text-gray-600">{stat.name}</p>
                                 <div className={`flex items-center space-x-1 text-sm font-semibold ${trendColor}`}>
                                     {TrendIcon && <TrendIcon className="w-4 h-4" />}
                                     <span>{stat.change}</span>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600 mb-1">{stat.name}</p>
                             <p className="text-3xl font-black text-gray-900">{stat.value}</p>
                         </div>
                     );
@@ -470,7 +467,7 @@ const DashboardContent = () => {
                             <h2 className="text-lg font-bold text-gray-900">Revenue Overview</h2>
                             <p className="text-xs text-gray-500 mt-0.5">Across time periods</p>
                         </div>
-                        <DollarSign className="w-5 h-5 text-orange-400" />
+                        <DollarSign className="w-5 h-5 text-gray-400" />
                     </div>
                     {stats.last30DaysRevenue > 0 || stats.last7DaysRevenue > 0 || stats.todayRevenue > 0 ? (
                         <ResponsiveContainer width="100%" height={240}>
@@ -514,7 +511,7 @@ const DashboardContent = () => {
                             <h2 className="text-lg font-bold text-gray-900">Order Breakdown</h2>
                             <p className="text-xs text-gray-500 mt-0.5">Status distribution</p>
                         </div>
-                        <ShoppingBag className="w-5 h-5 text-blue-400" />
+                        <ShoppingBag className="w-5 h-5 text-gray-400" />
                     </div>
                     {(() => {
                         const delivered  = filteredOrders.filter(o => o.status === 'DELIVERED').length;
@@ -569,7 +566,7 @@ const DashboardContent = () => {
             {/* Recent Orders - Beautiful Cards */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-gray-200 bg-linear-to-r from-gray-50 to-white">
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
@@ -577,7 +574,7 @@ const DashboardContent = () => {
                         </div>
                         <button
                             onClick={() => { setAllModalPage(1); setShowAllModal(true); }}
-                            className="px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                            className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                         >
                             View All
                         </button>
@@ -588,7 +585,7 @@ const DashboardContent = () => {
                 <div className="p-4 space-y-4">
                     {loading && (
                         <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+                            <div className="animate-spin h-8 w-8 border-4 border-gray-400 border-t-transparent rounded-full" />
                         </div>
                     )}
                     {!loading && filteredOrders.length === 0 && (
@@ -607,13 +604,13 @@ const DashboardContent = () => {
                         return (
                             <div
                                 key={order.publicOrderId}
-                                className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-lg transition-all group"
+                                className="p-4 sm:p-6 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-400 hover:shadow-lg transition-all group"
                             >
                                 {/* Order Header */}
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                                         {/* Avatar */}
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-sm shrink-0">
                                             {getOrderInitials(order.publicOrderId)}
                                         </div>
 
@@ -642,8 +639,8 @@ const DashboardContent = () => {
                                         <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.bg} ${statusConfig.text} border-2 ${statusConfig.border} relative`}>
                                             {statusConfig.pulse && (
                                                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-700"></span>
                         </span>
                                             )}
                                             {statusConfig.label}
@@ -701,7 +698,7 @@ const DashboardContent = () => {
 
                                         <button
                                             onClick={() => viewOrderDetail(order.publicOrderId)}
-                                            className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg flex items-center space-x-2 whitespace-nowrap"
+                                            className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all shadow-md hover:shadow-lg flex items-center space-x-2 whitespace-nowrap"
                                         >
                                             <Eye className="w-4 h-4" />
                                             <span className="text-sm">View</span>
@@ -758,7 +755,7 @@ const DashboardContent = () => {
                                     <div key={order.publicOrderId}
                                         className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-sm shrink-0">
                                                 {getOrderInitials(order.publicOrderId)}
                                             </div>
                                             <div className="min-w-0">
@@ -773,7 +770,7 @@ const DashboardContent = () => {
                                             <span className="font-bold text-gray-900">CA${parseFloat(order.totalAmount ?? 0).toFixed(2)}</span>
                                             <button
                                                 onClick={() => { setShowAllModal(false); viewOrderDetail(order.publicOrderId); }}
-                                                className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                                className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </button>
@@ -800,7 +797,7 @@ const DashboardContent = () => {
                                             onClick={() => setAllModalPage(pg)}
                                             className={`w-8 h-8 text-sm font-semibold rounded-lg transition-colors ${
                                                 pg === allModalPage
-                                                    ? 'bg-orange-600 text-white'
+                                                    ? 'bg-gray-900 text-white'
                                                     : 'text-gray-600 hover:bg-gray-100'
                                             }`}
                                         >
@@ -838,7 +835,7 @@ const DashboardContent = () => {
                     <div className="overflow-y-auto p-6">
                         {detailLoading ? (
                             <div className="flex items-center justify-center py-16">
-                                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                             </div>
                         ) : selectedOrder ? (
                             <div className="space-y-5">
@@ -851,7 +848,7 @@ const DashboardContent = () => {
                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusConfig(selectedOrder.status).bg} ${getStatusConfig(selectedOrder.status).text}`}>
                                         {selectedOrder.statusLabel || getStatusConfig(selectedOrder.status).label}
                                     </span>
-                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${selectedOrder.fulfillmentType === 'DELIVERY' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${selectedOrder.fulfillmentType === 'DELIVERY' ? 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-700'}`}>
                                         {selectedOrder.fulfillmentType === 'DELIVERY'
                                             ? <><Truck className="w-3 h-3" /> Delivery</>
                                             : <><Store className="w-3 h-3" /> Pickup</>

@@ -201,7 +201,7 @@ export default function OrderConfirmationPage() {
                                     </div>
                                     {item.priceAtPurchase != null && (
                                         <span className="text-sm text-gray-500">
-                                            ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                                            CA${(item.priceAtPurchase * item.quantity).toFixed(2)}
                                         </span>
                                     )}
                                 </div>
@@ -213,18 +213,18 @@ export default function OrderConfirmationPage() {
                     {!loading && order && (
                         <div className="border-t border-gray-100 px-5 py-4 space-y-2">
                             {order.subtotal != null && (
-                                <Row label="Subtotal" value={`$${order.subtotal.toFixed(2)}`} />
+                                <Row label="Subtotal" value={`CA$${order.subtotal.toFixed(2)}`} />
                             )}
                             {order.deliveryFee != null && order.deliveryFee > 0 && (
-                                <Row label="Delivery fee" value={`$${order.deliveryFee.toFixed(2)}`} />
+                                <Row label="Delivery fee" value={`CA$${order.deliveryFee.toFixed(2)}`} />
                             )}
                             {order.tax != null && (
-                                <Row label="Tax" value={`$${order.tax.toFixed(2)}`} />
+                                <Row label="Tax" value={`CA$${order.tax.toFixed(2)}`} />
                             )}
                             {order.totalAmount != null && (
                                 <Row
                                     label="Total"
-                                    value={`$${order.totalAmount.toFixed(2)}`}
+                                    value={`CA$${order.totalAmount.toFixed(2)}`}
                                     bold
                                 />
                             )}

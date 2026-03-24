@@ -324,9 +324,7 @@ export default function Step3() {
     if (!file) {
       const oldUrl = state.logoUrl || null;
       if (oldUrl) {
-        console.log("🗑️ Attempting to delete old logo:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old logo deleted:", oldUrl);
       }
       setValue("logoUrl", "");
       dispatch({ type: "UPDATE", payload: { logoUrl: "" } });
@@ -339,9 +337,7 @@ export default function Step3() {
       const imageUrl = res?.imageUrl;
       if (!imageUrl) throw new Error("No URL returned from logo upload");
       if (oldUrl && oldUrl !== imageUrl) {
-        console.log("🗑️ Attempting to delete old logo:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old logo deleted:", oldUrl);
       }
       setValue("logoUrl", imageUrl);
       dispatch({ type: "UPDATE", payload: { logoUrl: imageUrl } });
@@ -356,9 +352,7 @@ export default function Step3() {
     if (!file) {
       const oldUrl = state.bannerUrl || null;
       if (oldUrl) {
-        console.log("🗑️ Attempting to delete old banner:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old banner deleted:", oldUrl);
       }
       setValue("bannerUrl", "");
       dispatch({ type: "UPDATE", payload: { bannerUrl: "" } });
@@ -371,9 +365,7 @@ export default function Step3() {
       const imageUrl = res?.imageUrl;
       if (!imageUrl) throw new Error("No URL returned from banner upload");
       if (oldUrl && oldUrl !== imageUrl) {
-        console.log("🗑️ Attempting to delete old banner:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old banner deleted:", oldUrl);
       }
       setValue("bannerUrl", imageUrl);
       dispatch({ type: "UPDATE", payload: { bannerUrl: imageUrl } });
@@ -388,9 +380,7 @@ export default function Step3() {
     if (!file) {
       const oldUrl = state.businessLicenseUrl || null;
       if (oldUrl) {
-        console.log("🗑️ Attempting to delete old license:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old license deleted:", oldUrl);
       }
       setValue("businessLicenseUrl", "");
       dispatch({ type: "UPDATE", payload: { businessLicenseUrl: "" } });
@@ -403,9 +393,7 @@ export default function Step3() {
       const imageUrl = res?.imageUrl;
       if (!imageUrl) throw new Error("No URL returned from license upload");
       if (oldUrl && oldUrl !== imageUrl) {
-        console.log("🗑️ Attempting to delete old license:", oldUrl);
         await deleteImage(oldUrl);
-        console.log("✅ Old license deleted:", oldUrl);
       }
       setValue("businessLicenseUrl", imageUrl);
 

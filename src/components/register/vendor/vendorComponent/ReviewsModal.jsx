@@ -1,8 +1,18 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Star, MessageSquare, Filter, X } from 'lucide-react';
 
-const ReviewCard = ({ review }) => {
+const ReviewCard = ({ review, onMarkHelpful }) => {
+    const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount ?? 0);
+    const [marked, setMarked] = useState(false);
+
+    const handleMarkHelpful = () => {
+        if (marked) return;
+        setMarked(true);
+        setHelpfulCount((n) => n + 1);
+        if (onMarkHelpful) onMarkHelpful(review.reviewId);
+    };
+
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-5">
             <div className="flex items-start justify-between mb-3">
@@ -34,12 +44,20 @@ const ReviewCard = ({ review }) => {
                 <p className="text-gray-700 mb-3 leading-relaxed">{review.comment}</p>
             )}
 
-            {review.helpfulCount > 0 && (
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-3 mt-2">
+                <button
+                    onClick={handleMarkHelpful}
+                    disabled={marked}
+                    className={`flex items-center space-x-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+                        marked
+                            ? 'border-orange-200 bg-orange-50 text-orange-600 cursor-default'
+                            : 'border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50'
+                    }`}
+                >
                     <span>👍</span>
-                    <span>{review.helpfulCount} found this helpful</span>
-                </div>
-            )}
+                    <span>Helpful ({helpfulCount})</span>
+                </button>
+            </div>
         </div>
     );
 };
@@ -53,6 +71,8 @@ const ReviewsModal = ({
                           productName,
                           ratingFilter,
                           onRatingFilterChange,
+                          onWriteReview,
+                          onMarkHelpful,
                       }) => {
     if (!isOpen) return null;
 
@@ -73,12 +93,22 @@ const ReviewsModal = ({
                                 {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
                             </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {onWriteReview && (
+                                <button
+                                    onClick={onWriteReview}
+                                    className="px-4 py-2 text-sm font-semibold text-orange-600 border border-orange-500 rounded-xl hover:bg-orange-50 transition-colors"
+                                >
+                                    Write a Review
+                                </button>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
                     </div>
 
                     {reviewType === 'vendor' && (
@@ -105,7 +135,11 @@ const ReviewsModal = ({
                         {reviews.length > 0 ? (
                             <div className="space-y-6">
                                 {reviews.map((review) => (
-                                    <ReviewCard key={review.reviewId} review={review} />
+                                    <ReviewCard
+                                        key={review.reviewId}
+                                        review={review}
+                                        onMarkHelpful={onMarkHelpful}
+                                    />
                                 ))}
                             </div>
                         ) : (

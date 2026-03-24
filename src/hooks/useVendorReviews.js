@@ -36,14 +36,16 @@ export const useVendorReviews = ({
                     ]);
 
                     if (reviewsResponse?.success) {
-                        setReviews(reviewsResponse.data || []);
+                        // Only keep vendor-level reviews (no product attached)
+                        const vendorOnly = (reviewsResponse.data || []).filter(r => !r.productPublicId);
+                        setReviews(vendorOnly);
                     }
 
                     if (statsResponse?.success && statsResponse.data) {
                         setRating(statsResponse.data.averageRating || 0);
                     }
                 } catch (authError) {
-                    // If authenticated endpoints fail (500), fall back to getting vendor profile and using public endpoints
+                    // If authenticated endpoints fail, fall back to public endpoints
                     const profileResponse = await VendorProfileAPI.getVendorProfile();
                     const publicId = profileResponse?.data?.publicUserId || profileResponse?.data?.publicVendorId;
 
@@ -54,7 +56,9 @@ export const useVendorReviews = ({
                         ]);
 
                         if (reviewsResponse?.success) {
-                            setReviews(reviewsResponse.data || []);
+                            // Public endpoint only returns vendor reviews, but filter just in case
+                            const vendorOnly = (reviewsResponse.data || []).filter(r => !r.productPublicId);
+                            setReviews(vendorOnly);
                         }
 
                         if (ratingResponse?.success) {

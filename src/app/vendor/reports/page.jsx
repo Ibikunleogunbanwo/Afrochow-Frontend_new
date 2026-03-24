@@ -333,7 +333,7 @@ const VendorReportsPage = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-24">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mb-4" />
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-400 border-t-transparent mb-4" />
                 <p className="text-sm text-gray-500">Loading reports…</p>
             </div>
         );
@@ -347,7 +347,7 @@ const VendorReportsPage = () => {
                 <p className="text-gray-500 text-sm mb-6">{error}</p>
                 <button
                     onClick={fetchAllData}
-                    className="px-5 py-2 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                    className="px-5 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                 >
                     Try again
                 </button>
@@ -359,7 +359,7 @@ const VendorReportsPage = () => {
         <div className="space-y-6">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Dashboard
                 </Link>
@@ -384,7 +384,7 @@ const VendorReportsPage = () => {
                     </button>
                     <button
                         onClick={handleExportPDF}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                     >
                         <Download className="h-4 w-4" />
                         Export PDF
@@ -397,18 +397,13 @@ const VendorReportsPage = () => {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             {/* Total Orders */}
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="bg-orange-100 rounded-lg p-3">
-                                        <ShoppingBag className="h-6 w-6 text-orange-600" />
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
+                                {analytics.todayOrders > 0 && (
+                                    <div className="flex items-center gap-1 text-green-600 text-sm font-semibold mb-3">
+                                        <TrendingUp className="h-4 w-4" />
+                                        <span>Today: {analytics.todayOrders}</span>
                                     </div>
-                                    {analytics.todayOrders > 0 && (
-                                        <div className="flex items-center gap-1 text-green-600 text-sm font-semibold">
-                                            <TrendingUp className="h-4 w-4" />
-                                            <span>Today: {analytics.todayOrders}</span>
-                                        </div>
-                                    )}
-                                </div>
+                                )}
                                 <h3 className="text-sm font-medium text-gray-600 mb-1">Total Orders</h3>
                                 <p className="text-2xl font-bold text-gray-900">{analytics.totalOrders}</p>
                                 <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
@@ -419,15 +414,10 @@ const VendorReportsPage = () => {
                             </div>
 
                             {/* Total Revenue */}
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="bg-green-100 rounded-lg p-3">
-                                        <DollarSign className="h-6 w-6 text-green-600" />
-                                    </div>
-                                    <div className="flex items-center gap-1 text-green-600 text-sm font-semibold">
-                                        <TrendingUp className="h-4 w-4" />
-                                        <span>+{calculateGrowth(analytics.totalRevenue, analytics.totalRevenue - analytics.last30DaysRevenue)}%</span>
-                                    </div>
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
+                                <div className="flex items-center gap-1 text-green-600 text-sm font-semibold mb-3">
+                                    <TrendingUp className="h-4 w-4" />
+                                    <span>+{calculateGrowth(analytics.totalRevenue, analytics.totalRevenue - analytics.last30DaysRevenue)}%</span>
                                 </div>
                                 <h3 className="text-sm font-medium text-gray-600 mb-1">Total Revenue</h3>
                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(analytics.totalRevenue)}</p>
@@ -437,12 +427,7 @@ const VendorReportsPage = () => {
                             </div>
 
                             {/* Active Products */}
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="bg-blue-100 rounded-lg p-3">
-                                        <Package className="h-6 w-6 text-blue-600" />
-                                    </div>
-                                </div>
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
                                 <h3 className="text-sm font-medium text-gray-600 mb-1">Products</h3>
                                 <p className="text-2xl font-bold text-gray-900">{analytics.activeProducts}</p>
                                 <div className="mt-2 text-xs text-gray-500">
@@ -451,12 +436,7 @@ const VendorReportsPage = () => {
                             </div>
 
                             {/* Average Rating */}
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="bg-purple-100 rounded-lg p-3">
-                                        <Star className="h-6 w-6 text-purple-600" />
-                                    </div>
-                                </div>
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
                                 <h3 className="text-sm font-medium text-gray-600 mb-1">Average Rating</h3>
                                 <div className="flex items-center gap-2">
                                     <p className="text-2xl font-bold text-gray-900">{analytics.averageRating.toFixed(1)}</p>
@@ -481,39 +461,39 @@ const VendorReportsPage = () => {
 
                         {/* Revenue Breakdown */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
+                                <div className="flex items-center gap-2 mb-3">
                                     <Calendar className="h-5 w-5 text-gray-600" />
                                     <h3 className="font-semibold text-gray-900">Last 7 Days</h3>
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900 mb-2">
+                                <p className="text-2xl font-bold text-gray-900 mb-1">
                                     {formatCurrency(analytics.last7DaysRevenue)}
                                 </p>
                                 <p className="text-sm text-gray-500">Revenue generated</p>
                             </div>
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
+                                <div className="flex items-center gap-2 mb-3">
                                     <Calendar className="h-5 w-5 text-gray-600" />
                                     <h3 className="font-semibold text-gray-900">Last 30 Days</h3>
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900 mb-2">
+                                <p className="text-2xl font-bold text-gray-900 mb-1">
                                     {formatCurrency(analytics.last30DaysRevenue)}
                                 </p>
                                 <p className="text-sm text-gray-500">Revenue generated</p>
                             </div>
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-start text-left">
+                                <div className="flex items-center gap-2 mb-3">
                                     <Activity className="h-5 w-5 text-gray-600" />
                                     <h3 className="font-semibold text-gray-900">Order Status</h3>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 w-full">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Delivered</span>
-                                        <span className="font-semibold text-green-600">{analytics.deliveredOrders}</span>
+                                        <span className="font-semibold text-gray-900">{analytics.deliveredOrders}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Pending</span>
-                                        <span className="font-semibold text-blue-600">{analytics.pendingOrders}</span>
+                                        <span className="font-semibold text-gray-900">{analytics.pendingOrders}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Cancelled</span>
@@ -529,14 +509,14 @@ const VendorReportsPage = () => {
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <BarChart3 className="h-6 w-6 text-orange-600" />
+                            <BarChart3 className="h-6 w-6 text-gray-700" />
                             <h2 className="text-xl font-bold text-gray-900">Sales Report</h2>
                         </div>
                         <div className="flex items-center gap-3">
                             <select
                                 value={dateRange}
                                 onChange={(e) => handleDateRangeChange(e.target.value)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                                 style={{ color: 'black', backgroundColor: 'white' }}
                             >
                                 {dateRangeOptions.map(option => (
@@ -557,7 +537,7 @@ const VendorReportsPage = () => {
                                     value={customStartDate}
                                     onChange={(e) => setCustomStartDate(e.target.value)}
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                                 />
                             </div>
                             <div>
@@ -569,14 +549,14 @@ const VendorReportsPage = () => {
                                     value={customEndDate}
                                     onChange={(e) => setCustomEndDate(e.target.value)}
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                                 />
                             </div>
                             <div className="flex items-end">
                                 <button
                                     onClick={handleCustomDateRangeApply}
                                     disabled={!customStartDate || !customEndDate}
-                                    className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Apply
                                 </button>
@@ -586,23 +566,23 @@ const VendorReportsPage = () => {
 
                     {salesLoading ? (
                         <div className="flex items-center justify-center py-10">
-                            <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+                            <div className="animate-spin h-8 w-8 border-4 border-gray-400 border-t-transparent rounded-full" />
                         </div>
                     ) : salesReport ? (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="border-l-4 border-orange-500 pl-4">
+                            <div className="border-l-4 border-gray-300 pl-4">
                                 <p className="text-sm text-gray-600 mb-1">Total Orders</p>
                                 <p className="text-2xl font-bold text-gray-900">{salesReport.totalOrders}</p>
                             </div>
-                            <div className="border-l-4 border-green-500 pl-4">
+                            <div className="border-l-4 border-gray-300 pl-4">
                                 <p className="text-sm text-gray-600 mb-1">Delivered Orders</p>
                                 <p className="text-2xl font-bold text-gray-900">{salesReport.deliveredOrders}</p>
                             </div>
-                            <div className="border-l-4 border-blue-500 pl-4">
+                            <div className="border-l-4 border-gray-300 pl-4">
                                 <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(salesReport.totalRevenue)}</p>
                             </div>
-                            <div className="border-l-4 border-purple-500 pl-4">
+                            <div className="border-l-4 border-gray-300 pl-4">
                                 <p className="text-sm text-gray-600 mb-1">Avg Order Value</p>
                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(salesReport.averageOrderValue)}</p>
                             </div>
@@ -616,7 +596,7 @@ const VendorReportsPage = () => {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                            <TrendingUp className="h-5 w-5 text-orange-600" />
+                            <TrendingUp className="h-5 w-5 text-gray-700" />
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900">Top Popular Products</h2>
                                 <p className="text-xs text-gray-400 mt-0.5">Ranked by total orders</p>

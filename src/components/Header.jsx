@@ -13,15 +13,25 @@ import { SignUpModal } from "@/components/register/SignUpModal";
 import { ForgotPasswordModal } from "@/components/signin/ForgotPasswordModal";
 import { useCart } from "@/contexts/CartContext";
 import { SearchAPI } from "@/lib/api/search.api";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter as useNextRouter, usePathname } from "next/navigation";
 
 // ─── Sign-in param watcher ───────────────────────────────────────────────────
 
 const SignInParamWatcher = ({ onTrigger }) => {
     const searchParams = useSearchParams();
+    const router = useNextRouter();
+    const pathname = usePathname();
     useEffect(() => {
-        if (searchParams.get('signin') === 'true') onTrigger();
-    }, [searchParams, onTrigger]);
+        if (searchParams.get('signin') === 'true') {
+            onTrigger();
+            // Strip the signin param so the modal doesn't re-open on remount
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('signin');
+            const qs = params.toString();
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
     return null;
 };
 
@@ -139,7 +149,7 @@ const Header = () => {
                                     aria-label={`Cart - ${cartCount} items`}
                                 >
                                     <ShoppingCart className="w-4 h-4" />
-                                    <span className="hidden sm:inline text-sm">${cartTotal.toFixed(2)}</span>
+                                    <span className="hidden sm:inline text-sm">CA${cartTotal.toFixed(2)}</span>
                                     {cartCount > 0 && (
                                         <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white text-[10px] font-black rounded-full flex items-center justify-center">
                                             {cartCount > 9 ? "9+" : cartCount}
@@ -263,7 +273,7 @@ const Header = () => {
                                         >
                                             <ShoppingCart className="w-4 h-4 text-gray-400" />
                                             <span className="text-sm text-gray-700 font-medium flex-1">Cart</span>
-                                            <span className="text-sm text-gray-500">${cartTotal.toFixed(2)}</span>
+                                            <span className="text-sm text-gray-500">CA${cartTotal.toFixed(2)}</span>
                                             {cartCount > 0 && (
                                                 <span className="w-5 h-5 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                                                     {cartCount > 9 ? "9+" : cartCount}

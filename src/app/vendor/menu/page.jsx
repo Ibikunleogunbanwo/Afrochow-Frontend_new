@@ -276,7 +276,7 @@ const VendorMenuPage = () => {
         <div className="space-y-6">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-orange-600 transition-colors font-medium">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Dashboard
                 </Link>
@@ -295,7 +295,7 @@ const VendorMenuPage = () => {
                         resetForm();
                         setShowCreateModal(true);
                     }}
-                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg"
+                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all"
                 >
                     <Plus className="w-5 h-5" />
                     <span>Add Product</span>
@@ -315,7 +315,7 @@ const VendorMenuPage = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{ color: 'black', backgroundColor: 'white' }}
-                                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                             />
                         </div>
                     </div>
@@ -327,7 +327,7 @@ const VendorMenuPage = () => {
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all font-medium"
+                            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all font-medium"
                         >
                             <option value="all">All Categories</option>
                             {categories.map((cat) => (
@@ -344,7 +344,7 @@ const VendorMenuPage = () => {
             {/* Products Grid */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" />
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
                 </div>
             ) : filteredProducts.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
@@ -363,7 +363,7 @@ const VendorMenuPage = () => {
                     {filteredProducts.map((product) => (
                         <div
                             key={product.publicProductId}
-                            className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden hover:border-orange-300 hover:shadow-lg transition-all group"
+                            className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden hover:border-gray-400 hover:shadow-lg transition-all group"
                         >
                             {/* Product Image */}
                             <div className="relative h-48 bg-linear-to-br from-gray-100 to-gray-200">
@@ -417,7 +417,7 @@ const VendorMenuPage = () => {
                             <div className="p-4">
                                 <div className="flex items-start justify-between mb-2">
                                     <h3 className="font-bold text-gray-900 text-lg">{product.name}</h3>
-                                    <span className="text-xl font-black text-orange-600">
+                                    <span className="text-xl font-black text-gray-900">
                                         CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
                                     </span>
                                 </div>
@@ -425,7 +425,7 @@ const VendorMenuPage = () => {
                                 {/* Category and Rating Row */}
                                 <div className="flex items-center justify-between mb-2">
                                     {(product.category || product.categoryName) && (
-                                        <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg">
+                                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
                                             {product.categoryName || product.category}
                                         </span>
                                     )}
@@ -578,7 +578,7 @@ const VendorMenuPage = () => {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g., Jollof Rice"
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                 />
                             </div>
 
@@ -593,7 +593,7 @@ const VendorMenuPage = () => {
                                     placeholder="Describe your product..."
                                     rows={3}
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all resize-none"
                                 />
                             </div>
 
@@ -611,7 +611,7 @@ const VendorMenuPage = () => {
                                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                         placeholder="0.00"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                                 <div>
@@ -624,7 +624,7 @@ const VendorMenuPage = () => {
                                             setFormData({ ...formData, categoryId: Number(e.target.value) }) // 👈 convert to number if needed
                                         }
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     >
                                         <option value="">Select category</option>
                                         {categories.map((cat) => (
@@ -646,7 +646,7 @@ const VendorMenuPage = () => {
                                         onChange={(e) => setFormData({ ...formData, preparationTimeMinutes: e.target.value })}
                                         placeholder="15"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                     />
                                 </div>
                             </div>
@@ -663,7 +663,7 @@ const VendorMenuPage = () => {
                                     onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
                                     placeholder="0"
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
                                 />
                             </div>
 
@@ -678,7 +678,7 @@ const VendorMenuPage = () => {
                                             type="checkbox"
                                             checked={formData.isVegetarian}
                                             onChange={(e) => setFormData({ ...formData, isVegetarian: e.target.checked })}
-                                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Vegetarian</span>
                                     </label>
@@ -687,7 +687,7 @@ const VendorMenuPage = () => {
                                             type="checkbox"
                                             checked={formData.isVegan}
                                             onChange={(e) => setFormData({ ...formData, isVegan: e.target.checked })}
-                                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Vegan</span>
                                     </label>
@@ -696,7 +696,7 @@ const VendorMenuPage = () => {
                                             type="checkbox"
                                             checked={formData.isGlutenFree}
                                             onChange={(e) => setFormData({ ...formData, isGlutenFree: e.target.checked })}
-                                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Gluten Free</span>
                                     </label>
@@ -705,7 +705,7 @@ const VendorMenuPage = () => {
                                             type="checkbox"
                                             checked={formData.isSpicy}
                                             onChange={(e) => setFormData({ ...formData, isSpicy: e.target.checked })}
-                                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
                                         />
                                         <span className="text-sm font-medium text-gray-700">Spicy</span>
                                     </label>
@@ -748,7 +748,7 @@ const VendorMenuPage = () => {
                             <button
                                 onClick={showCreateModal ? handleCreateProduct : handleUpdateProduct}
                                 disabled={!formData.name || !formData.price || !formData.categoryId || !formData.preparationTimeMinutes}
-                                className="px-6 py-2.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {showCreateModal ? 'Create Product' : 'Update Product'}
                             </button>

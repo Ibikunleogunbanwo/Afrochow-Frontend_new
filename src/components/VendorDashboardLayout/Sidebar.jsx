@@ -12,6 +12,7 @@ import {
     HelpCircle,
     Store,
     LogOut,
+    Bell,
 } from 'lucide-react';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
 
@@ -19,15 +20,16 @@ const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/vendor/dashboard', badge: null },
     { name: 'Profile', icon: UserCircle, href: '/vendor/profile', badge: null },
     { name: 'Products', icon: UtensilsCrossed, href: '/vendor/menu', badge: null },
-    { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: 5 },
+    { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: null },
     { name: 'View Earnings', icon: DollarSign, href: '/vendor/earnings', badge: null },
-    { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: 3 },
+    { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: null },
     { name: 'Promotions', icon: Gift, href: '/vendor/promotions', badge: null },
     { name: 'View Reports', icon: BarChart3, href: '/vendor/reports', badge: null },
+    { name: 'Notifications', icon: Bell, href: '/vendor/notifications', badge: null },
     { name: 'Help', icon: HelpCircle, href: '/vendor/help', badge: null },
 ];
 
-const Sidebar = ({ pathname, user, profileOpen, onProfileToggle, onLogout, profileRef }) => {
+const Sidebar = ({ pathname, user, profileOpen, onProfileToggle, onLogout, profileRef, badgeCounts = {} }) => {
     return (
         <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
             <div className="flex flex-col grow bg-white border-r border-gray-200 overflow-y-auto">
@@ -45,6 +47,7 @@ const Sidebar = ({ pathname, user, profileOpen, onProfileToggle, onLogout, profi
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
+                        const badge = badgeCounts[item.href] ?? item.badge;
 
                         return (
                             <Link
@@ -62,12 +65,12 @@ const Sidebar = ({ pathname, user, profileOpen, onProfileToggle, onLogout, profi
                                     <Icon className="w-5 h-5" />
                                     <span>{item.name}</span>
                                 </div>
-                                {item.badge && (
+                                {badge > 0 && (
                                     <span className={`
                                         px-2 py-0.5 text-xs font-bold rounded-full
                                         ${isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'}
                                     `}>
-                                        {item.badge}
+                                        {badge > 99 ? '99+' : badge}
                                     </span>
                                 )}
                             </Link>

@@ -20,7 +20,7 @@ const getPromoBadge = (promotions) => {
     const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
     if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
     const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
-    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    if (fixed) return { label: `🏷️ CA$${fixed.value} OFF`, bg: 'bg-orange-500' };
     return null;
 };
 
@@ -143,14 +143,16 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                             <span className="text-sm font-bold text-gray-900">{rating.toFixed(1)}</span>
                         </div>
 
-                        {/* Status Badge */}
-                        <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg ${
-                            isOpenNow
-                                ? 'bg-green-500/90 text-white'
-                                : 'bg-red-500/90 text-white'
-                        }`}>
-                            {isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
-                        </div>
+                        {/* Status Badge — only render when status is known */}
+                        {isOpenNow !== null && isOpenNow !== undefined && (
+                            <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg ${
+                                isOpenNow
+                                    ? 'bg-green-500/90 text-white'
+                                    : 'bg-red-500/90 text-white'
+                            }`}>
+                                {isOpenNow ? '🟢 Open Now' : '🔴 Closed'}
+                            </div>
+                        )}
 
                         {/* Promo Badge */}
                         {(() => {
