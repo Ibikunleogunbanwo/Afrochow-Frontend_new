@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Star, Flame, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import React from "react";
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -51,18 +52,15 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
             <div className="h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
                 {/* Image */}
-                <div className="relative w-full aspect-4/3 overflow-hidden bg-gray-100">
-                    {imageUrl ? (
-                        <Image
-                            src={imageUrl}
-                            alt={name}
-                            fill
-                            priority={priority}
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            unoptimized
+                <div className="relative h-48 bg-linear-to-br from-gray-100 to-gray-200">
+                    {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
                         />
-                    ) : (
+                    ) :(
                         <div className="absolute inset-0 flex items-center justify-center bg-orange-50">
                             <Flame className="w-10 h-10 text-orange-300" />
                         </div>
