@@ -2,28 +2,89 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Tag, LayoutDashboard, ChevronRight, RefreshCw, AlertCircle, Plus, Trash2, Edit2, X, CheckCircle } from 'lucide-react';
+import {
+    Tag, LayoutDashboard, ChevronRight, RefreshCw, Plus,
+    Trash2, Edit2, X, AlertCircle, CheckCircle,
+} from 'lucide-react';
 import { AdminPromotionsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 
-const EMPTY_FORM = { code: '', discountPercent: '', maxUsage: '', expiresAt: '', description: '' };
+const DISCOUNT_TYPES = {
+    PERCENTAGE:   'Percentage Off',
+    FIXED_AMOUNT: 'Fixed Amount Off',
+    FREE_DELIVERY: 'Free Delivery',
+};
+
+const NO_VALUE_TYPES = ['FREE_DELIVERY'];
+
+const EMPTY_FORM = {
+    code:               '',
+    title:              '',
+    description:        '',
+    type:               'PERCENTAGE',
+    value:              '',
+    minimumOrderAmount: '',
+    maxDiscountAmount:  '',
+    usageLimit:         '',
+    perUserLimit:       '',
+    startDate:          '',
+    endDate:            '',
+    isActive:           true,
+    vendorPublicId:     '',
+};
+
+const buildPayload = (form) => ({
+    code:               form.code.trim().toUpperCase(),
+    title:              form.title.trim(),
+    description:        form.description.trim() || null,
+    type:               form.type,
+    value:              NO_VALUE_TYPES.includes(form.type) ? null : (parseFloat(form.value) || 0),
+    minimumOrderAmount: parseFloat(form.minimumOrderAmount) || 0,
+    maxDiscountAmount:  form.maxDiscountAmount ? parseFloat(form.maxDiscountAmount) : null,
+    usageLimit:         form.usageLimit ? parseInt(form.usageLimit, 10) : null,
+    perUserLimit:       form.perUserLimit ? parseInt(form.perUserLimit, 10) : null,
+    startDate:          form.startDate || null,
+    endDate:            form.endDate || null,
+    isActive:           form.isActive,
+    vendorPublicId:     form.vendorPublicId.trim() || null,
+});
+
+const formFromPromotion = (p) => ({
+    code:               p.code               ?? '',
+    title:              p.title              ?? '',
+    description:        p.description        ?? '',
+    type:               p.type               ?? 'PERCENTAGE',
+    value:              p.value              != null ? String(p.value) : '',
+    minimumOrderAmount: p.minimumOrderAmount != null ? String(p.minimumOrderAmount) : '',
+    maxDiscountAmount:  p.maxDiscountAmount  != null ? String(p.maxDiscountAmount)  : '',
+    usageLimit:         p.usageLimit         != null ? String(p.usageLimit)         : '',
+    perUserLimit:       p.perUserLimit       != null ? String(p.perUserLimit)       : '',
+    startDate:          p.startDate          ? p.startDate.slice(0, 10) : '',
+    endDate:            p.endDate            ? p.endDate.slice(0, 10)   : '',
+    isActive:           p.isActive           ?? p.isCurrentlyActive ?? true,
+    vendorPublicId:     p.vendorPublicId     ?? '',
+});
+
+const formatDate = (d) => d
+    ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
+    : '—';
 
 export default function AdminPromotionsPage() {
-    const [promotions, setPromotions]   = useState([]);
-    const [loading, setLoading]         = useState(true);
-    const [error, setError]             = useState(null);
+    const [promotions,    setPromotions]    = useState([]);
+    const [loading,       setLoading]       = useState(true);
+    const [error,         setError]         = useState(null);
     const [actionLoading, setActionLoading] = useState({});
-    const [showForm, setShowForm]       = useState(false);
-    const [editTarget, setEditTarget]   = useState(null);
-    const [form, setForm]               = useState(EMPTY_FORM);
-    const [formError, setFormError]     = useState(null);
-    const [saving, setSaving]           = useState(false);
+    const [showForm,      setShowForm]      = useState(false);
+    const [editTarget,    setEditTarget]    = useState(null);
+    const [form,          setForm]          = useState(EMPTY_FORM);
+    const [formError,     setFormError]     = useState(null);
+    const [saving,        setSaving]        = useState(false);
 
     const fetchPromotions = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await AdminPromotionsAPI.getAll();
+            const res  = await AdminPromotionsAPI.getAll();
             const data = res?.data ?? res ?? [];
             setPromotions(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -44,30 +105,24 @@ export default function AdminPromotionsPage() {
 
     const openEdit = (p) => {
         setEditTarget(p);
-        setForm({
-            code: p.code ?? '',
-            discountPercent: p.discountPercent ?? '',
-            maxUsage: p.maxUsage ?? '',
-            expiresAt: p.expiresAt ? p.expiresAt.slice(0, 10) : '',
-            description: p.description ?? '',
-        });
+        setForm(formFromPromotion(p));
         setFormError(null);
         setShowForm(true);
     };
 
     const handleSave = async () => {
-        if (!form.code.trim()) { setFormError('Promo code is required'); return; }
-        if (!form.discountPercent || isNaN(form.discountPercent)) { setFormError('Valid discount % is required'); return; }
+        if (!form.code.trim())  { setFormError('Promo code is required'); return; }
+        if (!form.title.trim()) { setFormError('Title is required'); return; }
+        if (!NO_VALUE_TYPES.includes(form.type) && (!form.value || isNaN(form.value))) {
+            setFormError('A valid discount value is required');
+            return;
+        }
         setSaving(true);
         setFormError(null);
         try {
-            const payload = {
-                ...form,
-                discountPercent: Number(form.discountPercent),
-                maxUsage: form.maxUsage ? Number(form.maxUsage) : null,
-            };
+            const payload = buildPayload(form);
             if (editTarget) {
-                await AdminPromotionsAPI.update(editTarget.id ?? editTarget.publicPromotionId, payload);
+                await AdminPromotionsAPI.update(editTarget.publicPromotionId ?? editTarget.id, payload);
             } else {
                 await AdminPromotionsAPI.create(payload);
             }
@@ -82,7 +137,7 @@ export default function AdminPromotionsPage() {
 
     const handleDeactivate = async (p) => {
         if (!confirm(`Deactivate promotion "${p.code}"?`)) return;
-        const id = p.id ?? p.publicPromotionId;
+        const id = p.publicPromotionId ?? p.id;
         setActionLoading(prev => ({ ...prev, [id]: true }));
         try {
             await AdminPromotionsAPI.deactivate(id);
@@ -94,9 +149,7 @@ export default function AdminPromotionsPage() {
         }
     };
 
-    const formatDate = (d) => d
-        ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-        : 'No expiry';
+    const field = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
     return (
         <div className="space-y-6">
@@ -128,16 +181,17 @@ export default function AdminPromotionsPage() {
                 </div>
             </div>
 
-            {/* Create/Edit Modal */}
+            {/* Create / Edit Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                             <h2 className="text-lg font-bold text-gray-900">{editTarget ? 'Edit Promotion' : 'New Promotion'}</h2>
                             <button onClick={() => setShowForm(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
+
                         <div className="p-6 space-y-4">
                             {formError && (
                                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -145,26 +199,180 @@ export default function AdminPromotionsPage() {
                                     {formError}
                                 </div>
                             )}
-                            {[
-                                { key: 'code', label: 'Promo Code', placeholder: 'e.g. SAVE20', type: 'text' },
-                                { key: 'discountPercent', label: 'Discount %', placeholder: '20', type: 'number' },
-                                { key: 'maxUsage', label: 'Max Usage (optional)', placeholder: '100', type: 'number' },
-                                { key: 'expiresAt', label: 'Expiry Date (optional)', placeholder: '', type: 'date' },
-                                { key: 'description', label: 'Description (optional)', placeholder: 'Describe this promotion', type: 'text' },
-                            ].map(f => (
-                                <div key={f.key}>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-1">{f.label}</label>
+
+                            {/* Code + Title */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Promo Code *</label>
                                     <input
-                                        type={f.type}
-                                        value={form[f.key]}
-                                        onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                        placeholder={f.placeholder}
+                                        type="text"
+                                        value={form.code}
+                                        onChange={e => field('code', e.target.value.toUpperCase())}
+                                        placeholder="SAVE20"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Title *</label>
+                                    <input
+                                        type="text"
+                                        value={form.title}
+                                        onChange={e => field('title', e.target.value)}
+                                        placeholder="Summer Sale"
                                         style={{ color: 'black', backgroundColor: 'white' }}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                                     />
                                 </div>
-                            ))}
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+                                <input
+                                    type="text"
+                                    value={form.description}
+                                    onChange={e => field('description', e.target.value)}
+                                    placeholder="Optional description"
+                                    style={{ color: 'black', backgroundColor: 'white' }}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                />
+                            </div>
+
+                            {/* Type + Value */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Discount Type *</label>
+                                    <select
+                                        value={form.type}
+                                        onChange={e => field('type', e.target.value)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    >
+                                        {Object.entries(DISCOUNT_TYPES).map(([k, v]) => (
+                                            <option key={k} value={k}>{v}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                        {form.type === 'PERCENTAGE' ? 'Discount %' : form.type === 'FIXED_AMOUNT' ? 'Amount (CA$)' : 'Value'}
+                                        {NO_VALUE_TYPES.includes(form.type) ? '' : ' *'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={form.value}
+                                        onChange={e => field('value', e.target.value)}
+                                        placeholder={form.type === 'PERCENTAGE' ? '20' : '5.00'}
+                                        disabled={NO_VALUE_TYPES.includes(form.type)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-40"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Min Order + Max Discount */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Min Order (CA$)</label>
+                                    <input
+                                        type="number"
+                                        value={form.minimumOrderAmount}
+                                        onChange={e => field('minimumOrderAmount', e.target.value)}
+                                        placeholder="0"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Max Discount (CA$)</label>
+                                    <input
+                                        type="number"
+                                        value={form.maxDiscountAmount}
+                                        onChange={e => field('maxDiscountAmount', e.target.value)}
+                                        placeholder="Optional cap"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Usage Limit + Per User */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Usage Limit</label>
+                                    <input
+                                        type="number"
+                                        value={form.usageLimit}
+                                        onChange={e => field('usageLimit', e.target.value)}
+                                        placeholder="Unlimited"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Per Customer Limit</label>
+                                    <input
+                                        type="number"
+                                        value={form.perUserLimit}
+                                        onChange={e => field('perUserLimit', e.target.value)}
+                                        placeholder="Unlimited"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Start + End Date */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={form.startDate}
+                                        onChange={e => field('startDate', e.target.value)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={form.endDate}
+                                        onChange={e => field('endDate', e.target.value)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Vendor Public ID */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Vendor Public ID (optional)</label>
+                                <input
+                                    type="text"
+                                    value={form.vendorPublicId}
+                                    onChange={e => field('vendorPublicId', e.target.value)}
+                                    placeholder="Leave blank for platform-wide"
+                                    style={{ color: 'black', backgroundColor: 'white' }}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                />
+                            </div>
+
+                            {/* Active toggle */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => field('isActive', !form.isActive)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? 'bg-gray-900' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                                <span className="text-sm font-medium text-gray-700">Active</span>
+                            </div>
                         </div>
+
                         <div className="flex gap-3 p-6 pt-0">
                             <button onClick={() => setShowForm(false)} className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
                                 Cancel
@@ -195,8 +403,9 @@ export default function AdminPromotionsPage() {
                 ) : (
                     <div className="divide-y divide-gray-100">
                         {promotions.map(p => {
-                            const id = p.id ?? p.publicPromotionId;
-                            const isExpired = p.expiresAt && new Date(p.expiresAt) < new Date();
+                            const id        = p.publicPromotionId ?? p.id;
+                            const isExpired = p.endDate && new Date(p.endDate) < new Date();
+                            const isActive  = p.isActive ?? p.isCurrentlyActive ?? false;
                             return (
                                 <div key={id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex items-center gap-4 min-w-0">
@@ -207,17 +416,25 @@ export default function AdminPromotionsPage() {
                                             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                                 <p className="text-sm font-bold text-gray-900 font-mono">{p.code}</p>
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
-                                                    {p.discountPercent}% off
+                                                    {p.type === 'PERCENTAGE'   && `${p.value}% off`}
+                                                    {p.type === 'FIXED_AMOUNT' && `CA$${p.value} off`}
+                                                    {p.type === 'FREE_DELIVERY' && 'Free Delivery'}
                                                 </span>
-                                                {p.active === false && (
-                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded-full border border-red-200">Inactive</span>
+                                                {isActive ? (
+                                                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
+                                                        <CheckCircle className="w-3 h-3" /> Active
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
                                                 )}
                                                 {isExpired && (
                                                     <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-400">
-                                                {p.description || '—'} · Used {p.usageCount ?? 0}{p.maxUsage ? `/${p.maxUsage}` : ''} · Expires {formatDate(p.expiresAt)}
+                                            <p className="text-xs text-gray-400 truncate">
+                                                {p.title}{p.description ? ` · ${p.description}` : ''}
+                                                {' · '}Used {p.totalUsageCount ?? 0}{p.usageLimit ? `/${p.usageLimit}` : ''}
+                                                {' · '}Ends {formatDate(p.endDate)}
                                             </p>
                                         </div>
                                     </div>

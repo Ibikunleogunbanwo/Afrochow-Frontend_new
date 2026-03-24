@@ -70,6 +70,17 @@ export const AdminPromotionsAPI = {
     deactivate:(id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`, { method: 'DELETE' }),
 };
 
+// ── Admin Categories ───────────────────────────────────────────────────────
+export const AdminCategoriesAPI = {
+    getAll:         ()            => fetchWithCredentials(`${API_BASE_URL}/admin/categories`),
+    create:         (data)        => fetchWithCredentials(`${API_BASE_URL}/admin/categories`,                         { method: 'POST',  body: JSON.stringify(data) }),
+    update:         (id, data)    => fetchWithCredentials(`${API_BASE_URL}/admin/categories/${id}`,                   { method: 'PUT',   body: JSON.stringify(data) }),
+    delete:         (id)          => fetchWithCredentials(`${API_BASE_URL}/admin/categories/${id}`,                   { method: 'DELETE' }),
+    activate:       (id)          => fetchWithCredentials(`${API_BASE_URL}/admin/categories/${id}/activate`,          { method: 'PATCH' }),
+    deactivate:     (id)          => fetchWithCredentials(`${API_BASE_URL}/admin/categories/${id}/deactivate`,        { method: 'PATCH' }),
+    setDisplayOrder:(id, order)   => fetchWithCredentials(`${API_BASE_URL}/admin/categories/${id}/display-order?order=${order}`, { method: 'PATCH' }),
+};
+
 // ── Notifications ──────────────────────────────────────────────────────────
 export const AdminNotificationsAPI = {
     broadcast: (data) => fetchWithCredentials(`${API_BASE_URL}/notifications/admin/broadcast`, { method: 'POST', body: JSON.stringify(data) }),

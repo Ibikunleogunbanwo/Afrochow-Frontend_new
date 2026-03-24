@@ -25,6 +25,7 @@ import {
     UserPlus,
     Star,
     Megaphone,
+    LayoutGrid,
 } from 'lucide-react';
 
 const AdminDashboardLayout = ({ children }) => {
@@ -44,6 +45,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders' },
         { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews' },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
+        { name: 'Categories',     icon: LayoutGrid,      href: '/admin/categories',    badgeKey: null },
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
         { name: 'Broadcast',      icon: Megaphone,       href: '/admin/broadcast',     badgeKey: null },
         { name: 'Register Admin', icon: UserPlus,        href: '/admin/register',      badgeKey: null },

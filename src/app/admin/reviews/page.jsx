@@ -165,9 +165,13 @@ export default function AdminReviewsPage() {
                     }`}
                 >
                     <p className="text-2xl font-black text-gray-900">
-                        {stats ? (stats.totalReviews ?? stats.total ?? reviews.length) : reviews.length}
+                        {search || dateFilterActive
+                            ? filtered.length
+                            : stats ? (stats.totalReviews ?? stats.total ?? reviews.length) : reviews.length}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">Total Reviews</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                        {search || dateFilterActive ? 'Matching Reviews' : 'Total Reviews'}
+                    </p>
                 </button>
 
                 {/* Hidden — clickable filter */}
