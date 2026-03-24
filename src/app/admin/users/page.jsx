@@ -51,6 +51,7 @@ export default function AdminUsersPage() {
     const [searchInput, setSearchInput] = useState('');
     const [loading, setLoading]         = useState(true);
     const [error, setError]             = useState(null);
+    const [statusFilter, setStatusFilter] = useState('all'); // 'all'|'active'|'inactive'|role string
     const [actionLoading, setActionLoading] = useState({});
     const [roleMenu, setRoleMenu]       = useState(null);
     const searchTimer = useRef(null);
@@ -60,9 +61,13 @@ export default function AdminUsersPage() {
         setError(null);
         try {
             let res;
-            if (search)                    res = await AdminUsersAPI.search(search);
-            else if (roleFilter !== 'ALL') res = await AdminUsersAPI.getByRole(roleFilter);
-            else                           res = await AdminUsersAPI.getAll();
+            if (search)                                           res = await AdminUsersAPI.search(search);
+            else if (statusFilter === 'active')                  res = await AdminUsersAPI.getActive();
+            else if (statusFilter === 'inactive')                res = await AdminUsersAPI.getInactive();
+            else if (['CUSTOMER','VENDOR','ADMIN','SUPERADMIN'].includes(statusFilter))
+                                                                  res = await AdminUsersAPI.getByRole(statusFilter);
+            else if (roleFilter !== 'ALL')                       res = await AdminUsersAPI.getByRole(roleFilter);
+            else                                                 res = await AdminUsersAPI.getAll();
             const data = res?.data ?? res ?? [];
             setUsers(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -70,7 +75,7 @@ export default function AdminUsersPage() {
         } finally {
             setLoading(false);
         }
-    }, [roleFilter, search]);
+    }, [roleFilter, search, statusFilter]);
 
     const fetchStats = useCallback(async () => {
         try {
@@ -79,7 +84,7 @@ export default function AdminUsersPage() {
         } catch (_) {}
     }, []);
 
-    useEffect(() => { fetchUsers(); fetchStats(); }, [fetchUsers, fetchStats]);
+    useEffect(() => { fetchUsers(); fetchStats(); }, [fetchUsers, fetchStats, statusFilter]);
 
     const handleSearchInput = (val) => {
         setSearchInput(val);
@@ -123,13 +128,13 @@ export default function AdminUsersPage() {
         : 'N/A';
 
     const statsCards = stats ? [
-        { label: 'Total Users',    value: stats.totalUsers      ?? 0 },
-        { label: 'Active',         value: stats.activeUsers     ?? 0 },
-        { label: 'Inactive',       value: stats.inactiveUsers   ?? 0 },
-        { label: 'Customers',      value: stats.totalCustomers  ?? 0 },
-        { label: 'Vendors',        value: stats.totalVendors    ?? 0 },
-        { label: 'Admins',         value: stats.totalAdmins     ?? 0 },
-        { label: 'Super Admins',   value: stats.totalSuperAdmins ?? 0 },
+        { key: 'all',        label: 'Total Users',  value: stats.totalUsers      ?? 0 },
+        { key: 'active',     label: 'Active',        value: stats.activeUsers     ?? 0 },
+        { key: 'inactive',   label: 'Suspended',     value: stats.inactiveUsers   ?? 0 },
+        { key: 'CUSTOMER',   label: 'Customers',     value: stats.totalCustomers  ?? 0 },
+        { key: 'VENDOR',     label: 'Vendors',       value: stats.totalVendors    ?? 0 },
+        { key: 'ADMIN',      label: 'Admins',        value: stats.totalAdmins     ?? 0 },
+        { key: 'SUPERADMIN', label: 'Super Admins',  value: stats.totalSuperAdmins ?? 0 },
     ] : [];
 
     // A user is fully protected if they are SUPERADMIN
@@ -165,10 +170,16 @@ export default function AdminUsersPage() {
             {statsCards.length > 0 && (
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
                     {statsCards.map(s => (
-                        <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm text-center">
+                        <button
+                            key={s.key}
+                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); }}
+                            className={`bg-white border rounded-2xl p-4 shadow-sm text-center transition-all hover:shadow-md ${
+                                statusFilter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                            }`}
+                        >
                             <p className="text-xl font-black text-gray-900">{s.value}</p>
                             <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}

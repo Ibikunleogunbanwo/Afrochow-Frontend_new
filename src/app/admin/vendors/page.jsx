@@ -10,7 +10,13 @@ import {
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 
-const FILTERS = ['all', 'pending', 'verified'];
+const FILTERS = [
+    { key: 'all',       label: 'All' },
+    { key: 'pending',   label: 'Pending' },
+    { key: 'verified',  label: 'Verified' },
+    { key: 'suspended', label: 'Suspended' },
+    { key: 'revoked',   label: 'Revoked' },
+];
 
 const StatusBadge = ({ verified, active }) => {
     if (!active) return (
@@ -45,10 +51,7 @@ export default function AdminVendorsPage() {
         setLoading(true);
         setError(null);
         try {
-            let res;
-            if (filter === 'pending')  res = await AdminVendorsAPI.getPending();
-            else if (filter === 'verified') res = await AdminVendorsAPI.getVerified();
-            else res = await AdminVendorsAPI.getAll();
+            const res = await AdminVendorsAPI.getAll();
             const data = res?.data ?? res ?? [];
             setVendors(Array.isArray(data) ? data : []);
         } catch (e) {
@@ -56,7 +59,7 @@ export default function AdminVendorsPage() {
         } finally {
             setLoading(false);
         }
-    }, [filter]);
+    }, []);
 
     useEffect(() => { fetchVendors(); }, [fetchVendors]);
 
@@ -72,10 +75,19 @@ export default function AdminVendorsPage() {
         }
     };
 
-    const filtered = vendors.filter(v =>
-        !search || [v.restaurantName, v.cuisineType]
-            .some(s => s?.toLowerCase().includes(search.toLowerCase()))
-    );
+    const filtered = vendors.filter(v => {
+        // text search
+        if (search && ![ v.restaurantName, v.cuisineType ]
+            .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
+        // tab filter
+        switch (filter) {
+            case 'pending':   return !v.isVerified && v.isActive !== false;
+            case 'verified':  return v.isVerified === true;
+            case 'suspended': return v.isActive === false;
+            case 'revoked':   return v.isVerified === false && v.verifiedAt != null;
+            default:          return true;
+        }
+    });
 
     const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
 
@@ -103,17 +115,25 @@ export default function AdminVendorsPage() {
                 </button>
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Stats cards — clickable filters */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 {[
-                    { label: 'Total',    value: vendors.length },
-                    { label: 'Verified', value: vendors.filter(v => v.isVerified).length },
-                    { label: 'Pending',  value: vendors.filter(v => !v.isVerified).length },
+                    { key: 'all',       label: 'Total',     value: vendors.length },
+                    { key: 'verified',  label: 'Verified',  value: vendors.filter(v => v.isVerified).length },
+                    { key: 'pending',   label: 'Pending',   value: vendors.filter(v => !v.isVerified && v.isActive !== false).length },
+                    { key: 'suspended', label: 'Suspended', value: vendors.filter(v => v.isActive === false).length },
+                    { key: 'revoked',   label: 'Revoked',   value: vendors.filter(v => !v.isVerified && v.verifiedAt != null).length },
                 ].map(s => (
-                    <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    <button
+                        key={s.key}
+                        onClick={() => setFilter(s.key)}
+                        className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
+                            filter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                        }`}
+                    >
                         <p className="text-2xl font-black text-gray-900">{s.value}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                    </div>
+                    </button>
                 ))}
             </div>
 
@@ -132,15 +152,15 @@ export default function AdminVendorsPage() {
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         {FILTERS.map(f => (
                             <button
-                                key={f}
-                                onClick={() => setFilter(f)}
+                                key={f.key}
+                                onClick={() => setFilter(f.key)}
                                 className={`px-4 py-2 text-sm font-semibold rounded-xl capitalize transition-colors ${
-                                    filter === f ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
-                            >{f}</button>
+                            >{f.label}</button>
                         ))}
                     </div>
                 </div>

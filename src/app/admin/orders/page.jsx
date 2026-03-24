@@ -340,6 +340,7 @@ export default function AdminOrdersPage() {
     /* ── stat counts from current list ── */
     const statCounts = {
         total:     orders.length,
+        pending:   orders.filter(o => o.status === 'PENDING').length,
         active:    orders.filter(o => !TERMINAL_STATUSES.has(o.status)).length,
         delivered: orders.filter(o => o.status === 'DELIVERED').length,
         cancelled: orders.filter(o => o.status === 'CANCELLED').length,
@@ -373,17 +374,24 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 {[
-                    { label: 'Total',     value: statCounts.total },
-                    { label: 'Active',    value: statCounts.active },
-                    { label: 'Delivered', value: statCounts.delivered },
-                    { label: 'Cancelled', value: statCounts.cancelled },
+                    { label: 'Total',     value: statCounts.total,     filter: 'ALL' },
+                    { label: 'Pending',   value: statCounts.pending,   filter: 'PENDING' },
+                    { label: 'Active',    value: statCounts.active,    filter: 'ALL' },
+                    { label: 'Delivered', value: statCounts.delivered, filter: 'DELIVERED' },
+                    { label: 'Cancelled', value: statCounts.cancelled, filter: 'CANCELLED' },
                 ].map(s => (
-                    <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    <button
+                        key={s.label}
+                        onClick={() => setStatusFilter(s.filter)}
+                        className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
+                            statusFilter === s.filter && s.filter !== 'ALL' ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                        }`}
+                    >
                         <p className="text-2xl font-black text-gray-900">{s.value}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                    </div>
+                    </button>
                 ))}
             </div>
 

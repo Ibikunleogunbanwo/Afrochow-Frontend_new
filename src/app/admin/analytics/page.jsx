@@ -65,12 +65,52 @@ const TrendRow = ({ label, orders, revenue }) => (
     </div>
 );
 
+/* ─── helpers ────────────────────────────────────────────────────────────── */
+const buildTrendParams = (preset, customStart, customEnd) => {
+    const pad = (d) => d.toISOString().slice(0, 10);
+    const today = new Date(); today.setHours(0,0,0,0);
+    switch (preset) {
+        case 'last7': {
+            const s = new Date(today); s.setDate(s.getDate() - 6);
+            return { startDate: `${pad(s)}T00:00:00`, endDate: `${pad(today)}T23:59:59` };
+        }
+        case 'last30': {
+            const s = new Date(today); s.setDate(s.getDate() - 29);
+            return { startDate: `${pad(s)}T00:00:00`, endDate: `${pad(today)}T23:59:59` };
+        }
+        case 'thisMonth': {
+            const s = new Date(today.getFullYear(), today.getMonth(), 1);
+            return { startDate: `${pad(s)}T00:00:00`, endDate: `${pad(today)}T23:59:59` };
+        }
+        case 'custom':
+            if (customStart && customEnd) return { startDate: `${customStart}T00:00:00`, endDate: `${customEnd}T23:59:59` };
+            return null;
+        default:
+            return null;
+    }
+};
+
 /* ─── main page ─────────────────────────────────────────────────────────── */
 export default function AdminAnalyticsPage() {
     const [platform, setPlatform] = useState(null);
     const [trends, setTrends]     = useState(null);
     const [loading, setLoading]   = useState(true);
     const [error, setError]       = useState(null);
+    const [trendsParams, setTrendsParams]   = useState(null);   // null = no filter (shows 7d/30d)
+    const [trendsLoading, setTrendsLoading] = useState(false);
+    const [trendStart, setTrendStart]       = useState('');
+    const [trendEnd, setTrendEnd]           = useState('');
+    const [trendPreset, setTrendPreset]     = useState('default');
+
+    const fetchTrends = async (params) => {
+        setTrendsLoading(true);
+        try {
+            const res = await AdminAnalyticsAPI.getTrends(params);
+            const raw = res?.data ?? res ?? null;
+            setTrends(raw);
+        } catch (_) {}
+        finally { setTrendsLoading(false); }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -240,28 +280,97 @@ export default function AdminAnalyticsPage() {
                     </div>
 
                     {/* ── Sales Trends ── */}
-                    {trends && (
-                        <section>
+                    <section>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                             <SectionHeading>Sales Trends</SectionHeading>
-                            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                                {/* Header */}
-                                <div className="grid grid-cols-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    <span>Period</span>
-                                    <span className="text-right">Revenue</span>
-                                    <span className="text-right">Orders</span>
-                                </div>
-                                <TrendRow label="Last 7 Days"  revenue={trends.revenueLast7Days}    orders={trends.ordersLast7Days} />
-                                <TrendRow label="Last 30 Days" revenue={trends.revenueLast30Days}   orders={trends.ordersLast30Days} />
-                                {trends.revenueInDateRange != null && (
-                                    <TrendRow
-                                        label={`Custom range${trends.filterStartDate ? ` (${new Date(trends.filterStartDate).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })} – ${new Date(trends.filterEndDate).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })})` : ''}`}
-                                        revenue={trends.revenueInDateRange}
-                                        orders={trends.ordersInDateRange}
-                                    />
-                                )}
+                            {/* Preset picker */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {[
+                                    { key: 'default',   label: 'All time' },
+                                    { key: 'last7',     label: 'Last 7d' },
+                                    { key: 'last30',    label: 'Last 30d' },
+                                    { key: 'thisMonth', label: 'This month' },
+                                    { key: 'custom',    label: 'Custom' },
+                                ].map(p => (
+                                    <button
+                                        key={p.key}
+                                        onClick={() => {
+                                            setTrendPreset(p.key);
+                                            if (p.key === 'custom') return; // wait for date input Apply
+                                            const params = buildTrendParams(p.key, trendStart, trendEnd);
+                                            setTrendsParams(params);
+                                            fetchTrends(params);
+                                        }}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                                            trendPreset === p.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                    >{p.label}</button>
+                                ))}
                             </div>
-                        </section>
-                    )}
+                        </div>
+
+                        {/* Custom date inputs — shown only when custom preset selected */}
+                        {trendPreset === 'custom' && (
+                            <div className="flex items-end gap-3 mb-4 flex-wrap">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Start</label>
+                                    <input
+                                        type="date" value={trendStart}
+                                        onChange={e => setTrendStart(e.target.value)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">End</label>
+                                    <input
+                                        type="date" value={trendEnd}
+                                        onChange={e => setTrendEnd(e.target.value)}
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    />
+                                </div>
+                                <button
+                                    disabled={!trendStart || !trendEnd}
+                                    onClick={() => {
+                                        const params = { startDate: `${trendStart}T00:00:00`, endDate: `${trendEnd}T23:59:59` };
+                                        setTrendsParams(params);
+                                        fetchTrends(params);
+                                    }}
+                                    className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50"
+                                >Apply</button>
+                            </div>
+                        )}
+
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="grid grid-cols-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <span>Period</span>
+                                <span className="text-right">Revenue</span>
+                                <span className="text-right">Orders</span>
+                            </div>
+                            {trendsLoading ? (
+                                <div className="flex items-center justify-center py-8 gap-2 text-gray-400">
+                                    <RefreshCw className="h-4 w-4 animate-spin" /><span className="text-sm">Loading…</span>
+                                </div>
+                            ) : trends ? (
+                                <>
+                                    <TrendRow label="Last 7 Days"  revenue={trends.revenueLast7Days}  orders={trends.ordersLast7Days} />
+                                    <TrendRow label="Last 30 Days" revenue={trends.revenueLast30Days} orders={trends.ordersLast30Days} />
+                                    {trends.revenueInDateRange != null && (
+                                        <TrendRow
+                                            label={trends.filterStartDate
+                                                ? `${new Date(trends.filterStartDate).toLocaleDateString('en-CA',{month:'short',day:'numeric'})} – ${new Date(trends.filterEndDate).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}`
+                                                : 'Custom range'}
+                                            revenue={trends.revenueInDateRange}
+                                            orders={trends.ordersInDateRange}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-sm text-gray-400 text-center py-8">No trend data</p>
+                            )}
+                        </div>
+                    </section>
                 </>
             )}
         </div>
