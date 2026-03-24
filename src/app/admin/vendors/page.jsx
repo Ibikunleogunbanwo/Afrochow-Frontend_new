@@ -41,6 +41,7 @@ const StatusBadge = ({ verified, active }) => {
 
 export default function AdminVendorsPage() {
     const [vendors, setVendors]       = useState([]);
+    const [revokedIds, setRevokedIds] = useState(new Set()); // track revoked in-session
     const [filter, setFilter]         = useState('all');
     const [search, setSearch]         = useState('');
     const [loading, setLoading]       = useState(true);
@@ -67,6 +68,13 @@ export default function AdminVendorsPage() {
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
             await fn(id);
+            // Track revoke / re-verify in local state so the card count updates
+            // even if the API doesn't return verifiedAt on the vendor object.
+            if (label === 'unverify') {
+                setRevokedIds(prev => new Set([...prev, id]));
+            } else if (label === 'verify') {
+                setRevokedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+            }
             await fetchVendors();
         } catch (e) {
             alert(e.message || `Failed: ${label}`);
@@ -75,16 +83,22 @@ export default function AdminVendorsPage() {
         }
     };
 
+    // A vendor is "revoked" if it was explicitly unverified this session,
+    // OR if the API returns verifiedAt (backend may preserve it after unverify).
+    const isRevoked = (v) =>
+        revokedIds.has(v.publicVendorId) ||
+        (!v.isVerified && v.verifiedAt != null);
+
     const filtered = vendors.filter(v => {
         // text search
         if (search && ![ v.restaurantName, v.cuisineType ]
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
         // tab filter
         switch (filter) {
-            case 'pending':   return !v.isVerified && v.isActive !== false;
+            case 'pending':   return !v.isVerified && v.isActive !== false && !isRevoked(v);
             case 'verified':  return v.isVerified === true;
             case 'suspended': return v.isActive === false;
-            case 'revoked':   return v.isVerified === false && v.verifiedAt != null;
+            case 'revoked':   return isRevoked(v);
             default:          return true;
         }
     });
@@ -120,9 +134,9 @@ export default function AdminVendorsPage() {
                 {[
                     { key: 'all',       label: 'Total',     value: vendors.length },
                     { key: 'verified',  label: 'Verified',  value: vendors.filter(v => v.isVerified).length },
-                    { key: 'pending',   label: 'Pending',   value: vendors.filter(v => !v.isVerified && v.isActive !== false).length },
+                    { key: 'pending',   label: 'Pending',   value: vendors.filter(v => !v.isVerified && v.isActive !== false && !isRevoked(v)).length },
                     { key: 'suspended', label: 'Suspended', value: vendors.filter(v => v.isActive === false).length },
-                    { key: 'revoked',   label: 'Revoked',   value: vendors.filter(v => !v.isVerified && v.verifiedAt != null).length },
+                    { key: 'revoked',   label: 'Revoked',   value: vendors.filter(v => isRevoked(v)).length },
                 ].map(s => (
                     <button
                         key={s.key}

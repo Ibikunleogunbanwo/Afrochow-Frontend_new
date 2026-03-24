@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Megaphone, LayoutDashboard, ChevronRight, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Megaphone, LayoutDashboard, ChevronRight, Send, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { AdminNotificationsAPI } from '@/lib/api/admin.api';
 
 const AUDIENCE_OPTIONS = [

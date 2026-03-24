@@ -52,10 +52,28 @@ export default function AdminReviewsPage() {
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
             await fn(id);
-            await fetchReviews();
+            // Optimistically update local state so hide/restore flips immediately
+            // without waiting for a full refetch (backend may not return `hidden` field).
+            if (label === 'hide') {
+                setReviews(prev => prev.map(r =>
+                    (r.publicReviewId ?? r.id) === id ? { ...r, hidden: true } : r
+                ));
+            } else if (label === 'show') {
+                if (filter === 'hidden') {
+                    // Remove the restored review from the hidden list
+                    setReviews(prev => prev.filter(r => (r.publicReviewId ?? r.id) !== id));
+                } else {
+                    setReviews(prev => prev.map(r =>
+                        (r.publicReviewId ?? r.id) === id ? { ...r, hidden: false } : r
+                    ));
+                }
+            } else if (label === 'delete') {
+                setReviews(prev => prev.filter(r => (r.publicReviewId ?? r.id) !== id));
+            }
             await fetchStats();
         } catch (e) {
             alert(e.message || `Failed: ${label}`);
+            await fetchReviews(); // revert to real server state on error
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
         }
@@ -109,15 +127,28 @@ export default function AdminReviewsPage() {
             {stats && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
-                        { label: 'Total Reviews',  value: stats.totalReviews  ?? stats.total    ?? reviews.length },
-                        { label: 'Avg Rating',     value: stats.averageRating != null ? Number(stats.averageRating).toFixed(1) : '—' },
-                        { label: 'Hidden',         value: stats.hiddenReviews ?? stats.hidden   ?? 0 },
-                        { label: 'This Month',     value: stats.thisMonth     ?? stats.monthly  ?? 0 },
+                        { label: 'Total Reviews', value: stats.totalReviews ?? stats.total ?? reviews.length,                       filterKey: 'all' },
+                        { label: 'Avg Rating',    value: stats.averageRating != null ? Number(stats.averageRating).toFixed(1) : '—', filterKey: null },
+                        { label: 'Hidden',        value: stats.hiddenReviews ?? stats.hidden ?? 0,                                   filterKey: 'hidden' },
+                        { label: 'This Month',    value: stats.thisMonth ?? stats.monthly ?? 0,                                      filterKey: null },
                     ].map(s => (
-                        <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                            <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                        </div>
+                        s.filterKey ? (
+                            <button
+                                key={s.label}
+                                onClick={() => setFilter(s.filterKey)}
+                                className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
+                                    filter === s.filterKey ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
+                                }`}
+                            >
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                            </button>
+                        ) : (
+                            <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                            </div>
+                        )
                     ))}
                 </div>
             )}
