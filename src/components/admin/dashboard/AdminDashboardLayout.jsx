@@ -46,7 +46,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
         { name: 'Broadcast',      icon: Megaphone,       href: '/admin/broadcast',     badgeKey: null },
-        { name: 'Register Admin', icon: UserPlus,        href: '/register/admin',      badgeKey: null },
+        { name: 'Register Admin', icon: UserPlus,        href: '/admin/register',      badgeKey: null },
         { name: 'Settings',       icon: Settings,        href: '/admin/profile',       badgeKey: null },
         { name: 'Help',           icon: HelpCircle,      href: '/admin/help',          badgeKey: null },
     ];
