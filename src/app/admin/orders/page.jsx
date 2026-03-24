@@ -12,18 +12,26 @@ import { AdminOrdersAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 
 /* ─── status config ─────────────────────────────────────────────────────── */
-// Values must match the backend OrderStatus enum exactly:
+// Values must match the backend OrderStatus enum exactly (8 values):
 // PENDING | CONFIRMED | PREPARING | READY_FOR_PICKUP | OUT_FOR_DELIVERY | DELIVERED | CANCELLED | REFUNDED
+//
+// READY_FOR_PICKUP covers both delivery and pickup. The response's `statusLabel`
+// field disambiguates: delivery → "Ready for Delivery", pickup → "Available for Pickup".
+// The `label` here is only the fallback when statusLabel is absent.
+//
+// Terminal statuses (isActive: false, canBeCancelled: false): DELIVERED, CANCELLED, REFUNDED
 const STATUS_META = {
     PENDING:          { label: 'Pending',          cls: 'bg-yellow-100 text-yellow-700 border-yellow-200',  Icon: Clock },
     CONFIRMED:        { label: 'Confirmed',         cls: 'bg-blue-100   text-blue-700   border-blue-200',    Icon: CheckCircle },
     PREPARING:        { label: 'Preparing',         cls: 'bg-orange-100 text-orange-700 border-orange-200',  Icon: Package },
-    READY_FOR_PICKUP: { label: 'Ready for Pickup',  cls: 'bg-purple-100 text-purple-700 border-purple-200',  Icon: Package },
+    READY_FOR_PICKUP: { label: 'Ready',             cls: 'bg-purple-100 text-purple-700 border-purple-200',  Icon: Package },
     OUT_FOR_DELIVERY: { label: 'Out for Delivery',  cls: 'bg-indigo-100 text-indigo-700 border-indigo-200',  Icon: Truck },
     DELIVERED:        { label: 'Delivered',         cls: 'bg-green-100  text-green-700  border-green-200',   Icon: CheckCircle },
     CANCELLED:        { label: 'Cancelled',         cls: 'bg-red-100    text-red-700    border-red-200',     Icon: XCircle },
     REFUNDED:         { label: 'Refunded',          cls: 'bg-gray-100   text-gray-600   border-gray-200',    Icon: Receipt },
 };
+
+const TERMINAL_STATUSES = new Set(['DELIVERED', 'CANCELLED', 'REFUNDED']);
 
 const STATUS_TABS = ['ALL', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'];
 
@@ -330,7 +338,6 @@ export default function AdminOrdersPage() {
     });
 
     /* ── stat counts from current list ── */
-    const TERMINAL_STATUSES = new Set(['DELIVERED', 'CANCELLED', 'REFUNDED']);
     const statCounts = {
         total:     orders.length,
         active:    orders.filter(o => !TERMINAL_STATUSES.has(o.status)).length,
