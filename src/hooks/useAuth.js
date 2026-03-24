@@ -24,6 +24,7 @@ import { useCart } from "@/contexts/CartContext";
 const ROLE_ROUTES = {
     VENDOR: "/vendor/dashboard",
     ADMIN: "/admin/dashboard",
+    SUPERADMIN: "/admin/dashboard",
 };
 
 export const useAuth = () => {
@@ -199,7 +200,9 @@ export const useAuth = () => {
             return false;
         }
 
-        if (requiredRole && role !== requiredRole) {
+        // SUPERADMIN satisfies any ADMIN-level requirement
+        const effectiveRole = role === 'SUPERADMIN' ? 'ADMIN' : role;
+        if (requiredRole && effectiveRole !== requiredRole) {
             router.push("/unauthorized");
             return false;
         }

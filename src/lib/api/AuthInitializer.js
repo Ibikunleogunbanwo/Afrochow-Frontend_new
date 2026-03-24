@@ -67,10 +67,12 @@ export default function AuthInitializer({ children }) {
     useEffect(() => {
         if (isLoading) return;
 
+        const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
+
         if (isAuth) {
             // Redirect authenticated users away from public auth routes
             if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
-                const dashboardRoute = userRole === 'ADMIN'
+                const dashboardRoute = isAdminRole
                     ? '/admin/dashboard'
                     : userRole === 'VENDOR'
                         ? '/vendor/dashboard'
@@ -80,7 +82,7 @@ export default function AuthInitializer({ children }) {
             }
 
             // Role-based redirects
-            if (userRole === 'ADMIN' && pathname.startsWith('/vendor')) {
+            if (isAdminRole && pathname.startsWith('/vendor')) {
                 router.push('/admin/dashboard');
                 return;
             }
@@ -187,7 +189,7 @@ export default function AuthInitializer({ children }) {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
             </div>
         );
     }
