@@ -5,9 +5,10 @@ import Link from 'next/link';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
-    RefreshCw, AlertCircle, ChevronDown,
+    RefreshCw, ChevronDown,
 } from 'lucide-react';
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
+import AdminPageError from '@/components/admin/AdminPageError';
 
 const FILTERS = ['all', 'pending', 'verified'];
 
@@ -151,11 +152,7 @@ export default function AdminVendorsPage() {
                         <span className="text-sm">Loading vendors…</span>
                     </div>
                 ) : error ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-6">
-                        <AlertCircle className="h-10 w-10 text-red-400" />
-                        <p className="text-sm text-gray-600">{error}</p>
-                        <button onClick={fetchVendors} className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl">Retry</button>
-                    </div>
+                    <AdminPageError error={error} onRetry={fetchVendors} />
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Store className="h-12 w-12 text-gray-200" />

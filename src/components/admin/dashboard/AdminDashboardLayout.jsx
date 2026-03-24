@@ -2,14 +2,13 @@
 import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { AdminAPI } from '@/lib/api/admin.api';
+import { AdminAPI, AdminVendorsAPI, AdminOrdersAPI, AdminReviewsAPI } from '@/lib/api/admin.api';
 import { AuthAPI } from '@/lib/api/auth.api';
 import {
     LayoutDashboard,
     Users,
     Store,
     ShoppingBag,
-    DollarSign,
     BarChart3,
     Shield,
     Settings,
@@ -21,10 +20,11 @@ import {
     ChevronDown,
     User,
     LogOut,
-    Package,
     MessageSquare,
     Tag,
-    UserPlus
+    UserPlus,
+    Star,
+    Megaphone,
 } from 'lucide-react';
 
 const AdminDashboardLayout = ({ children }) => {
@@ -33,88 +33,22 @@ const AdminDashboardLayout = ({ children }) => {
     const [profileOpen, setProfileOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const [adminData, setAdminData] = useState(null);
+    const [badges, setBadges] = useState({ vendors: 0, orders: 0, reviews: 0 });
     const pathname = usePathname();
     const router = useRouter();
 
     const navItems = [
-        {
-            name: 'Dashboard',
-            icon: LayoutDashboard,
-            href: '/admin/dashboard',
-            badge: null
-        },
-        {
-            name: 'Users',
-            icon: Users,
-            href: '/admin/users',
-            badge: 12
-        },
-        {
-            name: 'Vendors',
-            icon: Store,
-            href: '/admin/vendors',
-            badge: 5
-        },
-        {
-            name: 'Orders',
-            icon: ShoppingBag,
-            href: '/admin/orders',
-            badge: 23
-        },
-        {
-            name: 'Products',
-            icon: Package,
-            href: '/admin/products',
-            badge: null
-        },
-        {
-            name: 'Categories',
-            icon: Tag,
-            href: '/admin/categories',
-            badge: null
-        },
-        {
-            name: 'Payments',
-            icon: DollarSign,
-            href: '/admin/payments',
-            badge: null
-        },
-        {
-            name: 'Reports',
-            icon: BarChart3,
-            href: '/admin/reports',
-            badge: null
-        },
-        {
-            name: 'Reviews',
-            icon: MessageSquare,
-            href: '/admin/reviews',
-            badge: 8
-        },
-        {
-            name: 'Admins',
-            icon: Shield,
-            href: '/admin/admins',
-            badge: null
-        },
-        {
-            name: 'Register Admin',
-            icon: UserPlus,
-            href: '/register/admin',
-            badge: null
-        },
-        {
-            name: 'Settings',
-            icon: Settings,
-            href: '/admin/profile',
-            badge: null
-        },
-        {
-            name: 'Help',
-            icon: HelpCircle,
-            href: '/admin/help',
-            badge: null
-        },
+        { name: 'Dashboard',      icon: LayoutDashboard, href: '/admin/dashboard',    badgeKey: null },
+        { name: 'Users',          icon: Users,           href: '/admin/users',         badgeKey: null },
+        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors' },
+        { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders' },
+        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews' },
+        { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
+        { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
+        { name: 'Broadcast',      icon: Megaphone,       href: '/admin/broadcast',     badgeKey: null },
+        { name: 'Register Admin', icon: UserPlus,        href: '/register/admin',      badgeKey: null },
+        { name: 'Settings',       icon: Settings,        href: '/admin/profile',       badgeKey: null },
+        { name: 'Help',           icon: HelpCircle,      href: '/admin/help',          badgeKey: null },
     ];
 
     // Mock notifications
@@ -142,12 +76,37 @@ const AdminDashboardLayout = ({ children }) => {
             try {
                 const adminData = await AdminAPI.getAdminData();
                 setAdminData(adminData?.data ?? adminData);
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (_) {}
+        };
+
+        const fetchBadges = async () => {
+            try {
+                const [pendingRes, activeOrdersRes, reviewStatsRes] = await Promise.allSettled([
+                    AdminVendorsAPI.getPending(),
+                    AdminOrdersAPI.getActive(),
+                    AdminReviewsAPI.getStats(),
+                ]);
+
+                const pendingVendors = pendingRes.status === 'fulfilled'
+                    ? (pendingRes.value?.data ?? pendingRes.value ?? [])
+                    : [];
+                const activeOrders = activeOrdersRes.status === 'fulfilled'
+                    ? (activeOrdersRes.value?.data ?? activeOrdersRes.value ?? [])
+                    : [];
+                const reviewStats = reviewStatsRes.status === 'fulfilled'
+                    ? (reviewStatsRes.value?.data ?? reviewStatsRes.value ?? {})
+                    : {};
+
+                setBadges({
+                    vendors: Array.isArray(pendingVendors) ? pendingVendors.length : 0,
+                    orders:  Array.isArray(activeOrders)   ? activeOrders.length  : 0,
+                    reviews: reviewStats?.pendingReviews ?? reviewStats?.total ?? 0,
+                });
+            } catch (_) {}
         };
 
         fetchData();
+        fetchBadges();
     }, []);
 
 
@@ -205,12 +164,12 @@ const AdminDashboardLayout = ({ children }) => {
                                         <Icon className="w-5 h-5" />
                                         <span>{item.name}</span>
                                     </div>
-                                    {item.badge && (
+                                    {item.badgeKey && badges[item.badgeKey] > 0 && (
                                         <span className={`
                       px-2 py-0.5 text-xs font-bold rounded-full
                       ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}
                     `}>
-                      {item.badge}
+                      {badges[item.badgeKey]}
                     </span>
                                     )}
                                 </Link>
@@ -241,7 +200,7 @@ const AdminDashboardLayout = ({ children }) => {
                                     <User className="w-4 h-4 mr-3" />
                                     My Profile
                                 </Link>
-                                <Link href="/admin/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     <Settings className="w-4 h-4 mr-3" />
                                     Settings
                                 </Link>
@@ -407,7 +366,7 @@ const AdminDashboardLayout = ({ children }) => {
                                                 ))}
                                             </div>
                                             <div className="px-4 py-3 text-center border-t border-gray-200">
-                                                <Link href="/admin/notifications" className="text-sm text-gray-700 font-semibold hover:text-gray-900">
+                                                <Link href="/admin/broadcast" className="text-sm text-gray-700 font-semibold hover:text-gray-900">
                                                     View all notifications
                                                 </Link>
                                             </div>
