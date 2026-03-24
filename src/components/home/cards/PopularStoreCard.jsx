@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Star, Flame, Clock, MapPin, Store,Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { resolveImageUrl } from "@/lib/utils/imageUrl";
 
 // ── Badge sub-components ──────────────────────────────────────────────────────
 
@@ -81,9 +82,9 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
 
                 {/* Image */}
                 <div className="relative w-full aspect-4/3 overflow-hidden bg-gray-100">
-                    {product.imageUrl ? (
+                    {resolveImageUrl(product.imageUrl) ? (
                         <Image
-                            src={product.imageUrl}
+                            src={resolveImageUrl(product.imageUrl)}
                             alt={product.name}
                             fill
                             priority={priority}

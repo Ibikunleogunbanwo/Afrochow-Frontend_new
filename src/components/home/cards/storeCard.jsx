@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import { Heart, Star, Clock, Truck, MapPin, Store } from 'lucide-react';
 import Image from 'next/image';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
+import { resolveImageUrl } from '@/lib/utils/imageUrl';
 import { useAuth } from '@/hooks/useAuth';
 import { SignInModal } from "@/components/signin/SignInModal";
 import { SignUpModal } from "@/components/register/SignUpModal";
@@ -61,9 +62,9 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
         isSpicy,
     } = store;
 
-    const imageUrl = popularItems?.length > 0
-        ? popularItems[0].imageUrl
-        : '/image/amala.jpg';
+    const imageUrl = resolveImageUrl(
+        popularItems?.length > 0 ? popularItems[0].imageUrl : null
+    ) ?? '/image/amala.jpg';
 
     const categoryDisplay = Array.isArray(categories) && categories.length > 0
         ? categories.slice(0, 2).join(' • ')
