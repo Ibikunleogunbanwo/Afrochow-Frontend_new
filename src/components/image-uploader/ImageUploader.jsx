@@ -33,6 +33,7 @@ const SIZE_MAP = {
     lg: 'w-36 h-36',
     xl: 'w-48 h-48',
     'xl-wide': 'w-64 h-48', // Rectangle for products
+    banner: 'w-full h-44',  // Full-width landscape banner
 };
 
 const PLACEHOLDER_MAP = {
@@ -41,6 +42,7 @@ const PLACEHOLDER_MAP = {
     lg: { icon: 'w-8 h-8', text: 'text-sm', gap: 'gap-2' },
     xl: { icon: 'w-10 h-10', text: 'text-base', gap: 'gap-2.5' },
     'xl-wide': { icon: 'w-10 h-10', text: 'text-base', gap: 'gap-2.5' },
+    banner: { icon: 'w-10 h-10', text: 'text-base', gap: 'gap-2.5' },
 };
 
 const REMOVE_BUTTON_MAP = {
@@ -49,6 +51,7 @@ const REMOVE_BUTTON_MAP = {
     lg: { button: 'w-7 h-7', icon: 'w-4 h-4', position: 'top-1 right-1' },
     xl: { button: 'w-8 h-8', icon: 'w-5 h-5', position: 'top-2 right-2' },
     'xl-wide': { button: 'w-8 h-8', icon: 'w-5 h-5', position: 'top-2 right-2' },
+    banner: { button: 'w-8 h-8', icon: 'w-5 h-5', position: 'top-2 right-2' },
 };
 
 function ImageUploader({
@@ -199,7 +202,7 @@ function ImageUploader({
                             ? 'opacity-50 cursor-not-allowed border-slate-300'
                             : currentError
                                 ? 'border-red-500 hover:border-red-600'
-                                : 'border-slate-300 hover:border-orange-400'
+                                : 'border-slate-300 hover:border-gray-500'
                     }`}
                 >
                     <input
@@ -216,7 +219,7 @@ function ImageUploader({
                                 ? 'text-slate-400'
                                 : currentError
                                     ? 'text-red-500'
-                                    : 'text-slate-400 group-hover:text-orange-500'
+                                    : 'text-slate-400 group-hover:text-gray-600'
                         }`} />
                         <span className={`${PLACEHOLDER_MAP[size].text} font-medium ${
                             uploading ? 'text-slate-500' : 'text-slate-600'

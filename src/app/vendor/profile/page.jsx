@@ -7,12 +7,13 @@ import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { AuthAPI } from '@/lib/api/auth.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
+import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { CANADIAN_PROVINCES } from '@/lib/schemas/addressSchema';
 import { toast } from 'sonner';
 import {
     Store, Star, ShoppingBag, DollarSign, Package,
     MapPin, Pencil, Loader2, CheckCircle2, ChevronRight,
-    Calendar, Truck, X, Upload, ImageIcon,
+    Calendar, Truck, X, ImageIcon,
     LayoutDashboard, Home, Phone, Navigation, Timer, Info,
     AlertCircle,
 } from 'lucide-react';
@@ -260,75 +261,6 @@ function SaveBar({ saving, onSave, onCancel, disabled }) {
     );
 }
 
-/**
- * Registration-style drop zone — full-width overlay input for reliable mobile tap.
- * isSquare=true renders a fixed square (logo); isSquare=false renders full-width (banner).
- */
-function ImageDropZone({ label, hint, currentUrl, uploading, onFile, onRemove, aspectClass = 'h-40', isSquare = false }) {
-    const process = (file) => {
-        if (!file) return;
-        if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
-        if (file.size > 5 * 1024 * 1024)   { toast.error('Image must be under 5 MB');    return; }
-        onFile(file);
-    };
-
-    const containerCls = isSquare
-        ? 'relative w-32 h-32 sm:w-40 sm:h-40 rounded-xl'
-        : `relative w-full ${aspectClass} rounded-xl`;
-
-    return (
-        <div className="space-y-2">
-            <Label>{label}</Label>
-
-            {currentUrl ? (
-                /* ── Existing image ─────────────────────────────────────────── */
-                <div className={`${containerCls} overflow-hidden border-2 border-gray-200`}>
-                    {uploading && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70">
-                            <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
-                        </div>
-                    )}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={currentUrl} alt={label} className="w-full h-full object-cover" />
-                    <button type="button" onClick={onRemove}
-                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors z-20">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            ) : (
-                /* ── Drop zone ──────────────────────────────────────────────── */
-                <div className={`${containerCls} border-2 border-dashed bg-gray-50 transition-all
-                    ${uploading ? 'border-gray-500 bg-gray-50 cursor-wait' : 'border-gray-300 hover:border-gray-500 cursor-pointer'}`}>
-                    {/* Full-width hidden file input — works on all mobile browsers */}
-                    {!uploading && (
-                        <input type="file" accept="image/jpeg,image/png,image/webp"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                            onChange={e => process(e.target.files?.[0])} />
-                    )}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center pointer-events-none">
-                        {uploading ? (
-                            <>
-                                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
-                                <p className="text-sm text-gray-600 font-medium">Uploading…</p>
-                            </>
-                        ) : (
-                            <>
-                                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                    <Upload className="w-6 h-6 text-gray-400" />
-                                </div>
-                                <p className="text-sm font-medium text-gray-700">
-                                    {isSquare ? 'Tap to upload logo' : 'Drop image or tap to browse'}
-                                </p>
-                                <p className="text-xs text-gray-500">{hint}</p>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function VendorProfilePage() {
@@ -357,10 +289,8 @@ export default function VendorProfilePage() {
     const [savingHours, setSavingHours] = useState(false);
 
     // ── Branding ─────────────────────────────────────────────────────────────
-    const [logoUrl,         setLogoUrl]         = useState('');
-    const [bannerUrl,       setBannerUrl]        = useState('');
-    const [uploadingLogo,   setUploadingLogo]   = useState(false);
-    const [uploadingBanner, setUploadingBanner] = useState(false);
+    const [logoUrl,   setLogoUrl]   = useState('');
+    const [bannerUrl, setBannerUrl] = useState('');
 
     // ── Load ─────────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -533,47 +463,25 @@ export default function VendorProfilePage() {
         });
     };
 
-    // ── Branding — mirrors vendor registration upload flow ────────────────────
+    // ── Branding — upload directly to Cloudinary, then persist URL ───────────
+    // Both handlers return the URL so ImageUploader can update its own preview.
+    // Errors are thrown and caught by ImageUploader's built-in error display.
     const handleLogoUpload = async (file) => {
-        setUploadingLogo(true);
-        try {
-            // 1. Upload to the shared image endpoint (same as registration step 3)
-            const res = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorLogo');
-            const url = res?.imageUrl;
-            if (!url) throw new Error('No URL returned from server');
-
-            // 2. Persist the URL on the vendor profile
-            await VendorProfileAPI.updateVendorProfile({ logoUrl: url });
-
-            setLogoUrl(url);
-            setProfile(prev => ({ ...prev, logoUrl: url }));
-            toast.success('Logo updated');
-        } catch (e) {
-            toast.error(e.message || 'Logo upload failed');
-        } finally {
-            setUploadingLogo(false);
-        }
+        const { imageUrl: url } = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorLogo');
+        await VendorProfileAPI.updateVendorProfile({ logoUrl: url });
+        setLogoUrl(url);
+        setProfile(prev => ({ ...prev, logoUrl: url }));
+        toast.success('Logo updated');
+        return url;
     };
 
     const handleBannerUpload = async (file) => {
-        setUploadingBanner(true);
-        try {
-            // 1. Upload to the shared image endpoint (same as registration step 3)
-            const res = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorBanner');
-            const url = res?.imageUrl;
-            if (!url) throw new Error('No URL returned from server');
-
-            // 2. Persist the URL on the vendor profile
-            await VendorProfileAPI.updateVendorProfile({ bannerUrl: url });
-
-            setBannerUrl(url);
-            setProfile(prev => ({ ...prev, bannerUrl: url }));
-            toast.success('Banner updated');
-        } catch (e) {
-            toast.error(e.message || 'Banner upload failed');
-        } finally {
-            setUploadingBanner(false);
-        }
+        const { imageUrl: url } = await ImageUploadAPI.uploadRegistrationImage(file, 'VendorBanner');
+        await VendorProfileAPI.updateVendorProfile({ bannerUrl: url });
+        setBannerUrl(url);
+        setProfile(prev => ({ ...prev, bannerUrl: url }));
+        toast.success('Banner updated');
+        return url;
     };
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1032,20 +940,15 @@ export default function VendorProfilePage() {
                                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Logo</p>
                                     <p className="text-xs text-gray-500">Square images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
-                                {/* Full-width on mobile, square on md+ */}
-                                <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
-                                    <ImageDropZone
-                                        label="" hint="512×512 px recommended"
-                                        currentUrl={logoUrl} uploading={uploadingLogo}
-                                        isSquare
-                                        onFile={handleLogoUpload}
-                                        onRemove={() => setLogoUrl('')} />
-                                    {logoUrl && (
-                                        <p className="mt-2 sm:mt-0 text-xs text-green-600 font-medium flex items-center gap-1">
-                                            <CheckCircle2 className="w-3.5 h-3.5" /> Logo saved
-                                        </p>
-                                    )}
-                                </div>
+                                <ImageUploader
+                                    id="vendor-logo"
+                                    value={logoUrl}
+                                    size="xl"
+                                    shape="square"
+                                    helpText="512×512 px recommended"
+                                    onUpload={handleLogoUpload}
+                                    onChange={(val) => { if (typeof val === 'string' || val === null) setLogoUrl(val ?? ''); }}
+                                />
                             </section>
 
                             <div className="border-t border-gray-100" />
@@ -1056,17 +959,15 @@ export default function VendorProfilePage() {
                                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Banner</p>
                                     <p className="text-xs text-gray-500">Wide / landscape images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
-                                <ImageDropZone
-                                    label="" hint="PNG, JPG, WEBP · max 5 MB · wide images work best"
-                                    currentUrl={bannerUrl} uploading={uploadingBanner}
-                                    aspectClass="h-44"
-                                    onFile={handleBannerUpload}
-                                    onRemove={() => setBannerUrl('')} />
-                                {bannerUrl && (
-                                    <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> Banner saved
-                                    </p>
-                                )}
+                                <ImageUploader
+                                    id="vendor-banner"
+                                    value={bannerUrl}
+                                    size="banner"
+                                    shape="square"
+                                    helpText="Wide / landscape · JPG, PNG, WEBP · max 5 MB"
+                                    onUpload={handleBannerUpload}
+                                    onChange={(val) => { if (typeof val === 'string' || val === null) setBannerUrl(val ?? ''); }}
+                                />
                             </section>
                         </div>
                     )}
