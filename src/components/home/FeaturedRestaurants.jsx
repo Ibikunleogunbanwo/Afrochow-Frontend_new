@@ -57,10 +57,14 @@ const FeaturedRestaurants = () => {
                     ).then(results => {
                         const enriched = products.map((product, i) => {
                             const result = results[i];
-                            if (result.status === 'fulfilled' && result.value?.success && result.value?.data) {
-                                const d = result.value.data;
+                            if (result.status === 'fulfilled' && result.value) {
+                                // Handle both wrapped { success, data } and bare product objects
+                                const d = result.value?.data ?? result.value;
                                 return {
                                     ...product,
+                                    // The featured list endpoint returns a lightweight DTO that may
+                                    // omit imageUrl — always prefer the full product detail value.
+                                    imageUrl:     d.imageUrl     ?? product.imageUrl,
                                     isVegetarian: d.isVegetarian ?? product.isVegetarian ?? false,
                                     isVegan:      d.isVegan      ?? product.isVegan      ?? false,
                                     isGlutenFree: d.isGlutenFree ?? product.isGlutenFree ?? false,
