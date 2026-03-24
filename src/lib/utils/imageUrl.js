@@ -1,18 +1,23 @@
 /**
- * Resolves a product/vendor image URL returned by the Afrochow backend.
+ * Resolves an image URL from any Afrochow API response to a fully-qualified,
+ * correct URL for the current environment.
  *
- * The backend sometimes returns a relative path such as
- *   /api/images/products/<id>.jpg
- * instead of a fully-qualified URL.  When the browser sees a relative src it
- * resolves it against the *page* origin (e.g. localhost:3000 or
- * app.afrochow.ca), which is wrong — the image actually lives on the API
- * server (localhost:8080 / api.afrochow.ca).
+ * Problem: Product/vendor images hosted on the Afrochow backend are stored in
+ * the database as the URL that existed at upload time.  That URL may point to:
+ *   - localhost:8080         (uploaded during local dev)
+ *   - *.up.railway.app       (uploaded against the Railway staging server)
+ *   - a relative path        (/api/images/products/…)
+ *   - the correct production URL (https://api.afrochow.ca/api/images/…)
  *
- * This helper is intentionally narrow:
- *   - null / undefined           → returned as null (caller shows placeholder)
- *   - already absolute (http/https) → returned unchanged (Cloudinary, S3, etc.)
- *   - local Next.js public asset (/image/..., /icons/...) → returned unchanged
- *   - Afrochow backend path (/api/...) → API origin prepended
+ * All of those cases share one thing: the path always contains /api/images/.
+ * We extract that path segment and rebuild the URL with the correct API origin
+ * for the current deployment.
+ *
+ * External images (Cloudinary, S3, etc.) never contain /api/images/, so they
+ * pass through completely unchanged.
+ *
+ * Local Next.js public assets (/image/amala.jpg, /icons/…) also pass through
+ * unchanged because they don't match the pattern.
  */
 
 const API_ORIGIN = (() => {
@@ -24,6 +29,14 @@ const API_ORIGIN = (() => {
   }
 })();
 
+// Matches the Afrochow image path regardless of what host precedes it.
+// e.g. captures "/api/images/products/abc-123.jpg" from any of:
+//   http://localhost:8080/api/images/products/abc-123.jpg
+//   https://afrochow-backendnew-production.up.railway.app/api/images/products/abc-123.jpg
+//   https://api.afrochow.ca/api/images/products/abc-123.jpg
+//   /api/images/products/abc-123.jpg
+const AFROCHOW_IMAGE_PATH_RE = /(\/api\/images\/.+)/;
+
 /**
  * @param {string|null|undefined} url  Raw imageUrl from an API response.
  * @returns {string|null}              Absolute URL safe to use in <img src>.
@@ -31,13 +44,13 @@ const API_ORIGIN = (() => {
 export function resolveImageUrl(url) {
   if (!url) return null;
 
-  // Already absolute — Cloudinary, S3, external CDN, or full Afrochow URL
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Afrochow-hosted image: extract the canonical path and prepend the correct
+  // API origin for this deployment — fixes wrong-host and relative-path cases.
+  const match = url.match(AFROCHOW_IMAGE_PATH_RE);
+  if (match) {
+    return `${API_ORIGIN}${match[1]}`;
+  }
 
-  // Local Next.js public-folder asset — leave as-is so the browser resolves
-  // it against the page origin correctly (e.g. /image/amala.jpg)
-  if (!url.startsWith('/api/')) return url;
-
-  // Afrochow backend relative path — prepend the API server origin
-  return `${API_ORIGIN}${url}`;
+  // Everything else (Cloudinary, S3, Next.js public assets, etc.) — unchanged.
+  return url;
 }
