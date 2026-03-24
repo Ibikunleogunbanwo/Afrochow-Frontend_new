@@ -1,5 +1,5 @@
 /**
- * Resolves a product/vendor image URL returned by the backend.
+ * Resolves a product/vendor image URL returned by the Afrochow backend.
  *
  * The backend sometimes returns a relative path such as
  *   /api/images/products/<id>.jpg
@@ -8,10 +8,11 @@
  * app.afrochow.ca), which is wrong — the image actually lives on the API
  * server (localhost:8080 / api.afrochow.ca).
  *
- * This helper:
- *   - Returns null/undefined as-is so callers can still show placeholders.
- *   - Returns already-absolute URLs (http/https) unchanged.
- *   - Prepends the API server origin to relative paths.
+ * This helper is intentionally narrow:
+ *   - null / undefined           → returned as null (caller shows placeholder)
+ *   - already absolute (http/https) → returned unchanged (Cloudinary, S3, etc.)
+ *   - local Next.js public asset (/image/..., /icons/...) → returned unchanged
+ *   - Afrochow backend path (/api/...) → API origin prepended
  */
 
 const API_ORIGIN = (() => {
@@ -29,7 +30,14 @@ const API_ORIGIN = (() => {
  */
 export function resolveImageUrl(url) {
   if (!url) return null;
+
+  // Already absolute — Cloudinary, S3, external CDN, or full Afrochow URL
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  // Relative path — join with API origin
-  return `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+
+  // Local Next.js public-folder asset — leave as-is so the browser resolves
+  // it against the page origin correctly (e.g. /image/amala.jpg)
+  if (!url.startsWith('/api/')) return url;
+
+  // Afrochow backend relative path — prepend the API server origin
+  return `${API_ORIGIN}${url}`;
 }
