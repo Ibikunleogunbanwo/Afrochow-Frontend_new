@@ -41,9 +41,14 @@ export const AdminOrdersAPI = {
 };
 
 // ── Analytics ──────────────────────────────────────────────────────────────
+const buildDateQuery = (params) => {
+    if (!params?.startDate || !params?.endDate) return '';
+    return `?startDate=${encodeURIComponent(params.startDate)}&endDate=${encodeURIComponent(params.endDate)}`;
+};
+
 export const AdminAnalyticsAPI = {
-    getPlatform: () => fetchWithCredentials(`${API_BASE_URL}/analytics/admin/platform`),
-    getTrends:   () => fetchWithCredentials(`${API_BASE_URL}/analytics/admin/trends`),
+    getPlatform: (params) => fetchWithCredentials(`${API_BASE_URL}/analytics/admin/platform${buildDateQuery(params)}`),
+    getTrends:   (params) => fetchWithCredentials(`${API_BASE_URL}/analytics/admin/trends${buildDateQuery(params)}`),
 };
 
 // ── Admin Reviews ──────────────────────────────────────────────────────────

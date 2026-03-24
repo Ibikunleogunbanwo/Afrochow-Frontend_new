@@ -216,7 +216,7 @@ export default function AdminHelpPage() {
                 <p className="text-sm font-bold text-gray-700 mb-3">Quick links</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
-                        { label: 'Register Admin',  href: '/register/admin',    icon: UserPlus },
+                        { label: 'Register Admin',  href: '/admin/register',    icon: UserPlus },
                         { label: 'My Profile',      href: '/admin/profile',     icon: Settings },
                         { label: 'Broadcast',       href: '/admin/broadcast',   icon: Megaphone },
                     ].map(l => {
