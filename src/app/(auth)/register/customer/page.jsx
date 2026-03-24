@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { API_BASE_URL } from "@/lib/api/httpClient";
 import { RegistrationAPI } from "@/lib/api/registration.api";
+import { ImageUploadAPI } from "@/lib/api/imageUpload";
 import { toast } from "sonner";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -108,36 +109,6 @@ const registrationSchema = z
       message: "Passwords do not match",
       path: ["confirmPassword"],
     });
-
-// ─── Image Upload Helper ──────────────────────────────────────────────────────
-// Converts base64 to a proper multipart FormData so the backend
-// receives a "file" part — not a raw base64 string.
-
-async function uploadProfileImage(base64String) {
-  const fetchRes = await fetch(base64String);
-  const blob = await fetchRes.blob();
-  const ext = blob.type.split("/")[1] || "jpg";
-  const file = new File([blob], `profile.${ext}`, { type: blob.type });
-
-  const formData = new FormData();
-  formData.append("file", file); // backend expects @RequestPart("file")
-  formData.append("category", "CustomerProfileImage");
-
-  const response = await fetch(`${API_BASE_URL}/images/upload/registration`, {
-    method: "POST",
-    body: formData,
-    // ⚠️ Do NOT set Content-Type — browser sets it with the correct boundary
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Image upload failed");
-  }
-
-  const data = await response.json();
-  // Normalise: backend may wrap under data.data.imageUrl (new) or data.imageUrl (old)
-  return data?.data?.imageUrl ?? data?.imageUrl;
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -587,9 +558,13 @@ export default function CustomerRegistration() {
     try {
       let profileImageUrl = null;
 
-      // Upload image only if the user selected one (base64 → FormData → multipart)
-      if (formData.profileImageUrl && formData.profileImageUrl !== "") {
-        profileImageUrl = await uploadProfileImage(formData.profileImageUrl);
+      // Upload image only if the user selected one — goes directly to Cloudinary
+      if (formData.profileImageUrl instanceof File) {
+        const { imageUrl } = await ImageUploadAPI.uploadRegistrationImage(
+          formData.profileImageUrl,
+          'CustomerProfileImage'
+        );
+        profileImageUrl = imageUrl;
       }
 
       const payload = {

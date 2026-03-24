@@ -1,3 +1,5 @@
+import { ImageUploadAPI } from '@/lib/api/imageUpload';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 // ─── Token refresh state ─────────────────────────────────────────────────────
@@ -54,43 +56,6 @@ const apiCall = async (endpoint, options = {}, _retry = false) => {
   if (!res.ok) throw new Error(data.message || `API error: ${res.status}`);
   return data;
 };
-
-// ─── Image upload ────────────────────────────────────────────────────────────
-
-export class ImageUploadAPI {
-  /**
-   * Upload a registration image.
-   * @param {File} file - The file to upload
-   * @param {string} category - e.g. 'CustomerProfileImage', 'VendorLogo', 'ProductImage'
-   * @param {AbortSignal} [signal] - Optional cancellation signal
-   * @returns {Promise<Object>} Response JSON with imageUrl
-   */
-  static async uploadRegistrationImage(file, category = 'CustomerProfileImage', signal) {
-    if (!file) throw new Error('File is required');
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('category', category);
-
-    const response = await fetch(`${API_BASE_URL}/images/upload/registration`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-      signal,
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.success) {
-      throw new Error(data?.data?.message ?? data?.message ?? 'Image upload failed');
-    }
-
-    // Normalise wrapped response: backend may return { data: { imageUrl } } or { imageUrl }
-    const imageUrl = data?.data?.imageUrl ?? data?.imageUrl;
-    if (!imageUrl) throw new Error('Image upload succeeded but no URL was returned');
-
-    return { ...data, imageUrl };
-  }
-}
 
 /**
  * Upload all vendor images in parallel.
