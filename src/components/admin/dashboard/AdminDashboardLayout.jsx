@@ -38,12 +38,13 @@ const AdminDashboardLayout = ({ children }) => {
     const pathname = usePathname();
     const router = useRouter();
 
+    // badgeMeta: { label, colors: { default, active } }
     const navItems = [
         { name: 'Dashboard',      icon: LayoutDashboard, href: '/admin/dashboard',    badgeKey: null },
         { name: 'Users',          icon: Users,           href: '/admin/users',         badgeKey: null },
-        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors' },
-        { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders' },
-        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews' },
+        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors', badgeMeta: { label: 'awaiting',  colors: { default: 'bg-amber-100 text-amber-800',  active: 'bg-amber-400/30 text-amber-100' } } },
+        { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: null },
+        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'to review', colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
         { name: 'Categories',     icon: LayoutGrid,      href: '/admin/categories',    badgeKey: null },
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
@@ -166,14 +167,17 @@ const AdminDashboardLayout = ({ children }) => {
                                         <Icon className="w-5 h-5" />
                                         <span>{item.name}</span>
                                     </div>
-                                    {item.badgeKey && badges[item.badgeKey] > 0 && (
-                                        <span className={`
-                      px-2 py-0.5 text-xs font-bold rounded-full
-                      ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}
-                    `}>
-                      {badges[item.badgeKey]}
-                    </span>
-                                    )}
+                                    {item.badgeKey && badges[item.badgeKey] > 0 && (() => {
+                                        const count  = badges[item.badgeKey];
+                                        const meta   = item.badgeMeta;
+                                        const colors = isActive ? meta?.colors?.active : meta?.colors?.default;
+                                        return (
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap ${colors ?? (isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700')}`}>
+                                                {count}
+                                                {meta?.label && <span className="font-medium opacity-80">{meta.label}</span>}
+                                            </span>
+                                        );
+                                    })()}
                                 </Link>
                             );
                         })}
@@ -266,14 +270,17 @@ const AdminDashboardLayout = ({ children }) => {
                                             <Icon className="w-5 h-5" />
                                             <span>{item.name}</span>
                                         </div>
-                                        {item.badge && (
-                                            <span className={`
-                        px-2 py-0.5 text-xs font-bold rounded-full
-                        ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}
-                      `}>
-                        {item.badge}
-                      </span>
-                                        )}
+                                        {item.badgeKey && badges[item.badgeKey] > 0 && (() => {
+                                            const count  = badges[item.badgeKey];
+                                            const meta   = item.badgeMeta;
+                                            const colors = isActive ? meta?.colors?.active : meta?.colors?.default;
+                                            return (
+                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap ${colors ?? (isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700')}`}>
+                                                    {count}
+                                                    {meta?.label && <span className="font-medium opacity-80">{meta.label}</span>}
+                                                </span>
+                                            );
+                                        })()}
                                     </Link>
                                 );
                             })}
