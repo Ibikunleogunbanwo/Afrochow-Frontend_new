@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
     ShoppingCart, Menu, X, User, LogOut, Settings,
-    Package, ChevronDown, ChevronRight, Store
+    Package, ChevronDown, ChevronRight, Store, Bell,
 } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -14,6 +14,8 @@ import { ForgotPasswordModal } from "@/components/signin/ForgotPasswordModal";
 import { useCart } from "@/contexts/CartContext";
 import { SearchAPI } from "@/lib/api/search.api";
 import { useSearchParams, useRouter as useNextRouter, usePathname } from "next/navigation";
+import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
+import CustomerNotificationDropdown from "@/components/customer/CustomerNotificationDropdown";
 
 // ─── Sign-in param watcher ───────────────────────────────────────────────────
 
@@ -44,9 +46,12 @@ const Header = () => {
     const [showSignUp, setShowSignUp] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [navCategories, setNavCategories] = useState([]);
+    const [notifOpen, setNotifOpen] = useState(false);
 
     const { cartCount, cartTotal } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
+    const { notifications, unreadCount, loading: notifLoading, markRead, markAllRead, deleteOne } =
+        useCustomerNotifications();
 
     useEffect(() => {
         const loadCategories = async () => {
@@ -156,6 +161,39 @@ const Header = () => {
                                         </span>
                                     )}
                                 </Link>
+
+                                {/* Notification bell — visible on all breakpoints */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => { setNotifOpen(o => !o); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                                        className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                        aria-label="Notifications"
+                                    >
+                                        <Bell className="w-5 h-5 text-gray-600" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gray-900 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {notifOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setNotifOpen(false)} />
+                                            <div className="absolute right-0 top-full z-20">
+                                                <CustomerNotificationDropdown
+                                                    isOpen={notifOpen}
+                                                    notifications={notifications}
+                                                    unreadCount={unreadCount}
+                                                    loading={notifLoading}
+                                                    onClose={() => setNotifOpen(false)}
+                                                    onMarkAllRead={markAllRead}
+                                                    onMarkRead={markRead}
+                                                    onDelete={deleteOne}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
 
                                 {/* Desktop user dropdown */}
                                 <div className="relative hidden md:block">
@@ -302,8 +340,8 @@ const Header = () => {
                                     <div className="px-3 py-2">
                                         <p className="px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Account</p>
                                         {[
-                                            { href: "/profile", icon: User, label: "Profile" },
-                                            { href: "/orders", icon: Package, label: "My Orders" },
+                                            { href: "/profile",  icon: User,     label: "Profile" },
+                                            { href: "/orders",   icon: Package,  label: "My Orders" },
                                             { href: "/settings", icon: Settings, label: "Settings" },
                                         ].map(({ href, icon: Icon, label }) => (
                                             <Link
@@ -317,6 +355,21 @@ const Header = () => {
                                                 <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
                                             </Link>
                                         ))}
+                                        {/* Notifications — shows unread badge */}
+                                        <Link
+                                            href="/notifications"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                                        >
+                                            <Bell className="w-4 h-4 text-gray-400" />
+                                            <span className="flex-1">Notifications</span>
+                                            {unreadCount > 0 && (
+                                                <span className="w-5 h-5 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                                </span>
+                                            )}
+                                            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                                        </Link>
                                     </div>
 
                                     {/* Logout */}

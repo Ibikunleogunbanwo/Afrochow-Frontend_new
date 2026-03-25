@@ -47,43 +47,88 @@ function StatusBadge({ status, statusLabel }) {
 }
 
 function OrderCard({ order, onCancel, cancelling }) {
-    const isActive  = ACTIVE_STATUSES.has(order.status);
+    const isActive   = ACTIVE_STATUSES.has(order.status);
     const isDelivery = order.fulfillmentType === "DELIVERY";
+    const itemCount  = order.items?.length ?? order.itemCount ?? null;
+    const shortId    = order.publicOrderId?.slice(-8).toUpperCase();
+    const dateStr    = order.orderTime
+        ? new Date(order.orderTime).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-5">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="min-w-0">
-                        <p className="font-bold text-gray-900 truncate">{order.vendorName}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 font-mono">
-                            #{order.publicOrderId} · {order.orderTime
-                                ? new Date(order.orderTime).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
-                                : "—"}
+            {/* Active order top-bar accent */}
+            {isActive && (
+                <div className="h-1 w-full bg-gradient-to-r from-orange-500 to-red-500" />
+            )}
+
+            <div className="p-4 sm:p-5">
+                {/* ── Top row: vendor + status badge ── */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="min-w-0 flex-1">
+                        <p className="font-bold text-gray-900 text-base leading-tight truncate">
+                            {order.vendorName}
                         </p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            <span className="text-xs text-gray-400 font-mono">#{shortId}</span>
+                            <span className="text-gray-300 text-xs">·</span>
+                            <span className="text-xs text-gray-400">{dateStr}</span>
+                        </div>
                     </div>
                     <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                 </div>
 
-                {/* Fulfillment type */}
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3">
-                    {isDelivery
-                        ? <><Truck className="w-3.5 h-3.5" /> Delivery</>
-                        : <><Store className="w-3.5 h-3.5" /> Pickup</>
-                    }
+                {/* ── Meta row: fulfillment + item count ── */}
+                <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                    <span className="flex items-center gap-1">
+                        {isDelivery
+                            ? <><Truck className="w-3.5 h-3.5" /> Delivery</>
+                            : <><Store className="w-3.5 h-3.5" /> Pickup</>
+                        }
+                    </span>
+                    {itemCount != null && (
+                        <>
+                            <span className="text-gray-300">·</span>
+                            <span className="flex items-center gap-1">
+                                <Package className="w-3.5 h-3.5" />
+                                {itemCount} {itemCount === 1 ? "item" : "items"}
+                            </span>
+                        </>
+                    )}
                 </div>
 
-                {/* Total */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                {/* ── Items preview (if available) ── */}
+                {order.items?.length > 0 && (
+                    <div className="mb-3 space-y-1">
+                        {order.items.slice(0, 2).map((item, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs text-gray-500">
+                                <span className="truncate max-w-[70%]">
+                                    {item.quantity > 1 && <span className="font-semibold text-gray-700 mr-1">{item.quantity}×</span>}
+                                    {item.productName ?? item.name}
+                                </span>
+                                {item.subtotal != null && (
+                                    <span className="font-medium text-gray-700 shrink-0">
+                                        CA${item.subtotal.toFixed(2)}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                        {order.items.length > 2 && (
+                            <p className="text-xs text-gray-400">+{order.items.length - 2} more</p>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Total ── */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className="text-sm text-gray-500">Total</span>
                     <span className="text-lg font-black text-orange-600">
                         CA${order.totalAmount?.toFixed(2) ?? "—"}
                     </span>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 mt-3">
+                {/* ── Actions ── */}
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
                     <Link
                         href={`/order-confirmation/${order.publicOrderId}`}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
@@ -95,11 +140,11 @@ function OrderCard({ order, onCancel, cancelling }) {
                         <button
                             onClick={() => onCancel(order.publicOrderId)}
                             disabled={cancelling === order.publicOrderId}
-                            className="px-4 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                            className="sm:w-auto w-full flex items-center justify-center px-5 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
                         >
                             {cancelling === order.publicOrderId
                                 ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : "Cancel"
+                                : "Cancel order"
                             }
                         </button>
                     )}
