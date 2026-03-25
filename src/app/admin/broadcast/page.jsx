@@ -6,8 +6,16 @@ import {
     Megaphone, LayoutDashboard, ChevronRight, Send,
     CheckCircle, AlertCircle, RefreshCw,
     ShoppingBag, Truck, CreditCard, Tag, Shield, Bell,
+    Users, User, Store,
 } from 'lucide-react';
 import { AdminNotificationsAPI } from '@/lib/api/admin.api';
+
+// Audience filter
+const AUDIENCES = [
+    { value: 'ALL',       label: 'All users',  icon: Users, desc: 'Send to every customer and vendor on the platform' },
+    { value: 'CUSTOMERS', label: 'Customers',  icon: User,  desc: 'Send only to users with the CUSTOMER role' },
+    { value: 'VENDORS',   label: 'Vendors',    icon: Store, desc: 'Send only to users with the VENDOR role' },
+];
 
 // NotificationType enum values from the backend
 const NOTIFICATION_TYPES = [
@@ -20,7 +28,7 @@ const NOTIFICATION_TYPES = [
 ];
 
 export default function AdminBroadcastPage() {
-    const [form, setForm]     = useState({ title: '', message: '', type: 'SYSTEM_ALERT' });
+    const [form, setForm]     = useState({ title: '', message: '', type: 'SYSTEM_ALERT', targetAudience: 'ALL' });
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError]     = useState(null);
@@ -36,12 +44,13 @@ export default function AdminBroadcastPage() {
         setSuccess(false);
         try {
             await AdminNotificationsAPI.broadcast({
-                title:   form.title.trim(),
-                message: form.message.trim(),
-                type:    form.type,
+                title:          form.title.trim(),
+                message:        form.message.trim(),
+                type:           form.type,
+                targetAudience: form.targetAudience,
             });
             setSuccess(true);
-            setForm({ title: '', message: '', type: 'SYSTEM_ALERT' });
+            setForm({ title: '', message: '', type: 'SYSTEM_ALERT', targetAudience: 'ALL' });
         } catch (err) {
             setError(err.message || 'Failed to send broadcast');
         } finally {
@@ -83,6 +92,37 @@ export default function AdminBroadcastPage() {
                         {error}
                     </div>
                 )}
+
+                {/* Target Audience */}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Send to <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {AUDIENCES.map(opt => {
+                            const Icon = opt.icon;
+                            const active = form.targetAudience === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setForm(f => ({ ...f, targetAudience: opt.value }))}
+                                    className={`flex flex-col items-center gap-1.5 px-3 py-3 text-sm font-semibold rounded-xl border transition-all ${
+                                        active
+                                            ? 'bg-gray-900 text-white border-gray-900'
+                                            : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4 shrink-0" />
+                                    {opt.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                        {AUDIENCES.find(a => a.value === form.targetAudience)?.desc}
+                    </p>
+                </div>
 
                 {/* Notification Type */}
                 <div>
@@ -169,9 +209,9 @@ export default function AdminBroadcastPage() {
                     <div>
                         <p className="text-sm font-semibold text-gray-700 mb-1">About broadcasts</p>
                         <ul className="text-xs text-gray-500 space-y-1">
-                            <li>· Notifications are sent to all users on the platform</li>
+                            <li>· Target all users, customers only, or vendors only</li>
                             <li>· Choose the notification type that best matches your message</li>
-                            <li>· Users will receive in-app notifications</li>
+                            <li>· Recipients will receive in-app notifications</li>
                             <li>· Broadcasts cannot be undone after sending</li>
                         </ul>
                     </div>
