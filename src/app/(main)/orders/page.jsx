@@ -244,15 +244,17 @@ export default function OrdersPage() {
 
                 {/* Stats */}
                 {orders.length > 0 && (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                         {[
-                            { label: "Total",     value: orders.length },
-                            { label: "Active",    value: activeCount },
-                            { label: "Spent",     value: `CA$${totalSpent.toFixed(2)}` },
+                            { label: "Total orders",  value: orders.length,                      mono: false },
+                            { label: "Active now",    value: activeCount,                        mono: false },
+                            { label: "Total spent",   value: `CA$${totalSpent.toFixed(2)}`,      mono: true  },
                         ].map(s => (
-                            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-                                <p className="text-2xl font-black bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">{s.value}</p>
-                                <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+                            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3.5 flex sm:flex-col items-center sm:items-center justify-between sm:justify-center gap-2 sm:gap-1 sm:text-center">
+                                <p className="text-xs text-gray-500 sm:mb-0.5">{s.label}</p>
+                                <p className={`font-black bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent ${s.mono ? 'text-lg sm:text-2xl' : 'text-2xl'}`}>
+                                    {s.value}
+                                </p>
                             </div>
                         ))}
                     </div>
