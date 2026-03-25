@@ -10,19 +10,21 @@ import {
     BarChart3,
     HelpCircle,
     Store,
+    Bell,
     X, UserCircle, LogOut
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/vendor/dashboard', badge: null },
-    { name: 'Profile', icon: UserCircle, href: '/vendor/profile', badge: null },
-    { name: 'Products', icon: UtensilsCrossed, href: '/vendor/menu', badge: null },
-    { name: 'View Orders', icon: ShoppingBag, href: '/vendor/orders', badge: null },
-    { name: 'View Earnings', icon: DollarSign, href: '/vendor/earnings', badge: null },
-    { name: 'Reviews', icon: Star, href: '/vendor/reviews', badge: null },
-    { name: 'Promotions', icon: Gift, href: '/vendor/promotions', badge: null },
-    { name: 'View Reports', icon: BarChart3, href: '/vendor/reports', badge: null },
-    { name: 'Help', icon: HelpCircle, href: '/vendor/help', badge: null },
+    { name: 'Dashboard',       icon: LayoutDashboard, href: '/vendor/dashboard',      badge: null },
+    { name: 'Profile',         icon: UserCircle,      href: '/vendor/profile',         badge: null },
+    { name: 'Products',        icon: UtensilsCrossed, href: '/vendor/menu',            badge: null },
+    { name: 'View Orders',     icon: ShoppingBag,     href: '/vendor/orders',          badge: null },
+    { name: 'View Earnings',   icon: DollarSign,      href: '/vendor/earnings',        badge: null },
+    { name: 'Reviews',         icon: Star,            href: '/vendor/reviews',         badge: null },
+    { name: 'Promotions',      icon: Gift,            href: '/vendor/promotions',      badge: null },
+    { name: 'View Reports',    icon: BarChart3,       href: '/vendor/reports',         badge: null },
+    { name: 'Notifications',   icon: Bell,            href: '/vendor/notifications',   badge: null },
+    { name: 'Help',            icon: HelpCircle,      href: '/vendor/help',            badge: null },
 ];
 
 
