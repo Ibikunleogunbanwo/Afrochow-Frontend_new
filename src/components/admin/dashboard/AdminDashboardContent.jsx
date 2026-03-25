@@ -13,7 +13,7 @@ import { AdminVendorsAPI, AdminAnalyticsAPI, AdminUsersAPI } from '@/lib/api/adm
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
 const fmt$ = (n) =>
-    n != null ? `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '—';
+    n != null ? `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
 const fmtN = (n) =>
     n != null ? Number(n).toLocaleString() : '—';
 const is403 = (msg = '') =>
