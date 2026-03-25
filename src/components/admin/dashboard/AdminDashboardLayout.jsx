@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { AdminAPI, AdminVendorsAPI, AdminOrdersAPI, AdminReviewsAPI } from '@/lib/api/admin.api';
+import { AdminAPI, AdminAnalyticsAPI, AdminReviewsAPI } from '@/lib/api/admin.api';
 import { AuthAPI } from '@/lib/api/auth.api';
 import {
     LayoutDashboard,
@@ -34,7 +34,7 @@ const AdminDashboardLayout = ({ children }) => {
     const [profileOpen, setProfileOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const [adminData, setAdminData] = useState(null);
-    const [badges, setBadges] = useState({ vendors: 0, orders: 0, reviews: 0 });
+    const [badges, setBadges] = useState({ orders: 0, reviews: 0 });
     const pathname = usePathname();
     const router = useRouter();
 
@@ -42,9 +42,9 @@ const AdminDashboardLayout = ({ children }) => {
     const navItems = [
         { name: 'Dashboard',      icon: LayoutDashboard, href: '/admin/dashboard',    badgeKey: null },
         { name: 'Users',          icon: Users,           href: '/admin/users',         badgeKey: null },
-        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors', badgeMeta: { label: 'awaiting',  colors: { default: 'bg-amber-100 text-amber-800',  active: 'bg-amber-400/30 text-amber-100' } } },
-        { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: null },
-        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'to review', colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
+        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: null },
+        { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders',  badgeMeta: { label: 'pending',   colors: { default: 'bg-red-100 text-red-700',    active: 'bg-red-400/30 text-red-100'    } } },
+        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
         { name: 'Categories',     icon: LayoutGrid,      href: '/admin/categories',    badgeKey: null },
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
@@ -84,27 +84,24 @@ const AdminDashboardLayout = ({ children }) => {
 
         const fetchBadges = async () => {
             try {
-                const [pendingRes, activeOrdersRes, reviewStatsRes] = await Promise.allSettled([
-                    AdminVendorsAPI.getPending(),
-                    AdminOrdersAPI.getActive(),
+                const [platformRes, reviewStatsRes] = await Promise.allSettled([
+                    AdminAnalyticsAPI.getPlatform(),
                     AdminReviewsAPI.getStats(),
                 ]);
 
-                const pendingVendors = pendingRes.status === 'fulfilled'
-                    ? (pendingRes.value?.data ?? pendingRes.value ?? [])
-                    : [];
-                const activeOrders = activeOrdersRes.status === 'fulfilled'
-                    ? (activeOrdersRes.value?.data ?? activeOrdersRes.value ?? [])
-                    : [];
-                const reviewStats = reviewStatsRes.status === 'fulfilled'
+                // Pending orders — plain int from GET /analytics/admin/platform
+                const platformRaw = platformRes.status === 'fulfilled'
+                    ? (platformRes.value?.data ?? platformRes.value ?? {})
+                    : {};
+                const ordersCount = platformRaw?.pendingOrders ?? 0;
+
+                // Hidden reviews — confirmed field from GET /admin/reviews/stats
+                const reviewRaw = reviewStatsRes.status === 'fulfilled'
                     ? (reviewStatsRes.value?.data ?? reviewStatsRes.value ?? {})
                     : {};
+                const reviewCount = reviewRaw?.hiddenReviews ?? reviewRaw?.hiddenCount ?? 0;
 
-                setBadges({
-                    vendors: Array.isArray(pendingVendors) ? pendingVendors.length : 0,
-                    orders:  Array.isArray(activeOrders)   ? activeOrders.length  : 0,
-                    reviews: reviewStats?.pendingReviews ?? reviewStats?.total ?? 0,
-                });
+                setBadges({ orders: ordersCount, reviews: reviewCount });
             } catch (_) {}
         };
 

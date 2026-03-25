@@ -125,11 +125,13 @@ const AdminDashboardContent = () => {
                 AdminAnalyticsAPI.getTrends(dateParams),
                 AdminUsersAPI.getStats(),
             ]);
-            setPlatform(platformRes?.data ?? platformRes ?? null);
-            // Trends response is always an object (never an array)
-            const raw = trendsRes?.data ?? trendsRes ?? {};
+            const platformData = platformRes?.data ?? platformRes ?? null;
+            const raw          = trendsRes?.data  ?? trendsRes  ?? {};
+            const statsData    = statsRes?.data    ?? statsRes   ?? null;
+            console.warn('[Dashboard raw]', { platform: platformData, trendObj: raw, userStats: statsData });
+            setPlatform(platformData);
             setTrendObj(typeof raw === 'object' && !Array.isArray(raw) ? raw : {});
-            setUserStats(statsRes?.data ?? statsRes ?? null);
+            setUserStats(statsData);
         } catch (e) {
             setAnalyticsError(e.message || 'Failed to load analytics');
         } finally {
@@ -142,9 +144,11 @@ const AdminDashboardContent = () => {
         setLoadingVendors(true);
         setVendorError(null);
         try {
-            const res = await AdminVendorsAPI.getPending();
-            const data = res?.data ?? res ?? [];
-            setPendingVendors(Array.isArray(data) ? data : []);
+            const res  = await AdminVendorsAPI.getPending();
+            const raw  = res?.data ?? res ?? [];
+            // Handle Spring Page { content: [...] } or plain array
+            const data = raw?.content ?? (Array.isArray(raw) ? raw : []);
+            setPendingVendors(data);
         } catch (e) {
             setVendorError(e.message || 'Failed to load vendors');
         } finally {
@@ -169,10 +173,31 @@ const AdminDashboardContent = () => {
         return DATE_OPTIONS.find(o => o.value === dateRange)?.label ?? 'Last 30 Days';
     })();
 
+    // ── field-name helpers (defensive fallback chains) ──────────────────────
+    // These cover common backend naming variations so data always shows up.
+    const resolveRevenue7d  = (t) => t?.revenueLast7Days  ?? t?.revenue7Days   ?? t?.revenueLastWeek   ?? t?.last7DaysRevenue   ?? 0;
+    const resolveRevenue30d = (t) => t?.revenueLast30Days ?? t?.revenue30Days  ?? t?.revenueLastMonth  ?? t?.last30DaysRevenue  ?? 0;
+    const resolveOrders7d   = (t) => t?.ordersLast7Days   ?? t?.orders7Days    ?? t?.ordersLastWeek    ?? t?.last7DaysOrders    ?? 0;
+    const resolveOrders30d  = (t) => t?.ordersLast30Days  ?? t?.orders30Days   ?? t?.ordersLastMonth   ?? t?.last30DaysOrders   ?? 0;
+
+    const resolveTotalRevenue = (p) =>
+        p?.totalRevenue ?? p?.revenue ?? p?.platformRevenue ?? p?.totalPlatformRevenue ?? p?.revenueTotal ?? null;
+
+    const resolveTotalOrders = (p) =>
+        p?.totalOrders  ?? p?.orders  ?? p?.orderCount    ?? p?.totalOrderCount    ?? p?.ordersTotal   ?? null;
+
+    const resolveActiveVendors = (p, u) =>
+        // confirmed: totalVendors in platform analytics
+        p?.totalVendors ?? p?.activeVendors ?? p?.verifiedVendors ?? p?.vendorCount ?? u?.totalVendors ?? u?.vendorCount ?? null;
+
+    const resolveTotalUsers = (p, u) =>
+        // confirmed: totalUsers in platform analytics
+        p?.totalUsers ?? p?.totalCustomers ?? u?.totalUsers ?? u?.total ?? u?.userCount ?? null;
+
     // Revenue comparison bars (always 2 standard + optional "Selected" bucket)
     const revenueData = trendObj ? [
-        { label: 'Last 7d',  revenue: trendObj.revenueLast7Days  ?? 0 },
-        { label: 'Last 30d', revenue: trendObj.revenueLast30Days ?? 0 },
+        { label: 'Last 7d',  revenue: resolveRevenue7d(trendObj)  },
+        { label: 'Last 30d', revenue: resolveRevenue30d(trendObj) },
         ...(trendObj.revenueInDateRange != null
             ? [{ label: 'Selected', revenue: trendObj.revenueInDateRange }]
             : []),
@@ -180,8 +205,8 @@ const AdminDashboardContent = () => {
 
     // Orders comparison bars
     const ordersData = trendObj ? [
-        { label: 'Last 7d',  orders: trendObj.ordersLast7Days  ?? 0 },
-        { label: 'Last 30d', orders: trendObj.ordersLast30Days ?? 0 },
+        { label: 'Last 7d',  orders: resolveOrders7d(trendObj)  },
+        { label: 'Last 30d', orders: resolveOrders30d(trendObj) },
         ...(trendObj.ordersInDateRange != null
             ? [{ label: 'Selected', orders: trendObj.ordersInDateRange }]
             : []),
@@ -191,25 +216,25 @@ const AdminDashboardContent = () => {
     const stats = [
         {
             name:     'Total Users',
-            value:    loadingAnalytics ? null : fmtN(userStats?.totalUsers),
+            value:    loadingAnalytics ? null : fmtN(resolveTotalUsers(platform, userStats)),
             icon:     Users,
             allTime:  true,
         },
         {
-            name:     'Active Vendors',
-            value:    loadingAnalytics ? null : fmtN(platform?.activeVendors ?? userStats?.totalVendors),
+            name:     'Total Vendors',
+            value:    loadingAnalytics ? null : fmtN(resolveActiveVendors(platform, userStats)),
             icon:     Store,
             allTime:  true,
         },
         {
             name:     isFiltered ? 'Revenue (filtered)' : 'Platform Revenue',
-            value:    loadingAnalytics ? null : fmt$(platform?.totalRevenue),
+            value:    loadingAnalytics ? null : fmt$(resolveTotalRevenue(platform)),
             icon:     DollarSign,
             allTime:  !isFiltered,
         },
         {
             name:     isFiltered ? 'Orders (filtered)' : 'Total Orders',
-            value:    loadingAnalytics ? null : fmtN(platform?.totalOrders),
+            value:    loadingAnalytics ? null : fmtN(resolveTotalOrders(platform)),
             icon:     ShoppingBag,
             allTime:  !isFiltered,
         },
