@@ -208,31 +208,36 @@ export default function CustomerNotificationsPage() {
 
                 {/* ── Filters ─────────────────────────────────────────────────── */}
                 <div className="space-y-2">
-                    {/* Type filter — horizontally scrollable on mobile */}
-                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
-                        {TYPE_FILTERS.map(f => (
-                            <button
-                                key={f.key}
-                                onClick={() => handleFilterChange(f.key)}
-                                className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap shrink-0 transition-colors ${
-                                    filter === f.key
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                                }`}
-                            >
-                                {f.label}
-                                {f.key !== 'ALL' && (
-                                    <span className="ml-1 opacity-60">
-                                        {all.filter(n => n.type === f.key).length > 0
-                                            ? `(${all.filter(n => n.type === f.key).length})`
-                                            : ''}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                    {/* Type filters — 2 rows on mobile, single row on sm+ */}
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+                        {TYPE_FILTERS.map(f => {
+                            const count = f.key !== 'ALL'
+                                ? all.filter(n => n.type === f.key).length
+                                : null;
+                            return (
+                                <button
+                                    key={f.key}
+                                    onClick={() => handleFilterChange(f.key)}
+                                    className={`flex items-center justify-center gap-1 px-2 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                        filter === f.key
+                                            ? 'bg-gray-900 text-white'
+                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {f.label}
+                                    {count > 0 && (
+                                        <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full leading-none ${
+                                            filter === f.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                                        }`}>
+                                            {count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    {/* Unread toggle — full-width on mobile */}
+                    {/* Unread toggle + result count */}
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-gray-400">
                             {filtered.length} notification{filtered.length !== 1 ? 's' : ''}
