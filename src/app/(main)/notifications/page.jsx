@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
     Bell, ShoppingBag, Truck, CreditCard, Tag,
-    RefreshCw, CheckCheck, Trash2, Home, ChevronRight,
+    RefreshCw, CheckCheck, Trash2, Home, ChevronRight, X,
+    ArrowRight,
 } from 'lucide-react';
 import { NotificationsAPI } from '@/lib/api/notifications.api';
 
@@ -22,67 +23,180 @@ const relativeTime = (dateVal) => {
     return `${days}d ago`;
 };
 
-const TYPE_META = {
-    ORDER_UPDATE:    { Icon: ShoppingBag, bg: 'bg-gray-100',   icon: 'text-gray-700',   label: 'Order',   href: '/orders'      },
-    DELIVERY_UPDATE: { Icon: Truck,       bg: 'bg-blue-50',    icon: 'text-blue-600',   label: 'Delivery', href: '/orders'     },
-    PAYMENT_SUCCESS: { Icon: CreditCard,  bg: 'bg-green-50',   icon: 'text-green-600',  label: 'Payment',  href: '/orders'     },
-    PAYMENT_FAILED:  { Icon: CreditCard,  bg: 'bg-red-50',     icon: 'text-red-600',    label: 'Failed',   href: '/orders'     },
-    PROMO:           { Icon: Tag,         bg: 'bg-orange-50',  icon: 'text-orange-500', label: 'Promo',    href: '/restaurants'},
-    SYSTEM_ALERT:    { Icon: Bell,        bg: 'bg-gray-100',   icon: 'text-gray-400',   label: 'System',   href: '/profile'    },
+const fullDate = (dateVal) => {
+    if (!dateVal) return '';
+    return new Date(dateVal).toLocaleString('en-CA', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
 };
-const getMeta = (type) =>
-    TYPE_META[type] ?? { Icon: Bell, bg: 'bg-gray-100', icon: 'text-gray-400', label: 'Notice', href: '/profile' };
+
+const TYPE_META = {
+    ORDER_UPDATE:    { Icon: ShoppingBag, bg: 'bg-gray-100',  icon: 'text-gray-700',   label: 'Order',    baseHref: '/orders'      },
+    NEW_ORDER:       { Icon: ShoppingBag, bg: 'bg-gray-100',  icon: 'text-gray-700',   label: 'Order',    baseHref: '/orders'      },
+    ORDER:           { Icon: ShoppingBag, bg: 'bg-gray-100',  icon: 'text-gray-700',   label: 'Order',    baseHref: '/orders'      },
+    DELIVERY_UPDATE: { Icon: Truck,       bg: 'bg-blue-50',   icon: 'text-blue-600',   label: 'Delivery', baseHref: '/orders'      },
+    DELIVERY:        { Icon: Truck,       bg: 'bg-blue-50',   icon: 'text-blue-600',   label: 'Delivery', baseHref: '/orders'      },
+    PAYMENT_SUCCESS: { Icon: CreditCard,  bg: 'bg-green-50',  icon: 'text-green-600',  label: 'Payment',  baseHref: '/orders'      },
+    PAYMENT_FAILED:  { Icon: CreditCard,  bg: 'bg-red-50',    icon: 'text-red-600',    label: 'Failed',   baseHref: '/orders'      },
+    PAYMENT_FAILURE: { Icon: CreditCard,  bg: 'bg-red-50',    icon: 'text-red-600',    label: 'Failed',   baseHref: '/orders'      },
+    PAYMENT:         { Icon: CreditCard,  bg: 'bg-green-50',  icon: 'text-green-600',  label: 'Payment',  baseHref: '/orders'      },
+    PROMO:           { Icon: Tag,         bg: 'bg-orange-50', icon: 'text-orange-500', label: 'Promo',    baseHref: '/restaurants' },
+    PROMOTION:       { Icon: Tag,         bg: 'bg-orange-50', icon: 'text-orange-500', label: 'Promo',    baseHref: '/restaurants' },
+    SYSTEM_ALERT:    { Icon: Bell,        bg: 'bg-gray-100',  icon: 'text-gray-400',   label: 'System',   baseHref: null           },
+    SYSTEM:          { Icon: Bell,        bg: 'bg-gray-100',  icon: 'text-gray-400',   label: 'System',   baseHref: null           },
+};
+
+const getMeta = (notification) => {
+    const meta = TYPE_META[notification?.type];
+    if (!meta) return { Icon: Bell, bg: 'bg-gray-100', icon: 'text-gray-400', label: 'Notice', href: null };
+    let href = meta.baseHref;
+    if (href === '/orders' && notification?.relatedEntityId) {
+        href = `/order-confirmation/${notification.relatedEntityId}`;
+    }
+    return { ...meta, href };
+};
 
 const TYPE_FILTERS = [
-    { key: 'ALL',            label: 'All'      },
-    { key: 'ORDER_UPDATE',   label: 'Orders'   },
-    { key: 'DELIVERY_UPDATE',label: 'Delivery' },
-    { key: 'PAYMENT_SUCCESS',label: 'Payments' },
-    { key: 'PROMO',          label: 'Promos'   },
-    { key: 'SYSTEM_ALERT',   label: 'System'   },
+    { key: 'ALL',             label: 'All'      },
+    { key: 'ORDER_UPDATE',    label: 'Orders'   },
+    { key: 'DELIVERY_UPDATE', label: 'Delivery' },
+    { key: 'PAYMENT_SUCCESS', label: 'Payments' },
+    { key: 'PROMO',           label: 'Promos'   },
+    { key: 'SYSTEM_ALERT',    label: 'System'   },
 ];
 
 const PAGE_SIZE = 20;
 
-// ─── component ────────────────────────────────────────────────────────────────
+// ─── Notification detail modal ────────────────────────────────────────────────
+
+function NotificationModal({ notification, onClose, onDelete }) {
+    if (!notification) return null;
+    const meta     = getMeta(notification);
+    const { Icon, bg, icon, href, label } = meta;
+    const isUnread = !notification.isRead;
+
+    // Close on Escape
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [onClose]);
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                onClick={onClose}
+            />
+
+            {/* Panel — bottom sheet on mobile, centred card on sm+ */}
+            <div className="relative w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl z-10 overflow-hidden">
+
+                {/* Top colour strip matching type */}
+                <div className={`h-1.5 w-full ${
+                    bg === 'bg-green-50' ? 'bg-green-400' :
+                    bg === 'bg-red-50'   ? 'bg-red-400'   :
+                    bg === 'bg-blue-50'  ? 'bg-blue-400'  :
+                    bg === 'bg-orange-50'? 'bg-orange-400' :
+                    'bg-gray-300'
+                }`} />
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
+                            <Icon className={`w-4 h-4 ${icon}`} />
+                        </div>
+                        <div>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${bg} ${icon}`}>
+                                {label}
+                            </span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">{fullDate(notification.createdAt)}</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="px-5 py-4 space-y-3">
+                    <h3 className="text-base font-bold text-gray-900 leading-snug">
+                        {notification.title}
+                    </h3>
+                    {notification.message && (
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                            {notification.message}
+                        </p>
+                    )}
+                    {isUnread && (
+                        <p className="text-xs text-gray-400 italic">Marked as read</p>
+                    )}
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex items-center gap-2 px-5 pb-5 pt-1">
+                    {href && (
+                        <Link
+                            href={href}
+                            onClick={onClose}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors"
+                        >
+                            View details
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                    )}
+                    <button
+                        onClick={() => { onDelete(notification.notificationId); onClose(); }}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CustomerNotificationsPage() {
-    const [all,            setAll]            = useState([]);   // master list
-    const [loading,        setLoading]        = useState(true);
-    const [loadingMore,    setLoadingMore]     = useState(false);
-    const [filter,         setFilter]         = useState('ALL');
-    const [showUnreadOnly, setShowUnreadOnly]  = useState(false);
-    const [serverPage,     setServerPage]      = useState(0);
-    const [hasMore,        setHasMore]         = useState(false);
-    const [actionLoading,  setActionLoading]   = useState({});
-    const [stats,          setStats]           = useState(null);
+    const [all,            setAll]           = useState([]);
+    const [loading,        setLoading]       = useState(true);
+    const [loadingMore,    setLoadingMore]    = useState(false);
+    const [filter,         setFilter]        = useState('ALL');
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+    const [serverPage,     setServerPage]    = useState(0);
+    const [hasMore,        setHasMore]       = useState(false);
+    const [actionLoading,  setActionLoading] = useState({});
+    const [stats,          setStats]         = useState(null);
+    const [selected,       setSelected]      = useState(null); // open in modal
 
-    // ── initial fetch ─────────────────────────────────────────────────────────
+    // ── fetch ─────────────────────────────────────────────────────────────────
     const fetchPage = useCallback(async (page = 0, replace = true) => {
         page === 0 ? setLoading(true) : setLoadingMore(true);
         try {
-            // Always load ALL types from server — filter client-side so tab
-            // switching is instant. getAll returns Page<NotificationDto>.
             const [listRes, statsRes] = await Promise.allSettled([
                 NotificationsAPI.getAll(page, PAGE_SIZE),
                 page === 0 ? NotificationsAPI.getStats() : Promise.resolve(null),
             ]);
-
             if (listRes.status === 'fulfilled') {
-                const payload  = listRes.value?.data;
-                // Backend returns a Spring Page: { content: [...], totalElements, last }
-                const content  = Array.isArray(payload?.content)
+                const payload = listRes.value?.data;
+                const content = Array.isArray(payload?.content)
                     ? payload.content
-                    : Array.isArray(payload) ? payload : [];   // fallback if not paginated
-
+                    : Array.isArray(payload) ? payload : [];
                 setAll(prev => replace ? content : [...prev, ...content]);
-                setHasMore(payload?.last === false);           // last===false → more pages
+                setHasMore(payload?.last === false);
                 setServerPage(page);
             }
-
             if (page === 0 && statsRes.status === 'fulfilled' && statsRes.value) {
-                const s = statsRes.value?.data ?? statsRes.value;
-                setStats(s);
+                setStats(statsRes.value?.data ?? statsRes.value);
             }
         } finally {
             setLoading(false);
@@ -92,7 +206,7 @@ export default function CustomerNotificationsPage() {
 
     useEffect(() => { fetchPage(0); }, [fetchPage]);
 
-    // ── derived view — type filter + unread toggle applied client-side ─────────
+    // ── derived list ──────────────────────────────────────────────────────────
     const filtered = all
         .filter(n => filter === 'ALL' || n.type === filter)
         .filter(n => !showUnreadOnly || !n.isRead)
@@ -104,36 +218,38 @@ export default function CustomerNotificationsPage() {
     const unreadCount = all.filter(n => !n.isRead).length;
 
     // ── actions ───────────────────────────────────────────────────────────────
-    const markRead = async (id) => {
+    const markRead = useCallback(async (id) => {
         setAll(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
+        // keep modal in sync
+        setSelected(prev => prev?.notificationId === id ? { ...prev, isRead: true } : prev);
         setActionLoading(p => ({ ...p, [id + 'r']: true }));
         try { await NotificationsAPI.markRead(id); }
         catch { fetchPage(0); }
         finally { setActionLoading(p => ({ ...p, [id + 'r']: false })); }
-    };
+    }, [fetchPage]);
 
-    const deleteOne = async (id) => {
+    const deleteOne = useCallback(async (id) => {
         setAll(prev => prev.filter(n => n.notificationId !== id));
         setActionLoading(p => ({ ...p, [id + 'd']: true }));
         try { await NotificationsAPI.deleteOne(id); }
         catch { fetchPage(0); }
         finally { setActionLoading(p => ({ ...p, [id + 'd']: false })); }
-    };
+    }, [fetchPage]);
 
     const markAllRead = async () => {
         setAll(prev => prev.map(n => ({ ...n, isRead: true })));
-        try { await NotificationsAPI.markAllRead(); }
-        catch { fetchPage(0); }
+        try { await NotificationsAPI.markAllRead(); } catch { fetchPage(0); }
     };
 
     const clearRead = async () => {
         setAll(prev => prev.filter(n => !n.isRead));
-        try { await NotificationsAPI.deleteAllRead(); }
-        catch { fetchPage(0); }
+        try { await NotificationsAPI.deleteAllRead(); } catch { fetchPage(0); }
     };
 
-    const handleFilterChange = (key) => {
-        setFilter(key);
+    // Open modal and auto-mark read
+    const openNotification = (n) => {
+        setSelected(n);
+        if (!n.isRead) markRead(n.notificationId);
     };
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -206,18 +322,15 @@ export default function CustomerNotificationsPage() {
                     </div>
                 )}
 
-                {/* ── Filters ─────────────────────────────────────────────────── */}
+                {/* Filters */}
                 <div className="space-y-2">
-                    {/* Type filters — 2 rows on mobile, single row on sm+ */}
                     <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
                         {TYPE_FILTERS.map(f => {
-                            const count = f.key !== 'ALL'
-                                ? all.filter(n => n.type === f.key).length
-                                : null;
+                            const count = f.key !== 'ALL' ? all.filter(n => n.type === f.key).length : null;
                             return (
                                 <button
                                     key={f.key}
-                                    onClick={() => handleFilterChange(f.key)}
+                                    onClick={() => setFilter(f.key)}
                                     className={`flex items-center justify-center gap-1 px-2 py-2 text-xs font-semibold rounded-xl transition-colors ${
                                         filter === f.key
                                             ? 'bg-gray-900 text-white'
@@ -228,16 +341,12 @@ export default function CustomerNotificationsPage() {
                                     {count > 0 && (
                                         <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full leading-none ${
                                             filter === f.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
-                                        }`}>
-                                            {count}
-                                        </span>
+                                        }`}>{count}</span>
                                     )}
                                 </button>
                             );
                         })}
                     </div>
-
-                    {/* Unread toggle + result count */}
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-gray-400">
                             {filtered.length} notification{filtered.length !== 1 ? 's' : ''}
@@ -256,7 +365,7 @@ export default function CustomerNotificationsPage() {
                     </div>
                 </div>
 
-                {/* ── List ─────────────────────────────────────────────────────── */}
+                {/* List */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center py-20 gap-2 text-gray-400">
@@ -270,10 +379,7 @@ export default function CustomerNotificationsPage() {
                                 {showUnreadOnly ? 'No unread notifications' : 'No notifications yet'}
                             </p>
                             {showUnreadOnly && (
-                                <button
-                                    onClick={() => setShowUnreadOnly(false)}
-                                    className="text-xs text-gray-500 underline"
-                                >
+                                <button onClick={() => setShowUnreadOnly(false)} className="text-xs text-gray-500 underline">
                                     Show all
                                 </button>
                             )}
@@ -281,13 +387,14 @@ export default function CustomerNotificationsPage() {
                     ) : (
                         <div className="divide-y divide-gray-100">
                             {filtered.map(n => {
-                                const meta    = getMeta(n.type);
+                                const meta     = getMeta(n);
                                 const { Icon, bg, icon } = meta;
                                 const isUnread = !n.isRead;
                                 return (
-                                    <div
+                                    <button
                                         key={n.notificationId}
-                                        className={`group flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                                        onClick={() => openNotification(n)}
+                                        className={`group w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors ${
                                             isUnread ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'
                                         }`}
                                     >
@@ -296,15 +403,11 @@ export default function CustomerNotificationsPage() {
                                             <Icon className={`w-4 h-4 ${icon}`} />
                                         </div>
 
-                                        {/* Content — tappable area */}
-                                        <Link
-                                            href={meta.href}
-                                            onClick={() => isUnread && markRead(n.notificationId)}
-                                            className="flex-1 min-w-0"
-                                        >
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2">
-                                                <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
-                                                    <p className="text-sm font-semibold text-gray-900 leading-snug">
+                                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                                    <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
                                                         {n.title}
                                                     </p>
                                                     {isUnread && (
@@ -316,37 +419,25 @@ export default function CustomerNotificationsPage() {
                                                 </p>
                                             </div>
                                             {n.message && (
-                                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">
+                                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-1 text-left">
                                                     {n.message}
                                                 </p>
                                             )}
                                             <span className={`inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full ${bg} ${icon}`}>
                                                 {meta.label}
                                             </span>
-                                        </Link>
-
-                                        {/* Row actions — visible on hover (desktop) or always on mobile */}
-                                        <div className="flex flex-col items-center gap-1 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                            {isUnread && (
-                                                <button
-                                                    onClick={() => markRead(n.notificationId)}
-                                                    disabled={!!actionLoading[n.notificationId + 'r']}
-                                                    title="Mark read"
-                                                    className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                                                >
-                                                    <CheckCheck className="w-3.5 h-3.5" />
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => deleteOne(n.notificationId)}
-                                                disabled={!!actionLoading[n.notificationId + 'd']}
-                                                title="Delete"
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
                                         </div>
-                                    </div>
+
+                                        {/* Delete — hover only on desktop */}
+                                        <div
+                                            className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                            onClick={e => { e.stopPropagation(); deleteOne(n.notificationId); }}
+                                        >
+                                            <span className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors block">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </span>
+                                        </div>
+                                    </button>
                                 );
                             })}
                         </div>
@@ -383,6 +474,15 @@ export default function CustomerNotificationsPage() {
                 </div>
 
             </div>
+
+            {/* Notification detail modal */}
+            {selected && (
+                <NotificationModal
+                    notification={selected}
+                    onClose={() => setSelected(null)}
+                    onDelete={deleteOne}
+                />
+            )}
         </div>
     );
 }
