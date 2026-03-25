@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
             )}
 
             {/* Table card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row gap-3 p-5 border-b border-gray-100">
                     <div className="relative flex-1 max-w-sm">
@@ -268,12 +268,13 @@ export default function AdminUsersPage() {
                                                         Role <ChevronDown className="w-3 h-3" />
                                                     </button>
                                                     {roleMenu === u.publicUserId && (
-                                                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[130px] py-1 overflow-hidden">
+                                                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-[999] min-w-[140px] py-1">
                                                             {['CUSTOMER', 'VENDOR', 'ADMIN'].filter(r => r !== u.role).map(r => (
                                                                 <button
                                                                     key={r}
                                                                     onClick={() => handleChangeRole(u.publicUserId, r)}
-                                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium"
+                                                                    style={{ color: '#374151', backgroundColor: 'white' }}
+                                                                    className="w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-100 transition-colors"
                                                                 >
                                                                     Set {r}
                                                                 </button>
