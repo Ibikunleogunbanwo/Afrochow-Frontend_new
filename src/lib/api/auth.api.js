@@ -96,6 +96,13 @@ export const AuthAPI = {
     });
   },
 
+  deleteAccount: async (password) => {
+    return fetchWithCredentials(`${API_BASE_URL}/user/account`, {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+  },
+
   forgotPassword: async (email) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',

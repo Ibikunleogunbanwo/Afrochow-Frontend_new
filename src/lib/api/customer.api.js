@@ -49,4 +49,13 @@ export const CustomerAPI = {
       method: 'POST',
     });
   },
+
+  // ================= NOTIFICATION PREFERENCE =================
+
+  updateNotificationPreference: async (enabled) => {
+    return fetchWithCredentials(
+      `${API_BASE_URL}/customer/profile/notifications?enabled=${enabled}`,
+      { method: 'PATCH' }
+    );
+  },
 };

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
     ShoppingCart, Menu, X, User, LogOut, Settings,
-    Package, ChevronDown, ChevronRight, Store, Bell,
+    Package, ChevronDown, ChevronRight, Store, Bell, HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -228,9 +228,10 @@ const Header = () => {
                                                 {/* Nav links */}
                                                 <div className="p-1.5">
                                                     {[
-                                                        { href: "/profile", icon: User, label: "Profile" },
-                                                        { href: "/orders", icon: Package, label: "My Orders" },
-                                                        { href: "/settings", icon: Settings, label: "Settings" },
+                                                        { href: "/profile",       icon: User,        label: "Profile" },
+                                                        { href: "/orders",        icon: Package,     label: "My Orders" },
+                                                        { href: "/settings",      icon: Settings,    label: "Settings" },
+                                                        { href: "/help",          icon: HelpCircle,  label: "Help & Support" },
                                                     ].map(({ href, icon: Icon, label }) => (
                                                         <Link
                                                             key={href}
@@ -346,9 +347,10 @@ const Header = () => {
                                     <div className="px-3 py-2">
                                         <p className="px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Account</p>
                                         {[
-                                            { href: "/profile",  icon: User,     label: "Profile" },
-                                            { href: "/orders",   icon: Package,  label: "My Orders" },
-                                            { href: "/settings", icon: Settings, label: "Settings" },
+                                            { href: "/profile",  icon: User,       label: "Profile" },
+                                            { href: "/orders",   icon: Package,    label: "My Orders" },
+                                            { href: "/settings", icon: Settings,   label: "Settings" },
+                                            { href: "/help",     icon: HelpCircle, label: "Help & Support" },
                                         ].map(({ href, icon: Icon, label }) => (
                                             <Link
                                                 key={href}
