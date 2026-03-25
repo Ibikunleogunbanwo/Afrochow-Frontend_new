@@ -2,7 +2,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { AdminAPI, AdminAnalyticsAPI, AdminReviewsAPI } from '@/lib/api/admin.api';
+import { AdminAPI, AdminAnalyticsAPI, AdminReviewsAPI, AdminVendorsAPI } from '@/lib/api/admin.api';
 import { AuthAPI } from '@/lib/api/auth.api';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import {
@@ -39,7 +39,7 @@ const AdminDashboardLayout = ({ children }) => {
     const [profileOpen, setProfileOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const [adminData, setAdminData] = useState(null);
-    const [badges, setBadges] = useState({ orders: 0, reviews: 0 });
+    const [badges, setBadges] = useState({ orders: 0, reviews: 0, vendors: 0 });
     const bellRef = useRef(null);
     const pathname = usePathname();
     const router = useRouter();
@@ -50,7 +50,7 @@ const AdminDashboardLayout = ({ children }) => {
     const navItems = [
         { name: 'Dashboard',      icon: LayoutDashboard, href: '/admin/dashboard',    badgeKey: null },
         { name: 'Users',          icon: Users,           href: '/admin/users',         badgeKey: null },
-        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: null },
+        { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors', badgeMeta: { label: 'pending', colors: { default: 'bg-yellow-100 text-yellow-700', active: 'bg-yellow-400/30 text-yellow-100' } } },
         { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders',  badgeMeta: { label: 'pending',   colors: { default: 'bg-red-100 text-red-700',    active: 'bg-red-400/30 text-red-100'    } } },
         { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
@@ -85,9 +85,10 @@ const AdminDashboardLayout = ({ children }) => {
 
         const fetchBadges = async () => {
             try {
-                const [platformRes, reviewStatsRes] = await Promise.allSettled([
+                const [platformRes, reviewStatsRes, pendingVendorsRes] = await Promise.allSettled([
                     AdminAnalyticsAPI.getPlatform(),
                     AdminReviewsAPI.getStats(),
+                    AdminVendorsAPI.getPending(),
                 ]);
 
                 // Pending orders — plain int from GET /analytics/admin/platform
@@ -102,7 +103,15 @@ const AdminDashboardLayout = ({ children }) => {
                     : {};
                 const reviewCount = reviewRaw?.hiddenReviews ?? reviewRaw?.hiddenCount ?? 0;
 
-                setBadges({ orders: ordersCount, reviews: reviewCount });
+                // Pending vendor approvals — count of unverified + active stores
+                const vendorRaw = pendingVendorsRes.status === 'fulfilled'
+                    ? (pendingVendorsRes.value?.data ?? pendingVendorsRes.value ?? [])
+                    : [];
+                const vendorList = vendorRaw?.content ?? (Array.isArray(vendorRaw) ? vendorRaw : []);
+                // Only count stores that are active (not suspended) and unverified
+                const vendorCount = vendorList.filter(v => v.isActive !== false && !v.isVerified).length;
+
+                setBadges({ orders: ordersCount, reviews: reviewCount, vendors: vendorCount });
             } catch (_) {}
         };
 
