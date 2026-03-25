@@ -284,7 +284,13 @@ const Header = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+                    <>
+                        {/* Backdrop — closes menu on outside tap */}
+                        <div
+                            className="pointer-events-auto fixed inset-0 z-10 bg-black/20 backdrop-blur-[1px]"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        />
+                    <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden z-20">
                         <div className="divide-y divide-gray-100">
 
                             {isAuthenticated && user ? (
@@ -421,6 +427,7 @@ const Header = () => {
                             )}
                         </div>
                     </div>
+                    </>
                 )}
             </div>
 
