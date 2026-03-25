@@ -15,15 +15,17 @@ import {
     MapPin, Pencil, Loader2, CheckCircle2, ChevronRight,
     Calendar, Truck, X, ImageIcon,
     LayoutDashboard, Home, Phone, Navigation, Timer, Info,
-    AlertCircle,
+    AlertCircle, Bell, CheckCheck, Trash2, RefreshCw,
 } from 'lucide-react';
+import { useVendorNotifications } from '@/hooks/useVendorNotifications';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const TABS = [
-    { id: 'info',     label: 'Restaurant Info', icon: Store },
-    { id: 'hours',    label: 'Operating Hours', icon: Calendar },
-    { id: 'branding', label: 'Branding',        icon: ImageIcon },
+    { id: 'info',          label: 'Restaurant Info', icon: Store    },
+    { id: 'hours',         label: 'Operating Hours', icon: Calendar },
+    { id: 'branding',      label: 'Branding',        icon: ImageIcon },
+    { id: 'notifications', label: 'Notifications',   icon: Bell     },
 ];
 
 const DAYS = [
@@ -268,6 +270,16 @@ export default function VendorProfilePage() {
     const [analytics, setAnalytics] = useState(null);
     const [loading,   setLoading]   = useState(true);
     const [activeTab, setActiveTab] = useState('info');
+
+    // ── Notifications (for the Notifications tab) ─────────────────────────────
+    const {
+        notifications: notifList,
+        unreadCount:   notifUnread,
+        loading:       notifLoading,
+        markRead:      notifMarkRead,
+        markAllRead:   notifMarkAll,
+        deleteOne:     notifDelete,
+    } = useVendorNotifications();
 
     // ── Info form ────────────────────────────────────────────────────────────
     const [infoForm, setInfoForm] = useState({
@@ -647,6 +659,11 @@ export default function VendorProfilePage() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
                                 <Icon className="w-4 h-4" />
                                 {label}
+                                {id === 'notifications' && notifUnread > 0 && (
+                                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] font-black bg-orange-500 text-white rounded-full flex items-center justify-center leading-none">
+                                        {notifUnread > 9 ? '9+' : notifUnread}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -918,6 +935,107 @@ export default function VendorProfilePage() {
                                     setHoursForm(normaliseHours(profile?.weeklySchedule ?? null));
                                     setHoursErrors({});
                                 }} />
+                        </div>
+                    )}
+
+                    {/* ── Tab: Notifications ────────────────────────── */}
+                    {activeTab === 'notifications' && (
+                        <div className="p-5 sm:p-6 space-y-4">
+
+                            {/* Header row */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-black text-gray-900">
+                                        {notifUnread > 0 ? `${notifUnread} unread` : 'All caught up'}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Your recent alerts and order activity</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {notifUnread > 0 && (
+                                        <button
+                                            onClick={notifMarkAll}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                                        >
+                                            <CheckCheck className="w-3.5 h-3.5" />
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* List */}
+                            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                                {notifLoading ? (
+                                    <div className="flex items-center justify-center py-12 gap-2 text-gray-400">
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        <span className="text-sm">Loading…</span>
+                                    </div>
+                                ) : notifList.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-2">
+                                        <Bell className="w-10 h-10 text-gray-200" />
+                                        <p className="text-sm text-gray-400">No notifications yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-100">
+                                        {notifList.slice(0, 10).map(n => {
+                                            const isUnread = n.unread;
+                                            return (
+                                                <div
+                                                    key={n.id}
+                                                    className={`group flex items-start gap-3 px-4 py-3.5 ${isUnread ? 'bg-gray-50' : ''}`}
+                                                >
+                                                    {/* Unread dot */}
+                                                    <span className={`mt-2 w-2 h-2 rounded-full shrink-0 ${isUnread ? 'bg-orange-500' : 'bg-transparent'}`} />
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <p className={`text-sm leading-snug ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                                                                {n.title}
+                                                            </p>
+                                                            <p className="text-[11px] text-gray-400 whitespace-nowrap shrink-0 mt-0.5">{n.time}</p>
+                                                        </div>
+                                                        {n.text && (
+                                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{n.text}</p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                        {isUnread && (
+                                                            <button
+                                                                onClick={() => notifMarkRead(n.id)}
+                                                                title="Mark as read"
+                                                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => notifDelete(n.id)}
+                                                            title="Delete"
+                                                            className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-500" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* View all link */}
+                            <Link
+                                href="/vendor/notifications"
+                                className="flex items-center justify-center gap-1.5 w-full py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                            >
+                                View all notifications
+                                {notifList.length > 10 && (
+                                    <span className="text-gray-500 text-xs">(+{notifList.length - 10} more)</span>
+                                )}
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
                         </div>
                     )}
 

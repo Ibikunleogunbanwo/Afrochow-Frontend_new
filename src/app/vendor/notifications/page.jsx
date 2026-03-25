@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-    Bell, ShoppingBag, Star, Truck, CreditCard,
-    CheckCheck, Trash2, RefreshCcw, Filter, ChevronDown,
+    Bell, ShoppingBag, Star, Truck, CreditCard, Tag,
+    CheckCheck, Trash2, RefreshCw, X, ArrowRight, ChevronRight,
+    LayoutDashboard,
 } from "lucide-react";
 import { NotificationsAPI } from "@/lib/api/notifications.api";
 
@@ -12,301 +13,458 @@ import { NotificationsAPI } from "@/lib/api/notifications.api";
 
 const relativeTime = (dateVal) => {
     if (!dateVal) return "";
-    const diff = Date.now() - new Date(dateVal).getTime();
+    const diff  = Date.now() - new Date(dateVal).getTime();
     const mins  = Math.floor(diff / 60_000);
     const hours = Math.floor(diff / 3_600_000);
     const days  = Math.floor(diff / 86_400_000);
-    if (mins  <  1)  return "just now";
-    if (mins  < 60)  return `${mins} min ago`;
-    if (hours < 24)  return `${hours} hr${hours > 1 ? "s" : ""} ago`;
-    if (days  <  7)  return `${days} day${days > 1 ? "s" : ""} ago`;
-    return new Date(dateVal).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    if (mins  <  1) return "just now";
+    if (mins  < 60) return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
 };
 
-const TYPE_CONFIG = {
-    NEW_ORDER:      { Icon: ShoppingBag, bg: "bg-gray-100",  icon: "text-gray-600",  label: "New Order"       },
-    ORDER_UPDATE:   { Icon: ShoppingBag, bg: "bg-gray-100",  icon: "text-gray-600",  label: "Order Update"    },
-    DELIVERY_UPDATE:{ Icon: Truck,       bg: "bg-gray-100",  icon: "text-gray-600",  label: "Delivery"        },
-    PAYMENT_SUCCESS:{ Icon: CreditCard,  bg: "bg-gray-100",  icon: "text-gray-600",  label: "Payment"         },
-    PROMO:          { Icon: Bell,        bg: "bg-gray-100",  icon: "text-gray-600",  label: "Promo"           },
-    SYSTEM_ALERT:   { Icon: Bell,        bg: "bg-gray-100",  icon: "text-gray-500",  label: "System"          },
-};
-const DEFAULT_CONFIG = { Icon: Bell, bg: "bg-gray-100", icon: "text-gray-400", label: "Notification" };
-
-const hrefFor = (dto) => {
-    if (["NEW_ORDER","ORDER_UPDATE","DELIVERY_UPDATE"].includes(dto.type)) return `/vendor/orders${dto.relatedEntityId ? `?highlight=${dto.relatedEntityId}` : ""}`;
-    if (dto.type === "PAYMENT_SUCCESS") return "/vendor/orders";
-    if (dto.relatedEntityType === "REVIEW") return "/vendor/reviews";
-    return "#";
+const fullDate = (dateVal) => {
+    if (!dateVal) return "";
+    return new Date(dateVal).toLocaleString("en-CA", {
+        year: "numeric", month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit",
+    });
 };
 
-const FILTER_OPTIONS = [
-    { value: "all",    label: "All" },
-    { value: "unread", label: "Unread" },
-    { value: "NEW_ORDER",       label: "New Orders" },
-    { value: "ORDER_UPDATE",    label: "Order Updates" },
-    { value: "DELIVERY_UPDATE", label: "Delivery" },
-    { value: "PAYMENT_SUCCESS", label: "Payments" },
-    { value: "SYSTEM_ALERT",    label: "System" },
+// ─── type meta ────────────────────────────────────────────────────────────────
+
+const TYPE_META = {
+    NEW_ORDER:       { Icon: ShoppingBag, bg: "bg-orange-50",  icon: "text-orange-600", label: "New Order",  baseHref: "/vendor/orders"     },
+    ORDER_UPDATE:    { Icon: ShoppingBag, bg: "bg-gray-100",   icon: "text-gray-700",   label: "Order",      baseHref: "/vendor/orders"     },
+    ORDER:           { Icon: ShoppingBag, bg: "bg-gray-100",   icon: "text-gray-700",   label: "Order",      baseHref: "/vendor/orders"     },
+    DELIVERY_UPDATE: { Icon: Truck,       bg: "bg-blue-50",    icon: "text-blue-600",   label: "Delivery",   baseHref: "/vendor/orders"     },
+    DELIVERY:        { Icon: Truck,       bg: "bg-blue-50",    icon: "text-blue-600",   label: "Delivery",   baseHref: "/vendor/orders"     },
+    PAYMENT_SUCCESS: { Icon: CreditCard,  bg: "bg-green-50",   icon: "text-green-600",  label: "Payment",    baseHref: "/vendor/earnings"   },
+    PAYMENT_FAILED:  { Icon: CreditCard,  bg: "bg-red-50",     icon: "text-red-600",    label: "Failed",     baseHref: "/vendor/earnings"   },
+    PAYMENT_FAILURE: { Icon: CreditCard,  bg: "bg-red-50",     icon: "text-red-600",    label: "Failed",     baseHref: "/vendor/earnings"   },
+    REVIEW:          { Icon: Star,        bg: "bg-yellow-50",  icon: "text-yellow-600", label: "Review",     baseHref: "/vendor/reviews"    },
+    PROMO:           { Icon: Tag,         bg: "bg-orange-50",  icon: "text-orange-500", label: "Promo",      baseHref: "/vendor/promotions" },
+    PROMOTION:       { Icon: Tag,         bg: "bg-orange-50",  icon: "text-orange-500", label: "Promo",      baseHref: "/vendor/promotions" },
+    SYSTEM_ALERT:    { Icon: Bell,        bg: "bg-gray-100",   icon: "text-gray-400",   label: "System",     baseHref: null                 },
+    SYSTEM:          { Icon: Bell,        bg: "bg-gray-100",   icon: "text-gray-400",   label: "System",     baseHref: null                 },
+};
+
+const getMeta = (n) => {
+    const meta = TYPE_META[n?.type];
+    if (!meta) return { Icon: Bell, bg: "bg-gray-100", icon: "text-gray-400", label: "Notice", href: null };
+    let href = meta.baseHref;
+    if (href === "/vendor/orders" && n?.relatedEntityId) {
+        href = `/vendor/orders?highlight=${n.relatedEntityId}`;
+    }
+    return { ...meta, href };
+};
+
+// ─── filter pills ─────────────────────────────────────────────────────────────
+
+const TYPE_FILTERS = [
+    { key: "ALL",             label: "All"      },
+    { key: "NEW_ORDER",       label: "Orders"   },
+    { key: "DELIVERY_UPDATE", label: "Delivery" },
+    { key: "PAYMENT_SUCCESS", label: "Payments" },
+    { key: "REVIEW",          label: "Reviews"  },
+    { key: "SYSTEM_ALERT",    label: "System"   },
 ];
 
-// ─── page ─────────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 20;
 
-export default function NotificationsPage() {
-    const [notifications, setNotifications] = useState([]);
-    const [stats,         setStats]         = useState(null);
-    const [loading,       setLoading]       = useState(true);
-    const [filter,        setFilter]        = useState("all");
-    const [page,          setPage]          = useState(0);
-    const [totalPages,    setTotalPages]    = useState(0);
-    const [filterOpen,    setFilterOpen]    = useState(false);
-    const PAGE_SIZE = 20;
+// ─── Notification detail modal ────────────────────────────────────────────────
 
-    const fetchPage = useCallback(async (p = 0, activeFilter = filter) => {
-        setLoading(true);
-        try {
-            let res;
-            if (activeFilter === "unread") {
-                res = await NotificationsAPI.getUnread();
-                if (res?.success) {
-                    setNotifications(res.data ?? []);
-                    setTotalPages(1);
-                }
-            } else if (activeFilter !== "all") {
-                res = await NotificationsAPI.getByType(activeFilter);
-                if (res?.success) {
-                    setNotifications(res.data ?? []);
-                    setTotalPages(1);
-                }
-            } else {
-                res = await NotificationsAPI.getAll(p, PAGE_SIZE);
-                if (res?.success) {
-                    const pageData = res.data;
-                    setNotifications(pageData?.content ?? pageData ?? []);
-                    setTotalPages(pageData?.totalPages ?? 1);
-                }
-            }
-
-            // Refresh stats
-            const statsRes = await NotificationsAPI.getStats();
-            if (statsRes?.success) setStats(statsRes.data);
-        } catch {
-            // ignore
-        } finally {
-            setLoading(false);
-        }
-    }, [filter]);
+function NotificationModal({ notification, onClose, onDelete }) {
+    if (!notification) return null;
+    const { Icon, bg, icon, href, label } = getMeta(notification);
+    const isUnread = !notification.isRead;
 
     useEffect(() => {
-        fetchPage(0, filter);
-        setPage(0);
-    }, [filter]);
-
-    const handleMarkRead = async (id) => {
-        setNotifications((prev) => prev.map((n) => n.notificationId === id ? { ...n, isRead: true } : n));
-        try { await NotificationsAPI.markRead(id); } catch { fetchPage(page); }
-    };
-
-    const handleMarkAllRead = async () => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-        try {
-            await NotificationsAPI.markAllRead();
-            setStats((s) => s ? { ...s, unreadNotifications: 0 } : s);
-        } catch { fetchPage(page); }
-    };
-
-    const handleDelete = async (id) => {
-        setNotifications((prev) => prev.filter((n) => n.notificationId !== id));
-        try { await NotificationsAPI.deleteOne(id); } catch { fetchPage(page); }
-    };
-
-    const handleClearRead = async () => {
-        setNotifications((prev) => prev.filter((n) => !n.isRead));
-        try { await NotificationsAPI.deleteAllRead(); } catch { fetchPage(page); }
-    };
-
-    const unreadCount = stats?.unreadNotifications ?? notifications.filter((n) => !n.isRead).length;
-    const activeFilterLabel = FILTER_OPTIONS.find((f) => f.value === filter)?.label ?? "All";
+        const handler = (e) => { if (e.key === "Escape") onClose(); };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [onClose]);
 
     return (
-        <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
 
-            {/* ── Header ──────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                    {unreadCount > 0 && (
-                        <p className="text-sm text-gray-500 mt-0.5">
-                            {unreadCount} unread notification{unreadCount > 1 ? "s" : ""}
-                        </p>
+            <div className="relative w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl z-10 overflow-hidden">
+                {/* Top colour strip */}
+                <div className={`h-1.5 w-full ${
+                    bg === "bg-green-50"  ? "bg-green-400"  :
+                    bg === "bg-red-50"   ? "bg-red-400"    :
+                    bg === "bg-blue-50"  ? "bg-blue-400"   :
+                    bg === "bg-orange-50"? "bg-orange-400" :
+                    bg === "bg-yellow-50"? "bg-yellow-400" :
+                    "bg-gray-300"
+                }`} />
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
+                            <Icon className={`w-4 h-4 ${icon}`} />
+                        </div>
+                        <div>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${bg} ${icon}`}>
+                                {label}
+                            </span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">{fullDate(notification.createdAt)}</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="px-5 py-4 space-y-3">
+                    <h3 className="text-base font-bold text-gray-900 leading-snug">{notification.title}</h3>
+                    {notification.message && (
+                        <p className="text-sm text-gray-600 leading-relaxed">{notification.message}</p>
                     )}
+                    {isUnread && <p className="text-xs text-gray-400 italic">Marked as read</p>}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center gap-2 px-5 pb-5 pt-1">
+                    {href && (
+                        <Link
+                            href={href}
+                            onClick={onClose}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors"
+                        >
+                            View details
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                    )}
+                    <button
+                        onClick={() => { onDelete(notification.notificationId); onClose(); }}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function VendorNotificationsPage() {
+    const [all,           setAll]          = useState([]);
+    const [loading,       setLoading]      = useState(true);
+    const [loadingMore,   setLoadingMore]  = useState(false);
+    const [filter,        setFilter]       = useState("ALL");
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+    const [serverPage,    setServerPage]   = useState(0);
+    const [hasMore,       setHasMore]      = useState(false);
+    const [actionLoading, setActionLoading] = useState({});
+    const [stats,         setStats]        = useState(null);
+    const [selected,      setSelected]     = useState(null);
+
+    // ── fetch ─────────────────────────────────────────────────────────────────
+    const fetchPage = useCallback(async (page = 0, replace = true) => {
+        page === 0 ? setLoading(true) : setLoadingMore(true);
+        try {
+            const [listRes, statsRes] = await Promise.allSettled([
+                NotificationsAPI.getAll(page, PAGE_SIZE),
+                page === 0 ? NotificationsAPI.getStats() : Promise.resolve(null),
+            ]);
+            if (listRes.status === "fulfilled") {
+                const payload = listRes.value?.data;
+                const content = Array.isArray(payload?.content)
+                    ? payload.content
+                    : Array.isArray(payload) ? payload : [];
+                setAll(prev => replace ? content : [...prev, ...content]);
+                setHasMore(payload?.last === false);
+                setServerPage(page);
+            }
+            if (page === 0 && statsRes.status === "fulfilled" && statsRes.value) {
+                setStats(statsRes.value?.data ?? statsRes.value);
+            }
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchPage(0); }, [fetchPage]);
+
+    // ── derived list ──────────────────────────────────────────────────────────
+    const filtered = all
+        .filter(n => filter === "ALL" || n.type === filter)
+        .filter(n => !showUnreadOnly || !n.isRead)
+        .sort((a, b) => {
+            if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+    const unreadCount = all.filter(n => !n.isRead).length;
+
+    // ── actions ───────────────────────────────────────────────────────────────
+    const markRead = useCallback(async (id) => {
+        setAll(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
+        setSelected(prev => prev?.notificationId === id ? { ...prev, isRead: true } : prev);
+        setActionLoading(p => ({ ...p, [id + "r"]: true }));
+        try { await NotificationsAPI.markRead(id); }
+        catch { fetchPage(0); }
+        finally { setActionLoading(p => ({ ...p, [id + "r"]: false })); }
+    }, [fetchPage]);
+
+    const deleteOne = useCallback(async (id) => {
+        setAll(prev => prev.filter(n => n.notificationId !== id));
+        setActionLoading(p => ({ ...p, [id + "d"]: true }));
+        try { await NotificationsAPI.deleteOne(id); }
+        catch { fetchPage(0); }
+        finally { setActionLoading(p => ({ ...p, [id + "d"]: false })); }
+    }, [fetchPage]);
+
+    const markAllRead = async () => {
+        setAll(prev => prev.map(n => ({ ...n, isRead: true })));
+        try { await NotificationsAPI.markAllRead(); } catch { fetchPage(0); }
+    };
+
+    const clearRead = async () => {
+        setAll(prev => prev.filter(n => !n.isRead));
+        try { await NotificationsAPI.deleteAllRead(); } catch { fetchPage(0); }
+    };
+
+    const openNotification = (n) => {
+        setSelected(n);
+        if (!n.isRead) markRead(n.notificationId);
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    return (
+        <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8 space-y-5">
+
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 font-medium transition-colors">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Dashboard
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <span className="font-semibold text-gray-900">Notifications</span>
+            </nav>
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900">Notifications</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+                    </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => fetchPage(0)}
+                        className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+                        title="Refresh"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                    </button>
                     {unreadCount > 0 && (
                         <button
-                            onClick={handleMarkAllRead}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={markAllRead}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
-                            <CheckCheck className="w-4 h-4" />
-                            Mark all read
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Mark all read</span>
+                            <span className="sm:hidden">Read all</span>
                         </button>
                     )}
-                    {notifications.some((n) => n.isRead) && (
+                    {all.some(n => n.isRead) && (
                         <button
-                            onClick={handleClearRead}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={clearRead}
+                            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                             Clear read
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* ── Stats row ───────────────────────────────────────────── */}
-            {stats && (
-                <div className="grid grid-cols-3 gap-3 mb-6">
+            {/* Stats */}
+            {!loading && stats && (
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     {[
-                        { label: "Total",  value: stats.totalNotifications,  color: "text-gray-900" },
-                        { label: "Unread", value: stats.unreadNotifications, color: "text-gray-900" },
-                        { label: "Read",   value: stats.readNotifications,   color: "text-green-600" },
-                    ].map(({ label, value, color }) => (
-                        <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-                            <p className={`text-2xl font-bold ${color}`}>{value ?? 0}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                        { label: "Total",  value: stats.totalNotifications  ?? all.length },
+                        { label: "Unread", value: stats.unreadNotifications ?? unreadCount },
+                        { label: "Read",   value: stats.readNotifications   ?? (all.length - unreadCount) },
+                    ].map(s => (
+                        <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 text-center shadow-sm">
+                            <p className="text-xl sm:text-2xl font-black text-gray-900">{s.value}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* ── Filter ──────────────────────────────────────────────── */}
-            <div className="relative mb-4">
-                <button
-                    onClick={() => setFilterOpen((o) => !o)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                    <Filter className="w-4 h-4 text-gray-400" />
-                    {activeFilterLabel}
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
-                </button>
-                {filterOpen && (
-                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 min-w-[160px] py-1 overflow-hidden">
-                        {FILTER_OPTIONS.map((opt) => (
+            {/* Filters */}
+            <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+                    {TYPE_FILTERS.map(f => {
+                        const count = f.key !== "ALL" ? all.filter(n => n.type === f.key).length : null;
+                        return (
                             <button
-                                key={opt.value}
-                                onClick={() => { setFilter(opt.value); setFilterOpen(false); }}
-                                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                                    filter === opt.value
-                                        ? "bg-gray-100 text-gray-900 font-semibold"
-                                        : "text-gray-700 hover:bg-gray-50"
+                                key={f.key}
+                                onClick={() => setFilter(f.key)}
+                                className={`flex items-center justify-center gap-1 px-2 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                    filter === f.key
+                                        ? "bg-gray-900 text-white"
+                                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
                                 }`}
                             >
-                                {opt.label}
+                                {f.label}
+                                {count > 0 && (
+                                    <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full leading-none ${
+                                        filter === f.key ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                                    }`}>{count}</span>
+                                )}
                             </button>
-                        ))}
-                    </div>
-                )}
+                        );
+                    })}
+                </div>
+                <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-400">
+                        {filtered.length} notification{filtered.length !== 1 ? "s" : ""}
+                    </p>
+                    <button
+                        onClick={() => setShowUnreadOnly(p => !p)}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+                            showUnreadOnly
+                                ? "bg-gray-900 text-white"
+                                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                        }`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${showUnreadOnly ? "bg-white" : "bg-gray-400"}`} />
+                        Unread only
+                    </button>
+                </div>
             </div>
 
-            {/* ── List ────────────────────────────────────────────────── */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+            {/* List */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 {loading ? (
-                    <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
-                        <RefreshCcw className="w-5 h-5 animate-spin" />
-                        <span className="text-sm">Loading notifications…</span>
+                    <div className="flex items-center justify-center py-20 gap-2 text-gray-400">
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        <span className="text-sm">Loading…</span>
                     </div>
-                ) : notifications.length === 0 ? (
+                ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Bell className="w-12 h-12 text-gray-200" />
-                        <p className="text-gray-400 text-sm">No notifications found</p>
-                        {filter !== "all" && (
-                            <button onClick={() => setFilter("all")} className="text-xs text-gray-600 hover:underline">
-                                View all notifications
+                        <p className="text-sm font-semibold text-gray-500">
+                            {showUnreadOnly ? "No unread notifications" : "No notifications yet"}
+                        </p>
+                        {showUnreadOnly && (
+                            <button onClick={() => setShowUnreadOnly(false)} className="text-xs text-gray-500 underline">
+                                Show all
                             </button>
                         )}
                     </div>
                 ) : (
-                    notifications.map((n) => {
-                        const cfg = TYPE_CONFIG[n.type] ?? DEFAULT_CONFIG;
-                        const { Icon, bg, icon } = cfg;
-                        return (
-                            <div
-                                key={n.notificationId}
-                                className={`group flex items-start gap-4 px-5 py-4 transition-colors ${
-                                    !n.isRead ? "bg-gray-50" : "hover:bg-gray-50"
-                                }`}
-                            >
-                                {/* Icon */}
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${bg}`}>
-                                    <Icon className={`w-5 h-5 ${icon}`} />
-                                </div>
-
-                                {/* Content */}
-                                <Link
-                                    href={hrefFor(n)}
-                                    onClick={() => !n.isRead && handleMarkRead(n.notificationId)}
-                                    className="flex-1 min-w-0"
+                    <div className="divide-y divide-gray-100">
+                        {filtered.map(n => {
+                            const { Icon, bg, icon, label } = getMeta(n);
+                            const isUnread = !n.isRead;
+                            return (
+                                <button
+                                    key={n.notificationId}
+                                    onClick={() => openNotification(n)}
+                                    className={`group w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                                        isUnread ? "bg-gray-50 hover:bg-gray-100" : "hover:bg-gray-50"
+                                    }`}
                                 >
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-sm font-semibold text-gray-900">{n.title}</p>
-                                        {!n.isRead && (
-                                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gray-900 text-white rounded-full leading-none">
-                                                New
-                                            </span>
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${bg}`}>
+                                        <Icon className={`w-4 h-4 ${icon}`} />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                                <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
+                                                    {n.title}
+                                                </p>
+                                                {isUnread && (
+                                                    <span className="w-2 h-2 rounded-full bg-gray-900 shrink-0" />
+                                                )}
+                                            </div>
+                                            <p className="text-[11px] text-gray-400 whitespace-nowrap shrink-0 mt-0.5">
+                                                {relativeTime(n.createdAt)}
+                                            </p>
+                                        </div>
+                                        {n.message && (
+                                            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-1 text-left">
+                                                {n.message}
+                                            </p>
                                         )}
-                                        <span className="ml-auto text-xs text-gray-400 shrink-0">
-                                            {relativeTime(n.createdAt)}
+                                        <span className={`inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full ${bg} ${icon}`}>
+                                            {label}
                                         </span>
                                     </div>
-                                    {n.message && (
-                                        <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{n.message}</p>
-                                    )}
-                                </Link>
 
-                                {/* Actions */}
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                    {!n.isRead && (
-                                        <button
-                                            onClick={() => handleMarkRead(n.notificationId)}
-                                            title="Mark as read"
-                                            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                                        >
-                                            <CheckCheck className="w-4 h-4 text-gray-400" />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => handleDelete(n.notificationId)}
-                                        title="Delete"
-                                        className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                    {/* Delete — hover on desktop, always visible on mobile */}
+                                    <div
+                                        className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                        onClick={e => { e.stopPropagation(); deleteOne(n.notificationId); }}
                                     >
-                                        <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })
+                                        <span className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors block">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Load more */}
+                {!loading && hasMore && (
+                    <div className="px-4 py-4 border-t border-gray-100 text-center">
+                        <button
+                            onClick={() => fetchPage(serverPage + 1, false)}
+                            disabled={loadingMore}
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
+                        >
+                            {loadingMore
+                                ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading…</>
+                                : "Load more"
+                            }
+                        </button>
+                    </div>
+                )}
+
+                {/* Mobile clear-read footer */}
+                {!loading && all.some(n => n.isRead) && (
+                    <div className="px-4 py-3 border-t border-gray-100 sm:hidden">
+                        <button
+                            onClick={clearRead}
+                            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Clear all read notifications
+                        </button>
+                    </div>
                 )}
             </div>
 
-            {/* ── Pagination ──────────────────────────────────────────── */}
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6">
-                    <button
-                        disabled={page === 0}
-                        onClick={() => { const p = page - 1; setPage(p); fetchPage(p); }}
-                        className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                    >
-                        ← Previous
-                    </button>
-                    <span className="text-sm text-gray-500">Page {page + 1} of {totalPages}</span>
-                    <button
-                        disabled={page >= totalPages - 1}
-                        onClick={() => { const p = page + 1; setPage(p); fetchPage(p); }}
-                        className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                    >
-                        Next →
-                    </button>
-                </div>
+            {/* Detail modal */}
+            {selected && (
+                <NotificationModal
+                    notification={selected}
+                    onClose={() => setSelected(null)}
+                    onDelete={deleteOne}
+                />
             )}
         </div>
     );

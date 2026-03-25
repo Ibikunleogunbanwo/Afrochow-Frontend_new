@@ -395,8 +395,8 @@ const AdminDashboardContent = () => {
                             <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%"  stopColor="#111827" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#111827" stopOpacity={0} />
+                                        <stop offset="5%"  stopColor="#f97316" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -409,8 +409,8 @@ const AdminDashboardContent = () => {
                                 <Tooltip content={<ChartTooltip isCurrency />} />
                                 <Area
                                     type="monotone" dataKey="revenue" name="Revenue"
-                                    stroke="#111827" strokeWidth={2}
-                                    fill="url(#revenueGrad)" dot={{ r: 4, fill: '#111827', strokeWidth: 0 }}
+                                    stroke="#f97316" strokeWidth={2}
+                                    fill="url(#revenueGrad)" dot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -438,7 +438,7 @@ const AdminDashboardContent = () => {
                                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36} />
                                 <Tooltip content={<ChartTooltip />} />
-                                <Bar dataKey="orders" name="Orders" fill="#111827" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="orders" name="Orders" fill="#f97316" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
