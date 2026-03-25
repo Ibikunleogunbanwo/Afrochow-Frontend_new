@@ -1,9 +1,10 @@
 "use client";
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminAPI, AdminAnalyticsAPI, AdminReviewsAPI } from '@/lib/api/admin.api';
 import { AuthAPI } from '@/lib/api/auth.api';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import {
     LayoutDashboard,
     Users,
@@ -26,6 +27,10 @@ import {
     Star,
     Megaphone,
     LayoutGrid,
+    Package,
+    Truck,
+    CreditCard,
+    CheckCheck,
 } from 'lucide-react';
 
 const AdminDashboardLayout = ({ children }) => {
@@ -35,8 +40,11 @@ const AdminDashboardLayout = ({ children }) => {
     const [loggingOut, setLoggingOut] = useState(false);
     const [adminData, setAdminData] = useState(null);
     const [badges, setBadges] = useState({ orders: 0, reviews: 0 });
+    const bellRef = useRef(null);
     const pathname = usePathname();
     const router = useRouter();
+
+    const { notifications, unreadCount, markRead, markAllRead } = useAdminNotifications();
 
     // badgeMeta: { label, colors: { default, active } }
     const navItems = [
@@ -52,13 +60,6 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Register Admin', icon: UserPlus,        href: '/admin/register',      badgeKey: null },
         { name: 'Settings',       icon: Settings,        href: '/admin/profile',       badgeKey: null },
         { name: 'Help',           icon: HelpCircle,      href: '/admin/help',          badgeKey: null },
-    ];
-
-    // Mock notifications
-    const notifications = [
-        { id: 1, text: "New vendor registration pending approval", time: "2 min ago", unread: true },
-        { id: 2, text: "Payment dispute reported - Order #12345", time: "1 hour ago", unread: true },
-        { id: 3, text: "System backup completed successfully", time: "3 hours ago", unread: false },
     ];
 
     const getInitials = (firstName, lastName) => {
@@ -109,7 +110,17 @@ const AdminDashboardLayout = ({ children }) => {
         fetchBadges();
     }, []);
 
-
+    // Close bell dropdown on outside click
+    useEffect(() => {
+        if (!notificationsOpen) return;
+        const handler = (e) => {
+            if (bellRef.current && !bellRef.current.contains(e.target)) {
+                setNotificationsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [notificationsOpen]);
 
     const handleLogout = async () => {
         if (loggingOut) return;
@@ -341,43 +352,105 @@ const AdminDashboardLayout = ({ children }) => {
                             <div className="flex items-center space-x-4">
 
                                 {/* Notifications */}
-                                <div className="relative">
+                                <div className="relative" ref={bellRef}>
                                     <button
                                         onClick={() => setNotificationsOpen(!notificationsOpen)}
-                                        className="relative p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100"
+                                        className="relative p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <Bell className="w-6 h-6" />
-                                        {notifications.filter(n => n.unread).length > 0 && (
-                                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </span>
                                         )}
                                     </button>
 
                                     {/* Notifications Dropdown */}
-                                    {notificationsOpen && (
-                                        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                                            <div className="px-4 py-3 border-b border-gray-200">
-                                                <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
-                                            </div>
-                                            <div className="max-h-96 overflow-y-auto">
-                                                {notifications.map((notification) => (
-                                                    <div
-                                                        key={notification.id}
-                                                        className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 ${
-                                                            notification.unread ? 'bg-gray-50' : ''
-                                                        }`}
-                                                    >
-                                                        <p className="text-sm text-gray-900">{notification.text}</p>
-                                                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                                    {notificationsOpen && (() => {
+                                        const unread = notifications.filter((n) => n.unread).slice(0, 3);
+                                        const iconMap = {
+                                            new_order:    { bg: 'bg-orange-100', color: 'text-orange-600', Icon: Package },
+                                            order_update: { bg: 'bg-blue-100',   color: 'text-blue-600',   Icon: Package },
+                                            delivery:     { bg: 'bg-blue-100',   color: 'text-blue-600',   Icon: Truck },
+                                            payment:      { bg: 'bg-green-100',  color: 'text-green-600',  Icon: CreditCard },
+                                            vendor:       { bg: 'bg-amber-100',  color: 'text-amber-600',  Icon: Store },
+                                            review:       { bg: 'bg-yellow-100', color: 'text-yellow-600', Icon: Star },
+                                            system:       { bg: 'bg-gray-100',   color: 'text-gray-500',   Icon: Bell },
+                                        };
+                                        return (
+                                            <div className="absolute right-0 mt-2 w-[22rem] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-50">
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                                                        {unreadCount > 0 && (
+                                                            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[11px] font-bold rounded-full">
+                                                                {unreadCount} new
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                ))}
+                                                    {unreadCount > 0 && (
+                                                        <button
+                                                            onClick={markAllRead}
+                                                            className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                                                        >
+                                                            <CheckCheck className="w-3.5 h-3.5" />
+                                                            Mark all read
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Notification rows — unread only, max 3 */}
+                                                <div className="divide-y divide-gray-50">
+                                                    {unread.length === 0 ? (
+                                                        <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                                                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                                                <Bell className="w-6 h-6 text-gray-400" />
+                                                            </div>
+                                                            <p className="text-sm font-medium text-gray-700">All caught up!</p>
+                                                            <p className="text-xs text-gray-400 mt-1">No unread notifications</p>
+                                                        </div>
+                                                    ) : (
+                                                        unread.map((n) => {
+                                                            const { bg, color, Icon } = iconMap[n.icon] ?? iconMap.system;
+                                                            return (
+                                                                <div
+                                                                    key={n.id}
+                                                                    className="flex items-start gap-3 px-4 py-3 bg-orange-50/30 hover:bg-gray-50 transition-colors"
+                                                                >
+                                                                    {/* Icon */}
+                                                                    <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center mt-0.5 ${bg}`}>
+                                                                        <Icon className={`w-4 h-4 ${color}`} />
+                                                                    </div>
+                                                                    {/* Text */}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-semibold text-gray-900 leading-snug truncate">{n.title}</p>
+                                                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug">{n.text}</p>
+                                                                        <p className="text-[11px] text-gray-400 mt-1">{n.time}</p>
+                                                                    </div>
+                                                                    {/* Dismiss (mark read) */}
+                                                                    <button
+                                                                        onClick={() => markRead(n.id)}
+                                                                        className="shrink-0 p-1 text-gray-300 hover:text-gray-500 rounded transition-colors"
+                                                                        title="Mark as read"
+                                                                    >
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+
+                                                {/* Footer */}
+                                                {unreadCount > 3 && (
+                                                    <div className="px-4 py-2 text-center bg-gray-50 border-t border-gray-100">
+                                                        <p className="text-[11px] text-gray-500">+{unreadCount - 3} more unread</p>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="px-4 py-3 text-center border-t border-gray-200">
-                                                <Link href="/admin/broadcast" className="text-sm text-gray-700 font-semibold hover:text-gray-900">
-                                                    View all notifications
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Profile - Mobile */}
