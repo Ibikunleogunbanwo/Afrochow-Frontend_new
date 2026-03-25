@@ -651,7 +651,7 @@ export default function Step5() {
                     • Use the copy button to quickly set the same hours for
                     multiple days
                   </li>
-                  <li>• Most restaurants have different hours on weekends</li>
+                  <li>• Most stores have different hours on weekends</li>
                   <li>• You can adjust hours anytime from your dashboard</li>
                 </ul>
               </div>

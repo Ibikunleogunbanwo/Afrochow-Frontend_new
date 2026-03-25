@@ -6,6 +6,9 @@ const initialState = {
     isLoading: true,
     error: null,
     role: null,
+    // Vendor-only: null for non-vendor users, populated from LoginResponse
+    vendorIsActive: null,
+    vendorIsVerified: null,
 };
 
 const authSlice = createSlice({
@@ -20,6 +23,10 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
             state.isLoading = false;
             state.error = null;
+
+            // Persist vendor status flags from the login response
+            state.vendorIsActive = userData?.vendorIsActive ?? null;
+            state.vendorIsVerified = userData?.vendorIsVerified ?? null;
         },
 
         clearAuth(state) {
@@ -28,6 +35,8 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.isLoading = false;
             state.error = null;
+            state.vendorIsActive = null;
+            state.vendorIsVerified = null;
         },
 
         setLoading(state, action) {
@@ -58,5 +67,7 @@ export const selectUserRole = (state) => state.auth.role;
 export const selectPublicUserId = (state) => state.auth.user?.publicUserId;
 export const selectUsername = (state) => state.auth.user?.username;
 export const selectEmail = (state) => state.auth.user?.email;
+export const selectVendorIsActive = (state) => state.auth.vendorIsActive;
+export const selectVendorIsVerified = (state) => state.auth.vendorIsVerified;
 
 export default authSlice.reducer;

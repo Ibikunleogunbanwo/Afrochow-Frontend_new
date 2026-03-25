@@ -53,7 +53,7 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
       <div className="space-y-2">
         <label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
           <ImageIcon className="h-4 w-4" />
-          Restaurant Banner <span className="text-red-500">*</span>
+          Store Banner <span className="text-red-500">*</span>
           {initialUrl && !displayError && <span className="text-green-600 text-xs font-semibold ml-1">✓</span>}
         </label>
 
@@ -435,7 +435,7 @@ export default function Step3() {
           totalSteps={4}
           maxWidth="lg"
           title="Branding & Location"
-          description="Upload your restaurant's visual identity and business address"
+          description="Upload your store's visual identity and business address"
           fromReview={fromReview}
       >
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -456,7 +456,7 @@ export default function Step3() {
                     )}
                     <ImageUploader
                         id="logoFile"
-                        label="Restaurant Logo"
+                        label="Store Logo"
                         icon={ImageIcon}
                         onChange={handleLogoUpload}
                         error={errors.logoUrl?.message}

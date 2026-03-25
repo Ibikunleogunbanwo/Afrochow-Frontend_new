@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {usePathname, useRouter} from 'next/navigation';
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search, Bell, Clock, ShieldOff } from 'lucide-react';
 import { toast } from "@/components/ui/toast";
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
 import { AuthAPI } from '@/lib/api/auth.api';
@@ -16,7 +16,7 @@ import { useVendorNotifications } from "@/hooks/useVendorNotifications";
 const VendorDashboardLayout = ({ children }) => {
     const pathname = usePathname();
 
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, logout, vendorIsActive, vendorIsVerified } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
@@ -53,9 +53,7 @@ const VendorDashboardLayout = ({ children }) => {
         try {
             const [profileResponse, userResponse] = await Promise.all([
                 VendorProfileAPI.getVendorProfile(),
-                AuthAPI.getCurrentUser().catch((err) => {
-                    return null;
-                }),
+                AuthAPI.getCurrentUser().catch(() => null),
             ]);
 
             if (profileResponse?.success) {
@@ -67,9 +65,19 @@ const VendorDashboardLayout = ({ children }) => {
                 throw new Error("Failed to fetch profile");
             }
         } catch (err) {
-            toast.error("Session expired. Please log in again.");
-            setProfile(null);
-            router.push("/?signin=true");
+            // Only redirect to sign-in for genuine session failures (401/403).
+            // Inactive or pending vendors have a valid session — they should
+            // stay on the dashboard and see their status banner instead.
+            const status = err?.status ?? err?.response?.status;
+            if (status === 401 || status === 403) {
+                toast.error("Session expired. Please log in again.");
+                setProfile(null);
+                router.push("/?signin=true");
+            } else {
+                // Leave profile null; the layout will render a status banner
+                // or a generic error state rather than bouncing the vendor out.
+                setProfile(null);
+            }
         } finally {
             setLoading(false);
         }
@@ -210,6 +218,30 @@ const VendorDashboardLayout = ({ children }) => {
                         </div>
                     </div>
                 </header>
+
+                {/* Vendor status banners */}
+                {vendorIsActive === false && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <ShieldOff className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-red-800 text-sm">Store deactivated</p>
+                            <p className="text-red-700 text-sm mt-0.5">
+                                Your store has been suspended by an admin. You cannot receive orders at this time. Please contact support if you believe this is a mistake.
+                            </p>
+                        </div>
+                    </div>
+                )}
+                {vendorIsActive !== false && vendorIsVerified === false && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                        <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-orange-800 text-sm">Pending admin approval</p>
+                            <p className="text-orange-700 text-sm mt-0.5">
+                                Your store is under review — this typically takes 24–48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Page Content */}
                 <main className="p-4 sm:p-6 lg:p-8">

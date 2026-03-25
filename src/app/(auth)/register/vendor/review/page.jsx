@@ -204,12 +204,12 @@ export default function Review() {
             </div>
           </Card>
 
-          {/* ── Restaurant ── */}
+          {/* ── Store ── */}
           <Card>
-            <CardHead icon={Store} title="Restaurant Information" desc="Business details" step={2} onEdit={handleEdit} disabled={loading} />
+            <CardHead icon={Store} title="Store Information" desc="Business details" step={2} onEdit={handleEdit} disabled={loading} />
             <div className="px-4 py-4 space-y-4">
               <div>
-                <Label icon={Store} text="Restaurant Name" />
+                <Label icon={Store} text="Store Name" />
                 <Value>{state.restaurantName}</Value>
               </div>
               <div>

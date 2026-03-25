@@ -11,6 +11,8 @@ import {
     selectPublicUserId,
     selectUsername,
     selectEmail,
+    selectVendorIsActive,
+    selectVendorIsVerified,
     setAuth,
     clearAuth,
     setError,
@@ -39,6 +41,8 @@ export const useAuth = () => {
     const publicUserId = useSelector(selectPublicUserId);
     const username = useSelector(selectUsername);
     const email = useSelector(selectEmail);
+    const vendorIsActive = useSelector(selectVendorIsActive);
+    const vendorIsVerified = useSelector(selectVendorIsVerified);
 
     const { clearCart } = useCart();
 
@@ -61,7 +65,9 @@ export const useAuth = () => {
 
             dispatch(setAuth({ user: userData }));
 
-            // Route based on role; customers fall back to homepage
+            // Always route vendors to their dashboard regardless of
+            // isActive / isVerified — the dashboard itself shows the
+            // appropriate pending-approval or deactivated banner.
             const destination = ROLE_ROUTES[userData.role] ?? "/";
             router.push(destination);
 
@@ -217,6 +223,8 @@ export const useAuth = () => {
         username,
         email,
         role,
+        vendorIsActive,
+        vendorIsVerified,
 
         // State
         isAuthenticated,

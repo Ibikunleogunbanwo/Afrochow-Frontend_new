@@ -63,7 +63,7 @@ export default function RegistrationSuccess() {
             </div>
             <h1 className="text-3xl font-bold text-white mb-1">Welcome Aboard!</h1>
             <p className="text-orange-100 text-base">
-              Your restaurant registration is complete
+              Your store registration is complete
             </p>
           </div>
 
@@ -158,7 +158,7 @@ export default function RegistrationSuccess() {
                       <h4 className="font-semibold text-gray-900 text-sm">Admin Approval → Orders Open</h4>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Our team verifies your business documents — typically 24–48 hours. Once approved you&apos;ll receive a confirmation email and your restaurant will be live and able to accept orders.
+                      Our team verifies your business documents — typically 24–48 hours. Once approved you&apos;ll receive a confirmation email and your store will be live and able to accept orders.
                     </p>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function RegistrationSuccess() {
                     icon: Store,
                     color: "text-orange-600",
                     bg: "bg-white",
-                    title: "Restaurant Dashboard",
+                    title: "Store Dashboard",
                     desc: "Manage menu, orders, and settings in one place",
                   },
                   {

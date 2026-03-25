@@ -117,8 +117,8 @@ export default function Step2() {
       <FormContainer
           currentStep={2}
           totalSteps={4}
-          title="About You & Your Restaurant"
-          description="Tell us about yourself and your restaurant"
+          title="About You & Your Store"
+          description="Tell us about yourself and your store"
           fromReview={fromReview}
       >
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -180,11 +180,11 @@ export default function Step2() {
           />
 
           <div className="pt-3 border-t border-gray-100">
-            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Restaurant</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Store</p>
 
             <div className="space-y-5">
               <FormField
-                  label="Restaurant Name"
+                  label="Store Name"
                   id="restaurantName"
                   icon={Store}
                   error={errors.restaurantName?.message}
@@ -199,7 +199,7 @@ export default function Step2() {
                   icon={UtensilsCrossed}
                   error={errors.cuisineType?.message}
                   value={watch("cuisineType")}
-                  helpText="Helps customers find your restaurant when searching by cuisine"
+                  helpText="Helps customers find your store when searching by cuisine"
                   inputProps={{ type: "text", placeholder: "African, Caribbean, Fusion…", ...register("cuisineType") }}
               />
 
@@ -220,7 +220,7 @@ export default function Step2() {
                   <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <Textarea
                       id="description"
-                      placeholder="Tell customers what makes your restaurant special…"
+                      placeholder="Tell customers what makes your store special…"
                       className={`pl-10 min-h-28 resize-y ${
                           !errors.description && description && description.length >= 20 ? "pr-10" : ""
                       } ${
