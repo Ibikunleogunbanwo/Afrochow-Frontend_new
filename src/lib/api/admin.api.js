@@ -83,7 +83,8 @@ export const AdminCategoriesAPI = {
 
 // ── Notifications ──────────────────────────────────────────────────────────
 export const AdminNotificationsAPI = {
-    broadcast: (data) => fetchWithCredentials(`${API_BASE_URL}/notifications/admin/broadcast`, { method: 'POST', body: JSON.stringify(data) }),
+    broadcast:           (data)                => fetchWithCredentials(`${API_BASE_URL}/notifications/admin/broadcast`,               { method: 'POST', body: JSON.stringify(data) }),
+    getBroadcastHistory: (page = 0, size = 20) => fetchWithCredentials(`${API_BASE_URL}/notifications/admin/broadcasts?page=${page}&size=${size}`),
 };
 
 // ── Superadmin Only ────────────────────────────────────────────────────────
