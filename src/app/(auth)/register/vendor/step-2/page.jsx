@@ -194,13 +194,13 @@ export default function Step2() {
               />
 
               <FormField
-                  label="Cuisine Type"
+                  label="Product Type"
                   id="cuisineType"
                   icon={UtensilsCrossed}
                   error={errors.cuisineType?.message}
                   value={watch("cuisineType")}
-                  helpText="Helps customers find your store when searching by cuisine"
-                  inputProps={{ type: "text", placeholder: "African, Caribbean, Fusion…", ...register("cuisineType") }}
+                  helpText="Helps customers find your store when searching by product type"
+                  inputProps={{ type: "text", placeholder: "African Food, Groceries, Pastries…", ...register("cuisineType") }}
               />
 
               <div className="space-y-2">

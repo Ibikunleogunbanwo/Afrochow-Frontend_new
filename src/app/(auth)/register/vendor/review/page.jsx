@@ -217,7 +217,7 @@ export default function Review() {
                 <p className="text-sm text-gray-700 leading-relaxed break-words">{state.description}</p>
               </div>
               <div>
-                <Label icon={UtensilsCrossed} text="Cuisine Type" />
+                <Label icon={UtensilsCrossed} text="Product Type" />
                 <Value>{state.cuisineType}</Value>
               </div>
             </div>

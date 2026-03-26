@@ -54,7 +54,7 @@ const FAQS = {
     gettingStarted: [
         {
             question: "How do I complete my vendor profile?",
-            answer: "Go to Profile in your dashboard sidebar. Fill in your restaurant name, description, cuisine type, address, and upload a logo and cover photo. A complete profile helps customers find and trust your store. Don't forget to set your operating hours so customers see accurate open/closed status.",
+            answer: "Go to Profile in your dashboard sidebar. Fill in your restaurant name, description, product type, address, and upload a logo and cover photo. A complete profile helps customers find and trust your store. Don't forget to set your operating hours so customers see accurate open/closed status.",
         },
         {
             question: "How do I get my store approved and listed publicly?",

@@ -79,17 +79,17 @@ export default function Step3Fields({ register, watch, errors }) {
         )}
       </div>
 
-      {/* Cuisine Type */}
+      {/* Product Type */}
       <FormField
-        label="Cuisine Type"
+        label="Product Type"
         id="cuisineType"
         icon={UtensilsCrossed}
         error={errors.cuisineType?.message}
         value={cuisineType}
-        helpText="Helps customers find your restaurant when searching by cuisine"
+        helpText="Helps customers find your store when searching by product type"
         inputProps={{
           type: "text",
-          placeholder: "African, Caribbean, Fusion, etc.",
+          placeholder: "African Food, Groceries, Pastries, etc.",
           ...register("cuisineType"),
         }}
       />

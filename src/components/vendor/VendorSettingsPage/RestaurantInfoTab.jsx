@@ -56,8 +56,8 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
           />
                 </InputBlock>
 
-                {/* Cuisine Type */}
-                <InputBlock label="Type">
+                {/* Product Type */}
+                <InputBlock label="Product Type">
                     <input
                         type="text"
                         value={profileForm.cuisineType}
@@ -65,7 +65,7 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
                             setProfileForm({ ...profileForm, cuisineType: e.target.value })
                         }
                         className="w-full px-4 py-3 focus:outline-none rounded-lg bg-white border border-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                        placeholder="e.g., Nigerian, Continental, Fast Food"
+                        placeholder="e.g., African Food, Groceries, Pastries"
                     />
                 </InputBlock>
 

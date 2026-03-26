@@ -684,8 +684,8 @@ export default function VendorProfilePage() {
                                         <FieldError msg={infoErrors.restaurantName} />
                                     </div>
                                     <div>
-                                        <Label>Cuisine type</Label>
-                                        <input {...fi('cuisineType')} placeholder="e.g. Nigerian, Ethiopian" />
+                                        <Label>Product type</Label>
+                                        <input {...fi('cuisineType')} placeholder="e.g. African Food, Groceries, Pastries" />
                                         <FieldError msg={infoErrors.cuisineType} />
                                     </div>
                                     <div>
