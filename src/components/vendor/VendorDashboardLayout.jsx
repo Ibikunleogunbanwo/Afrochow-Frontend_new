@@ -18,6 +18,7 @@ const VendorDashboardLayout = ({ children }) => {
 
     const { user, isAuthenticated, logout, vendorIsActive, vendorIsVerified } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -133,11 +134,10 @@ const VendorDashboardLayout = ({ children }) => {
             <Sidebar
                 pathname={pathname}
                 user={userData}
-                profileOpen={profileOpen}
-                onProfileToggle={toggleProfile}
                 onLogout={handleLogout}
-                profileRef={profileRef}
                 badgeCounts={badgeCounts}
+                collapsed={sidebarCollapsed}
+                onCollapsedChange={setSidebarCollapsed}
             />
 
             {/* Mobile Sidebar */}
@@ -150,7 +150,7 @@ const VendorDashboardLayout = ({ children }) => {
             />
 
             {/* Main Content */}
-            <div className="lg:pl-72">
+            <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-72'}`}>
                 {/* Top Header */}
                 <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
                     <div className="px-4 sm:px-6 lg:px-8">
