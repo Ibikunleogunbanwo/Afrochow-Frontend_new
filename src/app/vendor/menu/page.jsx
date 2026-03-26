@@ -7,6 +7,7 @@ import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
 import ProductReviewsModal from '@/components/vendor/ProductReviewsModal';
+import { toast } from 'sonner';
 
 const VendorMenuPage = () => {
     const [products, setProducts] = useState([]);
@@ -16,6 +17,8 @@ const VendorMenuPage = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [formData, setFormData] = useState({
@@ -81,6 +84,8 @@ const VendorMenuPage = () => {
     };
 
     const handleCreateProduct = async () => {
+        if (isCreating) return;
+        setIsCreating(true);
         try {
             let imageUrl = formData.imageUrl || '';
 
@@ -110,9 +115,13 @@ const VendorMenuPage = () => {
                 await fetchProducts();
                 setShowCreateModal(false);
                 resetForm();
+                toast.success('Product created successfully');
             }
         } catch (error) {
             console.error('Error creating product:', error);
+            toast.error('Failed to create product', { description: error?.message });
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -159,16 +168,20 @@ const VendorMenuPage = () => {
     };
 
     const handleDeleteProduct = async () => {
+        if (isDeleting || !selectedProduct?.publicProductId) return;
+        setIsDeleting(true);
         try {
-            if (!selectedProduct?.publicProductId) return;
-
             const response = await deleteProduct(selectedProduct.publicProductId);
             if (response?.success) {
                 await fetchProducts();
                 setShowDeleteModal(false);
                 setSelectedProduct(null);
+                toast.success('Product deleted');
             }
         } catch (error) {
+            toast.error('Failed to delete product', { description: error?.message });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -747,10 +760,10 @@ const VendorMenuPage = () => {
                             </button>
                             <button
                                 onClick={showCreateModal ? handleCreateProduct : handleUpdateProduct}
-                                disabled={!formData.name || !formData.price || !formData.categoryId || !formData.preparationTimeMinutes}
+                                disabled={!formData.name || !formData.price || !formData.categoryId || !formData.preparationTimeMinutes || isCreating || uploadingImage}
                                 className="px-6 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {showCreateModal ? 'Create Product' : 'Update Product'}
+                                {isCreating ? 'Creating…' : showCreateModal ? 'Create Product' : 'Update Product'}
                             </button>
                         </div>
                     </div>
@@ -783,9 +796,10 @@ const VendorMenuPage = () => {
                             </button>
                             <button
                                 onClick={handleDeleteProduct}
-                                className="flex-1 px-6 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                                disabled={isDeleting}
+                                className="flex-1 px-6 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Delete
+                                {isDeleting ? 'Deleting…' : 'Delete'}
                             </button>
                         </div>
                     </div>
