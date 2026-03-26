@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
 import { selectUserRole } from '@/redux-store/authSlice';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 
 // Backend: changeRole + delete = SUPERADMIN only
 // Backend: activate/deactivate = ADMIN or SUPERADMIN (but not on SUPERADMIN accounts)
@@ -230,34 +231,52 @@ export default function AdminUsersPage() {
                         <p className="text-sm text-gray-400">No users found</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Name',    className: 'flex-1 min-w-[200px]' },
+                            { label: 'Role',    className: 'w-32 shrink-0' },
+                            { label: 'Status',  className: 'w-28 shrink-0' },
+                            { label: 'Joined',  className: 'w-32 shrink-0' },
+                            { label: 'Actions', className: 'w-52 shrink-0' },
+                        ]} />
                         {users.map(u => (
-                            <div key={u.publicUserId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 hover:bg-gray-50 transition-colors">
-                                {/* Info */}
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center shrink-0 text-xs font-bold text-gray-600">
-                                        {(u.fullName || u.email || '?').charAt(0).toUpperCase()}
-                                    </div>
+                            <AdminTableRow key={u.publicUserId}>
+                                {/* Name col */}
+                                <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                    <AdminAvatar
+                                        initials={(u.fullName || u.email || '?').charAt(0).toUpperCase()}
+                                        statusColor={u.isActive ? '#22c55e' : '#ef4444'}
+                                    />
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{u.fullName || 'No name'}</p>
-                                        <p className="text-xs text-gray-400 truncate">{u.email} · Joined {formatDate(u.createdAt)}</p>
+                                        <p className="font-semibold text-gray-900 truncate">{u.fullName || 'No name'}</p>
+                                        <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                     </div>
                                 </div>
 
-                                {/* Badges + Actions */}
-                                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                {/* Role col */}
+                                <div className="w-32 shrink-0">
                                     <RoleBadge role={u.role} />
-                                    <StatusDot active={u.isActive} />
+                                </div>
 
+                                {/* Status col */}
+                                <div className="w-28 shrink-0">
+                                    <StatusDot active={u.isActive} />
+                                </div>
+
+                                {/* Joined col */}
+                                <div className="w-32 shrink-0 text-xs text-gray-500">
+                                    {formatDate(u.createdAt)}
+                                </div>
+
+                                {/* Actions col */}
+                                <div className="w-52 shrink-0 flex items-center gap-1.5 flex-wrap">
                                     {isProtected(u) ? (
-                                        /* SUPERADMIN row — fully locked */
                                         <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-400 bg-gray-50 rounded-lg border border-gray-200">
                                             <ShieldAlert className="w-3 h-3" />
                                             Protected
                                         </span>
                                     ) : (
                                         <>
-                                            {/* Change role — SUPERADMIN-only on backend */}
                                             {isSuperAdmin && (
                                                 <div className="relative">
                                                     <button
@@ -268,7 +287,7 @@ export default function AdminUsersPage() {
                                                         Role <ChevronDown className="w-3 h-3" />
                                                     </button>
                                                     {roleMenu === u.publicUserId && (
-                                                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-[999] min-w-[140px] py-1">
+                                                        <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-[999] min-w-[140px] py-1">
                                                             {['CUSTOMER', 'VENDOR', 'ADMIN'].filter(r => r !== u.role).map(r => (
                                                                 <button
                                                                     key={r}
@@ -283,8 +302,6 @@ export default function AdminUsersPage() {
                                                     )}
                                                 </div>
                                             )}
-
-                                            {/* Promote/Demote ADMIN ↔ SUPERADMIN — SUPERADMIN only */}
                                             {isSuperAdmin && u.role === 'ADMIN' && (
                                                 <button
                                                     onClick={() => doAction(u.publicUserId, AdminSuperAPI.promote, 'promote')}
@@ -296,8 +313,6 @@ export default function AdminUsersPage() {
                                                     Promote
                                                 </button>
                                             )}
-
-                                            {/* Activate / Deactivate — ADMIN or SUPERADMIN (not on other ADMINs per backend) */}
                                             {!isAdminRole(u) && (
                                                 u.isActive ? (
                                                     <button
@@ -319,8 +334,6 @@ export default function AdminUsersPage() {
                                                     </button>
                                                 )
                                             )}
-
-                                            {/* Delete — SUPERADMIN only, not for ADMIN accounts */}
                                             {isSuperAdmin && !isAdminRole(u) && (
                                                 <button
                                                     onClick={() => handleDelete(u.publicUserId, u.fullName || u.email)}
@@ -334,9 +347,9 @@ export default function AdminUsersPage() {
                                         </>
                                     )}
                                 </div>
-                            </div>
+                            </AdminTableRow>
                         ))}
-                    </div>
+                    </AdminTableRoot>
                 )}
             </div>
         </div>

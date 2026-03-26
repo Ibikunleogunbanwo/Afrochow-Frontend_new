@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 
 const FILTERS = [
     { key: 'all',       label: 'All' },
@@ -193,69 +194,82 @@ export default function AdminVendorsPage() {
                         <p className="text-sm text-gray-400">No vendors found</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Restaurant', className: 'flex-1 min-w-[200px]' },
+                            { label: 'Status',     className: 'w-32 shrink-0' },
+                            { label: 'Joined',     className: 'w-32 shrink-0' },
+                            { label: 'Actions',    className: 'w-44 shrink-0' },
+                        ]} />
                         {filtered.map(v => (
-                            <div key={v.publicVendorId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
-                                {/* Info */}
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                                        <Store className="w-5 h-5 text-gray-600" />
-                                    </div>
+                            <AdminTableRow key={v.publicVendorId}>
+                                {/* Restaurant */}
+                                <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                    <AdminAvatar
+                                        initials={<Store className="w-4 h-4 text-gray-600" />}
+                                        statusColor={v.isActive === false ? '#ef4444' : v.isVerified ? '#22c55e' : '#f59e0b'}
+                                        size="md"
+                                    />
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
-                                        <p className="text-xs text-gray-500 truncate">{v.cuisineType || 'N/A'} · Joined {formatDate(v.createdAt)}</p>
+                                        <p className="font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
+                                        <p className="text-xs text-gray-400 truncate">{v.cuisineType || 'N/A'}</p>
                                     </div>
                                 </div>
 
-                                {/* Status + Actions */}
-                                <div className="flex items-center gap-3 shrink-0">
+                                {/* Status */}
+                                <div className="w-32 shrink-0">
                                     <StatusBadge verified={v.isVerified} active={v.isActive} />
-                                    <div className="flex gap-2">
-                                        {/* Verify toggle */}
-                                        {v.isVerified ? (
-                                            <button
-                                                onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}
-                                                disabled={!!actionLoading[v.publicVendorId + 'unverify']}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                <ShieldOff className="w-3.5 h-3.5" />
-                                                Revoke
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verify, 'verify')}
-                                                disabled={!!actionLoading[v.publicVendorId + 'verify']}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                <ShieldCheck className="w-3.5 h-3.5" />
-                                                Verify
-                                            </button>
-                                        )}
-                                        {/* Active toggle */}
-                                        {v.isActive ? (
-                                            <button
-                                                onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
-                                                disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                <XCircle className="w-3.5 h-3.5" />
-                                                Suspend
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.activate, 'activate')}
-                                                disabled={!!actionLoading[v.publicVendorId + 'activate']}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                Activate
-                                            </button>
-                                        )}
-                                    </div>
                                 </div>
-                            </div>
+
+                                {/* Joined */}
+                                <div className="w-32 shrink-0 text-xs text-gray-500">
+                                    {formatDate(v.createdAt)}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="w-44 shrink-0 flex items-center gap-1.5 flex-wrap">
+                                    {v.isVerified ? (
+                                        <button
+                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}
+                                            disabled={!!actionLoading[v.publicVendorId + 'unverify']}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            <ShieldOff className="w-3.5 h-3.5" />
+                                            Revoke
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verify, 'verify')}
+                                            disabled={!!actionLoading[v.publicVendorId + 'verify']}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                            Verify
+                                        </button>
+                                    )}
+                                    {v.isActive ? (
+                                        <button
+                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
+                                            disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            Suspend
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.activate, 'activate')}
+                                            disabled={!!actionLoading[v.publicVendorId + 'activate']}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            Activate
+                                        </button>
+                                    )}
+                                </div>
+                            </AdminTableRow>
                         ))}
-                    </div>
+                    </AdminTableRoot>
                 )}
             </div>
         </div>

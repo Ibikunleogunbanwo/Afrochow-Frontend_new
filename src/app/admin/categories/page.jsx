@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { AdminCategoriesAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 
 const EMPTY_FORM = { name: '', description: '', displayOrder: '', imageUrl: '' };
 
@@ -318,89 +319,88 @@ export default function AdminCategoriesPage() {
                         <button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl">Create first category</button>
                     </div>
                 ) : (
-                    <>
-                        {/* Table header */}
-                        <div className="hidden sm:grid grid-cols-[2fr_1fr_80px_auto] gap-4 px-5 py-3 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                            <span>Category</span>
-                            <span>Description</span>
-                            <span className="text-center">Order</span>
-                            <span>Actions</span>
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {categories.map(c => {
-                                const id = resolveId(c);
-                                return (
-                                    <div key={id} className="flex flex-col sm:grid sm:grid-cols-[2fr_1fr_80px_auto] sm:items-center gap-3 sm:gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
-                                        {/* Name + status */}
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            {c.imageUrl ? (
-                                                <img src={c.imageUrl} alt={c.name} className="w-9 h-9 rounded-lg object-cover shrink-0 border border-gray-100" />
-                                            ) : (
-                                                <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                                    <LayoutGrid className="w-4 h-4 text-gray-400" />
-                                                </div>
-                                            )}
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
-                                                <span className={`inline-block mt-0.5 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                                                    c.isActive
-                                                        ? 'bg-green-50 text-green-700 border border-green-200'
-                                                        : 'bg-gray-100 text-gray-500'
-                                                }`}>
-                                                    {c.isActive ? 'Active' : 'Inactive'}
-                                                </span>
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Category',    className: 'flex-1 min-w-[200px]' },
+                            { label: 'Description', className: 'w-48 shrink-0' },
+                            { label: 'Order',       className: 'w-20 shrink-0 text-center' },
+                            { label: 'Actions',     className: 'w-36 shrink-0' },
+                        ]} />
+                        {categories.map(c => {
+                            const id = resolveId(c);
+                            return (
+                                <AdminTableRow key={id}>
+                                    {/* Category name + status */}
+                                    <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                        {c.imageUrl ? (
+                                            <img src={c.imageUrl} alt={c.name} className="w-9 h-9 rounded-lg object-cover shrink-0 border border-gray-100" />
+                                        ) : (
+                                            <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                                <LayoutGrid className="w-4 h-4 text-gray-400" />
                                             </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-gray-900 truncate text-sm">{c.name}</p>
+                                            <span className={`inline-block mt-0.5 px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                                c.isActive
+                                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                                    : 'bg-gray-100 text-gray-500'
+                                            }`}>
+                                                {c.isActive ? 'Active' : 'Inactive'}
+                                            </span>
                                         </div>
+                                    </div>
 
-                                        {/* Description */}
-                                        <p className="text-xs text-gray-400 truncate hidden sm:block">
-                                            {c.description || '—'}
-                                        </p>
+                                    {/* Description */}
+                                    <div className="w-48 shrink-0 text-xs text-gray-400 truncate">
+                                        {c.description || '—'}
+                                    </div>
 
-                                        {/* Display order */}
+                                    {/* Display order */}
+                                    <div className="w-20 shrink-0 flex justify-center">
                                         <button
                                             onClick={() => openOrderModal(c)}
-                                            className="hidden sm:flex items-center justify-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-2 py-1 rounded-lg transition-colors"
+                                            className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-2 py-1 rounded-lg transition-colors"
                                             title="Set display order"
                                         >
                                             <GripVertical className="w-3.5 h-3.5" />
                                             {c.displayOrder ?? '—'}
                                         </button>
-
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <button
-                                                onClick={() => handleToggleActive(c)}
-                                                disabled={!!actionLoading[id + 'toggle']}
-                                                title={c.isActive ? 'Deactivate' : 'Activate'}
-                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                {c.isActive
-                                                    ? <ToggleRight className="w-4 h-4 text-green-600" />
-                                                    : <ToggleLeft className="w-4 h-4" />
-                                                }
-                                            </button>
-                                            <button
-                                                onClick={() => openEdit(c)}
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                            >
-                                                <Edit2 className="w-3.5 h-3.5" />
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(c)}
-                                                disabled={!!actionLoading[id + 'del']}
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                                title="Delete category"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </>
+
+                                    {/* Actions */}
+                                    <div className="w-36 shrink-0 flex items-center gap-1.5">
+                                        <button
+                                            onClick={() => handleToggleActive(c)}
+                                            disabled={!!actionLoading[id + 'toggle']}
+                                            title={c.isActive ? 'Deactivate' : 'Activate'}
+                                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {c.isActive
+                                                ? <ToggleRight className="w-4 h-4 text-green-600" />
+                                                : <ToggleLeft className="w-4 h-4" />
+                                            }
+                                        </button>
+                                        <button
+                                            onClick={() => openEdit(c)}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(c)}
+                                            disabled={!!actionLoading[id + 'del']}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                            title="Delete category"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </AdminTableRow>
+                            );
+                        })}
+                    </AdminTableRoot>
                 )}
             </div>
         </div>

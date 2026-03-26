@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { AuthAPI } from "@/lib/api/auth.api";

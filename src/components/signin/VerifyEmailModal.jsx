@@ -3,43 +3,48 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 import {
     MailCheck,
-    CheckCircle2,
     AlertCircle,
     Loader2,
     ArrowRight,
     ShieldCheck,
     Clock,
 } from "lucide-react"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog"
+import { SuccessIcon } from "@/components/ui/animated-state-icons"
 import { RegistrationAPI } from "@/lib/api/registration.api"
 
-export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
+/**
+ * Standalone OTP verification card — no Dialog wrapper.
+ * Designed to be rendered full-screen inside /verify-email/page.jsx.
+ *
+ * Props
+ *   email         – pre-filled email address (shown as hint)
+ *   onClose       – called when user clicks "Back to Home"
+ *   onSignInClick – called after successful verification
+ */
+export function VerifyEmailModal({ email, onClose, onSignInClick }) {
     const router = useRouter()
-    const [code, setCode] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [resendLoading, setResendLoading] = useState(false)
+
+    // ── OTP state ──────────────────────────────────────────────────────────
+    const [otp, setOtp]                       = useState(["", "", "", "", "", ""])
+    const [loading, setLoading]               = useState(false)
+    const [success, setSuccess]               = useState(false)
+
+    // ── Resend state ───────────────────────────────────────────────────────
+    const [resendLoading, setResendLoading]   = useState(false)
     const [resendDisabled, setResendDisabled] = useState(false)
     const [resendCountdown, setResendCountdown] = useState(0)
-    const [resendSent, setResendSent] = useState(false)
-    const hiddenInputRef = useRef(null)
-    const timerRef = useRef(null)
+    const [resendSent, setResendSent]         = useState(false)
 
-    // focus the hidden input when modal opens
+    const inputRefs = useRef([])
+    const timerRef  = useRef(null)
+
+    // auto-focus first box on mount
     useEffect(() => {
-        if (isOpen) {
-            setTimeout(() => hiddenInputRef.current?.focus(), 150)
-        }
-    }, [isOpen])
+        setTimeout(() => inputRefs.current[0]?.focus(), 150)
+    }, [])
 
     // countdown timer
     useEffect(() => {
@@ -58,63 +63,90 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         return () => { if (timerRef.current) clearInterval(timerRef.current) }
     }, [resendCountdown])
 
-    const resetState = () => {
-        setCode("")
-        setSuccess(false)
-        setResendDisabled(false)
-        setResendCountdown(0)
-    }
+    // ── OTP input handlers ─────────────────────────────────────────────────
+    const handleChange = (index, value) => {
+        if (value.length > 1) return
+        if (value && !/^\d$/.test(value)) return
 
-    const handleClose = () => {
-        resetState()
-        router.push("/")
-        onClose()
-    }
+        const next = [...otp]
+        next[index] = value
+        setOtp(next)
 
-    const handleSignIn = () => {
-        resetState()
-        if (onSignInClick) {
-            onSignInClick()
-        } else {
-            router.push("/")
+        if (value && index < 5) {
+            inputRefs.current[index + 1]?.focus()
         }
     }
 
-    const handleCodeChange = useCallback((e) => {
-        const digits = e.target.value.replace(/\D/g, "").slice(0, 6)
-        setCode(digits)
-    }, [])
+    const handleKeyDown = (index, e) => {
+        if (e.key === "Backspace") {
+            if (otp[index]) {
+                // clear current box first
+                const next = [...otp]
+                next[index] = ""
+                setOtp(next)
+            } else if (index > 0) {
+                inputRefs.current[index - 1]?.focus()
+            }
+        } else if (e.key === "ArrowLeft" && index > 0) {
+            inputRefs.current[index - 1]?.focus()
+        } else if (e.key === "ArrowRight" && index < 5) {
+            inputRefs.current[index + 1]?.focus()
+        }
+    }
 
-    const handleSubmit = async (e) => {
+    const handlePaste = (e) => {
         e.preventDefault()
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
+        if (!pasted.length) return
 
-        if (code.length !== 6) {
+        const next = Array(6).fill("")
+        for (let i = 0; i < Math.min(pasted.length, 6); i++) {
+            next[i] = pasted[i]
+        }
+        setOtp(next)
+
+        const nextEmpty = next.findIndex(d => d === "")
+        setTimeout(() => inputRefs.current[nextEmpty === -1 ? 5 : nextEmpty]?.focus(), 0)
+    }
+
+    const codeString   = otp.join("")
+    const isComplete   = otp.every(d => d !== "")
+
+    // ── Submit ─────────────────────────────────────────────────────────────
+    const handleSubmit = async (e) => {
+        e?.preventDefault()
+        if (codeString.length !== 6) {
             toast.error("Incomplete Code", { description: "Please enter all 6 digits" })
             return
         }
-
         setLoading(true)
-
         try {
-            await RegistrationAPI.verifyEmail(code)
+            await RegistrationAPI.verifyEmail(codeString)
             setSuccess(true)
         } catch (err) {
             toast.error("Verification Failed", { description: err.message || "Invalid or expired code" })
-            setCode("")
-            setTimeout(() => hiddenInputRef.current?.focus(), 50)
+            setOtp(["", "", "", "", "", ""])
+            setTimeout(() => inputRefs.current[0]?.focus(), 50)
         } finally {
             setLoading(false)
         }
     }
 
+    // auto-submit when all 6 digits filled
+    useEffect(() => {
+        if (isComplete && !loading && !success) {
+            handleSubmit()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isComplete])
+
+    // ── Resend ─────────────────────────────────────────────────────────────
     const handleResend = async () => {
         if (!email) {
             toast.error("Email Missing", { description: "Email address not found. Please register again." })
             return
         }
-
         setResendLoading(true)
-
         try {
             await RegistrationAPI.resendVerificationEmail(email)
             setResendSent(true)
@@ -128,132 +160,124 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
         }
     }
 
-    // digits array used only for rendering the visual boxes
-    const digits = code.split("")
+    const handleSignIn = () => {
+        if (onSignInClick) onSignInClick()
+        else router.push("/")
+    }
 
+    const handleBack = () => {
+        if (onClose) onClose()
+        else router.push("/")
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[425px]">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
 
-                {/* Success View */}
+                {/* ── Success state ─────────────────────────────────────── */}
                 {success ? (
-                    <div className="text-center py-4">
-                        <div className="w-16 h-16 bg-linear-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                            <CheckCircle2 className="w-9 h-9 text-white" />
+                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
+                        <div className="flex items-center justify-center mx-auto mb-5">
+                            <SuccessIcon state={true} size={80} color="#22c55e" />
                         </div>
-
-                        <h2 className="text-xl font-bold text-slate-900 mb-2">
-                            Email Verified! 🎉
-                        </h2>
-                        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-                            Your email has been successfully verified. You can now sign in and start ordering delicious African cuisine!
+                        <h2 className="text-2xl font-black text-gray-900 mb-2">Email Verified! 🎉</h2>
+                        <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                            Your email has been successfully verified.<br />
+                            You can now sign in and start ordering delicious African cuisine!
                         </p>
-
                         <button
                             onClick={handleSignIn}
-                            className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                         >
                             Continue to Sign In
                             <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
                 ) : (
-                    // Verification Form
-                    <>
-                        <DialogHeader>
-                            <div className="flex justify-center mb-2">
-                                <div className="w-12 h-12 bg-linear-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
-                                    <ShieldCheck className="w-6 h-6 text-white" />
-                                </div>
+                    /* ── Verification form ──────────────────────────────── */
+                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                <ShieldCheck className="w-8 h-8 text-white" />
                             </div>
-                            <DialogTitle className="text-center">Verify Your Email</DialogTitle>
-                            <DialogDescription className="text-center">
-                                Enter the 6-digit code we sent to{" "}
-                                {email && (
-                                    <span className="text-orange-600 font-semibold break-all block mt-1">
-                                        {email}
-                                    </span>
-                                )}
-                            </DialogDescription>
-                        </DialogHeader>
+                            <h1 className="text-2xl font-black text-gray-900 mb-1">Verify Your Email</h1>
+                            <p className="text-sm text-gray-500">
+                                We&apos;ve sent a 6-digit code to
+                            </p>
+                            {email && (
+                                <p className="text-sm font-semibold text-orange-600 mt-0.5 break-all">{email}</p>
+                            )}
+                        </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+                        <form onSubmit={handleSubmit} className="space-y-6">
 
-                            {/* Code Input — single hidden input + visual boxes */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-slate-700 text-center">
+                            {/* OTP boxes */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-600 text-center uppercase tracking-wider mb-4">
                                     Verification Code
                                 </label>
-
-                                {/* Hidden real input that captures keystrokes */}
-                                <input
-                                    ref={hiddenInputRef}
-                                    type="text"
-                                    inputMode="numeric"
-                                    autoComplete="one-time-code"
-                                    value={code}
-                                    onChange={handleCodeChange}
-                                    disabled={loading}
-                                    maxLength={6}
-                                    className="sr-only"
-                                    aria-label="6-digit verification code"
-                                />
-
-                                {/* Visual digit boxes — tapping focuses the hidden input */}
-                                <div
-                                    className="flex gap-2 justify-center cursor-text"
-                                    onClick={() => hiddenInputRef.current?.focus()}
-                                >
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <div
+                                <div className="flex justify-center gap-3">
+                                    {otp.map((digit, i) => (
+                                        <input
                                             key={i}
-                                            className={`w-10 h-12 flex items-center justify-center text-xl font-bold border-2 rounded-xl transition-all select-none ${
-                                                loading
-                                                    ? "opacity-50 border-slate-200 bg-slate-50"
-                                                    : digits[i]
-                                                        ? "border-orange-600 bg-orange-50 text-black"
-                                                        : i === digits.length
-                                                            ? "border-orange-400 bg-white ring-2 ring-orange-200"
-                                                            : "border-slate-300 bg-white"
-                                            }`}
-                                        >
-                                            {digits[i] || ""}
-                                        </div>
+                                            ref={el => { inputRefs.current[i] = el }}
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete={i === 0 ? "one-time-code" : "off"}
+                                            value={digit}
+                                            onChange={e => handleChange(i, e.target.value)}
+                                            onKeyDown={e => handleKeyDown(i, e)}
+                                            onPaste={handlePaste}
+                                            disabled={loading}
+                                            maxLength={1}
+                                            style={{ color: 'black', backgroundColor: 'white' }}
+                                            className={`
+                                                w-12 h-14 text-center text-2xl font-bold rounded-2xl border-2
+                                                transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2
+                                                disabled:opacity-50
+                                                ${digit
+                                                    ? "border-orange-500 bg-orange-50 text-gray-900 focus:ring-orange-400"
+                                                    : "border-gray-200 bg-white text-gray-900 focus:border-orange-400 focus:ring-orange-300"
+                                                }
+                                            `}
+                                        />
                                     ))}
                                 </div>
                             </div>
 
+                            {/* Submit button */}
                             <button
                                 type="submit"
-                                disabled={loading || code.length !== 6}
-                                className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={loading || !isComplete}
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {loading ? (
-                                    <><Loader2 className="h-4 w-4 animate-spin" /> Verifying...</>
+                                    <><Loader2 className="h-4 w-4 animate-spin" /> Verifying…</>
                                 ) : (
                                     <><MailCheck className="h-4 w-4" /> Verify Email</>
                                 )}
                             </button>
 
                             {/* Resend */}
-                            <div className="text-center">
-                                <p className="text-xs text-slate-600 mb-2">
-                                    Didn&#39;t receive the code?
-                                </p>
+                            <div className="text-center space-y-2">
+                                <p className="text-xs text-gray-500">Didn&apos;t receive the code?</p>
                                 <button
                                     type="button"
                                     onClick={handleResend}
                                     disabled={resendDisabled || resendLoading || resendSent}
-                                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
+                                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-sm font-semibold ${
                                         resendSent
                                             ? "bg-green-50 text-green-600 border-green-200"
                                             : resendDisabled || resendLoading
-                                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                                ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                                                 : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
                                     }`}
                                 >
                                     {resendLoading ? (
-                                        <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+                                        <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
                                     ) : resendSent ? (
                                         <><CheckCircle2 className="h-4 w-4" /> Code Sent!</>
                                     ) : resendDisabled ? (
@@ -265,28 +289,31 @@ export function VerifyEmailModal({ isOpen, onClose, email, onSignInClick }) {
                             </div>
                         </form>
 
-                        <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl">
-                            <h3 className="text-xs font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
-                                <AlertCircle className="h-4 w-4 text-orange-600" />
-                                Need Help?
+                        {/* Help tip */}
+                        <div className="mt-6 p-3.5 bg-orange-50 border border-orange-100 rounded-2xl">
+                            <h3 className="text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+                                Need help?
                             </h3>
-                            <ul className="text-xs text-slate-700 space-y-0.5">
+                            <ul className="text-xs text-gray-500 space-y-0.5">
                                 <li>• Check your spam/junk folder</li>
-                                <li>• Code expires in 24 hours</li>
+                                <li>• The code expires in 24 hours</li>
                                 <li>• Make sure you entered the correct email</li>
                             </ul>
                         </div>
 
+                        {/* Back */}
                         <button
                             type="button"
-                            onClick={handleClose}
-                            className="w-full text-sm text-slate-600 hover:text-orange-600 font-medium transition-colors text-center"
+                            onClick={handleBack}
+                            className="mt-5 w-full text-sm text-gray-400 hover:text-orange-600 font-medium transition-colors text-center"
                         >
                             ← Back to Home
                         </button>
-                    </>
+                    </div>
                 )}
-            </DialogContent>
-        </Dialog>
+
+            </div>
+        </div>
     )
 }

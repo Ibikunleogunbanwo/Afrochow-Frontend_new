@@ -19,6 +19,7 @@ import {
     Bell,
     Search,
     ChevronDown,
+    ChevronsRight,
     User,
     LogOut,
     MessageSquare,
@@ -32,9 +33,11 @@ import {
     CreditCard,
     CheckCheck,
 } from 'lucide-react';
+import { NotificationIcon } from '@/components/ui/animated-state-icons';
 
 const AdminDashboardLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
@@ -150,20 +153,22 @@ const AdminDashboardLayout = ({ children }) => {
         <div className="min-h-screen bg-gray-50">
 
             {/* Sidebar - Desktop */}
-            <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-                <div className="flex flex-col grow bg-white border-r border-gray-200 overflow-y-auto">
+            <aside className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
+                <div className="flex flex-col grow bg-white border-r border-gray-200 overflow-y-auto overflow-x-hidden">
 
                     {/* Logo */}
-                    <div className="flex items-center shrink-0 px-6 py-5 border-b border-gray-200">
-                        <Shield className="w-8 h-8 text-gray-900" />
-                        <div className="ml-3">
-                            <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
-                            <p className="text-xs text-gray-500">Admin Dashboard</p>
-                        </div>
+                    <div className={`flex items-center shrink-0 border-b border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'px-3 py-5 justify-center' : 'px-5 py-5'}`}>
+                        <Shield className="w-8 h-8 text-gray-900 shrink-0" />
+                        {!sidebarCollapsed && (
+                            <div className="ml-3 min-w-0">
+                                <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
+                                <p className="text-xs text-gray-500">Admin Dashboard</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 px-4 py-6 space-y-1">
+                    <nav className="flex-1 px-2 py-4 space-y-0.5">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
@@ -172,19 +177,25 @@ const AdminDashboardLayout = ({ children }) => {
                                 <Link
                                     key={item.name}
                                     href={item.href}
+                                    title={sidebarCollapsed ? item.name : undefined}
                                     className={`
-                    flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all
-                    ${isActive
-                                        ? 'bg-gray-900 text-white'
-                                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                                    }
-                  `}
+                                        relative flex items-center h-11 rounded-xl transition-all duration-200
+                                        ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'}
+                                        ${isActive
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        }
+                                    `}
                                 >
-                                    <div className="flex items-center space-x-3">
-                                        <Icon className="w-5 h-5" />
-                                        <span>{item.name}</span>
+                                    <div className={`flex items-center ${sidebarCollapsed ? '' : 'gap-3'}`}>
+                                        <div className="grid h-11 w-10 place-content-center shrink-0">
+                                            <Icon className="w-4.5 h-4.5" style={{ width: '18px', height: '18px' }} />
+                                        </div>
+                                        {!sidebarCollapsed && (
+                                            <span className="text-sm font-medium whitespace-nowrap">{item.name}</span>
+                                        )}
                                     </div>
-                                    {item.badgeKey && badges[item.badgeKey] > 0 && (() => {
+                                    {!sidebarCollapsed && item.badgeKey && badges[item.badgeKey] > 0 && (() => {
                                         const count  = badges[item.badgeKey];
                                         const meta   = item.badgeMeta;
                                         const colors = isActive ? meta?.colors?.active : meta?.colors?.default;
@@ -195,50 +206,71 @@ const AdminDashboardLayout = ({ children }) => {
                                             </span>
                                         );
                                     })()}
+                                    {/* Badge dot in collapsed mode */}
+                                    {sidebarCollapsed && item.badgeKey && badges[item.badgeKey] > 0 && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                                    )}
                                 </Link>
                             );
                         })}
                     </nav>
 
                     {/* Bottom User Section */}
-                    <div className="shrink-0 p-4 border-t border-gray-200">
-                        <button
-                            onClick={() => setProfileOpen(!profileOpen)}
-                            className="flex items-center w-full px-4 py-3 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                        >
-                            <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold">
-                                {admin.name.charAt(0)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">{admin.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{admin.role}</p>
-                            </div>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                        </button>
-
-                        {/* Profile Dropdown */}
-                        {profileOpen && (
-                            <div className="mt-2 py-2 bg-white border border-gray-200 rounded-xl shadow-lg">
-                                <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                    <User className="w-4 h-4 mr-3" />
-                                    My Profile
-                                </Link>
-                                <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                    <Settings className="w-4 h-4 mr-3" />
-                                    Settings
-                                </Link>
-                                <hr className="my-2" />
-                                {/* ✅ LOGOUT BUTTON WITH HANDLER */}
+                    <div className="shrink-0 border-t border-gray-200">
+                        {/* User info — hidden when collapsed */}
+                        {!sidebarCollapsed && (
+                            <div className="p-3">
                                 <button
-                                    onClick={handleLogout}
-                                    disabled={loggingOut}
-                                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={() => setProfileOpen(!profileOpen)}
+                                    className="flex items-center w-full px-3 py-2.5 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                                 >
-                                    <LogOut className="w-4 h-4 mr-3" />
-                                    {loggingOut ? 'Logging out...' : 'Logout'}
+                                    <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                        {admin.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{admin.name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{admin.role}</p>
+                                    </div>
+                                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
                                 </button>
+
+                                {/* Profile Dropdown */}
+                                {profileOpen && (
+                                    <div className="mt-2 py-2 bg-white border border-gray-200 rounded-xl shadow-lg">
+                                        <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <User className="w-4 h-4 mr-3" />
+                                            My Profile
+                                        </Link>
+                                        <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <Settings className="w-4 h-4 mr-3" />
+                                            Settings
+                                        </Link>
+                                        <hr className="my-2" />
+                                        <button
+                                            onClick={handleLogout}
+                                            disabled={loggingOut}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <LogOut className="w-4 h-4 mr-3" />
+                                            {loggingOut ? 'Logging out...' : 'Logout'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
+
+                        {/* Collapse toggle button */}
+                        <button
+                            onClick={() => setSidebarCollapsed(v => !v)}
+                            className="flex items-center w-full border-t border-gray-200 p-3 hover:bg-gray-50 transition-colors"
+                        >
+                            <div className="grid w-10 h-10 place-content-center">
+                                <ChevronsRight className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${sidebarCollapsed ? '' : 'rotate-180'}`} />
+                            </div>
+                            {!sidebarCollapsed && (
+                                <span className="text-sm font-medium text-gray-600">Collapse</span>
+                            )}
+                        </button>
                     </div>
 
                 </div>
@@ -328,7 +360,7 @@ const AdminDashboardLayout = ({ children }) => {
             )}
 
             {/* Main Content */}
-            <div className="lg:pl-72">
+            <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
 
                 {/* Top Header */}
                 <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
@@ -366,7 +398,11 @@ const AdminDashboardLayout = ({ children }) => {
                                         onClick={() => setNotificationsOpen(!notificationsOpen)}
                                         className="relative p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
-                                        <Bell className="w-6 h-6" />
+                                        <NotificationIcon
+                                            state={unreadCount > 0}
+                                            size={24}
+                                            color="#9ca3af"
+                                        />
                                         {unreadCount > 0 && (
                                             <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
                                                 {unreadCount > 9 ? '9+' : unreadCount}

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     ShoppingBag, DollarSign, Users, Calendar,
     ChevronDown, Clock, Store, Eye, CheckCircle,
-    XCircle, AlertCircle, Loader2, TrendingUp, ShieldOff, Filter,
+    XCircle, AlertCircle, Loader2, TrendingUp, TrendingDown, ShieldOff, Filter,
 } from 'lucide-react';
 import {
     AreaChart, Area, BarChart, Bar,
@@ -215,28 +215,52 @@ const AdminDashboardContent = () => {
     // Stat cards — Revenue & Orders show filtered values when date range applied
     const stats = [
         {
-            name:     'Total Users',
-            value:    loadingAnalytics ? null : fmtN(resolveTotalUsers(platform, userStats)),
-            icon:     Users,
-            allTime:  true,
+            name:      'Total Users',
+            value:     loadingAnalytics ? null : fmtN(resolveTotalUsers(platform, userStats)),
+            icon:      Users,
+            allTime:   true,
+            iconBg:    'bg-blue-50',
+            iconColor: 'text-blue-600',
+            trend:     null,
         },
         {
-            name:     'Total Vendors',
-            value:    loadingAnalytics ? null : fmtN(resolveActiveVendors(platform, userStats)),
-            icon:     Store,
-            allTime:  true,
+            name:      'Total Vendors',
+            value:     loadingAnalytics ? null : fmtN(resolveActiveVendors(platform, userStats)),
+            icon:      Store,
+            allTime:   true,
+            iconBg:    'bg-green-50',
+            iconColor: 'text-green-600',
+            trend:     null,
         },
         {
-            name:     isFiltered ? 'Revenue (filtered)' : 'Platform Revenue',
-            value:    loadingAnalytics ? null : fmt$(resolveTotalRevenue(platform)),
-            icon:     DollarSign,
-            allTime:  !isFiltered,
+            name:      isFiltered ? 'Revenue (filtered)' : 'Platform Revenue',
+            value:     loadingAnalytics ? null : fmt$(resolveTotalRevenue(platform)),
+            icon:      DollarSign,
+            allTime:   !isFiltered,
+            iconBg:    'bg-orange-50',
+            iconColor: 'text-orange-600',
+            trend:     trendObj ? (() => {
+                const r7  = resolveRevenue7d(trendObj);
+                const r30 = resolveRevenue30d(trendObj);
+                if (!r7 || !r30 || r30 === 0) return null;
+                const pct = ((r7 / (r30 / 4)) - 1) * 100;
+                return { pct: Math.abs(pct).toFixed(0), up: pct >= 0 };
+            })() : null,
         },
         {
-            name:     isFiltered ? 'Orders (filtered)' : 'Total Orders',
-            value:    loadingAnalytics ? null : fmtN(resolveTotalOrders(platform)),
-            icon:     ShoppingBag,
-            allTime:  !isFiltered,
+            name:      isFiltered ? 'Orders (filtered)' : 'Total Orders',
+            value:     loadingAnalytics ? null : fmtN(resolveTotalOrders(platform)),
+            icon:      ShoppingBag,
+            allTime:   !isFiltered,
+            iconBg:    'bg-purple-50',
+            iconColor: 'text-purple-600',
+            trend:     trendObj ? (() => {
+                const o7  = resolveOrders7d(trendObj);
+                const o30 = resolveOrders30d(trendObj);
+                if (!o7 || !o30 || o30 === 0) return null;
+                const pct = ((o7 / (o30 / 4)) - 1) * 100;
+                return { pct: Math.abs(pct).toFixed(0), up: pct >= 0 };
+            })() : null,
         },
     ];
 
@@ -358,16 +382,24 @@ const AdminDashboardContent = () => {
                 {stats.map(s => {
                     const Icon = s.icon;
                     return (
-                        <div key={s.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                        <div key={s.name} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                                    <Icon className="w-6 h-6 text-gray-700" />
+                                <div className={`w-10 h-10 ${s.iconBg} rounded-xl flex items-center justify-center`}>
+                                    <Icon className={`w-5 h-5 ${s.iconColor}`} />
                                 </div>
-                                {s.allTime && (
+                                {s.trend ? (
+                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${s.trend.up ? 'text-green-600' : 'text-red-500'}`}>
+                                        {s.trend.up
+                                            ? <TrendingUp className="w-3.5 h-3.5" />
+                                            : <TrendingDown className="w-3.5 h-3.5" />
+                                        }
+                                        {s.trend.pct}%
+                                    </span>
+                                ) : s.allTime ? (
                                     <span className="text-xs text-gray-400 font-medium">all-time</span>
-                                )}
+                                ) : null}
                             </div>
-                            <p className="text-sm text-gray-600 mb-1">{s.name}</p>
+                            <p className="text-sm text-gray-500 mb-1">{s.name}</p>
                             {s.value === null ? (
                                 <div className="h-9 w-24 bg-gray-100 animate-pulse rounded-lg" />
                             ) : (

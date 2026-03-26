@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { AdminPromotionsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 
 const DISCOUNT_TYPES = {
     PERCENTAGE:   'Percentage Off',
@@ -401,44 +402,61 @@ export default function AdminPromotionsPage() {
                         <button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl">Create first promotion</button>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Code',    className: 'flex-1 min-w-[200px]' },
+                            { label: 'Details', className: 'w-52 shrink-0' },
+                            { label: 'Status',  className: 'w-24 shrink-0' },
+                            { label: 'Actions', className: 'w-36 shrink-0' },
+                        ]} />
                         {promotions.map(p => {
                             const id        = p.publicPromotionId ?? p.id;
                             const isExpired = p.endDate && new Date(p.endDate) < new Date();
                             const isActive  = p.isActive ?? p.isCurrentlyActive ?? false;
                             return (
-                                <div key={id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                                            <Tag className="w-5 h-5 text-gray-600" />
+                                <AdminTableRow key={id}>
+                                    {/* Code + type */}
+                                    <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                            <Tag className="w-4 h-4 text-gray-600" />
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                                <p className="text-sm font-bold text-gray-900 font-mono">{p.code}</p>
+                                            <p className="font-bold text-gray-900 font-mono text-sm truncate">{p.code}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
-                                                    {p.type === 'PERCENTAGE'   && `${p.value}% off`}
-                                                    {p.type === 'FIXED_AMOUNT' && `CA$${p.value} off`}
+                                                    {p.type === 'PERCENTAGE'    && `${p.value}% off`}
+                                                    {p.type === 'FIXED_AMOUNT'  && `CA$${p.value} off`}
                                                     {p.type === 'FREE_DELIVERY' && 'Free Delivery'}
                                                 </span>
-                                                {isActive ? (
-                                                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
-                                                        <CheckCircle className="w-3 h-3" /> Active
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
-                                                )}
-                                                {isExpired && (
-                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
-                                                )}
                                             </div>
-                                            <p className="text-xs text-gray-400 truncate">
-                                                {p.title}{p.description ? ` · ${p.description}` : ''}
-                                                {' · '}Used {p.totalUsageCount ?? 0}{p.usageLimit ? `/${p.usageLimit}` : ''}
-                                                {' · '}Ends {formatDate(p.endDate)}
-                                            </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+
+                                    {/* Details */}
+                                    <div className="w-52 shrink-0 overflow-hidden">
+                                        <p className="text-xs font-medium text-gray-700 truncate">{p.title}</p>
+                                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                                            Used {p.totalUsageCount ?? 0}{p.usageLimit ? `/${p.usageLimit}` : ''}
+                                            {p.endDate ? ` · Ends ${formatDate(p.endDate)}` : ''}
+                                        </p>
+                                        {isExpired && (
+                                            <span className="inline-block mt-0.5 px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
+                                        )}
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="w-24 shrink-0">
+                                        {isActive ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
+                                                <CheckCircle className="w-3 h-3" /> Active
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
+                                        )}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="w-36 shrink-0 flex items-center gap-1.5">
                                         <button
                                             onClick={() => openEdit(p)}
                                             className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -455,10 +473,10 @@ export default function AdminPromotionsPage() {
                                             Deactivate
                                         </button>
                                     </div>
-                                </div>
+                                </AdminTableRow>
                             );
                         })}
-                    </div>
+                    </AdminTableRoot>
                 )}
             </div>
         </div>

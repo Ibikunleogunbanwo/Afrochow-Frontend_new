@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import {
     Clock, Package, CheckCircle, XCircle, Truck, Search,
     Filter, ChevronDown, Eye, DollarSign, User, MapPin,

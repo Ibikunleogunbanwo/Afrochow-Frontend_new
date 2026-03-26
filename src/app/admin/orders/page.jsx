@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AdminOrdersAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 
 /* ─── status config ─────────────────────────────────────────────────────── */
 // Values must match the backend OrderStatus enum exactly (8 values):
@@ -459,46 +460,43 @@ export default function AdminOrdersPage() {
                         <p className="text-sm text-gray-400">No orders found</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Order',    className: 'flex-1 min-w-[220px]' },
+                            { label: 'Customer', className: 'w-36 shrink-0' },
+                            { label: 'Vendor',   className: 'w-36 shrink-0' },
+                            { label: 'Status',   className: 'w-36 shrink-0' },
+                            { label: 'Amount',   className: 'w-24 shrink-0 text-right' },
+                            { label: '',         className: 'w-20 shrink-0' },
+                        ]} />
                         {filtered.map(o => {
-                            const meta    = STATUS_META[o.status];
                             const customer = o.customerName || null;
                             const vendor   = o.restaurantName || o.vendorName || null;
                             const amount   = o.totalAmount ?? o.total;
                             const time     = o.orderTime ?? o.createdAt;
 
                             return (
-                                <div
+                                <AdminTableRow
                                     key={o.publicOrderId}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer group"
                                     onClick={() => openDetail(o.publicOrderId)}
+                                    className="group"
                                 >
-                                    {/* Left — IDs + meta */}
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <p className="text-sm font-bold text-gray-900 font-mono">{o.publicOrderId}</p>
-                                            <StatusBadge status={o.status} statusLabel={o.statusLabel} />
+                                    {/* Order ID + time + items */}
+                                    <div className="flex-1 min-w-[220px] overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                            <p className="font-bold text-gray-900 font-mono text-xs">{o.publicOrderId}</p>
                                             {o.fulfillmentType && (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                                                    {o.fulfillmentType === 'DELIVERY' ? <Truck className="w-3 h-3" /> : <Store className="w-3 h-3" />}
+                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                                                    {o.fulfillmentType === 'DELIVERY' ? <Truck className="w-2.5 h-2.5" /> : <Store className="w-2.5 h-2.5" />}
                                                     {o.fulfillmentType}
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                                            {customer && (
-                                                <span className="flex items-center gap-1">
-                                                    <User className="w-3 h-3" />{customer}
-                                                </span>
-                                            )}
-                                            {vendor && (
-                                                <span className="flex items-center gap-1">
-                                                    <Store className="w-3 h-3" />{vendor}
-                                                </span>
-                                            )}
+                                        <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
                                             {time && (
                                                 <span className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />{fmtDate(time, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    <Calendar className="w-3 h-3" />
+                                                    {fmtDate(time, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             )}
                                             {o.itemCount != null && (
@@ -507,30 +505,54 @@ export default function AdminOrdersPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        {/* Item names preview */}
                                         {Array.isArray(o.itemNames) && o.itemNames.length > 0 && (
-                                            <p className="text-xs text-gray-400 mt-1 truncate">
+                                            <p className="text-xs text-gray-400 truncate mt-0.5">
                                                 {o.itemNames.slice(0, 3).join(', ')}{o.itemNames.length > 3 ? ` +${o.itemNames.length - 3} more` : ''}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Right — amount + view */}
-                                    <div className="shrink-0 flex items-center gap-3">
-                                        <div className="text-right">
-                                            <p className="text-sm font-bold text-gray-900">
-                                                {amount != null ? fmt$(amount) : '—'}
-                                            </p>
-                                        </div>
+                                    {/* Customer */}
+                                    <div className="w-36 shrink-0 text-xs text-gray-700 truncate">
+                                        {customer ? (
+                                            <span className="flex items-center gap-1">
+                                                <User className="w-3 h-3 text-gray-400 shrink-0" />
+                                                <span className="truncate">{customer}</span>
+                                            </span>
+                                        ) : '—'}
+                                    </div>
+
+                                    {/* Vendor */}
+                                    <div className="w-36 shrink-0 text-xs text-gray-700 truncate">
+                                        {vendor ? (
+                                            <span className="flex items-center gap-1">
+                                                <Store className="w-3 h-3 text-gray-400 shrink-0" />
+                                                <span className="truncate">{vendor}</span>
+                                            </span>
+                                        ) : '—'}
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="w-36 shrink-0">
+                                        <StatusBadge status={o.status} statusLabel={o.statusLabel} />
+                                    </div>
+
+                                    {/* Amount */}
+                                    <div className="w-24 shrink-0 text-right font-bold text-gray-900 text-sm">
+                                        {amount != null ? fmt$(amount) : '—'}
+                                    </div>
+
+                                    {/* View */}
+                                    <div className="w-20 shrink-0 flex justify-end">
                                         <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 group-hover:bg-gray-200 rounded-lg transition-colors">
                                             <Eye className="w-3.5 h-3.5" />
                                             View
                                         </span>
                                     </div>
-                                </div>
+                                </AdminTableRow>
                             );
                         })}
-                    </div>
+                    </AdminTableRoot>
                 )}
             </div>
 

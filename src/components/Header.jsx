@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
-    ShoppingCart, Menu, X, User, LogOut, Settings,
-    Package, ChevronDown, ChevronRight, Store, Bell, HelpCircle,
+    ShoppingCart, User, LogOut, Settings,
+    Package, ChevronDown, ChevronRight, Store, HelpCircle,
 } from "lucide-react";
+import { MenuCloseIcon, NotificationIcon } from "@/components/ui/animated-state-icons";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -201,7 +202,11 @@ const Header = () => {
                                         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
                                         aria-label="Notifications"
                                     >
-                                        <Bell className="w-5 h-5 text-gray-600" />
+                                        <NotificationIcon
+                                            state={unreadCount > 0}
+                                            size={20}
+                                            color="#4b5563"
+                                        />
                                         {unreadCount > 0 && (
                                             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gray-900 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
                                                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -307,10 +312,11 @@ const Header = () => {
                             className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors ml-0.5"
                             aria-label="Toggle menu"
                         >
-                            {isMobileMenuOpen
-                                ? <X className="w-5 h-5 text-gray-600" />
-                                : <Menu className="w-5 h-5 text-gray-600" />
-                            }
+                            <MenuCloseIcon
+                                state={isMobileMenuOpen}
+                                size={20}
+                                color="#4b5563"
+                            />
                         </button>
                     </div>
                 </nav>
@@ -401,7 +407,7 @@ const Header = () => {
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                                         >
-                                            <Bell className="w-4 h-4 text-gray-400" />
+                                            <NotificationIcon state={unreadCount > 0} size={16} color="#9ca3af" />
                                             <span className="flex-1">Notifications</span>
                                             {unreadCount > 0 && (
                                                 <span className="w-5 h-5 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">

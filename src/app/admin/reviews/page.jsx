@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { AdminReviewsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 
 const StarRating = ({ rating }) => (
     <div className="flex items-center gap-0.5">
@@ -268,91 +269,100 @@ export default function AdminReviewsPage() {
                         <p className="text-sm text-gray-400">No reviews found</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <AdminTableRoot>
+                        <AdminTableHeader columns={[
+                            { label: 'Reviewer', className: 'w-40 shrink-0' },
+                            { label: 'Review',   className: 'flex-1 min-w-[200px]' },
+                            { label: 'Target',   className: 'w-36 shrink-0' },
+                            { label: 'Date',     className: 'w-28 shrink-0' },
+                            { label: 'Actions',  className: 'w-32 shrink-0' },
+                        ]} />
                         {filtered.map(r => {
                             const rid = resolveId(r);
-                            // isVisible: false means hidden; treat undefined as visible
                             const isHidden = r.isVisible === false;
+                            const initials = (r.userName || 'U').slice(0, 2).toUpperCase();
                             return (
-                                <div
+                                <AdminTableRow
                                     key={rid ?? Math.random()}
-                                    className={`px-5 py-4 hover:bg-gray-50 transition-colors ${isHidden ? 'opacity-60' : ''}`}
+                                    className={isHidden ? 'opacity-60' : ''}
                                 >
-                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            {/* Rating + hidden badge */}
-                                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                                <StarRating rating={r.rating ?? 0} />
-                                                {isHidden && (
-                                                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200">
-                                                        Hidden
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Comment */}
-                                            <p className="text-sm text-gray-900 mb-2">
-                                                {r.comment || <span className="text-gray-400 italic">No comment</span>}
+                                    {/* Reviewer */}
+                                    <div className="w-40 shrink-0 flex items-center gap-2.5 overflow-hidden">
+                                        <AdminAvatar initials={initials} size="sm" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-semibold text-gray-900 truncate">
+                                                {r.userName || 'Unknown'}
                                             </p>
-
-                                            {/* Reviewer · Store/Product · Date */}
-                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
-                                                <span className="font-medium text-gray-700">
-                                                    {r.userName || 'Unknown reviewer'}
-                                                </span>
-                                                <span className="text-gray-300">·</span>
-                                                {r.restaurantName && (
-                                                    <span>🏪 {r.restaurantName}</span>
-                                                )}
-                                                {r.productName && (
-                                                    <>
-                                                        {r.restaurantName && <span className="text-gray-300">·</span>}
-                                                        <span>📦 {r.productName}</span>
-                                                    </>
-                                                )}
-                                                {!r.restaurantName && !r.productName && (
-                                                    <span>Unknown store</span>
-                                                )}
-                                                <span className="text-gray-300">·</span>
-                                                <span>{formatDate(r.createdAt)}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            {isHidden ? (
-                                                <button
-                                                    onClick={() => doAction(rid, AdminReviewsAPI.show, 'show')}
-                                                    disabled={!!actionLoading[rid + 'show']}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                    Restore
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => doAction(rid, AdminReviewsAPI.hide, 'hide')}
-                                                    disabled={!!actionLoading[rid + 'hide']}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <EyeOff className="w-3.5 h-3.5" />
-                                                    Hide
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => handleDelete(rid)}
-                                                disabled={!!actionLoading[rid + 'delete']}
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                                title="Delete review"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
+                                            <StarRating rating={r.rating ?? 0} />
                                         </div>
                                     </div>
-                                </div>
+
+                                    {/* Comment + hidden badge */}
+                                    <div className="flex-1 min-w-[200px] overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                            {isHidden && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                                                    Hidden
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-700 line-clamp-2">
+                                            {r.comment || <span className="text-gray-400 italic">No comment</span>}
+                                        </p>
+                                    </div>
+
+                                    {/* Target (store / product) */}
+                                    <div className="w-36 shrink-0 text-xs text-gray-500 overflow-hidden">
+                                        {r.restaurantName && (
+                                            <p className="truncate">🏪 {r.restaurantName}</p>
+                                        )}
+                                        {r.productName && (
+                                            <p className="truncate">📦 {r.productName}</p>
+                                        )}
+                                        {!r.restaurantName && !r.productName && (
+                                            <span className="text-gray-400">—</span>
+                                        )}
+                                    </div>
+
+                                    {/* Date */}
+                                    <div className="w-28 shrink-0 text-xs text-gray-500">
+                                        {formatDate(r.createdAt)}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="w-32 shrink-0 flex items-center gap-1.5">
+                                        {isHidden ? (
+                                            <button
+                                                onClick={() => doAction(rid, AdminReviewsAPI.show, 'show')}
+                                                disabled={!!actionLoading[rid + 'show']}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                Restore
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => doAction(rid, AdminReviewsAPI.hide, 'hide')}
+                                                disabled={!!actionLoading[rid + 'hide']}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                <EyeOff className="w-3.5 h-3.5" />
+                                                Hide
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => handleDelete(rid)}
+                                            disabled={!!actionLoading[rid + 'delete']}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                            title="Delete review"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </AdminTableRow>
                             );
                         })}
-                    </div>
+                    </AdminTableRoot>
                 )}
             </div>
         </div>

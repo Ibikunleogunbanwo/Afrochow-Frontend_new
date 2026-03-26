@@ -1,139 +1,168 @@
-"use client";
-import { Toast, Toaster, createToaster } from "@ark-ui/react/toast";
-import { Portal } from "@ark-ui/react/portal";
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
+'use client';
 
-export const toaster = createToaster({
-    placement: "top-end",
-    gap: 16,
-    overlap: true,
-    duration: 8000,
-});
+import { motion } from 'framer-motion';
+import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner';
+import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const toastVariants = {
-    success: {
-        bg: "bg-gray-900 border-gray-800",
-        title: "text-white",
-        description: "text-gray-300",
-        icon: CheckCircle,
-        iconColor: "text-green-400",
-    },
-    error: {
-        bg: "bg-gray-900 border-gray-800",
-        title: "text-white",
-        description: "text-gray-300",
-        icon: AlertCircle,
-        iconColor: "text-red-400",
-    },
-    warning: {
-        bg: "bg-gray-900 border-gray-800",
-        title: "text-white",
-        description: "text-gray-300",
-        icon: AlertTriangle,
-        iconColor: "text-yellow-400",
-    },
-    info: {
-        bg: "bg-gray-900 border-gray-800",
-        title: "text-white",
-        description: "text-gray-300",
-        icon: Info,
-        iconColor: "text-blue-400",
-    },
+// ─── Variant config ───────────────────────────────────────────────────────────
+
+const variantStyles = {
+  default: 'bg-white border-gray-200',
+  success: 'bg-white border-green-500/60',
+  error:   'bg-white border-red-500/60',
+  warning: 'bg-white border-amber-500/60',
 };
 
-/**
- * Toast Component - Global toast notifications
- *
- * Place this component at the root of your app (layout.jsx)
- * Use the exported `toaster` instance to show toasts from anywhere
- *
- * @example
- * // Show success toast
- * toaster.create({
- *   title: "Success!",
- *   description: "Admin registered successfully",
- *   type: "success",
- * });
- *
- * @example
- * // Show error toast
- * toaster.create({
- *   title: "Error",
- *   description: "Registration failed",
- *   type: "error",
- * });
- */
-export function ToastProvider() {
-    return (
-        <Portal>
-            <Toaster toaster={toaster}>
-                {(toast) => {
-                    const variant = toastVariants[toast.type] || toastVariants.info;
-                    const Icon = variant.icon;
+const titleColors = {
+  default: 'text-gray-900',
+  success: 'text-green-600',
+  error:   'text-red-600',
+  warning: 'text-amber-600',
+};
 
-                    return (
-                        <Toast.Root
-                            className={`${variant.bg} rounded-xl shadow-lg border min-w-80 p-4 relative overflow-hidden transition-all duration-300 ease-default will-change-transform h-(--height) opacity-(--opacity) translate-x-(--x) translate-y-(--y) scale-(--scale) z-(--z-index)`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <Icon className={`w-5 h-5 ${variant.iconColor} shrink-0 mt-0.5`} />
-                                <div className="flex-1 min-w-0">
-                                    <Toast.Title className={`${variant.title} font-semibold text-sm`}>
-                                        {toast.title}
-                                    </Toast.Title>
-                                    {toast.description && (
-                                        <Toast.Description className={`${variant.description} text-sm mt-1`}>
-                                            {toast.description}
-                                        </Toast.Description>
-                                    )}
-                                </div>
-                                <Toast.CloseTrigger className="p-1 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white shrink-0">
-                                    <X className="w-4 h-4" />
-                                </Toast.CloseTrigger>
-                            </div>
-                        </Toast.Root>
-                    );
-                }}
-            </Toaster>
-        </Portal>
-    );
+const iconColors = {
+  default: 'text-gray-400',
+  success: 'text-green-500',
+  error:   'text-red-500',
+  warning: 'text-amber-500',
+};
+
+const variantIcons = {
+  default: Info,
+  success: CheckCircle,
+  error:   AlertCircle,
+  warning: AlertTriangle,
+};
+
+// ─── Animation ────────────────────────────────────────────────────────────────
+
+const toastAnimation = {
+  initial: { opacity: 0, y: 16, scale: 0.96 },
+  animate: { opacity: 1, y: 0,  scale: 1    },
+  exit:    { opacity: 0, y: 16, scale: 0.96 },
+};
+
+// ─── Toast content (rendered inside sonner's custom slot) ─────────────────────
+
+function ToastContent({ toastId, title, message, variant = 'default', action, onDismiss }) {
+  const Icon = variantIcons[variant];
+
+  return (
+    <motion.div
+      variants={toastAnimation}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.22, ease: 'easeOut' }}
+      className={cn(
+        'flex items-center justify-between w-full max-w-sm p-3 rounded-xl border shadow-lg',
+        variantStyles[variant]
+      )}
+    >
+      {/* Left: icon + text */}
+      <div className="flex items-start gap-2.5 flex-1 min-w-0">
+        <Icon className={cn('h-4 w-4 mt-0.5 shrink-0', iconColors[variant])} />
+        <div className="space-y-0.5 min-w-0">
+          {title && (
+            <p className={cn('text-xs font-semibold leading-tight', titleColors[variant])}>
+              {title}
+            </p>
+          )}
+          {message && (
+            <p className="text-xs text-gray-500 leading-snug">{message}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Right: optional action button + dismiss */}
+      <div className="flex items-center gap-1.5 ml-3 shrink-0">
+        {action?.label && (
+          <button
+            type="button"
+            onClick={() => {
+              action.onClick();
+              sonnerToast.dismiss(toastId);
+            }}
+            className={cn(
+              'text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors',
+              variant === 'success' && 'text-green-600 border-green-300 hover:bg-green-50',
+              variant === 'error'   && 'text-red-600   border-red-300   hover:bg-red-50',
+              variant === 'warning' && 'text-amber-600 border-amber-300 hover:bg-amber-50',
+              variant === 'default' && 'text-gray-700  border-gray-200  hover:bg-gray-50',
+            )}
+          >
+            {action.label}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            sonnerToast.dismiss(toastId);
+            onDismiss?.();
+          }}
+          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+          aria-label="Dismiss notification"
+        >
+          <X className="h-3 w-3 text-gray-400" />
+        </button>
+      </div>
+    </motion.div>
+  );
 }
 
-// Toast deduplication - prevent duplicate toasts with same content
-const recentToasts = new Map();
-const TOAST_DEBOUNCE_TIME = 1000; // 1 second
+// ─── Toaster (place once in layout) ──────────────────────────────────────────
 
-const createDedupedToast = (title, description, type) => {
-    const key = `${type}-${title}-${description}`;
-    const now = Date.now();
-    const lastShown = recentToasts.get(key);
+export function Toaster({ position = 'bottom-right' }) {
+  return (
+    <SonnerToaster
+      position={position}
+      toastOptions={{
+        unstyled: true,
+        className: 'flex w-full justify-end',
+      }}
+    />
+  );
+}
 
-    // If same toast was shown recently, skip it
-    if (lastShown && now - lastShown < TOAST_DEBOUNCE_TIME) {
-        return;
-    }
+// ─── Internal show helper ─────────────────────────────────────────────────────
+// Normalises both call signatures used across the codebase:
+//   toast.success("Title")
+//   toast.success("Title", { description: "...", id, duration, action, onDismiss })
 
-    recentToasts.set(key, now);
+function show(variant, titleOrMessage, options = {}) {
+  const {
+    description,
+    id,
+    duration = 4000,
+    position,
+    onDismiss,
+    action,
+  } = typeof options === 'object' ? options : {};
 
-    // Cleanup old entries
-    if (recentToasts.size > 50) {
-        const oldestKey = recentToasts.keys().next().value;
-        recentToasts.delete(oldestKey);
-    }
+  return sonnerToast.custom(
+    (toastId) => (
+      <ToastContent
+        toastId={toastId}
+        title={titleOrMessage}
+        message={description ?? null}
+        variant={variant}
+        action={action}
+        onDismiss={onDismiss}
+      />
+    ),
+    { id, duration, position }
+  );
+}
 
-    return toaster.create({ title, description, type });
-};
+// ─── Drop-in replacement for `import { toast } from 'sonner'` ────────────────
 
 export const toast = {
-    success: (title, description) =>
-        createDedupedToast(title, description, "success"),
-
-    error: (title, description) =>
-        createDedupedToast(title, description, "error"),
-
-    warning: (title, description) =>
-        createDedupedToast(title, description, "warning"),
-
-    info: (title, description) =>
-        createDedupedToast(title, description, "info"),
+  success: (msg, opts) => show('success', msg, opts),
+  error:   (msg, opts) => show('error',   msg, opts),
+  warning: (msg, opts) => show('warning', msg, opts),
+  info:    (msg, opts) => show('default', msg, opts),
+  default: (msg, opts) => show('default', msg, opts),
+  dismiss: (...args)   => sonnerToast.dismiss(...args),
+  promise: (...args)   => sonnerToast.promise(...args),
 };

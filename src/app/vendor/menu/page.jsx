@@ -7,7 +7,7 @@ import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
 import ProductReviewsModal from '@/components/vendor/ProductReviewsModal';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 const VendorMenuPage = () => {
     const [products, setProducts] = useState([]);

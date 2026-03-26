@@ -7,25 +7,26 @@ import { SignInModal } from "@/components/signin/SignInModal"
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
-  const router = useRouter()
-  const email = searchParams.get("email") || ""
+  const router       = useRouter()
+  const email        = searchParams.get("email") || ""
   const [showSignIn, setShowSignIn] = useState(false)
 
   return (
-      <>
+    <>
+      {/* Full-page OTP card — rendered directly, no modal wrapper */}
+      {!showSignIn && (
         <VerifyEmailModal
-            isOpen={!showSignIn}
-            onClose={() => {}}
-            email={email}
-            onSignInClick={() => setShowSignIn(true)}
+          email={email}
+          onClose={() => router.push("/")}
+          onSignInClick={() => setShowSignIn(true)}
         />
-        <SignInModal
-            isOpen={showSignIn}
-            // After login, useAuth already calls router.push("/").
-            // Using a no-op here prevents the verify modal from re-opening
-            // for the brief moment before that navigation completes.
-            onClose={() => router.push("/")}
-        />
-      </>
+      )}
+
+      {/* Sign-in modal slides in after successful verification */}
+      <SignInModal
+        isOpen={showSignIn}
+        onClose={() => router.push("/")}
+      />
+    </>
   )
 }

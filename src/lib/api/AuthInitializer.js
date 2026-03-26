@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { setAuth, clearAuth, setLoading, setError } from "@/redux-store/authSlice";
 import { AuthAPI } from "@/lib/api/auth.api";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 
 // How long a user can be inactive before being silently logged out.
 const IDLE_TIMEOUT_MS   = 30 * 60 * 1000; // 30 minutes

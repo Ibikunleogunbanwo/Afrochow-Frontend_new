@@ -9,7 +9,7 @@ import { AuthAPI } from '@/lib/api/auth.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { CANADIAN_PROVINCES } from '@/lib/schemas/addressSchema';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import {
     Store, Star, ShoppingBag, DollarSign, Package,
     MapPin, Pencil, Loader2, CheckCircle2, ChevronRight,

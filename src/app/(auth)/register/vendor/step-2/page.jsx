@@ -13,7 +13,7 @@ import ImageUploader from "@/components/image-uploader/ImageUploader";
 import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import {
   User, Phone, Camera, Store, UtensilsCrossed, FileText,
   CheckCircle2, AlertCircle, Loader2,

@@ -14,7 +14,7 @@ import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import {
   FileText, Image as ImageIcon, MapPin, Building2,
   Mail, Globe, CheckCircle2, AlertCircle, Info, Home, X, Loader2,

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSavedState } from "@/hooks/useSavedState";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import Image from "next/image";
 import Link from "next/link";
 import Breadcrumb from "@/components/ui/Breadcrumb";

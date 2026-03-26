@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useForm } from "../context/Provider";
 import { resendVerificationEmail } from "@/lib/api/vendor_register_api";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 
 const RESEND_COOLDOWN = 60;
 
