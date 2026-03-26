@@ -72,6 +72,38 @@ const Header = () => {
         loadCategories();
     }, []);
 
+    // Close the mobile menu when the user scrolls more than 10px
+    useEffect(() => {
+        if (!isMobileMenuOpen) return;
+
+        let startY = window.scrollY;
+
+        const handleScroll = () => {
+            if (Math.abs(window.scrollY - startY) > 10) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [isMobileMenuOpen]);
+
+    // Close the notification dropdown when the user scrolls more than 10px
+    useEffect(() => {
+        if (!notifOpen) return;
+
+        let startY = window.scrollY;
+
+        const handleScroll = () => {
+            if (Math.abs(window.scrollY - startY) > 10) {
+                setNotifOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [notifOpen]);
+
     const handleLogout = async () => {
         await logout();
         setIsMenuOpen(false);
