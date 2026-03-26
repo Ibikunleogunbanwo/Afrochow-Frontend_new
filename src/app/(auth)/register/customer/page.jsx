@@ -243,14 +243,17 @@ function PasswordField({ icon: Icon, hasError, id, className = "", ...inputProps
 
 // ─── AvatarUpload ─────────────────────────────────────────────────────────────
 
-function AvatarUpload({ value, onChange }) {
+function AvatarUpload({ value, onChange, onFileChange }) {
   const fileRef = useRef(null);
 
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => onChange(reader.result); // store base64 for preview
+    reader.onload = () => {
+      onChange(reader.result); // store base64 for preview
+      onFileChange?.(file);    // pass the real File object to the parent for upload
+    };
     reader.readAsDataURL(file);
   };
 
@@ -300,6 +303,7 @@ function AvatarUpload({ value, onChange }) {
                   type="button"
                   onClick={() => {
                     onChange(null);
+                    onFileChange?.(null);
                     if (fileRef.current) fileRef.current.value = "";
                   }}
                   className="text-xs text-gray-400 hover:text-red-500 transition-colors text-left"
@@ -412,6 +416,9 @@ export default function CustomerRegistration() {
   const [resendCountdown, setResendCountdown] = useState(0);
   const [resendSent, setResendSent] = useState(false);
   const timerRef = useRef(null);
+  // Holds the actual File object selected in AvatarUpload so we can upload it.
+  // formData.profileImageUrl only stores the base64 preview string.
+  const profileImageFileRef = useRef(null);
 
   // Redirect already-authenticated users away from registration
   useEffect(() => {
@@ -558,10 +565,12 @@ export default function CustomerRegistration() {
     try {
       let profileImageUrl = null;
 
-      // Upload image only if the user selected one — goes directly to Cloudinary
-      if (formData.profileImageUrl instanceof File) {
+      // Upload image only if the user selected one — goes directly to Cloudinary.
+      // profileImageFileRef holds the real File; formData.profileImageUrl is only
+      // the base64 preview string, which is never instanceof File.
+      if (profileImageFileRef.current instanceof File) {
         const { imageUrl } = await ImageUploadAPI.uploadRegistrationImage(
-          formData.profileImageUrl,
+          profileImageFileRef.current,
           'CustomerProfileImage'
         );
         profileImageUrl = imageUrl;
@@ -670,6 +679,7 @@ export default function CustomerRegistration() {
                     onChange={(val) =>
                         setFormData((prev) => ({ ...prev, profileImageUrl: val }))
                     }
+                    onFileChange={(file) => { profileImageFileRef.current = file; }}
                 />
 
                 {/* ── Account ── */}
