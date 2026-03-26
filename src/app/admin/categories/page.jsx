@@ -10,7 +10,9 @@ import {
 import { AdminCategoriesAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
+import Pagination from '@/components/admin/Pagination';
 
+const PAGE_SIZE = 15;
 const EMPTY_FORM = { name: '', description: '', displayOrder: '', imageUrl: '' };
 
 export default function AdminCategoriesPage() {
@@ -25,6 +27,7 @@ export default function AdminCategoriesPage() {
     const [saving,        setSaving]        = useState(false);
     const [orderTarget,   setOrderTarget]   = useState(null);
     const [orderValue,    setOrderValue]    = useState('');
+    const [page,          setPage]          = useState(1);
 
     const fetchCategories = useCallback(async () => {
         setLoading(true);
@@ -326,7 +329,7 @@ export default function AdminCategoriesPage() {
                             { label: 'Order',       className: 'w-20 shrink-0 text-center' },
                             { label: 'Actions',     className: 'w-36 shrink-0' },
                         ]} />
-                        {categories.map(c => {
+                        {categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(c => {
                             const id = resolveId(c);
                             return (
                                 <AdminTableRow key={id}>
@@ -401,6 +404,15 @@ export default function AdminCategoriesPage() {
                             );
                         })}
                     </AdminTableRoot>
+                )}
+                {!loading && !error && categories.length > PAGE_SIZE && (
+                    <Pagination
+                        page={page}
+                        totalPages={Math.ceil(categories.length / PAGE_SIZE)}
+                        totalItems={categories.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
                 )}
             </div>
         </div>

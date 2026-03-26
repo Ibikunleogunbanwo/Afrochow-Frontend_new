@@ -11,6 +11,9 @@ import {
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
 import { selectUserRole } from '@/redux-store/authSlice';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
+import Pagination from '@/components/admin/Pagination';
+
+const PAGE_SIZE = 15;
 
 // Backend: changeRole + delete = SUPERADMIN only
 // Backend: activate/deactivate = ADMIN or SUPERADMIN (but not on SUPERADMIN accounts)
@@ -55,6 +58,7 @@ export default function AdminUsersPage() {
     const [statusFilter, setStatusFilter] = useState('all'); // 'all'|'active'|'inactive'|role string
     const [actionLoading, setActionLoading] = useState({});
     const [roleMenu, setRoleMenu]       = useState(null);
+    const [page, setPage]               = useState(1);
     const searchTimer = useRef(null);
 
     const fetchUsers = useCallback(async () => {
@@ -89,6 +93,7 @@ export default function AdminUsersPage() {
 
     const handleSearchInput = (val) => {
         setSearchInput(val);
+        setPage(1);
         clearTimeout(searchTimer.current);
         searchTimer.current = setTimeout(() => setSearch(val), 400);
     };
@@ -173,7 +178,7 @@ export default function AdminUsersPage() {
                     {statsCards.map(s => (
                         <button
                             key={s.key}
-                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); }}
+                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); setPage(1); }}
                             className={`bg-white border rounded-2xl p-4 shadow-sm text-center transition-all hover:shadow-md ${
                                 statusFilter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                             }`}
@@ -204,7 +209,7 @@ export default function AdminUsersPage() {
                         {ROLES.map(r => (
                             <button
                                 key={r}
-                                onClick={() => { setRoleFilter(r); setSearch(''); setSearchInput(''); }}
+                                onClick={() => { setRoleFilter(r); setSearch(''); setSearchInput(''); setPage(1); }}
                                 className={`px-3 py-2 text-xs font-semibold rounded-xl capitalize transition-colors ${
                                     roleFilter === r && !search ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
@@ -239,7 +244,7 @@ export default function AdminUsersPage() {
                             { label: 'Joined',  className: 'w-32 shrink-0' },
                             { label: 'Actions', className: 'w-52 shrink-0' },
                         ]} />
-                        {users.map(u => (
+                        {users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(u => (
                             <AdminTableRow key={u.publicUserId}>
                                 {/* Name col */}
                                 <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
@@ -350,6 +355,15 @@ export default function AdminUsersPage() {
                             </AdminTableRow>
                         ))}
                     </AdminTableRoot>
+                )}
+                {!loading && !error && users.length > PAGE_SIZE && (
+                    <Pagination
+                        page={page}
+                        totalPages={Math.ceil(users.length / PAGE_SIZE)}
+                        totalItems={users.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
                 )}
             </div>
         </div>

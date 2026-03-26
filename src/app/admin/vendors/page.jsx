@@ -10,6 +10,9 @@ import {
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
+import Pagination from '@/components/admin/Pagination';
+
+const PAGE_SIZE = 15;
 
 const FILTERS = [
     { key: 'all',       label: 'All' },
@@ -48,6 +51,7 @@ export default function AdminVendorsPage() {
     const [loading, setLoading]       = useState(true);
     const [error, setError]           = useState(null);
     const [actionLoading, setActionLoading] = useState({});
+    const [page, setPage]             = useState(1);
 
     const fetchVendors = useCallback(async () => {
         setLoading(true);
@@ -141,7 +145,7 @@ export default function AdminVendorsPage() {
                 ].map(s => (
                     <button
                         key={s.key}
-                        onClick={() => setFilter(s.key)}
+                        onClick={() => { setFilter(s.key); setPage(1); }}
                         className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
                             filter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                         }`}
@@ -162,7 +166,7 @@ export default function AdminVendorsPage() {
                             type="text"
                             placeholder="Search by name or cuisine…"
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
@@ -171,7 +175,7 @@ export default function AdminVendorsPage() {
                         {FILTERS.map(f => (
                             <button
                                 key={f.key}
-                                onClick={() => setFilter(f.key)}
+                                onClick={() => { setFilter(f.key); setPage(1); }}
                                 className={`px-4 py-2 text-sm font-semibold rounded-xl capitalize transition-colors ${
                                     filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
@@ -201,7 +205,7 @@ export default function AdminVendorsPage() {
                             { label: 'Joined',     className: 'w-32 shrink-0' },
                             { label: 'Actions',    className: 'w-44 shrink-0' },
                         ]} />
-                        {filtered.map(v => (
+                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(v => (
                             <AdminTableRow key={v.publicVendorId}>
                                 {/* Restaurant */}
                                 <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
@@ -270,6 +274,15 @@ export default function AdminVendorsPage() {
                             </AdminTableRow>
                         ))}
                     </AdminTableRoot>
+                )}
+                {!loading && !error && filtered.length > PAGE_SIZE && (
+                    <Pagination
+                        page={page}
+                        totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
+                        totalItems={filtered.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
                 )}
             </div>
         </div>

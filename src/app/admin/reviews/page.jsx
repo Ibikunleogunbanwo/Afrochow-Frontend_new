@@ -9,6 +9,9 @@ import {
 import { AdminReviewsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
+import Pagination from '@/components/admin/Pagination';
+
+const PAGE_SIZE = 15;
 
 const StarRating = ({ rating }) => (
     <div className="flex items-center gap-0.5">
@@ -28,6 +31,7 @@ export default function AdminReviewsPage() {
     const [search, setSearch]           = useState('');
     const [dateFrom, setDateFrom]       = useState('');
     const [dateTo, setDateTo]           = useState('');
+    const [page, setPage]               = useState(1);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading]         = useState(true);
     const [error, setError]             = useState(null);
@@ -96,7 +100,7 @@ export default function AdminReviewsPage() {
         await doAction(id, AdminReviewsAPI.delete, 'delete');
     };
 
-    const clearDateFilter = () => { setDateFrom(''); setDateTo(''); setShowDatePicker(false); };
+    const clearDateFilter = () => { setDateFrom(''); setDateTo(''); setShowDatePicker(false); setPage(1); };
 
     const filtered = reviews.filter(r => {
         // text search
@@ -160,7 +164,7 @@ export default function AdminReviewsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {/* Total Reviews — clickable filter */}
                 <button
-                    onClick={() => { setFilter('all'); clearDateFilter(); }}
+                    onClick={() => { setFilter('all'); clearDateFilter(); setPage(1); }}
                     className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
                         filter === 'all' && !dateFilterActive ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                     }`}
@@ -177,7 +181,7 @@ export default function AdminReviewsPage() {
 
                 {/* Hidden — clickable filter */}
                 <button
-                    onClick={() => { setFilter('hidden'); clearDateFilter(); }}
+                    onClick={() => { setFilter('hidden'); clearDateFilter(); setPage(1); }}
                     className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
                         filter === 'hidden' ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                     }`}
@@ -208,7 +212,7 @@ export default function AdminReviewsPage() {
                         <input
                             type="date"
                             value={dateFrom}
-                            onChange={e => setDateFrom(e.target.value)}
+                            onChange={e => { setDateFrom(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
                             placeholder="From"
@@ -216,7 +220,7 @@ export default function AdminReviewsPage() {
                         <input
                             type="date"
                             value={dateTo}
-                            onChange={e => setDateTo(e.target.value)}
+                            onChange={e => { setDateTo(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
                             placeholder="To"
@@ -235,7 +239,7 @@ export default function AdminReviewsPage() {
                             type="text"
                             placeholder="Search by reviewer, store, or product…"
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
@@ -247,7 +251,7 @@ export default function AdminReviewsPage() {
                         ].map(f => (
                             <button
                                 key={f.key}
-                                onClick={() => setFilter(f.key)}
+                                onClick={() => { setFilter(f.key); setPage(1); }}
                                 className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
                                     filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
@@ -277,7 +281,7 @@ export default function AdminReviewsPage() {
                             { label: 'Date',     className: 'w-28 shrink-0' },
                             { label: 'Actions',  className: 'w-32 shrink-0' },
                         ]} />
-                        {filtered.map(r => {
+                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(r => {
                             const rid = resolveId(r);
                             const isHidden = r.isVisible === false;
                             const initials = (r.userName || 'U').slice(0, 2).toUpperCase();
@@ -363,6 +367,15 @@ export default function AdminReviewsPage() {
                             );
                         })}
                     </AdminTableRoot>
+                )}
+                {!loading && !error && filtered.length > PAGE_SIZE && (
+                    <Pagination
+                        page={page}
+                        totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
+                        totalItems={filtered.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
                 )}
             </div>
         </div>
