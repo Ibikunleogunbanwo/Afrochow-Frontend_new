@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
 
             {/* Stats */}
             {statsCards.length > 0 && (
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-7 gap-3">
                     {statsCards.map(s => (
                         <button
                             key={s.key}
@@ -205,12 +205,12 @@ export default function AdminUsersPage() {
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap overflow-x-auto pb-0.5">
                         {ROLES.map(r => (
                             <button
                                 key={r}
                                 onClick={() => { setRoleFilter(r); setSearch(''); setSearchInput(''); setPage(1); }}
-                                className={`px-3 py-2 text-xs font-semibold rounded-xl capitalize transition-colors ${
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-xl capitalize transition-colors whitespace-nowrap shrink-0 ${
                                     roleFilter === r && !search ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                             >{r === 'ALL' ? 'All Roles' : r}</button>
@@ -247,34 +247,40 @@ export default function AdminUsersPage() {
                         {users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(u => (
                             <AdminTableRow key={u.publicUserId}>
                                 {/* Name col */}
-                                <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                     <AdminAvatar
                                         initials={(u.fullName || u.email || '?').charAt(0).toUpperCase()}
                                         statusColor={u.isActive ? '#22c55e' : '#ef4444'}
                                     />
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-gray-900 truncate">{u.fullName || 'No name'}</p>
                                         <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                                        {/* Mobile-only: role + status + date inline */}
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
+                                            <RoleBadge role={u.role} />
+                                            <StatusDot active={u.isActive} />
+                                            <span className="text-[11px] text-gray-400">{formatDate(u.createdAt)}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Role col */}
-                                <div className="w-32 shrink-0">
+                                {/* Role col — desktop only */}
+                                <div className="hidden md:block w-32 shrink-0">
                                     <RoleBadge role={u.role} />
                                 </div>
 
-                                {/* Status col */}
-                                <div className="w-28 shrink-0">
+                                {/* Status col — desktop only */}
+                                <div className="hidden md:block w-28 shrink-0">
                                     <StatusDot active={u.isActive} />
                                 </div>
 
-                                {/* Joined col */}
-                                <div className="w-32 shrink-0 text-xs text-gray-500">
+                                {/* Joined col — desktop only */}
+                                <div className="hidden md:block w-32 shrink-0 text-xs text-gray-500">
                                     {formatDate(u.createdAt)}
                                 </div>
 
                                 {/* Actions col */}
-                                <div className="w-52 shrink-0 flex items-center gap-1.5 flex-wrap">
+                                <div className="md:w-52 md:shrink-0 flex items-center gap-1.5 flex-wrap">
                                     {isProtected(u) ? (
                                         <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-400 bg-gray-50 rounded-lg border border-gray-200">
                                             <ShieldAlert className="w-3 h-3" />

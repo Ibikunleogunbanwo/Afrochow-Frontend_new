@@ -208,30 +208,35 @@ export default function AdminVendorsPage() {
                         {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(v => (
                             <AdminTableRow key={v.publicVendorId}>
                                 {/* Restaurant */}
-                                <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                     <AdminAvatar
                                         initials={<Store className="w-4 h-4 text-gray-600" />}
                                         statusColor={v.isActive === false ? '#ef4444' : v.isVerified ? '#22c55e' : '#f59e0b'}
                                         size="md"
                                     />
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
                                         <p className="text-xs text-gray-400 truncate">{v.cuisineType || 'N/A'}</p>
+                                        {/* Mobile-only: status + date */}
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
+                                            <StatusBadge verified={v.isVerified} active={v.isActive} />
+                                            <span className="text-[11px] text-gray-400">{formatDate(v.createdAt)}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Status */}
-                                <div className="w-32 shrink-0">
+                                {/* Status — desktop only */}
+                                <div className="hidden md:block w-32 shrink-0">
                                     <StatusBadge verified={v.isVerified} active={v.isActive} />
                                 </div>
 
-                                {/* Joined */}
-                                <div className="w-32 shrink-0 text-xs text-gray-500">
+                                {/* Joined — desktop only */}
+                                <div className="hidden md:block w-32 shrink-0 text-xs text-gray-500">
                                     {formatDate(v.createdAt)}
                                 </div>
 
                                 {/* Actions */}
-                                <div className="w-44 shrink-0 flex items-center gap-1.5 flex-wrap">
+                                <div className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap">
                                     {v.isVerified ? (
                                         <button
                                             onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}

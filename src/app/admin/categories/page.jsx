@@ -334,7 +334,7 @@ export default function AdminCategoriesPage() {
                             return (
                                 <AdminTableRow key={id}>
                                     {/* Category name + status */}
-                                    <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                    <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                         {c.imageUrl ? (
                                             <img src={c.imageUrl} alt={c.name} className="w-9 h-9 rounded-lg object-cover shrink-0 border border-gray-100" />
                                         ) : (
@@ -342,7 +342,7 @@ export default function AdminCategoriesPage() {
                                                 <LayoutGrid className="w-4 h-4 text-gray-400" />
                                             </div>
                                         )}
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="font-semibold text-gray-900 truncate text-sm">{c.name}</p>
                                             <span className={`inline-block mt-0.5 px-2 py-0.5 text-xs font-semibold rounded-full ${
                                                 c.isActive
@@ -351,16 +351,23 @@ export default function AdminCategoriesPage() {
                                             }`}>
                                                 {c.isActive ? 'Active' : 'Inactive'}
                                             </span>
+                                            {/* Mobile-only: description + order inline */}
+                                            {c.description && (
+                                                <p className="text-[11px] text-gray-400 truncate mt-0.5 md:hidden">{c.description}</p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Description */}
-                                    <div className="w-48 shrink-0 text-xs text-gray-400 truncate">
-                                        {c.description || '—'}
+                                    {/* Description — desktop only */}
+                                    <div className="hidden md:block w-48 shrink-0" title={c.description || ''}>
+                                        {c.description
+                                            ? <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{c.description}</p>
+                                            : <span className="text-xs text-gray-300">—</span>
+                                        }
                                     </div>
 
-                                    {/* Display order */}
-                                    <div className="w-20 shrink-0 flex justify-center">
+                                    {/* Display order — desktop only */}
+                                    <div className="hidden md:flex w-20 shrink-0 justify-center">
                                         <button
                                             onClick={() => openOrderModal(c)}
                                             className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-2 py-1 rounded-lg transition-colors"
@@ -372,7 +379,7 @@ export default function AdminCategoriesPage() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="w-36 shrink-0 flex items-center gap-1.5">
+                                    <div className="md:w-36 md:shrink-0 flex items-center gap-1.5">
                                         <button
                                             onClick={() => handleToggleActive(c)}
                                             disabled={!!actionLoading[id + 'toggle']}

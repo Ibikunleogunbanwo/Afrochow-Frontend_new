@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
     Star, LayoutDashboard, ChevronRight, Search,
     RefreshCw, Eye, EyeOff, Trash2, CalendarDays,
+    Store, UtensilsCrossed,
 } from 'lucide-react';
 import { AdminReviewsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
@@ -291,18 +292,34 @@ export default function AdminReviewsPage() {
                                     className={isHidden ? 'opacity-60' : ''}
                                 >
                                     {/* Reviewer */}
-                                    <div className="w-40 shrink-0 flex items-center gap-2.5 overflow-hidden">
+                                    <div className="flex items-start gap-2.5 overflow-hidden md:w-40 md:shrink-0">
                                         <AdminAvatar initials={initials} size="sm" />
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-xs font-semibold text-gray-900 truncate">
                                                 {r.userName || 'Unknown'}
                                             </p>
                                             <StarRating rating={r.rating ?? 0} />
+                                            {/* Mobile-only: target + date */}
+                                            <div className="flex flex-wrap gap-1 mt-1.5 md:hidden">
+                                                {r.restaurantName && (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">
+                                                        <Store className="w-2.5 h-2.5 shrink-0" />
+                                                        <span className="truncate max-w-[120px]">{r.restaurantName}</span>
+                                                    </span>
+                                                )}
+                                                {r.productName && (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[11px] font-medium">
+                                                        <UtensilsCrossed className="w-2.5 h-2.5 shrink-0" />
+                                                        <span className="truncate max-w-[120px]">{r.productName}</span>
+                                                    </span>
+                                                )}
+                                                <span className="text-[11px] text-gray-400">{formatDate(r.createdAt)}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Comment + hidden badge */}
-                                    <div className="flex-1 min-w-[200px] overflow-hidden">
+                                    <div className="flex-1 md:min-w-[200px] overflow-hidden">
                                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                             {isHidden && (
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200">
@@ -315,26 +332,30 @@ export default function AdminReviewsPage() {
                                         </p>
                                     </div>
 
-                                    {/* Target (store / product) */}
-                                    <div className="w-36 shrink-0 text-xs text-gray-500 overflow-hidden">
+                                    {/* Target — desktop only */}
+                                    <div className="hidden md:flex w-36 shrink-0 flex-col gap-1 overflow-hidden">
                                         {r.restaurantName && (
-                                            <p className="truncate">🏪 {r.restaurantName}</p>
+                                            <span title={r.restaurantName} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-[11px] font-medium max-w-full">
+                                                <Store className="w-3 h-3 shrink-0 text-gray-400" />
+                                                <span className="truncate">{r.restaurantName}</span>
+                                            </span>
                                         )}
                                         {r.productName && (
-                                            <p className="truncate">📦 {r.productName}</p>
+                                            <span title={r.productName} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[11px] font-medium max-w-full">
+                                                <UtensilsCrossed className="w-3 h-3 shrink-0 text-orange-400" />
+                                                <span className="truncate">{r.productName}</span>
+                                            </span>
                                         )}
-                                        {!r.restaurantName && !r.productName && (
-                                            <span className="text-gray-400">—</span>
-                                        )}
+                                        {!r.restaurantName && !r.productName && <span className="text-xs text-gray-300">—</span>}
                                     </div>
 
-                                    {/* Date */}
-                                    <div className="w-28 shrink-0 text-xs text-gray-500">
+                                    {/* Date — desktop only */}
+                                    <div className="hidden md:block w-28 shrink-0 text-xs text-gray-500">
                                         {formatDate(r.createdAt)}
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="w-32 shrink-0 flex items-center gap-1.5">
+                                    <div className="md:w-32 md:shrink-0 flex items-center gap-1.5">
                                         {isHidden ? (
                                             <button
                                                 onClick={() => doAction(rid, AdminReviewsAPI.show, 'show')}

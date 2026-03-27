@@ -416,11 +416,11 @@ export default function AdminPromotionsPage() {
                             return (
                                 <AdminTableRow key={id}>
                                     {/* Code + type */}
-                                    <div className="flex items-center gap-3 flex-1 min-w-[200px] overflow-hidden">
+                                    <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                         <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                             <Tag className="w-4 h-4 text-gray-600" />
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="font-bold text-gray-900 font-mono text-sm truncate">{p.code}</p>
                                             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
@@ -428,12 +428,23 @@ export default function AdminPromotionsPage() {
                                                     {p.type === 'FIXED_AMOUNT'  && `CA$${p.value} off`}
                                                     {p.type === 'FREE_DELIVERY' && 'Free Delivery'}
                                                 </span>
+                                                {/* Mobile-only: status + expiry inline */}
+                                                <span className="md:hidden">
+                                                    {isActive
+                                                        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200"><CheckCircle className="w-3 h-3" />Active</span>
+                                                        : <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
+                                                    }
+                                                </span>
                                             </div>
+                                            {/* Mobile-only: title + usage */}
+                                            <p className="text-[11px] text-gray-400 truncate mt-0.5 md:hidden">
+                                                {p.title}{p.endDate ? ` · Ends ${formatDate(p.endDate)}` : ''}
+                                            </p>
                                         </div>
                                     </div>
 
-                                    {/* Details */}
-                                    <div className="w-52 shrink-0 overflow-hidden">
+                                    {/* Details — desktop only */}
+                                    <div className="hidden md:block w-52 shrink-0 overflow-hidden">
                                         <p className="text-xs font-medium text-gray-700 truncate">{p.title}</p>
                                         <p className="text-xs text-gray-400 truncate mt-0.5">
                                             Used {p.totalUsageCount ?? 0}{p.usageLimit ? `/${p.usageLimit}` : ''}
@@ -444,8 +455,8 @@ export default function AdminPromotionsPage() {
                                         )}
                                     </div>
 
-                                    {/* Status */}
-                                    <div className="w-24 shrink-0">
+                                    {/* Status — desktop only */}
+                                    <div className="hidden md:block w-24 shrink-0">
                                         {isActive ? (
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
                                                 <CheckCircle className="w-3 h-3" /> Active
@@ -456,7 +467,7 @@ export default function AdminPromotionsPage() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="w-36 shrink-0 flex items-center gap-1.5">
+                                    <div className="md:w-36 md:shrink-0 flex items-center gap-1.5">
                                         <button
                                             onClick={() => openEdit(p)}
                                             className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"

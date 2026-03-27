@@ -482,7 +482,7 @@ export default function AdminOrdersPage() {
                                     className="group"
                                 >
                                     {/* Order ID + time + items */}
-                                    <div className="flex-1 min-w-[220px] overflow-hidden">
+                                    <div className="flex-1 md:min-w-[220px] overflow-hidden">
                                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                             <p className="font-bold text-gray-900 font-mono text-xs">{o.publicOrderId}</p>
                                             {o.fulfillmentType && (
@@ -510,10 +510,15 @@ export default function AdminOrdersPage() {
                                                 {o.itemNames.slice(0, 3).join(', ')}{o.itemNames.length > 3 ? ` +${o.itemNames.length - 3} more` : ''}
                                             </p>
                                         )}
+                                        {/* Mobile-only: customer + vendor inline */}
+                                        <div className="flex flex-wrap items-center gap-2 mt-1.5 md:hidden text-xs text-gray-500">
+                                            {customer && <span className="flex items-center gap-1"><User className="w-3 h-3 text-gray-400" />{customer}</span>}
+                                            {vendor && <span className="flex items-center gap-1"><Store className="w-3 h-3 text-gray-400" />{vendor}</span>}
+                                        </div>
                                     </div>
 
-                                    {/* Customer */}
-                                    <div className="w-36 shrink-0 text-xs text-gray-700 truncate">
+                                    {/* Customer — desktop only */}
+                                    <div className="hidden md:block w-36 shrink-0 text-xs text-gray-700 truncate">
                                         {customer ? (
                                             <span className="flex items-center gap-1">
                                                 <User className="w-3 h-3 text-gray-400 shrink-0" />
@@ -522,8 +527,8 @@ export default function AdminOrdersPage() {
                                         ) : '—'}
                                     </div>
 
-                                    {/* Vendor */}
-                                    <div className="w-36 shrink-0 text-xs text-gray-700 truncate">
+                                    {/* Vendor — desktop only */}
+                                    <div className="hidden md:block w-36 shrink-0 text-xs text-gray-700 truncate">
                                         {vendor ? (
                                             <span className="flex items-center gap-1">
                                                 <Store className="w-3 h-3 text-gray-400 shrink-0" />
@@ -532,18 +537,18 @@ export default function AdminOrdersPage() {
                                         ) : '—'}
                                     </div>
 
-                                    {/* Status */}
-                                    <div className="w-36 shrink-0">
-                                        <StatusBadge status={o.status} statusLabel={o.statusLabel} />
-                                    </div>
-
-                                    {/* Amount */}
-                                    <div className="w-24 shrink-0 text-right font-bold text-gray-900 text-sm">
-                                        {amount != null ? fmt$(amount) : '—'}
+                                    {/* Status + Amount — always visible, inline on mobile */}
+                                    <div className="flex items-center gap-2 md:contents">
+                                        <div className="md:w-36 md:shrink-0">
+                                            <StatusBadge status={o.status} statusLabel={o.statusLabel} />
+                                        </div>
+                                        <div className="md:w-24 md:shrink-0 md:text-right font-bold text-gray-900 text-sm">
+                                            {amount != null ? fmt$(amount) : '—'}
+                                        </div>
                                     </div>
 
                                     {/* View */}
-                                    <div className="w-20 shrink-0 flex justify-end">
+                                    <div className="md:w-20 md:shrink-0 flex md:justify-end">
                                         <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 group-hover:bg-gray-200 rounded-lg transition-colors">
                                             <Eye className="w-3.5 h-3.5" />
                                             View

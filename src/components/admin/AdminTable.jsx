@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 export function AdminTableRoot({ className, children, ...props }) {
     return (
         <div
-            className={cn('w-full overflow-x-auto', className)}
+            className={cn('w-full', className)}
             {...props}
         >
             {children}
@@ -18,13 +18,12 @@ export function AdminTableRoot({ className, children, ...props }) {
 }
 
 /**
- * Sticky header row. Pass an array of column configs:
- *   [{ label, className }]
- * Use className to control width (e.g. "w-32 shrink-0") or "flex-1" for the grow column.
+ * Sticky header row — desktop only.
+ * Hidden on mobile; column labels are implied by the card layout instead.
  */
 export function AdminTableHeader({ columns }) {
     return (
-        <div className="flex items-center px-6 py-2.5 bg-gray-50 border-b border-gray-100 sticky top-0 z-10 min-w-max">
+        <div className="hidden md:flex items-center px-6 py-2.5 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
             {columns.map((col, i) => (
                 <div
                     key={i}
@@ -41,14 +40,20 @@ export function AdminTableHeader({ columns }) {
 }
 
 /**
- * A single data row. Children should be divs with the same widths as the header columns.
+ * A single data row.
+ * On mobile  → flex-col card layout with padding + gap between stacked fields.
+ * On desktop → flex-row aligned to the header columns.
  */
 export function AdminTableRow({ className, children, onClick, ...props }) {
     return (
         <div
             onClick={onClick}
             className={cn(
-                'flex items-center px-6 py-3.5 border-b border-gray-100 last:border-b-0 text-sm min-w-max',
+                'flex flex-col md:flex-row md:items-center',
+                'px-4 md:px-6',
+                'py-4 md:py-3.5',
+                'gap-3 md:gap-0',
+                'border-b border-gray-100 last:border-b-0 text-sm',
                 onClick && 'cursor-pointer',
                 'hover:bg-gray-50 transition-colors',
                 className
