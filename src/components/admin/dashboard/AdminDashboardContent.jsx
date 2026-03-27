@@ -104,6 +104,8 @@ const AdminDashboardContent = () => {
     const [platform, setPlatform]             = useState(null);
     const [trendObj, setTrendObj]             = useState(null);  // raw trends object from backend
     const [userStats, setUserStats]           = useState(null);
+    const [allUsers, setAllUsers]             = useState([]);
+    const [allVendors, setAllVendors]         = useState([]);
     const [pendingVendors, setPendingVendors] = useState([]);
 
     const [loadingAnalytics, setLoadingAnalytics] = useState(true);
@@ -122,18 +124,24 @@ const AdminDashboardContent = () => {
         setAnalyticsError(null);
         const dateParams = toISORange(dateRange, customStart, customEnd);
         try {
-            const [platformRes, trendsRes, statsRes] = await Promise.all([
+            const [platformRes, trendsRes, statsRes, usersRes, vendorsRes] = await Promise.all([
                 AdminAnalyticsAPI.getPlatform(dateParams),
                 AdminAnalyticsAPI.getTrends(dateParams),
                 AdminUsersAPI.getStats(),
+                AdminUsersAPI.getAll(),
+                AdminVendorsAPI.getAll(),
             ]);
             const platformData = platformRes?.data ?? platformRes ?? null;
             const raw          = trendsRes?.data  ?? trendsRes  ?? {};
             const statsData    = statsRes?.data    ?? statsRes   ?? null;
+            const usersRaw     = usersRes?.data    ?? usersRes   ?? [];
+            const vendorsRaw   = vendorsRes?.data  ?? vendorsRes ?? [];
             console.warn('[Dashboard raw]', { platform: platformData, trendObj: raw, userStats: statsData });
             setPlatform(platformData);
             setTrendObj(typeof raw === 'object' && !Array.isArray(raw) ? raw : {});
             setUserStats(statsData);
+            setAllUsers(Array.isArray(usersRaw) ? usersRaw : (usersRaw?.content ?? []));
+            setAllVendors(Array.isArray(vendorsRaw) ? vendorsRaw : (vendorsRaw?.content ?? []));
         } catch (e) {
             setAnalyticsError(e.message || 'Failed to load analytics');
         } finally {
@@ -168,6 +176,22 @@ const AdminDashboardContent = () => {
 
     /* ── derived state ───────────────────────────────────────────────── */
     const isFiltered = !!(platform?.filterStartDate);
+
+    // Count items whose createdAt falls within the given ISO date params
+    const countInRange = (arr, params) => {
+        if (!params || !arr?.length) return null;
+        const s = new Date(params.startDate);
+        const e = new Date(params.endDate);
+        return arr.filter(item => {
+            if (!item.createdAt) return false;
+            const d = new Date(item.createdAt);
+            return d >= s && d <= e;
+        }).length;
+    };
+
+    const currentDateParams = toISORange(dateRange, customStart, customEnd);
+    const usersInPeriod     = isFiltered ? countInRange(allUsers,   currentDateParams) : null;
+    const vendorsInPeriod   = isFiltered ? countInRange(allVendors, currentDateParams) : null;
 
     // Date picker label
     const dateLabel = (() => {
@@ -217,19 +241,27 @@ const AdminDashboardContent = () => {
     // Stat cards — Revenue & Orders show filtered values when date range applied
     const stats = [
         {
-            name:      'Total Users',
-            value:     loadingAnalytics ? null : fmtN(resolveTotalUsers(platform, userStats)),
+            name:      isFiltered ? 'New Users' : 'Total Users',
+            value:     loadingAnalytics ? null : fmtN(
+                isFiltered && usersInPeriod !== null
+                    ? usersInPeriod
+                    : resolveTotalUsers(platform, userStats)
+            ),
             icon:      Users,
-            allTime:   true,
+            allTime:   !isFiltered,
             iconBg:    'bg-blue-50',
             iconColor: 'text-blue-600',
             trend:     null,
         },
         {
-            name:      'Total Vendors',
-            value:     loadingAnalytics ? null : fmtN(resolveActiveVendors(platform, userStats)),
+            name:      isFiltered ? 'New Vendors' : 'Total Vendors',
+            value:     loadingAnalytics ? null : fmtN(
+                isFiltered && vendorsInPeriod !== null
+                    ? vendorsInPeriod
+                    : resolveActiveVendors(platform, userStats)
+            ),
             icon:      Store,
-            allTime:   true,
+            allTime:   !isFiltered,
             iconBg:    'bg-green-50',
             iconColor: 'text-green-600',
             trend:     null,
