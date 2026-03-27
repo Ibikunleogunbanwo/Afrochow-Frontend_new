@@ -11,8 +11,17 @@ import {
     HelpCircle,
     Store,
     Bell,
-    X, UserCircle, LogOut
+    X, UserCircle, LogOut,
+    CheckCircle2, Clock, ShieldOff, XCircle, ShieldAlert,
 } from 'lucide-react';
+
+function getStoreStatus(isActive, isVerified, verifiedAt) {
+    if (isActive && isVerified)            return { label: 'Active',    color: 'green',  Icon: CheckCircle2 };
+    if (!isActive && isVerified)           return { label: 'Suspended', color: 'red',    Icon: ShieldOff    };
+    if (!isActive && !isVerified && verifiedAt) return { label: 'Revoked', color: 'red', Icon: ShieldAlert  };
+    if (!isActive && !isVerified)          return { label: 'Rejected',  color: 'red',    Icon: XCircle      };
+    return                                        { label: 'Pending',   color: 'orange', Icon: Clock        };
+}
 
 const navItems = [
     { name: 'Dashboard',       icon: LayoutDashboard, href: '/vendor/dashboard',      badge: null },
@@ -28,8 +37,17 @@ const navItems = [
 ];
 
 
-const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {} }) => {
+const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, vendorIsActive, vendorIsVerified, vendorVerifiedAt }) => {
     if (!isOpen) return null;
+
+    const status = getStoreStatus(vendorIsActive, vendorIsVerified, vendorVerifiedAt);
+    const statusColors = {
+        green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200'  },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200' },
+        red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200'    },
+    };
+    const sc = statusColors[status.color];
+    const StatusIcon = status.Icon;
 
     return (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -59,6 +77,16 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {} }
                         <X className="w-6 h-6" />
                     </button>
                 </div>
+
+                {/* Store status badge */}
+                {vendorIsActive !== undefined && vendorIsVerified !== undefined && (
+                    <div className={`mx-4 mt-3 mb-1 flex items-center gap-2 rounded-lg px-3 py-2 ring-1 ${sc.bg} ${sc.ring}`}>
+                        <StatusIcon className={`w-4 h-4 shrink-0 ${sc.text}`} />
+                        <span className={`text-sm font-semibold ${sc.text}`}>
+                            Store: {status.label}
+                        </span>
+                    </div>
+                )}
 
                 {/* Mobile Navigation */}
                 <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">

@@ -14,8 +14,34 @@ import {
     LogOut,
     Bell,
     ChevronsRight,
+    CheckCircle2,
+    Clock,
+    ShieldOff,
+    XCircle,
+    ShieldAlert,
 } from 'lucide-react';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
+
+/**
+ * Derive a store status descriptor from isActive + isVerified + verifiedAt.
+ * Returns { label, color, Icon, dot } for rendering a status pill.
+ */
+function getStoreStatus(isActive, isVerified, verifiedAt) {
+    if (isActive && isVerified) {
+        return { label: 'Active', color: 'green', Icon: CheckCircle2 };
+    }
+    if (!isActive && isVerified) {
+        return { label: 'Suspended', color: 'red', Icon: ShieldOff };
+    }
+    if (!isActive && !isVerified && verifiedAt) {
+        return { label: 'Revoked', color: 'red', Icon: ShieldAlert };
+    }
+    if (!isActive && !isVerified) {
+        return { label: 'Rejected', color: 'red', Icon: XCircle };
+    }
+    // isActive=true, isVerified=false — pending
+    return { label: 'Pending', color: 'orange', Icon: Clock };
+}
 
 const navItems = [
     { name: 'Dashboard',       icon: LayoutDashboard, href: '/vendor/dashboard'     },
@@ -37,7 +63,20 @@ const Sidebar = ({
     badgeCounts = {},
     collapsed = false,
     onCollapsedChange,
+    vendorIsActive,
+    vendorIsVerified,
+    vendorVerifiedAt,
 }) => {
+    const status = getStoreStatus(vendorIsActive, vendorIsVerified, vendorVerifiedAt);
+
+    const statusColors = {
+        green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200',  dot: 'bg-green-500'  },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200', dot: 'bg-orange-500' },
+        red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200',    dot: 'bg-red-500'    },
+    };
+    const sc = statusColors[status.color];
+    const StatusIcon = status.Icon;
+
     return (
         <aside
             className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${
@@ -58,6 +97,19 @@ const Sidebar = ({
                         </div>
                     )}
                 </div>
+
+                {/* Store status badge */}
+                {vendorIsActive !== undefined && vendorIsVerified !== undefined && (
+                    <div className={`mx-3 mt-2 mb-1 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 ring-1 ${sc.bg} ${sc.ring} ${collapsed ? 'justify-center px-0' : ''}`}
+                         title={collapsed ? `Store: ${status.label}` : undefined}>
+                        <StatusIcon className={`w-3.5 h-3.5 shrink-0 ${sc.text}`} />
+                        {!collapsed && (
+                            <span className={`text-xs font-semibold ${sc.text}`}>
+                                Store: {status.label}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {/* Navigation */}
                 <nav className="flex-1 px-2 py-4 space-y-0.5">

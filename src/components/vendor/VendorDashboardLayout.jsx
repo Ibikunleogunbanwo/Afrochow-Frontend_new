@@ -155,6 +155,9 @@ const VendorDashboardLayout = ({ children }) => {
                 badgeCounts={badgeCounts}
                 collapsed={sidebarCollapsed}
                 onCollapsedChange={setSidebarCollapsed}
+                vendorIsActive={vendorIsActive}
+                vendorIsVerified={vendorIsVerified}
+                vendorVerifiedAt={profile?.verifiedAt ?? null}
             />
 
             {/* Mobile Sidebar */}
@@ -164,6 +167,9 @@ const VendorDashboardLayout = ({ children }) => {
                 pathname={pathname}
                 onLogout={handleLogout}
                 badgeCounts={badgeCounts}
+                vendorIsActive={vendorIsActive}
+                vendorIsVerified={vendorIsVerified}
+                vendorVerifiedAt={profile?.verifiedAt ?? null}
             />
 
             {/* Main Content */}
