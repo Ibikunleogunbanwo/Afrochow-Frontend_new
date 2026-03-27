@@ -136,7 +136,7 @@ export default function AdminVendorsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900">Vendor Management</h1>
-                    <p className="text-gray-500 mt-1">Verify, activate and manage restaurant vendors</p>
+                    <p className="text-gray-500 mt-1">Verify, activate and manage vendors</p>
                 </div>
                 <button onClick={fetchVendors} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
                     <RefreshCw className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default function AdminVendorsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search by name or cuisine…"
+                            placeholder="Search by name or product type…"
                             value={search}
                             onChange={e => { setSearch(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
@@ -245,53 +245,101 @@ export default function AdminVendorsPage() {
                                     {formatDate(v.createdAt)}
                                 </div>
 
-                                {/* Actions */}
+                                {/* Actions — state-aware */}
                                 <div className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap">
-                                    <button
-                                        onClick={() => setReviewVendor(v)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
-                                    >
-                                        <Eye className="w-3.5 h-3.5" />
-                                        Review
-                                    </button>
-                                    {v.isVerified ? (
-                                        <button
-                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}
-                                            disabled={!!actionLoading[v.publicVendorId + 'unverify']}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            <ShieldOff className="w-3.5 h-3.5" />
-                                            Revoke
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verify, 'verify')}
-                                            disabled={!!actionLoading[v.publicVendorId + 'verify']}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            <ShieldCheck className="w-3.5 h-3.5" />
-                                            Verify
-                                        </button>
-                                    )}
-                                    {v.isActive ? (
-                                        <button
-                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
-                                            disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            <XCircle className="w-3.5 h-3.5" />
-                                            Suspend
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.activate, 'activate')}
-                                            disabled={!!actionLoading[v.publicVendorId + 'activate']}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            Activate
-                                        </button>
-                                    )}
+                                    {(() => {
+                                        const isPending  = !v.isVerified && v.isActive !== false && !isRevoked(v);
+                                        const isVerifiedActive = v.isVerified && v.isActive !== false;
+                                        const isSuspended = v.isActive === false && v.isVerified;
+                                        const isRejected  = v.isActive === false && !v.isVerified && !v.verifiedAt;
+                                        const isRevokedV  = isRevoked(v); // unverified but was once verified
+
+                                        if (isPending) {
+                                            // Pending applicant — Review & Decide only
+                                            return (
+                                                <button
+                                                    onClick={() => setReviewVendor(v)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Review & Decide
+                                                </button>
+                                            );
+                                        }
+
+                                        if (isVerifiedActive) {
+                                            // Active verified vendor — can Suspend or Revoke
+                                            return (<>
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Suspend
+                                                </button>
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'unverify']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <ShieldOff className="w-3.5 h-3.5" />
+                                                    Revoke
+                                                </button>
+                                            </>);
+                                        }
+
+                                        if (isSuspended) {
+                                            // Suspended verified vendor — Activate only
+                                            return (
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.activate, 'activate')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'activate']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Reinstate
+                                                </button>
+                                            );
+                                        }
+
+                                        if (isRejected) {
+                                            // Rejected applicant — Review to re-approve or dismiss
+                                            return (
+                                                <button
+                                                    onClick={() => setReviewVendor(v)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Review
+                                                </button>
+                                            );
+                                        }
+
+                                        if (isRevokedV) {
+                                            // Revoked (was verified, now unverified) — Re-verify or Suspend
+                                            return (<>
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verify, 'verify')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'verify']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                                    Re-verify
+                                                </button>
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Suspend
+                                                </button>
+                                            </>);
+                                        }
+
+                                        return null;
+                                    })()}
                                 </div>
                             </AdminTableRow>
                         ))}
