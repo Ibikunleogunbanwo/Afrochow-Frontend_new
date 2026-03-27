@@ -70,6 +70,7 @@ export const useAuth = () => {
             // appropriate pending-approval or deactivated banner.
             const destination = ROLE_ROUTES[userData.role] ?? "/";
             router.push(destination);
+            return destination;
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Login failed";

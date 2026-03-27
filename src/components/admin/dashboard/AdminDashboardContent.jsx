@@ -10,6 +10,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { AdminVendorsAPI, AdminAnalyticsAPI, AdminUsersAPI } from '@/lib/api/admin.api';
+import VendorReviewModal from '@/components/admin/VendorReviewModal';
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
 const fmt$ = (n) =>
@@ -110,6 +111,7 @@ const AdminDashboardContent = () => {
     const [analyticsError, setAnalyticsError]      = useState(null);
     const [vendorError, setVendorError]            = useState(null);
     const [actionLoading, setActionLoading]        = useState({});
+    const [reviewVendor, setReviewVendor]          = useState(null); // vendor open in modal
 
     /* ── fetch analytics ─────────────────────────────────────────────── */
     const fetchAnalytics = useCallback(async () => {
@@ -284,6 +286,16 @@ const AdminDashboardContent = () => {
 
     return (
         <div className="space-y-6">
+
+            {/* Vendor review modal */}
+            {reviewVendor && (
+                <VendorReviewModal
+                    vendor={reviewVendor}
+                    onClose={() => setReviewVendor(null)}
+                    onApprove={(v) => setPendingVendors(p => p.filter(x => x.publicVendorId !== v.publicVendorId))}
+                    onReject={(v)  => setPendingVendors(p => p.filter(x => x.publicVendorId !== v.publicVendorId))}
+                />
+            )}
 
             {/* ── Header + date filter ─────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -595,27 +607,11 @@ const AdminDashboardContent = () => {
 
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleVendorAction(vendor, 'verify')}
-                                            disabled={anyLoading}
-                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors"
-                                        >
-                                            {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                            Approve
-                                        </button>
-                                        <a
-                                            href={`/admin/vendors`}
-                                            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                                            onClick={() => setReviewVendor(vendor)}
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                                         >
                                             <Eye className="w-4 h-4" />
-                                            Review
-                                        </a>
-                                        <button
-                                            onClick={() => handleVendorAction(vendor, 'reject')}
-                                            disabled={anyLoading}
-                                            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 disabled:opacity-50 transition-colors"
-                                        >
-                                            {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                                            Reject
+                                            Review &amp; Decide
                                         </button>
                                     </div>
                                 </div>

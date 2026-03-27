@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedState } from "@/hooks/useSavedState";
 import { CustomerAPI } from "@/lib/api/customer.api";
+import { useRouter } from "next/navigation";
 import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
 import { toast } from '@/components/ui/toast';
 import Image from "next/image";
@@ -177,7 +178,16 @@ function SectionRow({ icon: Icon, label, children, onEdit, editing }) {
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, role, isLoading: authLoading } = useAuth();
+    const router = useRouter();
+
+    // Redirect vendors and admins away from the customer profile page
+    useEffect(() => {
+        if (authLoading) return;
+        const r = role?.toUpperCase();
+        if (r === 'VENDOR') { router.replace('/vendor/dashboard'); return; }
+        if (r === 'ADMIN' || r === 'SUPERADMIN') { router.replace('/admin/dashboard'); return; }
+    }, [role, authLoading, router]);
 
     const [profileData, setProfileData]         = useState(null);
     const [loading, setLoading]                 = useState(true);
@@ -419,6 +429,12 @@ export default function ProfilePage() {
     };
 
     // ── loading / empty states ───────────────────────────────────────────
+
+    // While role-based redirect is in flight, show nothing to avoid flash
+    const r = role?.toUpperCase();
+    if (authLoading || r === 'VENDOR' || r === 'ADMIN' || r === 'SUPERADMIN') {
+        return null;
+    }
 
     if (loading) {
         return (

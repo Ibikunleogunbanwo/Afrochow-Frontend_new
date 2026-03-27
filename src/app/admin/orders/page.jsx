@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
     ShoppingBag, LayoutDashboard, ChevronRight, Search, RefreshCw,
     Clock, CheckCircle, XCircle, Truck, Package, Eye, X,
@@ -11,6 +12,7 @@ import {
 import { AdminOrdersAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
+import Pagination from '@/components/admin/Pagination';
 
 /* ─── status config ─────────────────────────────────────────────────────── */
 // Values must match the backend OrderStatus enum exactly (8 values):
@@ -35,6 +37,20 @@ const STATUS_META = {
 const TERMINAL_STATUSES = new Set(['DELIVERED', 'CANCELLED', 'REFUNDED']);
 
 const STATUS_TABS = ['ALL', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'];
+
+/* Tab appearance — solid colours driven by inline style so no purge issues */
+const TAB_META = {
+    ALL:              { label: 'All',          Icon: null,        activeBg: '#111827', activeText: '#fff', inactiveText: '#6b7280' },
+    PENDING:          { label: 'Pending',      Icon: Clock,       activeBg: '#d97706', activeText: '#fff', inactiveText: '#b45309' },
+    CONFIRMED:        { label: 'Confirmed',    Icon: CheckCircle, activeBg: '#2563eb', activeText: '#fff', inactiveText: '#1d4ed8' },
+    PREPARING:        { label: 'Preparing',    Icon: Package,     activeBg: '#ea580c', activeText: '#fff', inactiveText: '#c2410c' },
+    READY_FOR_PICKUP: { label: 'Ready',        Icon: Package,     activeBg: '#7c3aed', activeText: '#fff', inactiveText: '#6d28d9' },
+    OUT_FOR_DELIVERY: { label: 'Out',          Icon: Truck,       activeBg: '#4338ca', activeText: '#fff', inactiveText: '#3730a3' },
+    DELIVERED:        { label: 'Delivered',    Icon: CheckCircle, activeBg: '#15803d', activeText: '#fff', inactiveText: '#166534' },
+    CANCELLED:        { label: 'Cancelled',    Icon: XCircle,     activeBg: '#dc2626', activeText: '#fff', inactiveText: '#b91c1c' },
+};
+
+const PAGE_SIZE = 15;
 
 const StatusBadge = ({ status, statusLabel }) => {
     const meta = STATUS_META[status] ?? { label: status, cls: 'bg-gray-100 text-gray-600 border-gray-200', Icon: Clock };
@@ -285,6 +301,7 @@ export default function AdminOrdersPage() {
     const [search, setSearch]               = useState('');
     const [loading, setLoading]             = useState(true);
     const [error, setError]                 = useState(null);
+    const [page, setPage]                   = useState(1);
 
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalLoading, setModalLoading]   = useState(false);
@@ -308,7 +325,7 @@ export default function AdminOrdersPage() {
         }
     }, [statusFilter]);
 
-    useEffect(() => { fetchOrders(); }, [fetchOrders]);
+    useEffect(() => { fetchOrders(); setPage(1); }, [fetchOrders]);
 
     /* ── open detail modal ── */
     const openDetail = async (publicOrderId) => {
@@ -406,23 +423,55 @@ export default function AdminOrdersPage() {
                             type="text"
                             placeholder="Search by order ID, customer, vendor…"
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                        {STATUS_TABS.map(s => (
-                            <button
-                                key={s}
-                                onClick={() => setStatusFilter(s)}
-                                className={`px-3 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                    statusFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                            >
-                                {s === 'ALL' ? 'All' : (STATUS_META[s]?.label ?? s)}
-                            </button>
-                        ))}
+                    {/* ── Status filter tabs (animated) ── */}
+                    <div className="flex gap-1.5 flex-nowrap overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                        {STATUS_TABS.map(s => {
+                            const meta    = TAB_META[s] ?? TAB_META.ALL;
+                            const Icon    = meta.Icon;
+                            const isActive = statusFilter === s;
+                            const count   = s === 'ALL'
+                                ? orders.length
+                                : orders.filter(o => o.status === s).length;
+
+                            return (
+                                <motion.button
+                                    key={s}
+                                    onClick={() => { setStatusFilter(s); setPage(1); }}
+                                    whileHover={{ scale: 1.04 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    animate={{
+                                        backgroundColor: isActive ? meta.activeBg : 'transparent',
+                                        color:           isActive ? meta.activeText : meta.inactiveText,
+                                        boxShadow:       isActive
+                                            ? '0 4px 14px 0 rgba(0,0,0,0.18)'
+                                            : '0 0 0 0 transparent',
+                                    }}
+                                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                                    className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none"
+                                    style={{ color: isActive ? meta.activeText : meta.inactiveText }}
+                                >
+                                    {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
+                                    {meta.label}
+                                    {count > 0 && (
+                                        <motion.span
+                                            animate={{
+                                                backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : '#f3f4f6',
+                                                color:           isActive ? '#fff' : '#6b7280',
+                                            }}
+                                            transition={{ duration: 0.18 }}
+                                            className="px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+                                        >
+                                            {count}
+                                        </motion.span>
+                                    )}
+                                </motion.button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -469,7 +518,7 @@ export default function AdminOrdersPage() {
                             { label: 'Amount',   className: 'w-24 shrink-0 text-right' },
                             { label: '',         className: 'w-20 shrink-0' },
                         ]} />
-                        {filtered.map(o => {
+                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(o => {
                             const customer = o.customerName || null;
                             const vendor   = o.restaurantName || o.vendorName || null;
                             const amount   = o.totalAmount ?? o.total;
@@ -559,6 +608,13 @@ export default function AdminOrdersPage() {
                         })}
                     </AdminTableRoot>
                 )}
+                <Pagination
+                    page={page}
+                    totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
+                    totalItems={filtered.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setPage}
+                />
             </div>
 
             {/* Detail modal */}

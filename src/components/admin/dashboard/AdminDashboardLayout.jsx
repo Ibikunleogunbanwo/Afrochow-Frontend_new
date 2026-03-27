@@ -1,10 +1,10 @@
 "use client";
 import React, {useEffect, useState, useRef} from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { AdminAPI, AdminAnalyticsAPI, AdminReviewsAPI, AdminVendorsAPI } from '@/lib/api/admin.api';
-import { AuthAPI } from '@/lib/api/auth.api';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useAuth } from '@/hooks/useAuth';
 import {
     LayoutDashboard,
     Users,
@@ -45,9 +45,9 @@ const AdminDashboardLayout = ({ children }) => {
     const [badges, setBadges] = useState({ orders: 0, reviews: 0, vendors: 0 });
     const bellRef = useRef(null);
     const pathname = usePathname();
-    const router = useRouter();
 
     const { notifications, unreadCount, markRead, markAllRead } = useAdminNotifications();
+    const { logout } = useAuth();
 
     // badgeMeta: { label, colors: { default, active } }
     const navItems = [
@@ -136,14 +136,9 @@ const AdminDashboardLayout = ({ children }) => {
 
     const handleLogout = async () => {
         if (loggingOut) return;
-
         setLoggingOut(true);
         try {
-            const response = await AuthAPI.logout();
-            router.push('/login');
-        } catch (error) {
-            console.error('Logout error:', error);
-            router.push('/login');
+            await logout(); // clears Redux auth state, cart, then routes to "/"
         } finally {
             setLoggingOut(false);
         }

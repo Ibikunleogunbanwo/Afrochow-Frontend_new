@@ -5,12 +5,13 @@ import Link from 'next/link';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
-    RefreshCw, ChevronDown,
+    RefreshCw, ChevronDown, Eye,
 } from 'lucide-react';
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
+import VendorReviewModal from '@/components/admin/VendorReviewModal';
 
 const PAGE_SIZE = 15;
 
@@ -52,6 +53,7 @@ export default function AdminVendorsPage() {
     const [error, setError]           = useState(null);
     const [actionLoading, setActionLoading] = useState({});
     const [page, setPage]             = useState(1);
+    const [reviewVendor, setReviewVendor] = useState(null); // vendor open in detail modal
 
     const fetchVendors = useCallback(async () => {
         setLoading(true);
@@ -112,6 +114,14 @@ export default function AdminVendorsPage() {
 
     return (
         <div className="space-y-6">
+            {reviewVendor && (
+                <VendorReviewModal
+                    vendor={reviewVendor}
+                    onClose={() => setReviewVendor(null)}
+                    onApprove={() => { setReviewVendor(null); fetchVendors(); }}
+                    onReject={() => { setReviewVendor(null); fetchVendors(); }}
+                />
+            )}
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500">
                 <Link href="/admin/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
@@ -237,6 +247,13 @@ export default function AdminVendorsPage() {
 
                                 {/* Actions */}
                                 <div className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap">
+                                    <button
+                                        onClick={() => setReviewVendor(v)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                                    >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        Review
+                                    </button>
                                     {v.isVerified ? (
                                         <button
                                             onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}

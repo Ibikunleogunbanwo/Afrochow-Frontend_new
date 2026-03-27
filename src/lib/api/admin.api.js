@@ -24,6 +24,7 @@ export const AdminUsersAPI = {
 // ── Admin Vendor Management ────────────────────────────────────────────────
 export const AdminVendorsAPI = {
     getAll:      ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors`),
+    getById:     (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}`),
     getPending:  ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/pending`),
     getVerified: ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/verified`),
     verify:      (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/verify`,     { method: 'PATCH' }),

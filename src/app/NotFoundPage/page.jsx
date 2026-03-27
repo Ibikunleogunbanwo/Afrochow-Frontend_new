@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Home, ArrowLeft, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated, selectUserRole } from "@/redux-store/authSlice";
 import {
     Empty,
     EmptyContent,
@@ -24,6 +26,30 @@ const orbs = [
 
 export default function NotFoundPage() {
     const router = useRouter();
+    const isAuthenticated = useSelector(selectIsAuthenticated);
+    const role = useSelector(selectUserRole);
+
+    // Where "Back to Home" should go — authenticated users stay in their area
+    const homeRoute = (() => {
+        if (!isAuthenticated) return "/";
+        const r = role?.toUpperCase();
+        if (r === 'ADMIN' || r === 'SUPERADMIN') return "/admin/dashboard";
+        if (r === 'VENDOR') return "/vendor/dashboard";
+        return "/";
+    })();
+
+    // Links shown at the bottom — hide Login/Register for authenticated users
+    const helpLinks = isAuthenticated
+        ? [
+            { href: "/restaurants",            label: "Restaurants" },
+            { href: homeRoute,                 label: "Dashboard" },
+          ]
+        : [
+            { href: "/register/signup",        label: "Sign Up" },
+            { href: "/login",                  label: "Login" },
+            { href: "/restaurants",            label: "Restaurants" },
+            { href: "/register/vendor/step-1", label: "Become a Vendor" },
+          ];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-6 relative overflow-hidden">
@@ -108,11 +134,11 @@ export default function NotFoundPage() {
                     <EmptyContent>
                         <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                             <button
-                                onClick={() => router.push("/")}
+                                onClick={() => router.push(homeRoute)}
                                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-orange-600 to-red-500 text-white font-bold rounded-2xl hover:from-orange-700 hover:to-red-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.98]"
                             >
                                 <Home className="w-5 h-5" />
-                                Back to Home
+                                {isAuthenticated ? "Back to Dashboard" : "Back to Home"}
                             </button>
 
                             <button
@@ -131,12 +157,7 @@ export default function NotFoundPage() {
                             You might be looking for:
                         </p>
                         <div className="flex flex-wrap gap-3 justify-center">
-                            {[
-                                { href: "/register/signup",        label: "Sign Up" },
-                                { href: "/login",                  label: "Login" },
-                                { href: "/restaurants",            label: "Restaurants" },
-                                { href: "/register/vendor/step-1", label: "Become a Vendor" },
-                            ].map(({ href, label }, i) => (
+                            {helpLinks.map(({ href, label }, i) => (
                                 <span key={href} className="flex items-center gap-3">
                                     {i > 0 && <span className="text-gray-300 select-none">•</span>}
                                     <Link
