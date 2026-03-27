@@ -53,10 +53,24 @@ const authSlice = createSlice({
                 state.user = { ...state.user, ...action.payload };
             }
         },
+
+        /**
+         * Refresh vendor status flags from the live API profile response.
+         * Called after fetchProfile() so the sidebar badge and banners always
+         * reflect the current DB state, not the stale login-time snapshot.
+         */
+        updateVendorStatus(state, action) {
+            if (action.payload.isActive !== undefined) {
+                state.vendorIsActive = action.payload.isActive;
+            }
+            if (action.payload.isVerified !== undefined) {
+                state.vendorIsVerified = action.payload.isVerified;
+            }
+        },
     },
 });
 
-export const { setAuth, clearAuth, setLoading, setError, updateUser } = authSlice.actions;
+export const { setAuth, clearAuth, setLoading, setError, updateUser, updateVendorStatus } = authSlice.actions;
 
 
 export const selectUser = (state) => state.auth.user;

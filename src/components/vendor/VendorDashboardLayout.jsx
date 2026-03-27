@@ -12,10 +12,13 @@ import MobileSidebar from '@/components/VendorDashboardLayout/MobileSidebar';
 import NotificationDropdown from '@/components/VendorDashboardLayout/NotificationDropdown';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
 import {useAuth} from "@/hooks/useAuth";
+import { useDispatch } from 'react-redux';
+import { updateVendorStatus } from '@/redux-store/authSlice';
 import { useVendorNotifications } from "@/hooks/useVendorNotifications";
 
 const VendorDashboardLayout = ({ children }) => {
     const pathname = usePathname();
+    const dispatch = useDispatch();
 
     const { user, isAuthenticated, logout, vendorIsActive, vendorIsVerified } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,10 +62,18 @@ const VendorDashboardLayout = ({ children }) => {
             ]);
 
             if (profileResponse?.success) {
+                const profileData = profileResponse.data;
                 setProfile({
-                    ...profileResponse.data,
+                    ...profileData,
                     user: userResponse?.success ? userResponse.data : null,
                 });
+                // Sync the live isActive/isVerified into Redux so the sidebar badge
+                // and status banners always reflect the current DB state, not the
+                // stale snapshot from login time.
+                dispatch(updateVendorStatus({
+                    isActive:   profileData.isActive,
+                    isVerified: profileData.isVerified,
+                }));
             } else {
                 throw new Error("Failed to fetch profile");
             }
