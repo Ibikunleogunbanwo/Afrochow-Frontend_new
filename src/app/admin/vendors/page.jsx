@@ -5,8 +5,40 @@ import Link from 'next/link';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
-    RefreshCw, ChevronDown, Eye,
+    RefreshCw, ChevronDown, Eye, Calendar, X,
 } from 'lucide-react';
+
+// ── Date filter helpers ────────────────────────────────────────────────────
+const DATE_OPTIONS = [
+    { value: 'today',      label: 'Today' },
+    { value: 'yesterday',  label: 'Yesterday' },
+    { value: 'last7days',  label: 'Last 7 Days' },
+    { value: 'last30days', label: 'Last 30 Days' },
+    { value: 'thisMonth',  label: 'This Month' },
+    { value: 'lastMonth',  label: 'Last Month' },
+    { value: 'custom',     label: 'Custom Range' },
+];
+
+const getDateBounds = (preset, customStart, customEnd) => {
+    const today = new Date(); today.setHours(23, 59, 59, 999);
+    const startOfDay = (d) => { const n = new Date(d); n.setHours(0,0,0,0); return n; };
+    switch (preset) {
+        case 'today':     return { start: startOfDay(today), end: today };
+        case 'yesterday': { const y = new Date(today); y.setDate(y.getDate() - 1); return { start: startOfDay(y), end: new Date(y.getFullYear(), y.getMonth(), y.getDate(), 23, 59, 59) }; }
+        case 'last7days': { const s = new Date(today); s.setDate(s.getDate() - 6); return { start: startOfDay(s), end: today }; }
+        case 'last30days':{ const s = new Date(today); s.setDate(s.getDate() - 29); return { start: startOfDay(s), end: today }; }
+        case 'thisMonth': return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: today };
+        case 'lastMonth': { const s = new Date(today.getFullYear(), today.getMonth() - 1, 1); const e = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59); return { start: s, end: e }; }
+        case 'custom':    return customStart && customEnd ? { start: startOfDay(new Date(customStart)), end: new Date(`${customEnd}T23:59:59`) } : null;
+        default:          return null;
+    }
+};
+
+const inDateRange = (dateStr, bounds) => {
+    if (!bounds || !dateStr) return true;
+    const d = new Date(dateStr);
+    return d >= bounds.start && d <= bounds.end;
+};
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
@@ -54,6 +86,10 @@ export default function AdminVendorsPage() {
     const [actionLoading, setActionLoading] = useState({});
     const [page, setPage]             = useState(1);
     const [reviewVendor, setReviewVendor] = useState(null); // vendor open in detail modal
+    const [dateFilter, setDateFilter] = useState('');
+    const [showDateMenu, setShowDateMenu] = useState(false);
+    const [customStart, setCustomStart] = useState('');
+    const [customEnd, setCustomEnd]   = useState('');
 
     const fetchVendors = useCallback(async () => {
         setLoading(true);
@@ -96,19 +132,29 @@ export default function AdminVendorsPage() {
         revokedIds.has(v.publicVendorId) ||
         (!v.isVerified && v.verifiedAt != null);
 
+    const dateBounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
+
     const filtered = vendors.filter(v => {
+        // date registered filter
+        if (!inDateRange(v.createdAt, dateBounds)) return false;
         // text search
         if (search && ![ v.restaurantName, v.cuisineType ]
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
-        // tab filter
+        // status tab filter
         switch (filter) {
             case 'pending':   return !v.isVerified && v.isActive !== false && !isRevoked(v);
             case 'verified':  return v.isVerified === true;
-            case 'suspended': return v.isActive === false;
+            case 'suspended': return v.isActive === false && v.isVerified === true;
             case 'revoked':   return isRevoked(v);
             default:          return true;
         }
     });
+
+    const dateLabel = (() => {
+        if (!dateFilter) return null;
+        if (dateFilter === 'custom' && customStart && customEnd) return `${customStart} – ${customEnd}`;
+        return DATE_OPTIONS.find(o => o.value === dateFilter)?.label ?? null;
+    })();
 
     const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
 
@@ -144,15 +190,27 @@ export default function AdminVendorsPage() {
                 </button>
             </div>
 
-            {/* Stats cards — clickable filters */}
+            {/* Stats cards — clickable filters.
+                Counts respect search + date bounds and use the same predicates as
+                the filter tabs, so clicking a card always shows a matching count. */}
+            {(() => {
+                // base pool: apply search + date, but no status filter
+                const pool = vendors.filter(v => {
+                    if (!inDateRange(v.createdAt, dateBounds)) return false;
+                    if (search && ![ v.restaurantName, v.cuisineType ]
+                        .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
+                    return true;
+                });
+                const statCards = [
+                    { key: 'all',       label: 'Total',     value: pool.length },
+                    { key: 'verified',  label: 'Verified',  value: pool.filter(v => v.isVerified === true).length },
+                    { key: 'pending',   label: 'Pending',   value: pool.filter(v => !v.isVerified && v.isActive !== false && !isRevoked(v)).length },
+                    { key: 'suspended', label: 'Suspended', value: pool.filter(v => v.isActive === false && v.isVerified === true).length },
+                    { key: 'revoked',   label: 'Revoked',   value: pool.filter(v => isRevoked(v)).length },
+                ];
+                return (
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {[
-                    { key: 'all',       label: 'Total',     value: vendors.length },
-                    { key: 'verified',  label: 'Verified',  value: vendors.filter(v => v.isVerified).length },
-                    { key: 'pending',   label: 'Pending',   value: vendors.filter(v => !v.isVerified && v.isActive !== false && !isRevoked(v)).length },
-                    { key: 'suspended', label: 'Suspended', value: vendors.filter(v => v.isActive === false).length },
-                    { key: 'revoked',   label: 'Revoked',   value: vendors.filter(v => isRevoked(v)).length },
-                ].map(s => (
+                {statCards.map(s => (
                     <button
                         key={s.key}
                         onClick={() => { setFilter(s.key); setPage(1); }}
@@ -165,22 +223,88 @@ export default function AdminVendorsPage() {
                     </button>
                 ))}
             </div>
+                );
+            })()}
 
             {/* Table card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 {/* Toolbar */}
-                <div className="flex flex-col sm:flex-row gap-3 p-5 border-b border-gray-100">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name or product type…"
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                            style={{ color: 'black', backgroundColor: 'white' }}
-                            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        />
+                <div className="flex flex-col gap-3 p-5 border-b border-gray-100">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name or product type…"
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                style={{ color: 'black', backgroundColor: 'white' }}
+                                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            />
+                        </div>
+                        {/* Date registered filter */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowDateMenu(v => !v)}
+                                className={`inline-flex items-center gap-2 px-3 py-2 border rounded-xl text-sm font-medium transition-all ${
+                                    dateFilter
+                                        ? 'border-gray-900 bg-gray-900 text-white'
+                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                }`}
+                            >
+                                <Calendar className="w-4 h-4" />
+                                <span>{dateLabel ?? 'Date Joined'}</span>
+                                {dateFilter
+                                    ? <X className="w-3.5 h-3.5 ml-1 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} />
+                                    : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                }
+                            </button>
+
+                            {showDateMenu && (
+                                <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+                                    <div className="p-2">
+                                        {DATE_OPTIONS.map(o => (
+                                            <button
+                                                key={o.value}
+                                                onClick={() => {
+                                                    setDateFilter(o.value);
+                                                    setPage(1);
+                                                    if (o.value !== 'custom') { setShowDateMenu(false); setCustomStart(''); setCustomEnd(''); }
+                                                }}
+                                                style={{ color: '#374151', backgroundColor: dateFilter === o.value ? '#f3f4f6' : 'white' }}
+                                                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 ${
+                                                    dateFilter === o.value ? 'font-semibold' : ''
+                                                }`}
+                                            >{o.label}</button>
+                                        ))}
+                                    </div>
+                                    {dateFilter === 'custom' && (
+                                        <div className="p-4 border-t border-gray-200 space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-700 mb-1">From</label>
+                                                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPage(1); }}
+                                                    style={{ color: 'black', backgroundColor: 'white' }}
+                                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-700 mb-1">To</label>
+                                                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPage(1); }}
+                                                    style={{ color: 'black', backgroundColor: 'white' }}
+                                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
+                                            </div>
+                                            <button
+                                                onClick={() => { if (customStart && customEnd) setShowDateMenu(false); }}
+                                                disabled={!customStart || !customEnd}
+                                                className="w-full px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                                            >Apply Range</button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Status filter pills */}
                     <div className="flex gap-2 flex-wrap">
                         {FILTERS.map(f => (
                             <button
@@ -192,6 +316,19 @@ export default function AdminVendorsPage() {
                             >{f.label}</button>
                         ))}
                     </div>
+
+                    {/* Active date filter badge */}
+                    {dateLabel && (
+                        <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 w-fit">
+                            <Filter className="w-3 h-3 text-gray-500" />
+                            <span>Joined: <span className="font-semibold text-gray-900">{dateLabel}</span></span>
+                            <span className="text-gray-400">·</span>
+                            <span className="font-semibold text-gray-700">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+                            <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content */}
@@ -205,7 +342,7 @@ export default function AdminVendorsPage() {
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Store className="h-12 w-12 text-gray-200" />
-                        <p className="text-sm text-gray-400">No vendors found</p>
+                        <p className="text-sm text-gray-400">{dateLabel ? 'No vendors registered in this date range' : 'No vendors found'}</p>
                     </div>
                 ) : (
                     <AdminTableRoot>
