@@ -31,6 +31,10 @@ export const AdminVendorsAPI = {
     unverify:    (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/unverify`,   { method: 'PATCH' }),
     activate:    (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/activate`,   { method: 'PATCH' }),
     deactivate:  (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/deactivate`, { method: 'PATCH' }),
+    reject:      (id, reason) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+    }),
 };
 
 // ── Admin Order Management ─────────────────────────────────────────────────

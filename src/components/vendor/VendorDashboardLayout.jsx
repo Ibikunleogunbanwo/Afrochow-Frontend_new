@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {usePathname, useRouter} from 'next/navigation';
-import { Menu, Search, Bell, Clock, ShieldOff } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Search, Bell, Clock, ShieldOff, XCircle, RefreshCw, Pencil, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from "@/components/ui/toast";
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
 import { AuthAPI } from '@/lib/api/auth.api';
@@ -84,6 +85,22 @@ const VendorDashboardLayout = ({ children }) => {
         }
     };
 
+
+    const [resubmitting, setResubmitting] = useState(false);
+    const [resubmitDone, setResubmitDone] = useState(false);
+
+    const handleResubmit = async () => {
+        setResubmitting(true);
+        try {
+            await VendorProfileAPI.resubmitForReview();
+            setResubmitDone(true);
+            toast.success("Application resubmitted! Our team will review it shortly.");
+        } catch (e) {
+            toast.error(e.message || "Could not resubmit. Please try again.");
+        } finally {
+            setResubmitting(false);
+        }
+    };
 
     const handleLogout = async () => {
         await logout();
@@ -220,19 +237,71 @@ const VendorDashboardLayout = ({ children }) => {
                 </header>
 
                 {/* Vendor status banners */}
-                {vendorIsActive === false && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+
+                {/* ── Rejected: isActive=false AND isVerified=false ── */}
+                {vendorIsActive === false && vendorIsVerified === false && !resubmitDone && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-red-800 text-sm">Application not approved</p>
+                                <p className="text-red-700 text-sm mt-0.5">
+                                    Your store application was reviewed but could not be approved at this time.
+                                    Please update your store details to address any issues, then resubmit for review.
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                    <Link
+                                        href="/vendor/profile"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                                    >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                        Edit Store Profile
+                                    </Link>
+                                    <button
+                                        onClick={handleResubmit}
+                                        disabled={resubmitting}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors disabled:opacity-60"
+                                    >
+                                        {resubmitting
+                                            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Resubmitting…</>
+                                            : <><RefreshCw className="w-3.5 h-3.5" /> Resubmit for Review</>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Resubmit success ── */}
+                {resubmitDone && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                        <CheckCircle2 className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-orange-800 text-sm">Application resubmitted</p>
+                            <p className="text-orange-700 text-sm mt-0.5">
+                                Your application is back under review — this typically takes 24–48 hours. We&apos;ll email you once a decision is made.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Suspended: isActive=false AND isVerified=true ── */}
+                {vendorIsActive === false && vendorIsVerified === true && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
                         <ShieldOff className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-semibold text-red-800 text-sm">Store deactivated</p>
+                            <p className="font-semibold text-red-800 text-sm">Store suspended</p>
                             <p className="text-red-700 text-sm mt-0.5">
                                 Your store has been suspended by an admin. You cannot receive orders at this time. Please contact support if you believe this is a mistake.
                             </p>
                         </div>
                     </div>
                 )}
+
+                {/* ── Pending: isActive=true AND isVerified=false ── */}
                 {vendorIsActive !== false && vendorIsVerified === false && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
                         <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
                         <div>
                             <p className="font-semibold text-orange-800 text-sm">Pending admin approval</p>

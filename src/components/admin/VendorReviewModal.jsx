@@ -78,6 +78,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
     const [approving, setApproving]     = useState(false);
     const [rejecting, setRejecting]     = useState(false);
     const [confirmAction, setConfirmAction] = useState(null); // 'approve' | 'reject'
+    const [rejectionReason, setRejectionReason] = useState("");
     const [actionError, setActionError] = useState(null);
 
     /* ── fetch full detail on open ── */
@@ -128,7 +129,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setRejecting(true);
         setActionError(null);
         try {
-            await AdminVendorsAPI.deactivate(vendor.publicVendorId);
+            await AdminVendorsAPI.reject(vendor.publicVendorId, rejectionReason.trim() || null);
             onReject?.(vendor);
             onClose();
         } catch (e) {
@@ -450,12 +451,29 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                             </p>
                             <p className="text-xs text-gray-500 text-center">
                                 {confirmAction === "approve"
-                                    ? "The vendor will be verified and able to receive orders immediately."
-                                    : "The vendor's account will be deactivated. This can be reversed later."}
+                                    ? "The vendor will be verified and able to receive orders immediately. A confirmation email will be sent to them."
+                                    : "The vendor's application will be rejected and they will be notified by email."}
                             </p>
+
+                            {/* Rejection reason textarea */}
+                            {confirmAction === "reject" && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                                        Reason for rejection <span className="text-gray-400 font-normal">(sent to vendor by email)</span>
+                                    </label>
+                                    <textarea
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        placeholder="e.g. Missing business license, incomplete address, invalid tax ID…"
+                                        rows={3}
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 resize-none text-gray-900 placeholder-gray-400"
+                                    />
+                                </div>
+                            )}
+
                             <div className="flex gap-3">
                                 <button
-                                    onClick={() => setConfirmAction(null)}
+                                    onClick={() => { setConfirmAction(null); setRejectionReason(""); }}
                                     disabled={busy}
                                     className="flex-1 h-10 border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
                                 >

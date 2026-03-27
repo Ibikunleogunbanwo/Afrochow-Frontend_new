@@ -21,6 +21,12 @@ export const VendorProfileAPI = {
     });
   },
 
+  resubmitForReview: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/vendor/profile/resubmit`, {
+      method: 'POST',
+    });
+  },
+
   uploadVendorImage: async (file, type) => {
     const formData = new FormData();
     formData.append('file', file);
