@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     X, Store, User, MapPin, Clock, Truck, ShoppingBag,
-    CheckCircle2, XCircle, Shield, Hash, Phone, Mail,
+    CheckCircle2, XCircle, Shield, Phone, Mail,
     Globe, Timer, DollarSign, Package, Navigation,
     Image as ImageIcon, FileText, Loader2, AlertCircle,
-    Calendar, ExternalLink,
+    ExternalLink,
 } from "lucide-react";
 import { AdminVendorsAPI } from "@/lib/api/admin.api";
 
@@ -70,38 +70,54 @@ const Grid2 = ({ children }) => (
 );
 
 /* ─── main component ───────────────────────────────────────────────────── */
-/**
- * VendorReviewModal
- *
- * Props:
- *   vendor          – vendor object from the API list
- *   onClose         – () => void
- *   onApprove       – (vendor) => Promise<void>   (called after API succeeds)
- *   onReject        – (vendor) => Promise<void>
- */
 export default function VendorReviewModal({ vendor, onClose, onApprove, onReject }) {
-    const [approving, setApproving] = useState(false);
-    const [rejecting, setRejecting] = useState(false);
+    const [detail, setDetail]           = useState(null);
+    const [loadingDetail, setLoadingDetail] = useState(true);
+    const [fetchError, setFetchError]   = useState(null);
+
+    const [approving, setApproving]     = useState(false);
+    const [rejecting, setRejecting]     = useState(false);
     const [confirmAction, setConfirmAction] = useState(null); // 'approve' | 'reject'
-    const [error, setError] = useState(null);
+    const [actionError, setActionError] = useState(null);
+
+    /* ── fetch full detail on open ── */
+    useEffect(() => {
+        if (!vendor?.publicVendorId) return;
+        setLoadingDetail(true);
+        setFetchError(null);
+        AdminVendorsAPI.getById(vendor.publicVendorId)
+            .then((res) => {
+                const d = res?.data ?? res;
+                setDetail(d);
+            })
+            .catch((e) => {
+                setFetchError(e.message || "Could not load vendor details");
+                // Fall back to summary data so the modal isn't completely empty
+                setDetail(vendor);
+            })
+            .finally(() => setLoadingDetail(false));
+    }, [vendor?.publicVendorId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!vendor) return null;
 
+    // Use detailed data when available, otherwise fall back to summary
+    const d = detail ?? vendor;
+
     const busy = approving || rejecting;
 
-    const address = vendor.address ?? {};
-    const ops     = vendor.operatingHours ?? {};
+    // Operating hours: from detail endpoint it's a flat map on `d.operatingHours`
+    const ops = d.operatingHours ?? {};
 
     /* ── actions ── */
     const handleApprove = async () => {
         setApproving(true);
-        setError(null);
+        setActionError(null);
         try {
             await AdminVendorsAPI.verify(vendor.publicVendorId);
             onApprove?.(vendor);
             onClose();
         } catch (e) {
-            setError(e.message || "Failed to approve vendor");
+            setActionError(e.message || "Failed to approve vendor");
         } finally {
             setApproving(false);
             setConfirmAction(null);
@@ -110,13 +126,13 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
 
     const handleReject = async () => {
         setRejecting(true);
-        setError(null);
+        setActionError(null);
         try {
             await AdminVendorsAPI.deactivate(vendor.publicVendorId);
             onReject?.(vendor);
             onClose();
         } catch (e) {
-            setError(e.message || "Failed to reject vendor");
+            setActionError(e.message || "Failed to reject vendor");
         } finally {
             setRejecting(false);
             setConfirmAction(null);
@@ -137,12 +153,11 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                 {/* ── Header ── */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        {/* Avatar */}
-                        {vendor.logoUrl ? (
+                        {d.logoUrl ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
-                                src={vendor.logoUrl}
-                                alt={vendor.restaurantName}
+                                src={d.logoUrl}
+                                alt={d.restaurantName}
                                 className="w-10 h-10 rounded-xl object-cover border border-gray-200 shrink-0"
                             />
                         ) : (
@@ -152,14 +167,14 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                         )}
                         <div className="min-w-0">
                             <h2 className="text-lg font-bold text-gray-900 truncate">
-                                {val(vendor.restaurantName, "Unnamed Vendor")}
+                                {val(d.restaurantName, "Unnamed Vendor")}
                             </h2>
                             <div className="flex items-center gap-2 mt-0.5">
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
                                     <AlertCircle className="w-3 h-3" />
                                     Pending Approval
                                 </span>
-                                <span className="text-xs text-gray-400">Applied {fmtDate(vendor.createdAt)}</span>
+                                <span className="text-xs text-gray-400">Applied {fmtDate(d.createdAt)}</span>
                             </div>
                         </div>
                     </div>
@@ -174,238 +189,250 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                 {/* ── Scrollable body ── */}
                 <div className="overflow-y-auto flex-1 px-6 py-5">
 
-                    {/* ── Store Info ── */}
-                    <Section icon={Store} title="Store Information">
-                        <Grid2>
-                            <Field label="Store Name"   value={vendor.restaurantName} />
-                            <Field label="Product Type" value={vendor.cuisineType} />
-                        </Grid2>
-                        {vendor.description && (
-                            <Field label="Description">
-                                <p className="text-sm text-gray-700 leading-relaxed">{vendor.description}</p>
-                            </Field>
-                        )}
-                    </Section>
-
-                    {/* ── Owner Info ── */}
-                    <Section icon={User} title="Owner / Account">
-                        <Grid2>
-                            <Field label="First Name" value={vendor.firstName} />
-                            <Field label="Last Name"  value={vendor.lastName} />
-                            <Field label="Email">
-                                <div className="flex items-center gap-1.5">
-                                    <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                    <span className="text-sm text-gray-900 font-medium break-all">
-                                        {val(vendor.email ?? vendor.ownerEmail)}
-                                    </span>
-                                </div>
-                            </Field>
-                            <Field label="Phone">
-                                <div className="flex items-center gap-1.5">
-                                    <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                    <span className="text-sm text-gray-900 font-medium">{val(vendor.phone)}</span>
-                                </div>
-                            </Field>
-                        </Grid2>
-                    </Section>
-
-                    {/* ── Business Verification ── */}
-                    <Section icon={Shield} title="Business Verification">
-                        <Grid2>
-                            <Field label="Business / Tax ID">
-                                {vendor.taxId ? (
-                                    <span className="text-sm font-mono text-gray-900">{vendor.taxId}</span>
-                                ) : (
-                                    <span className="text-xs text-amber-600 font-semibold">Not provided</span>
-                                )}
-                            </Field>
-                            <Field label="Business License">
-                                {vendor.businessLicenseUrl ? (
-                                    <a
-                                        href={vendor.businessLicenseUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-sm text-orange-600 font-semibold hover:underline"
-                                    >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        View Document
-                                        <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                ) : (
-                                    <span className="text-xs text-amber-600 font-semibold">Not provided</span>
-                                )}
-                            </Field>
-                        </Grid2>
-                    </Section>
-
-                    {/* ── Business Address ── */}
-                    <Section icon={MapPin} title="Business Address">
-                        {(address.addressLine || address.city || address.province) ? (
-                            <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                                <div className="flex items-start gap-2">
-                                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">{val(address.addressLine)}</p>
-                                        <p className="text-sm text-gray-600 mt-0.5">
-                                            {[address.city, address.province, address.postalCode].filter(Boolean).join(", ")}
-                                        </p>
-                                        <div className="flex items-center gap-1 mt-0.5">
-                                            <Globe className="w-3 h-3 text-gray-400 shrink-0" />
-                                            <span className="text-xs text-gray-500">{val(address.country, "Canada")}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400 italic">No address provided</p>
-                        )}
-                    </Section>
-
-                    {/* ── Operations ── */}
-                    <Section icon={Clock} title="Business Operations">
-
-                        {/* Services */}
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <div className={`flex items-center gap-2 p-3 rounded-xl border-2 ${
-                                vendor.offersDelivery ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
-                            }`}>
-                                <Truck className={`w-4 h-4 shrink-0 ${vendor.offersDelivery ? "text-orange-600" : "text-gray-300"}`} />
-                                <span className="text-sm font-semibold text-gray-800">Delivery</span>
-                                {vendor.offersDelivery
-                                    ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />
-                                    : <XCircle className="w-4 h-4 text-gray-300 ml-auto shrink-0" />
-                                }
-                            </div>
-                            <div className={`flex items-center gap-2 p-3 rounded-xl border-2 ${
-                                vendor.offersPickup ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
-                            }`}>
-                                <ShoppingBag className={`w-4 h-4 shrink-0 ${vendor.offersPickup ? "text-green-600" : "text-gray-300"}`} />
-                                <span className="text-sm font-semibold text-gray-800">Pickup</span>
-                                {vendor.offersPickup
-                                    ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />
-                                    : <XCircle className="w-4 h-4 text-gray-300 ml-auto shrink-0" />
-                                }
-                            </div>
+                    {/* Loading skeleton */}
+                    {loadingDetail && (
+                        <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
+                            <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                            <span className="text-sm font-medium">Loading vendor details…</span>
                         </div>
-
-                        {/* Prep time + delivery settings */}
-                        <Grid2>
-                            {vendor.preparationTime != null && (
-                                <Field label="Preparation Time">
-                                    <div className="flex items-center gap-1.5">
-                                        <Timer className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                                        <span className="text-sm font-semibold text-amber-800">{vendor.preparationTime} minutes</span>
-                                    </div>
-                                </Field>
-                            )}
-                            {vendor.offersDelivery && vendor.deliveryFee != null && (
-                                <Field label="Delivery Fee">
-                                    <div className="flex items-center gap-1.5">
-                                        <DollarSign className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="text-sm font-medium text-gray-900">{fmt$(vendor.deliveryFee)}</span>
-                                    </div>
-                                </Field>
-                            )}
-                            {vendor.offersDelivery && vendor.minimumOrderAmount != null && (
-                                <Field label="Minimum Order">
-                                    <div className="flex items-center gap-1.5">
-                                        <Package className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="text-sm font-medium text-gray-900">{fmt$(vendor.minimumOrderAmount)}</span>
-                                    </div>
-                                </Field>
-                            )}
-                            {vendor.offersDelivery && vendor.estimatedDeliveryMinutes != null && (
-                                <Field label="Estimated Delivery">
-                                    <div className="flex items-center gap-1.5">
-                                        <Timer className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="text-sm font-medium text-gray-900">{vendor.estimatedDeliveryMinutes} min</span>
-                                    </div>
-                                </Field>
-                            )}
-                            {vendor.offersDelivery && vendor.maxDeliveryDistanceKm != null && (
-                                <Field label="Delivery Radius">
-                                    <div className="flex items-center gap-1.5">
-                                        <Navigation className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="text-sm font-medium text-gray-900">{vendor.maxDeliveryDistanceKm} km</span>
-                                    </div>
-                                </Field>
-                            )}
-                        </Grid2>
-
-                        {/* Operating Hours */}
-                        {Object.keys(ops).length > 0 && (
-                            <Field label="Weekly Schedule">
-                                <div className="mt-1 rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-                                    {DAYS.map(({ key, label }) => {
-                                        const d = ops[key];
-                                        return (
-                                            <div
-                                                key={key}
-                                                className={`flex items-center justify-between px-3 py-2.5 text-sm ${
-                                                    d?.isOpen ? "bg-green-50" : "bg-white"
-                                                }`}
-                                            >
-                                                <span className="font-medium text-gray-800 w-28">{label}</span>
-                                                {d?.isOpen ? (
-                                                    <span className="text-xs text-gray-600 font-medium tabular-nums">
-                                                        {fmtTime(d.openTime)} – {fmtTime(d.closeTime)}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-xs text-gray-400 italic">Closed</span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </Field>
-                        )}
-                    </Section>
-
-                    {/* ── Branding ── */}
-                    {(vendor.logoUrl || vendor.bannerUrl) && (
-                        <Section icon={ImageIcon} title="Branding &amp; Media">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {vendor.logoUrl && (
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Logo</p>
-                                        <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={vendor.logoUrl}
-                                                alt="Logo"
-                                                className="w-full h-36 object-cover"
-                                            />
-                                            <div className="absolute bottom-2 right-2 bg-white rounded-full p-0.5 shadow">
-                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                {vendor.bannerUrl && (
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Banner</p>
-                                        <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={vendor.bannerUrl}
-                                                alt="Banner"
-                                                className="w-full h-36 object-cover"
-                                            />
-                                            <div className="absolute bottom-2 right-2 bg-white rounded-full p-0.5 shadow">
-                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </Section>
                     )}
 
-                    {/* Error */}
-                    {error && (
+                    {/* Fetch error banner (non-fatal — falls back to summary data) */}
+                    {!loadingDetail && fetchError && (
+                        <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 mb-4">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            Some details could not be loaded. Showing available information.
+                        </div>
+                    )}
+
+                    {!loadingDetail && (
+                        <>
+                            {/* ── Store Info ── */}
+                            <Section icon={Store} title="Store Information">
+                                <Grid2>
+                                    <Field label="Store Name"    value={d.restaurantName} />
+                                    <Field label="Product Type"  value={d.cuisineType} />
+                                </Grid2>
+                                {d.description && (
+                                    <Field label="Description">
+                                        <p className="text-sm text-gray-700 leading-relaxed">{d.description}</p>
+                                    </Field>
+                                )}
+                            </Section>
+
+                            {/* ── Owner Info ── */}
+                            <Section icon={User} title="Owner / Account">
+                                <Grid2>
+                                    <Field label="First Name" value={d.firstName} />
+                                    <Field label="Last Name"  value={d.lastName} />
+                                    <Field label="Email">
+                                        <div className="flex items-center gap-1.5">
+                                            <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                            <span className="text-sm text-gray-900 font-medium break-all">
+                                                {val(d.email)}
+                                            </span>
+                                        </div>
+                                    </Field>
+                                    <Field label="Phone">
+                                        <div className="flex items-center gap-1.5">
+                                            <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                            <span className="text-sm text-gray-900 font-medium">{val(d.phone)}</span>
+                                        </div>
+                                    </Field>
+                                </Grid2>
+                            </Section>
+
+                            {/* ── Business Verification ── */}
+                            <Section icon={Shield} title="Business Verification">
+                                <Grid2>
+                                    <Field label="Business / Tax ID">
+                                        {d.taxId ? (
+                                            <span className="text-sm font-mono text-gray-900">{d.taxId}</span>
+                                        ) : (
+                                            <span className="text-xs text-amber-600 font-semibold">Not provided</span>
+                                        )}
+                                    </Field>
+                                    <Field label="Business License">
+                                        {d.businessLicenseUrl ? (
+                                            <a
+                                                href={d.businessLicenseUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-sm text-orange-600 font-semibold hover:underline"
+                                            >
+                                                <FileText className="w-3.5 h-3.5" />
+                                                View Document
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-amber-600 font-semibold">Not provided</span>
+                                        )}
+                                    </Field>
+                                </Grid2>
+                            </Section>
+
+                            {/* ── Business Address ── */}
+                            <Section icon={MapPin} title="Business Address">
+                                {(d.addressLine || d.city || d.province) ? (
+                                    <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{val(d.addressLine)}</p>
+                                                <p className="text-sm text-gray-600 mt-0.5">
+                                                    {[d.city, d.province, d.postalCode].filter(Boolean).join(", ")}
+                                                </p>
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    <Globe className="w-3 h-3 text-gray-400 shrink-0" />
+                                                    <span className="text-xs text-gray-500">{val(d.country, "Canada")}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic">No address provided</p>
+                                )}
+                            </Section>
+
+                            {/* ── Operations ── */}
+                            <Section icon={Clock} title="Business Operations">
+
+                                {/* Services */}
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className={`flex items-center gap-2 p-3 rounded-xl border-2 ${
+                                        d.offersDelivery ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
+                                    }`}>
+                                        <Truck className={`w-4 h-4 shrink-0 ${d.offersDelivery ? "text-orange-600" : "text-gray-300"}`} />
+                                        <span className="text-sm font-semibold text-gray-800">Delivery</span>
+                                        {d.offersDelivery
+                                            ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />
+                                            : <XCircle className="w-4 h-4 text-gray-300 ml-auto shrink-0" />
+                                        }
+                                    </div>
+                                    <div className={`flex items-center gap-2 p-3 rounded-xl border-2 ${
+                                        d.offersPickup ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                                    }`}>
+                                        <ShoppingBag className={`w-4 h-4 shrink-0 ${d.offersPickup ? "text-green-600" : "text-gray-300"}`} />
+                                        <span className="text-sm font-semibold text-gray-800">Pickup</span>
+                                        {d.offersPickup
+                                            ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />
+                                            : <XCircle className="w-4 h-4 text-gray-300 ml-auto shrink-0" />
+                                        }
+                                    </div>
+                                </div>
+
+                                {/* Prep time + delivery settings */}
+                                <Grid2>
+                                    {d.preparationTime != null && (
+                                        <Field label="Preparation Time">
+                                            <div className="flex items-center gap-1.5">
+                                                <Timer className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                                <span className="text-sm font-semibold text-amber-800">{d.preparationTime} minutes</span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {d.offersDelivery && d.deliveryFee != null && (
+                                        <Field label="Delivery Fee">
+                                            <div className="flex items-center gap-1.5">
+                                                <DollarSign className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                <span className="text-sm font-medium text-gray-900">{fmt$(d.deliveryFee)}</span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {d.offersDelivery && d.minimumOrderAmount != null && (
+                                        <Field label="Minimum Order">
+                                            <div className="flex items-center gap-1.5">
+                                                <Package className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                <span className="text-sm font-medium text-gray-900">{fmt$(d.minimumOrderAmount)}</span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {d.offersDelivery && d.estimatedDeliveryMinutes != null && (
+                                        <Field label="Estimated Delivery">
+                                            <div className="flex items-center gap-1.5">
+                                                <Timer className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                <span className="text-sm font-medium text-gray-900">{d.estimatedDeliveryMinutes} min</span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {d.offersDelivery && d.maxDeliveryDistanceKm != null && (
+                                        <Field label="Delivery Radius">
+                                            <div className="flex items-center gap-1.5">
+                                                <Navigation className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                <span className="text-sm font-medium text-gray-900">{d.maxDeliveryDistanceKm} km</span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                </Grid2>
+
+                                {/* Operating Hours */}
+                                {Object.keys(ops).length > 0 && (
+                                    <Field label="Weekly Schedule">
+                                        <div className="mt-1 rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                                            {DAYS.map(({ key, label }) => {
+                                                const day = ops[key];
+                                                return (
+                                                    <div
+                                                        key={key}
+                                                        className={`flex items-center justify-between px-3 py-2.5 text-sm ${
+                                                            day?.isOpen ? "bg-green-50" : "bg-white"
+                                                        }`}
+                                                    >
+                                                        <span className="font-medium text-gray-800 w-28">{label}</span>
+                                                        {day?.isOpen ? (
+                                                            <span className="text-xs text-gray-600 font-medium tabular-nums">
+                                                                {fmtTime(day.openTime)} – {fmtTime(day.closeTime)}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400 italic">Closed</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </Field>
+                                )}
+                            </Section>
+
+                            {/* ── Branding ── */}
+                            {(d.logoUrl || d.bannerUrl) && (
+                                <Section icon={ImageIcon} title="Branding &amp; Media">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {d.logoUrl && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Logo</p>
+                                                <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={d.logoUrl} alt="Logo" className="w-full h-36 object-cover" />
+                                                    <div className="absolute bottom-2 right-2 bg-white rounded-full p-0.5 shadow">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {d.bannerUrl && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Banner</p>
+                                                <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={d.bannerUrl} alt="Banner" className="w-full h-36 object-cover" />
+                                                    <div className="absolute bottom-2 right-2 bg-white rounded-full p-0.5 shadow">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Section>
+                            )}
+                        </>
+                    )}
+
+                    {/* Action error */}
+                    {actionError && (
                         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 mb-4">
                             <AlertCircle className="w-4 h-4 shrink-0" />
-                            {error}
+                            {actionError}
                         </div>
                     )}
 
@@ -418,8 +445,8 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                         <div className="space-y-3">
                             <p className="text-sm font-semibold text-gray-900 text-center">
                                 {confirmAction === "approve"
-                                    ? `Approve ${vendor.restaurantName || "this vendor"}?`
-                                    : `Reject ${vendor.restaurantName || "this vendor"}?`}
+                                    ? `Approve ${d.restaurantName || "this vendor"}?`
+                                    : `Reject ${d.restaurantName || "this vendor"}?`}
                             </p>
                             <p className="text-xs text-gray-500 text-center">
                                 {confirmAction === "approve"
@@ -458,7 +485,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={() => setConfirmAction("reject")}
-                                disabled={busy}
+                                disabled={busy || loadingDetail}
                                 className="flex-1 h-11 flex items-center justify-center gap-2 border-2 border-red-200 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
                             >
                                 <XCircle className="w-4 h-4" />
@@ -466,7 +493,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                             </button>
                             <button
                                 onClick={() => setConfirmAction("approve")}
-                                disabled={busy}
+                                disabled={busy || loadingDetail}
                                 className="flex-1 h-11 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
                             >
                                 <CheckCircle2 className="w-4 h-4" />
