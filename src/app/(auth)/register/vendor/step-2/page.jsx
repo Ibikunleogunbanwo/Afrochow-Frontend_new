@@ -52,25 +52,13 @@ export default function Step2() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
 
-  // Pull live category names from the admin-managed Category table so the
-  // vendor dropdown always matches what admins configure (same list as header nav).
-  useEffect(() => {
-    SearchAPI.getAllCategories()
-        .then(res => {
-            const list = Array.isArray(res) ? res : res?.data;
-            if (Array.isArray(list) && list.length > 0) {
-                setCuisineTypes(list.map(c => c.name ?? c));
-            }
-        })
-        .catch(() => { /* keep fallback */ });
-  }, []);
-
   const {
     register,
     handleSubmit,
     control,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useReactForm({
     resolver: zodResolver(step2Schema),
@@ -84,6 +72,29 @@ export default function Step2() {
       cuisineType: state.cuisineType,
     },
   });
+
+  // Pull live category names from the admin-managed Category table so the
+  // vendor dropdown always matches what admins configure (same list as header nav).
+  useEffect(() => {
+    SearchAPI.getAllCategories()
+        .then(res => {
+            const list = Array.isArray(res) ? res : res?.data;
+            if (Array.isArray(list) && list.length > 0) {
+                const names = list.map(c => c.name ?? c);
+                setCuisineTypes(names);
+                // If a previously saved value (e.g. from localStorage) is no longer
+                // a valid admin category, clear it so the placeholder shows and
+                // the Zod min(1) validation correctly blocks the user from continuing.
+                const current = getValues("cuisineType");
+                if (current && !names.includes(current)) {
+                    setValue("cuisineType", "");
+                }
+            }
+        })
+        .catch(() => { /* keep fallback */ });
+  // getValues/setValue are stable RHF references — safe to omit from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const description = watch("description");
   const descriptionLength = description?.length || 0;
