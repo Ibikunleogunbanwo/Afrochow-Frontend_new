@@ -10,24 +10,40 @@ import { useAuthModal } from "@/contexts/AuthModalContext";
 import FeaturedProductCard from "@/components/home/cards/FeaturedProductCard";
 import FeaturedProductSkeleton from "@/components/home/cards/FeaturedProductSkeleton";
 
-// Module-level cache — persists across re-renders without hitting the API again
-let cachedFeaturedProducts = [];
-let cachedFeaturedPromoMap = {};
+// ── Module-level cache with 5-minute TTL ─────────────────────────────────────
+// Featured products are global (no location/auth dependency) so a single shared
+// object is correct. The TTL ensures a mid-session vendor spike is picked up on
+// the next mount after the window expires.
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+const featuredCache = {
+    products: [],
+    promoMap: {},
+    cachedAt:  null,   // null = never fetched
+};
+
+const isCacheValid = () =>
+    featuredCache.products.length > 0 &&
+    featuredCache.cachedAt !== null &&
+    Date.now() - featuredCache.cachedAt < CACHE_TTL_MS;
+
+// ── Component ─────────────────────────────────────────────────────────────────
 const FeaturedRestaurants = () => {
     const { isAuthenticated } = useAuth();
     const { openSignIn }      = useAuthModal();
 
-    const [featuredProducts, setFeaturedProducts] = useState(cachedFeaturedProducts);
-    const [promoMap, setPromoMap]                 = useState(cachedFeaturedPromoMap);
-    const [loading, setLoading]                   = useState(cachedFeaturedProducts.length === 0);
+    const valid = isCacheValid();
+
+    const [featuredProducts, setFeaturedProducts] = useState(valid ? featuredCache.products : []);
+    const [promoMap, setPromoMap]                 = useState(valid ? featuredCache.promoMap  : {});
+    const [loading, setLoading]                   = useState(!valid);
     const [error, setError]                       = useState(false);
     const [retryCount, setRetry]                  = useState(0);
 
     useEffect(() => {
-        if (cachedFeaturedProducts.length > 0) {
-            setFeaturedProducts(cachedFeaturedProducts);
-            setPromoMap(cachedFeaturedPromoMap);
+        if (isCacheValid()) {
+            setFeaturedProducts(featuredCache.products);
+            setPromoMap(featuredCache.promoMap);
             setLoading(false);
             return;
         }
@@ -39,48 +55,19 @@ const FeaturedRestaurants = () => {
 
                 const response = await SearchAPI.getFeaturedProducts();
 
+                // The featured endpoint already returns the full ProductResponseDto —
+                // dietary flags (isVegetarian, isVegan, isGlutenFree, isSpicy),
+                // imageUrl, and all stats are included. No background enrichment needed.
                 const products =
                     response?.success && response?.data
                         ? response.data
-                        : Array.isArray(response)
-                            ? response
-                            : [];
+                        : Array.isArray(response) ? response : [];
 
-                // Render cards immediately with list data
+                featuredCache.products = products;
+                featuredCache.cachedAt = Date.now();
                 setFeaturedProducts(products);
 
-                // Enrich with full product details (dietary flags) in the background.
-                // The featured endpoint returns a lighter DTO without isVegetarian/isVegan/isGlutenFree/isSpicy.
-                if (products.length > 0) {
-                    Promise.allSettled(
-                        products.map(p => SearchAPI.getProductById(p.publicProductId))
-                    ).then(results => {
-                        const enriched = products.map((product, i) => {
-                            const result = results[i];
-                            if (result.status === 'fulfilled' && result.value) {
-                                // Handle both wrapped { success, data } and bare product objects
-                                const d = result.value?.data ?? result.value;
-                                return {
-                                    ...product,
-                                    // The featured list endpoint returns a lightweight DTO that may
-                                    // omit imageUrl — always prefer the full product detail value.
-                                    imageUrl:     d.imageUrl     ?? product.imageUrl,
-                                    isVegetarian: d.isVegetarian ?? product.isVegetarian ?? false,
-                                    isVegan:      d.isVegan      ?? product.isVegan      ?? false,
-                                    isGlutenFree: d.isGlutenFree ?? product.isGlutenFree ?? false,
-                                    isSpicy:      d.isSpicy      ?? product.isSpicy      ?? false,
-                                };
-                            }
-                            return product;
-                        });
-                        cachedFeaturedProducts = enriched;
-                        setFeaturedProducts(enriched);
-                    });
-                } else {
-                    cachedFeaturedProducts = products;
-                }
-
-                // Fetch active promos in the background — never blocks product rendering
+                // Promos fetched in background — never blocks product render
                 PromotionsAPI.getActivePromotions()
                     .then(res => {
                         const list = res?.success && Array.isArray(res.data)
@@ -93,10 +80,11 @@ const FeaturedRestaurants = () => {
                             }
                             return m;
                         }, {});
-                        cachedFeaturedPromoMap = map;
+                        featuredCache.promoMap = map;
                         setPromoMap(map);
                     })
                     .catch(() => { /* promos are optional */ });
+
             } catch (err) {
                 console.error("Error fetching featured products:", err);
                 setError(true);
@@ -110,8 +98,9 @@ const FeaturedRestaurants = () => {
     }, [retryCount]);
 
     const handleRetry = () => {
-        cachedFeaturedProducts = [];
-        cachedFeaturedPromoMap = {};
+        featuredCache.products = [];
+        featuredCache.promoMap = {};
+        featuredCache.cachedAt = null;
         setError(false);
         setRetry((n) => n + 1);
     };
@@ -138,7 +127,7 @@ const FeaturedRestaurants = () => {
                 {/* Cards */}
                 {loading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {[...Array(8)].map((_, i) => (
+                        {[...Array(16)].map((_, i) => (
                             <FeaturedProductSkeleton key={`skeleton-${i}`} />
                         ))}
                     </div>

@@ -21,6 +21,21 @@ import { useVendorNotifications } from '@/hooks/useVendorNotifications';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
+/** Mirrors CuisineType enum on the backend — update both together. */
+const CUISINE_TYPES = [
+    "African Home Kitchen",
+    "African Restaurant",
+    "African Soups & Stews",
+    "African Grocery Store",
+    "Bakery & Pastries",
+    "Farm Produce",
+    "Catering Services",
+    "Caribbean Cuisine",
+    "Frozen Meals & Meal Prep",
+    "Halal Food",
+    "Other",
+];
+
 const TABS = [
     { id: 'info',          label: 'Restaurant Info', icon: Store    },
     { id: 'hours',         label: 'Operating Hours', icon: Calendar },
@@ -112,8 +127,8 @@ function validateInfo(infoForm, addrForm) {
         e.restaurantName = 'Must be under 100 characters';
     }
 
-    if (infoForm.cuisineType && infoForm.cuisineType.length > 50) {
-        e.cuisineType = 'Must be under 50 characters';
+    if (infoForm.cuisineType && !CUISINE_TYPES.includes(infoForm.cuisineType)) {
+        e.cuisineType = 'Please select a valid product type';
     }
 
     if (infoForm.description) {
@@ -561,17 +576,26 @@ export default function VendorProfilePage() {
                     {/* Banner + logo: logo is absolutely anchored to the banner bottom */}
                     <div className="relative">
                         {/* Banner */}
-                        <div className="h-36 sm:h-48 relative bg-gray-900 overflow-hidden">
-                            {bannerUrl
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                ? <img src={bannerUrl} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
-                                : <div className="absolute inset-0 opacity-10 pointer-events-none">
+                        <div className="h-52 sm:h-64 relative bg-gray-900 overflow-hidden">
+                            {bannerUrl ? (
+                                <Image
+                                    src={bannerUrl}
+                                    alt="Restaurant banner"
+                                    fill
+                                    sizes="100vw"
+                                    className="object-cover"
+                                    priority
+                                />
+                            ) : (
+                                <div className="absolute inset-0 opacity-10 pointer-events-none">
                                     {[...Array(6)].map((_, i) => (
                                         <Store key={i} className="absolute text-white w-16 h-16"
                                             style={{ top: `${(i * 30) % 80}%`, left: `${(i * 18) % 90}%` }} />
                                     ))}
-                                  </div>
-                            }
+                                </div>
+                            )}
+                            {/* Subtle gradient so the edit button stays readable over any image */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                             <button onClick={() => setActiveTab('branding')}
                                 className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white text-xs font-semibold rounded-lg backdrop-blur-sm transition-colors">
                                 <Pencil className="w-3 h-3" /> Edit branding
@@ -685,7 +709,12 @@ export default function VendorProfilePage() {
                                     </div>
                                     <div>
                                         <Label>Product type</Label>
-                                        <input {...fi('cuisineType')} placeholder="e.g. African Food, Groceries, Pastries" />
+                                        <select {...fi('cuisineType')}>
+                                            <option value="">Select product type…</option>
+                                            {CUISINE_TYPES.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
                                         <FieldError msg={infoErrors.cuisineType} />
                                     </div>
                                     <div>

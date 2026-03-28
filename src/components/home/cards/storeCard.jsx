@@ -52,15 +52,10 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
         popularItems,
         location,
         deliveryFee,
-        restaurantName,
         vendorPublicId,
         isOpenNow,
         todayHoursFormatted,
         offersPickup,
-        isVegan,
-        isVegetarian,
-        isGlutenFree,
-        isSpicy,
     } = store;
 
     const imageUrl = resolveImageUrl(
@@ -175,20 +170,20 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                     {/* Content Container */}
                     <div className="p-5 space-y-3">
 
-                        {/* Product Name — bold, primary */}
+                        {/* Restaurant name */}
                         <h3 className="text-base font-bold text-gray-900 line-clamp-1">
                             {name}
                         </h3>
 
-                        {/* Restaurant Name — orange, not bold */}
-                        {restaurantName && (
-                            <p className="text-sm font-medium text-orange-500 line-clamp-1 flex items-center gap-1">
-                                <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                                {restaurantName}
+                        {/* Location */}
+                        {location && (
+                            <p className="text-sm text-gray-400 line-clamp-1 flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                {location}
                             </p>
                         )}
 
-                        {/* Categories — pill badges */}
+                        {/* Cuisine type pills */}
                         {categoryDisplay && (
                             <div className="flex flex-wrap gap-1.5">
                                 {categoryDisplay.split(' • ').map((cat, idx) => (
@@ -199,32 +194,6 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                                         {cat}
                                     </span>
                                 ))}
-                            </div>
-                        )}
-
-                        {/* Dietary badges */}
-                        {(isVegan || isVegetarian || isGlutenFree || isSpicy) && (
-                            <div className="flex flex-wrap gap-1.5">
-                                {isVegan && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                        🌱 Vegan
-                                    </span>
-                                )}
-                                {isVegetarian && !isVegan && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                        🥬 Vegetarian
-                                    </span>
-                                )}
-                                {isGlutenFree && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                        🌾 Gluten-Free
-                                    </span>
-                                )}
-                                {isSpicy && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                                        🌶️ Spicy
-                                    </span>
-                                )}
                             </div>
                         )}
 

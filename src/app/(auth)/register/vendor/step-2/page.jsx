@@ -21,6 +21,21 @@ import {
 
 const step2Schema = profileSchema.merge(restaurantSchema);
 
+/** Mirrors CuisineType enum on the backend — update both together. */
+const CUISINE_TYPES = [
+    "African Home Kitchen",
+    "African Restaurant",
+    "African Soups & Stews",
+    "African Grocery Store",
+    "Bakery & Pastries",
+    "Farm Produce",
+    "Catering Services",
+    "Caribbean Cuisine",
+    "Frozen Meals & Meal Prep",
+    "Halal Food",
+    "Other",
+];
+
 export default function Step2() {
   const {
     state,
@@ -196,11 +211,14 @@ export default function Step2() {
               <FormField
                   label="Product Type"
                   id="cuisineType"
+                  type="select"
                   icon={UtensilsCrossed}
                   error={errors.cuisineType?.message}
                   value={watch("cuisineType")}
                   helpText="Helps customers find your store when searching by product type"
-                  inputProps={{ type: "text", placeholder: "African Food, Groceries, Pastries…", ...register("cuisineType") }}
+                  placeholder="Select product type…"
+                  options={CUISINE_TYPES}
+                  selectProps={{ ...register("cuisineType") }}
               />
 
               <div className="space-y-2">

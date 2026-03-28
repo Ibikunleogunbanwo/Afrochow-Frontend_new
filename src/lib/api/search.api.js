@@ -169,6 +169,13 @@ export const SearchAPI = {
 
   // ================= LOCATION =================
 
+  getVendorsNearCoordinates: async (lat, lng, radiusKm = 25) => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/vendors/near-coordinates?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`,
+        { method: 'GET' }
+    );
+  },
+
   getProductsNearCoordinates: async (lat, lng, radiusKm = 25) => {
     return fetchWithCredentials(
         `${API_BASE_URL}/search/products/near-coordinates?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`,

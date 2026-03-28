@@ -81,11 +81,11 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                     {/* Subtle gradient for badge legibility */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-                    {/* Top-left: cuisine category */}
-                    {product.categoryName && (
+                    {/* Top-left: cuisine type */}
+                    {product.cuisineType && (
                         <div className="absolute top-3 left-3">
                             <span className="px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-sm">
-                                {product.categoryName}
+                                {product.cuisineType}
                             </span>
                         </div>
                     )}
@@ -196,10 +196,18 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
 
                         {/* Fulfillment */}
                         <div className="flex flex-col items-center gap-0.5 flex-1">
-                            {product.offersPickup ? (
+                            {product.offersPickup && (product.offersDelivery ?? true) ? (
+                                <>
+                                    <div className="flex items-center gap-1">
+                                        <Truck className="w-3.5 h-3.5 text-gray-400" />
+                                        <Store className="w-3.5 h-3.5 text-teal-500" />
+                                    </div>
+                                    <span className="text-[10px] text-gray-400">Delivery &amp; Pickup</span>
+                                </>
+                            ) : product.offersPickup ? (
                                 <>
                                     <Store className="w-4 h-4 text-teal-500" />
-                                    <span className="text-[10px] text-gray-400">Pickup</span>
+                                    <span className="text-[10px] text-gray-400">Pickup only</span>
                                 </>
                             ) : (
                                 <>
