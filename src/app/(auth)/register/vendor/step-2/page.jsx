@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm as useReactForm, Controller } from "react-hook-form";
+import { SearchAPI } from '@/lib/api/search.api';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema } from "@/lib/schemas/profileSchema";
 import { restaurantSchema } from "@/lib/schemas/restaurantSchema";
@@ -21,8 +22,8 @@ import {
 
 const step2Schema = profileSchema.merge(restaurantSchema);
 
-/** Mirrors CuisineType enum on the backend — update both together. */
-const CUISINE_TYPES = [
+/** Fallback list used while the backend request is in-flight or if it fails. */
+const CUISINE_TYPES_FALLBACK = [
     "African Home Kitchen",
     "African Restaurant",
     "African Soups & Stews",
@@ -49,6 +50,20 @@ export default function Step2() {
   } = useStepForm();
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
+
+  // Pull live category names from the admin-managed Category table so the
+  // vendor dropdown always matches what admins configure (same list as header nav).
+  useEffect(() => {
+    SearchAPI.getAllCategories()
+        .then(res => {
+            const list = Array.isArray(res) ? res : res?.data;
+            if (Array.isArray(list) && list.length > 0) {
+                setCuisineTypes(list.map(c => c.name ?? c));
+            }
+        })
+        .catch(() => { /* keep fallback */ });
+  }, []);
 
   const {
     register,
@@ -217,7 +232,7 @@ export default function Step2() {
                   value={watch("cuisineType")}
                   helpText="Helps customers find your store when searching by product type"
                   placeholder="Select product type…"
-                  options={CUISINE_TYPES}
+                  options={cuisineTypes}
                   selectProps={{ ...register("cuisineType") }}
               />
 

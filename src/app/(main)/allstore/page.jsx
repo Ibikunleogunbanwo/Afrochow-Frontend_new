@@ -4,9 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HiSearch } from 'react-icons/hi';
 import { ChevronRight, Home, X } from 'lucide-react';
-import StoreCard from '@/components/home/cards/storeCard';
+import PopularStoreCard from '@/components/home/cards/PopularStoreCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { SearchAPI } from '@/lib/api/search.api';
+import { useAuth } from '@/hooks/useAuth';
+import { SignInModal } from '@/components/signin/SignInModal';
+import { SignUpModal } from '@/components/register/SignUpModal';
 
 // ── Module-level cache keyed by query + city + page ───────────────────────────
 const storesCache = {};
@@ -79,33 +82,37 @@ const computeIsOpenFromSchedule = (weeklySchedule) => {
 // Open rank: open=0, unknown=1, closed=2
 const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
 
-// ── Vendor → StoreCard shape ──────────────────────────────────────────────────
+// ── Vendor → PopularStoreCard shape ──────────────────────────────────────────
 const transformVendor = (vendor) => {
     const isOpenNow = computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
         ?? computeIsOpenNow(vendor.todayHoursFormatted)
         ?? vendor.isOpenNow
         ?? null;
     return {
-        storeId: vendor.publicUserId,
+        // identity
         vendorPublicId: vendor.publicUserId,
-        name: vendor.restaurantName,
+        // image — prefer banner, fall back to logo
+        imageUrl: vendor.bannerUrl || vendor.logoUrl || null,
+        // names & meta
         restaurantName: vendor.restaurantName,
-        rating: vendor.averageRating || 0,
-        reviewCount: vendor.reviewCount || 0,
-        categories: vendor.cuisineType ? [vendor.cuisineType] : ['African Cuisine'],
-        deliveryTime: vendor.estimatedDeliveryMinutes || 30,
-        deliveryFee: vendor.deliveryFee || 0,
+        cuisineType: vendor.cuisineType || null,
         location: vendor.address?.city && vendor.address?.province
             ? `${vendor.address.city}, ${vendor.address.province}`
             : vendor.address?.city || '',
-        popularItems: vendor.bannerUrl
-            ? [{ name: vendor.restaurantName, imageUrl: vendor.bannerUrl }]
-            : vendor.logoUrl
-                ? [{ name: vendor.restaurantName, imageUrl: vendor.logoUrl }]
-                : [],
+        // open status
         isOpenNow,
-        todayHoursFormatted: computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? vendor.todayHoursFormatted ?? null,
+        todayHoursFormatted: computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+            ?? vendor.todayHoursFormatted
+            ?? null,
+        // delivery
+        deliveryFee: vendor.deliveryFee ?? 0,
         offersPickup: vendor.offersPickup ?? false,
+        offersDelivery: vendor.offersDelivery ?? true,
+        // stats
+        preparationTimeMinutes: vendor.estimatedDeliveryMinutes || 0,
+        averageRating: vendor.averageRating || 0,
+        reviewCount: vendor.reviewCount || 0,
+        totalOrders: vendor.totalOrdersCompleted || 0,
     };
 };
 
@@ -133,6 +140,9 @@ const DisplayStores = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(urlPage);
     const [totalPages, setTotalPages]   = useState(0);
+    const [showSignIn, setShowSignIn] = useState(false);
+    const [showSignUp, setShowSignUp] = useState(false);
+    const { isAuthenticated } = useAuth();
 
     // ── fetch ──────────────────────────────────────────────────────────────────
     const fetchStores = useCallback(async () => {
@@ -477,11 +487,16 @@ const DisplayStores = () => {
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
                             {stores.map((store, index) => (
                                 <div
-                                    key={store.storeId || `store-${index}`}
-                                    className="animate-fade-in"
+                                    key={store.vendorPublicId || `store-${index}`}
+                                    className="h-full animate-fade-in"
                                     style={{ animationDelay: `${index * 40}ms` }}
                                 >
-                                    <StoreCard store={store} priority={index < 3} />
+                                    <PopularStoreCard
+                                        product={store}
+                                        priority={index < 3}
+                                        isAuthenticated={isAuthenticated}
+                                        onUnauthenticated={() => setShowSignIn(true)}
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -555,6 +570,18 @@ const DisplayStores = () => {
                     </div>
                 )}
             </div>
+
+            {/* Auth modals */}
+            <SignInModal
+                isOpen={showSignIn}
+                onClose={() => setShowSignIn(false)}
+                onSignUpClick={() => { setShowSignIn(false); setShowSignUp(true); }}
+            />
+            <SignUpModal
+                isOpen={showSignUp}
+                onClose={() => setShowSignUp(false)}
+                onSignInClick={() => { setShowSignUp(false); setShowSignIn(true); }}
+            />
         </div>
     );
 };

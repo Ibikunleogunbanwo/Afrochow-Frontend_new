@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HiSearch } from 'react-icons/hi';
 import { ChevronRight, Home } from 'lucide-react';
-import StoreCard from '@/components/home/cards/storeCard';
+import FeaturedProductCard from '@/components/home/cards/FeaturedProductCard';
 import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
 import { PromotionsAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { SignInModal } from '@/components/signin/SignInModal';
+import { SignUpModal } from '@/components/register/SignUpModal';
 
 // Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
 // Avoids timezone bugs where the backend calculates isOpenNow in UTC
@@ -87,6 +90,9 @@ const DisplayRestaurant = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [hasMore,       setHasMore]       = useState(false);
     const [promoMap,      setPromoMap]       = useState({});
+    const [showSignIn,    setShowSignIn]     = useState(false);
+    const [showSignUp,    setShowSignUp]     = useState(false);
+    const { isAuthenticated } = useAuth();
     const pageSize = 20;
 
     // ── Sync inputs when URL changes (back/forward navigation) ──
@@ -154,49 +160,32 @@ const DisplayRestaurant = () => {
                     const transformedResults = productList
                         .map(product => {
                             const vendor = vendorMap[product.vendorPublicId] || {};
+                            const isOpenNow = computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
+                                ?? vendor.isOpenNow
+                                ?? null;
                             return {
-                                storeId:          product.vendorPublicId,
-                                publicProductId:  product.publicProductId,
-                                vendorPublicId:   product.vendorPublicId,
-                                name:             product.name,
-                                categories:       product.categoryName
-                                    ? [product.categoryName]
-                                    : ['African Cuisine'],
-                                rating:           product.averageRating || 0,
-                                reviewCount:      product.reviewCount   || 0,
-                                deliveryTime:     vendor.estimatedDeliveryMinutes
-                                    || product.preparationTimeMinutes
-                                    || 30,
-                                location: vendor.address?.city && vendor.address?.province
-                                    ? `${vendor.address.city}, ${vendor.address.province}`
-                                    : product.vendorCity && product.vendorProvince
-                                        ? `${product.vendorCity}, ${product.vendorProvince}`
-                                        : product.vendorCity || '',
-                                deliveryFee:            vendor.deliveryFee || 2.99,
-                                popularItems: [{
-                                    name:        product.name,
-                                    imageUrl:    product.imageUrl || '/image/placeholder.jpg',
-                                    price:       product.price,
-                                    description: product.description,
-                                }],
-                                available:              product.available !== false,
-                                restaurantName:         product.restaurantName || vendor.restaurantName,
-                                categoryName:           product.categoryName,
-                                description:            product.description,
-                                price:                  product.price,
-                                vendorAddressLine:      product.vendorAddressLine,
-                                vendorCity:             product.vendorCity,
-                                vendorProvince:         product.vendorProvince,
-                                vendorPostalCode:       product.vendorPostalCode,
-                                vendorCountry:          product.vendorCountry,
-                                vendorFormattedAddress: product.vendorFormattedAddress,
-                                isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? computeIsOpenNow(vendor.todayHoursFormatted) ?? vendor.isOpenNow ?? null,
-                                todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? vendor.todayHoursFormatted ?? null,
-                                offersPickup:           vendor.offersPickup        ?? false,
-                                isVegetarian:           product.isVegetarian       || false,
-                                isVegan:                product.isVegan            || false,
-                                isGlutenFree:           product.isGlutenFree       || false,
-                                isSpicy:                product.isSpicy            || false,
+                                // identity
+                                publicProductId:        product.publicProductId,
+                                vendorPublicId:         product.vendorPublicId,
+                                // FeaturedProductCard core props
+                                name:                   product.name,
+                                restaurantName:         product.restaurantName || vendor.restaurantName || '',
+                                imageUrl:               product.imageUrl || null,
+                                price:                  product.price ?? null,
+                                averageRating:          product.averageRating || 0,
+                                reviewCount:            product.reviewCount   || 0,
+                                totalOrders:            product.totalOrders   || 0,
+                                categoryName:           product.categoryName  || null,
+                                preparationTimeMinutes: product.preparationTimeMinutes
+                                    || vendor.estimatedDeliveryMinutes
+                                    || 0,
+                                isVegan:        product.isVegan        || false,
+                                isVegetarian:   product.isVegetarian   || false,
+                                isGlutenFree:   product.isGlutenFree   || false,
+                                isSpicy:        product.isSpicy        || false,
+                                // open status (used for sort)
+                                isOpenNow,
                             };
                         });
 
@@ -510,15 +499,17 @@ const DisplayRestaurant = () => {
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12">
                             {products.map((product, index) => (
                                 <div
-                                    key={product.publicProductId}
-                                    className="animate-fade-up"
+                                    key={product.publicProductId || `product-${index}`}
+                                    className="h-full animate-fade-up"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    <StoreCard
-                                    store={product}
-                                    priority={index < 3}
-                                    promotions={promoMap[product.vendorPublicId] || []}
-                                />
+                                    <FeaturedProductCard
+                                        product={product}
+                                        priority={index < 4}
+                                        isAuthenticated={isAuthenticated}
+                                        onUnauthenticated={() => setShowSignIn(true)}
+                                        promotions={promoMap[product.vendorPublicId] || []}
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -592,6 +583,18 @@ const DisplayRestaurant = () => {
                     </div>
                 )}
             </div>
+
+            {/* Auth modals */}
+            <SignInModal
+                isOpen={showSignIn}
+                onClose={() => setShowSignIn(false)}
+                onSignUpClick={() => { setShowSignIn(false); setShowSignUp(true); }}
+            />
+            <SignUpModal
+                isOpen={showSignUp}
+                onClose={() => setShowSignUp(false)}
+                onSignInClick={() => { setShowSignUp(false); setShowSignIn(true); }}
+            />
         </div>
     );
 };

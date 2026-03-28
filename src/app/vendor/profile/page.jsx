@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
@@ -18,11 +18,12 @@ import {
     AlertCircle, Bell, CheckCheck, Trash2, RefreshCw,
 } from 'lucide-react';
 import { useVendorNotifications } from '@/hooks/useVendorNotifications';
+import { SearchAPI } from '@/lib/api/search.api';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-/** Mirrors CuisineType enum on the backend — update both together. */
-const CUISINE_TYPES = [
+/** Fallback used while backend request is in-flight or if it fails. */
+const CUISINE_TYPES_FALLBACK = [
     "African Home Kitchen",
     "African Restaurant",
     "African Soups & Stews",
@@ -127,7 +128,7 @@ function validateInfo(infoForm, addrForm) {
         e.restaurantName = 'Must be under 100 characters';
     }
 
-    if (infoForm.cuisineType && !CUISINE_TYPES.includes(infoForm.cuisineType)) {
+    if (infoForm.cuisineType && !cuisineTypes.includes(infoForm.cuisineType)) {
         e.cuisineType = 'Please select a valid product type';
     }
 
@@ -281,10 +282,24 @@ function SaveBar({ saving, onSave, onCancel, disabled }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function VendorProfilePage() {
-    const [profile,   setProfile]   = useState(null);
-    const [analytics, setAnalytics] = useState(null);
-    const [loading,   setLoading]   = useState(true);
-    const [activeTab, setActiveTab] = useState('info');
+    const [profile,      setProfile]      = useState(null);
+    const [analytics,    setAnalytics]    = useState(null);
+    const [loading,      setLoading]      = useState(true);
+    const [activeTab,    setActiveTab]    = useState('info');
+    const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
+
+    // Pull live category names from the admin-managed Category table so the
+    // dropdown matches what admins configure (same list as header nav).
+    useEffect(() => {
+        SearchAPI.getAllCategories()
+            .then(res => {
+                const list = Array.isArray(res) ? res : res?.data;
+                if (Array.isArray(list) && list.length > 0) {
+                    setCuisineTypes(list.map(c => c.name ?? c));
+                }
+            })
+            .catch(() => { /* keep fallback */ });
+    }, []);
 
     // ── Notifications (for the Notifications tab) ─────────────────────────────
     const {
@@ -711,7 +726,7 @@ export default function VendorProfilePage() {
                                         <Label>Product type</Label>
                                         <select {...fi('cuisineType')}>
                                             <option value="">Select product type…</option>
-                                            {CUISINE_TYPES.map(type => (
+                                            {cuisineTypes.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
                                         </select>

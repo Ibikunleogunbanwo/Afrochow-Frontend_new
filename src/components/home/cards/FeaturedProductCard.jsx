@@ -179,12 +179,12 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             label="Rating"
                             value={averageRating > 0
                                 ? `⭐ ${averageRating.toFixed(1)}${reviewCount > 0 ? ` (${reviewCount >= 1000 ? `${(reviewCount / 1000).toFixed(1)}k` : reviewCount})` : ''}`
-                                : '⭐ —'}
+                                : '⭐ 0'}
                         />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem
                             label="Prep time"
-                            value={preparationTimeMinutes > 0 ? `${preparationTimeMinutes} min` : '—'}
+                            value={preparationTimeMinutes > 0 ? `${preparationTimeMinutes} min` : '0 min'}
                         />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem

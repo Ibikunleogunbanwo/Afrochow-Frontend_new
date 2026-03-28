@@ -167,6 +167,14 @@ export const SearchAPI = {
     );
   },
 
+  /** Returns the authoritative list of vendor product/cuisine type labels from the backend enum. */
+  getCuisineTypes: async () => {
+    return fetchWithCredentials(
+        `${API_BASE_URL}/categories/cuisine-types`,
+        { method: 'GET' }
+    );
+  },
+
   // ================= LOCATION =================
 
   getVendorsNearCoordinates: async (lat, lng, radiusKm = 25) => {

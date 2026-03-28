@@ -173,13 +173,13 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                             <div className="flex items-center gap-1">
                                 <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
                                 <span className="text-sm font-bold text-gray-800">
-                                    {product.averageRating > 0 ? product.averageRating.toFixed(1) : "—"}
+                                    {product.averageRating > 0 ? product.averageRating.toFixed(1) : "0"}
                                 </span>
                             </div>
                             <span className="text-[10px] text-gray-400">
                                 {product.reviewCount > 0
                                     ? `${product.reviewCount >= 1000 ? `${(product.reviewCount / 1000).toFixed(1)}k` : product.reviewCount} reviews`
-                                    : "No reviews"}
+                                    : "0 reviews"}
                             </span>
                         </div>
 
@@ -190,7 +190,7 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                             <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4 text-gray-400" />
                                 <span className="text-sm font-bold text-gray-800">
-                                    {product.preparationTimeMinutes > 0 ? `${product.preparationTimeMinutes}` : "—"}
+                                    {product.preparationTimeMinutes > 0 ? `${product.preparationTimeMinutes}` : "0"}
                                 </span>
                             </div>
                             <span className="text-[10px] text-gray-400">min prep</span>
