@@ -72,7 +72,7 @@ const AdminDashboardLayout = ({ children }) => {
     const admin = {
         name: `${adminData?.firstName || ""} ${adminData?.lastName || ""}`.trim(),
         email: adminData?.email || "",
-        role: adminData?.accessLevel || "",
+        role: adminData?.accessLevel?.replace(/_/g, " ") || "",
         avatar: getInitials(adminData?.firstName, adminData?.lastName)
     };
 
