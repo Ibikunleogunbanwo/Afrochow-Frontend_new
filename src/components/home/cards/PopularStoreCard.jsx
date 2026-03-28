@@ -58,7 +58,7 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
             role="button"
             tabIndex={0}
         >
-            <div className="h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
                 {/* ── Image ── */}
                 <div className="relative w-full h-52 overflow-hidden bg-gray-100">
@@ -124,32 +124,36 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                 </div>
 
                 {/* ── Body ── */}
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
 
                     {/* Restaurant name */}
                     <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-1 mb-1">
                         {product.restaurantName || product.name}
                     </h3>
 
-                    {/* Location */}
-                    {product.location && (
-                        <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-2">
-                            <MapPin className="w-3 h-3 shrink-0 text-gray-300" />
-                            {product.location}
-                        </p>
-                    )}
+                    {/* Location — always reserve one line of space */}
+                    <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-2 min-h-[1rem]">
+                        {product.location && (
+                            <>
+                                <MapPin className="w-3 h-3 shrink-0 text-gray-300" />
+                                {product.location}
+                            </>
+                        )}
+                    </p>
 
-                    {/* Today's hours */}
-                    {product.todayHoursFormatted && (
-                        <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-3">
-                            <Clock className="w-3 h-3 shrink-0 text-gray-300" />
-                            {product.todayHoursFormatted}
-                        </p>
-                    )}
+                    {/* Today's hours — always reserve one line of space */}
+                    <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-3 min-h-[1rem]">
+                        {product.todayHoursFormatted && (
+                            <>
+                                <Clock className="w-3 h-3 shrink-0 text-gray-300" />
+                                {product.todayHoursFormatted}
+                            </>
+                        )}
+                    </p>
 
-                    {/* Delivery fee pill */}
-                    {deliveryFeeLabel && (
-                        <div className="mb-3">
+                    {/* Delivery fee pill — always reserve height */}
+                    <div className="mb-3 min-h-[1.75rem]">
+                        {deliveryFeeLabel && (
                             <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
                                 product.deliveryFee === 0 || product.deliveryFee === '0'
                                     ? 'bg-green-50 text-green-700 border-green-100'
@@ -158,11 +162,11 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                                 <Truck className="w-3 h-3 shrink-0" />
                                 {deliveryFeeLabel}
                             </span>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
-                    {/* ── Stats row ── */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    {/* ── Stats row — pinned to bottom ── */}
+                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-100">
 
                         {/* Rating */}
                         <div className="flex flex-col items-center gap-0.5 flex-1">

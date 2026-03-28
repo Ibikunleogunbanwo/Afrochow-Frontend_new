@@ -68,11 +68,11 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     return (
         <motion.div
             onClick={handleClick}
-            className="group w-full cursor-pointer"
+            className="group w-full h-full cursor-pointer"
             whileHover={{ y: -5, scale: 1.02 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-            <div className="w-full overflow-hidden rounded-2xl bg-white shadow-md">
+            <div className="w-full h-full flex flex-col overflow-hidden rounded-2xl bg-white shadow-md">
 
                 {/* ── Image section ── */}
                 <div className="relative h-56 w-full overflow-hidden">
@@ -153,21 +153,22 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                 </div>
 
                 {/* ── Bottom section ── */}
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
 
-                    {/* Dietary tags */}
-                    {dietaryTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {dietaryTags.map((tag) => (
-                                <span
-                                    key={tag.label}
-                                    className={`px-3 py-1 text-base font-semibold rounded-full border ${tag.bg}`}
-                                >
-                                    {tag.label}
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    {/* Dietary tags — always reserve space so cards stay uniform */}
+                    <div className="flex flex-wrap gap-2 mb-3 min-h-[2rem]">
+                        {dietaryTags.map((tag) => (
+                            <span
+                                key={tag.label}
+                                className={`px-3 py-1 text-base font-semibold rounded-full border ${tag.bg}`}
+                            >
+                                {tag.label}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Push stats to bottom */}
+                    <div className="mt-auto">
 
                     {/* Divider */}
                     <div className="h-px w-full bg-gray-100 mb-3" />
@@ -191,6 +192,8 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             value={price != null ? `$${Number(price).toFixed(2)}` : '—'}
                         />
                     </div>
+
+                    </div>{/* end mt-auto */}
                 </div>
             </div>
         </motion.div>

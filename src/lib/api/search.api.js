@@ -109,7 +109,7 @@ export const SearchAPI = {
 
   getVendorsByCity: async (city) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/advanced?city=${encodeURIComponent(city)}&isVerified=true`,
+        `${API_BASE_URL}/search/vendors/city/${encodeURIComponent(city)}`,
         { method: 'GET' }
     );
   },
