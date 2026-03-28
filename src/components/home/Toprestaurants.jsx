@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import StoreCard from "@/components/home/cards/storeCard";
-import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
+import PopularStoreCard from "@/components/home/cards/PopularStoreCard";
+import PopularStoreSkeleton from "@/components/home/cards/PopularStoreSkeleton";
 import LocationSelector from "@/components/LocationSelector";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { SearchAPI } from "@/lib/api/search.api";
@@ -19,9 +19,6 @@ const storesCache = {};
 
 const getCacheKey = (city) =>
     city ? city.toLowerCase().trim() : "__default__";
-
-// Picks the best available image URL from a vendor object
-const getStoreImage = (vendor) => vendor.bannerUrl || vendor.logoUrl || null;
 
 // Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
 const computeIsOpenNow = (todayHoursFormatted) => {
@@ -121,33 +118,29 @@ const TopStores = () => {
                         ? vendorsResponse.data
                         : [];
 
-                const transformedVendors = vendors
-                    .map((vendor) => {
-                        const image = getStoreImage(vendor);
-                        return {
-                            storeId:             vendor.publicUserId,
-                            vendorPublicId:      vendor.publicUserId,
-                            name:                vendor.restaurantName,
-                            restaurantName:      vendor.restaurantName,
-                            rating:              vendor.averageRating || 0,
-                            reviewCount:         vendor.reviewCount   || 0,
-                            categories:          vendor.cuisineType
-                                ? [vendor.cuisineType]
-                                : ["African Cuisine"],
-                            deliveryTime:        vendor.estimatedDeliveryMinutes || 30,
-                            deliveryFee:         vendor.deliveryFee || 0,
-                            location:            vendor.address?.city && vendor.address?.province
-                                ? `${vendor.address.city}, ${vendor.address.province}`
-                                : vendor.address?.city || "",
-                            popularItems:        image
-                                ? [{ name: vendor.restaurantName, imageUrl: image }]
-                                : [],
-                            isOpenNow:           computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? computeIsOpenNow(vendor.todayHoursFormatted) ?? vendor.isOpenNow ?? null,
-                            todayHoursFormatted: computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours) ?? vendor.todayHoursFormatted ?? null,
-                            offersPickup:        vendor.offersPickup ?? false,
-                            offersDelivery:      vendor.offersDelivery ?? true,
-                        };
-                    });
+                const transformedVendors = vendors.map((vendor) => ({
+                    vendorPublicId:         vendor.publicUserId,
+                    imageUrl:               vendor.bannerUrl || vendor.logoUrl || null,
+                    restaurantName:         vendor.restaurantName || "Store",
+                    cuisineType:            vendor.cuisineType    || null,
+                    location:               vendor.address?.city && vendor.address?.province
+                                                ? `${vendor.address.city}, ${vendor.address.province}`
+                                                : vendor.address?.city || "",
+                    isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+                                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
+                                                ?? vendor.isOpenNow
+                                                ?? null,
+                    todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+                                                ?? vendor.todayHoursFormatted
+                                                ?? null,
+                    deliveryFee:            vendor.deliveryFee            ?? 2.99,
+                    offersPickup:           vendor.offersPickup           ?? false,
+                    offersDelivery:         vendor.offersDelivery         ?? true,
+                    preparationTimeMinutes: vendor.estimatedDeliveryMinutes ?? vendor.preparationTime ?? 30,
+                    averageRating:          vendor.averageRating          ?? 0,
+                    reviewCount:            vendor.reviewCount            ?? 0,
+                    totalOrders:            vendor.totalOrdersCompleted   ?? 0,
+                }));
 
                 // Open first → unknown (null) → closed last
                 const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
@@ -202,9 +195,9 @@ const TopStores = () => {
 
                 {/* Cards */}
                 {loading ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {[...Array(SKELETON_COUNT)].map((_, i) => (
-                            <StoreCardSkeleton key={`skeleton-${i}`} />
+                            <PopularStoreSkeleton key={`skeleton-${i}`} />
                         ))}
                     </div>
                 ) : error ? (
@@ -220,12 +213,12 @@ const TopStores = () => {
                         </button>
                     </div>
                 ) : stores.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {stores.map((store, index) => (
-                            <StoreCard
+                            <PopularStoreCard
                                 key={store.vendorPublicId || `store-${index}`}
-                                store={store}
-                                priority={index < 3}
+                                product={store}
+                                priority={index < 4}
                                 isAuthenticated={isAuthenticated}
                                 onUnauthenticated={openSignIn}
                             />
