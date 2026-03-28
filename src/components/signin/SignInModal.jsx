@@ -73,7 +73,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
             // login() handles role-based routing internally (VENDOR, ADMIN, customer)
             // and returns the destination path.
             const destination = await login(values.email, values.password)
-            toast.success("Welcome back!")
+            toast.success("Welcome back!", { id: 'login-success' })
             // Only close the dialog when the destination is "/" (customer staying
             // on the same page). For vendors/admins the router already navigates
             // away — calling onClose() here would push "/" on top and override it.

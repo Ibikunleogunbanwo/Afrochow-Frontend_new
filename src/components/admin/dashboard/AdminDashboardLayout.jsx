@@ -61,7 +61,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
         { name: 'Broadcast',      icon: Megaphone,       href: '/admin/broadcast',     badgeKey: null },
         { name: 'Register Admin', icon: UserPlus,        href: '/admin/register',      badgeKey: null },
-        { name: 'Settings',       icon: Settings,        href: '/admin/profile',       badgeKey: null },
+        { name: 'Settings',       icon: Settings,        href: '/admin/settings',      badgeKey: null },
         { name: 'Help',           icon: HelpCircle,      href: '/admin/help',          badgeKey: null },
     ];
 
@@ -149,7 +149,7 @@ const AdminDashboardLayout = ({ children }) => {
 
             {/* Sidebar - Desktop */}
             <aside className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
-                <div className="flex flex-col grow bg-white border-r border-gray-200 overflow-y-auto overflow-x-hidden">
+                <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-hidden">
 
                     {/* Logo */}
                     <div className={`flex items-center shrink-0 border-b border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'px-3 py-5 justify-center' : 'px-5 py-5'}`}>
@@ -162,8 +162,8 @@ const AdminDashboardLayout = ({ children }) => {
                         )}
                     </div>
 
-                    {/* Navigation */}
-                    <nav className="flex-1 px-2 py-4 space-y-0.5">
+                    {/* Navigation — scrollable independently so bottom section always visible */}
+                    <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-0.5">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
@@ -214,29 +214,23 @@ const AdminDashboardLayout = ({ children }) => {
                     <div className="shrink-0 border-t border-gray-200">
                         {/* User info — hidden when collapsed */}
                         {!sidebarCollapsed && (
-                            <div className="p-3">
-                                <button
-                                    onClick={() => setProfileOpen(!profileOpen)}
-                                    className="flex items-center w-full px-3 py-2.5 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                                >
-                                    <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
-                                        {admin.name.charAt(0)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{admin.name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{admin.role}</p>
-                                    </div>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
-                                </button>
-
-                                {/* Profile Dropdown */}
+                            <div className="p-3 relative">
+                                {/* Profile Dropdown — opens upward so it's never clipped */}
                                 {profileOpen && (
-                                    <div className="mt-2 py-2 bg-white border border-gray-200 rounded-xl shadow-lg">
-                                        <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <div className="absolute bottom-full left-3 right-3 mb-1 py-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
+                                        <Link
+                                            href="/admin/profile"
+                                            onClick={() => setProfileOpen(false)}
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                        >
                                             <User className="w-4 h-4 mr-3" />
                                             My Profile
                                         </Link>
-                                        <Link href="/admin/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        <Link
+                                            href="/admin/settings"
+                                            onClick={() => setProfileOpen(false)}
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                        >
                                             <Settings className="w-4 h-4 mr-3" />
                                             Settings
                                         </Link>
@@ -251,6 +245,20 @@ const AdminDashboardLayout = ({ children }) => {
                                         </button>
                                     </div>
                                 )}
+
+                                <button
+                                    onClick={() => setProfileOpen(!profileOpen)}
+                                    className="flex items-center w-full px-3 py-2.5 space-x-3 text-left text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                        {admin.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{admin.name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{admin.role}</p>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
+                                </button>
                             </div>
                         )}
 
