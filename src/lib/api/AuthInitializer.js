@@ -97,6 +97,9 @@ export default function AuthInitializer({ children }) {
                 (pathname.startsWith('/admin') || pathname.startsWith('/vendor') || pathname.startsWith('/profile') || pathname.startsWith('/orders'));
 
             if (isProtectedRoute) {
+                // Remember where the user was trying to go so we can
+                // send them there after a successful login.
+                sessionStorage.setItem('returnTo', pathname);
                 router.push('/?signin=true');
             }
         }

@@ -96,7 +96,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                 <div className="relative overflow-hidden transition-all duration-300 bg-white rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1">
 
                     {/* Image Container */}
-                    <div className="relative w-full h-56 overflow-hidden bg-gray-200">
+                    <div className="relative w-full h-56 overflow-hidden bg-gray-100">
                         {!imageError ? (
                             <>
                                 <Image

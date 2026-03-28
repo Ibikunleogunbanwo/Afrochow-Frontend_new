@@ -71,6 +71,8 @@ const ReviewsModal = ({
                           productName,
                           ratingFilter,
                           onRatingFilterChange,
+                          canWriteReview,       // true → show active button; false + reviewBlockedReason → show tooltip
+                          reviewBlockedReason,  // string shown when the user cannot review yet
                           onWriteReview,
                           onMarkHelpful,
                       }) => {
@@ -94,14 +96,21 @@ const ReviewsModal = ({
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            {onWriteReview && (
+                            {canWriteReview ? (
                                 <button
                                     onClick={onWriteReview}
                                     className="px-4 py-2 text-sm font-semibold text-orange-600 border border-orange-500 rounded-xl hover:bg-orange-50 transition-colors"
                                 >
                                     Write a Review
                                 </button>
-                            )}
+                            ) : reviewBlockedReason ? (
+                                <span
+                                    title={reviewBlockedReason}
+                                    className="px-4 py-2 text-sm text-gray-400 border border-gray-200 rounded-xl cursor-default select-none"
+                                >
+                                    {reviewBlockedReason}
+                                </span>
+                            ) : null}
                             <button
                                 onClick={onClose}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"

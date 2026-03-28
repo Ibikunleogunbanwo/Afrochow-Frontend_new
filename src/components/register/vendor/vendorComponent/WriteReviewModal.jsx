@@ -9,6 +9,7 @@ const WriteReviewModal = ({
     vendorPublicId,
     vendorName,
     product,
+    eligibleOrderId, // publicOrderId of a DELIVERED order — required by the backend
     onSuccess,
 }) => {
     const [rating, setRating] = useState(0);
@@ -67,6 +68,7 @@ const WriteReviewModal = ({
                 vendorPublicId,
                 rating,
                 comment,
+                orderPublicId: eligibleOrderId,
             };
             if (product?.publicProductId) {
                 payload.productPublicId = product.publicProductId;

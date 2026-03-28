@@ -81,6 +81,40 @@ const Missing = ({ text }) => (
   </span>
 );
 
+// ── validation ────────────────────────────────────────────────────────────────
+
+const getValidationErrors = (state) => {
+  const errors = [];
+
+  // Step 1 — Account
+  if (!state.email?.trim())    errors.push({ step: 1, field: "Email address",  message: "Required to create your account." });
+  if (!state.password?.trim()) errors.push({ step: 1, field: "Password",       message: "Required to create your account." });
+
+  // Step 2 — Personal + Store
+  if (!state.firstName?.trim())     errors.push({ step: 2, field: "First name",     message: "Personal details are required." });
+  if (!state.lastName?.trim())      errors.push({ step: 2, field: "Last name",      message: "Personal details are required." });
+  if (!state.phone?.trim())         errors.push({ step: 2, field: "Phone number",   message: "Required for order notifications." });
+  if (!state.restaurantName?.trim()) errors.push({ step: 2, field: "Store name",    message: "Customers search for your store by name." });
+  if (!state.description?.trim())   errors.push({ step: 2, field: "Store description", message: "Tell customers what you sell." });
+  if (!state.cuisineType?.trim())   errors.push({ step: 2, field: "Product type",   message: "Select a category for your store." });
+
+  // Step 3 — Branding + Address
+  if (!state.logoUrl)   errors.push({ step: 3, field: "Store logo",   message: "A logo is required before submitting." });
+  if (!state.bannerUrl) errors.push({ step: 3, field: "Store banner", message: "A banner is required before submitting." });
+  const addr = state.address || {};
+  if (!addr.addressLine?.trim()) errors.push({ step: 3, field: "Street address", message: "Business address is required." });
+  if (!addr.city?.trim())        errors.push({ step: 3, field: "City",            message: "Business address is required." });
+  if (!addr.province?.trim())    errors.push({ step: 3, field: "Province",        message: "Business address is required." });
+  if (!addr.postalCode?.trim())  errors.push({ step: 3, field: "Postal code",     message: "Business address is required." });
+
+  // Step 4 — Operations
+  if (!state.offersDelivery && !state.offersPickup) {
+    errors.push({ step: 4, field: "Fulfillment method", message: "Enable at least Delivery or Pickup." });
+  }
+
+  return errors;
+};
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function Review() {
@@ -89,6 +123,8 @@ export default function Review() {
   const [loading, setLoading]               = useState(false);
   const [progress, setProgress]             = useState(null);
   const [error, setError]                   = useState(null);
+
+  const validationErrors = getValidationErrors(state);
 
   useEffect(() => {
     if (!loading) return;
@@ -104,8 +140,10 @@ export default function Review() {
 
   const handleSubmit = async () => {
     if (loading) return;
-    if (!state.logoUrl)   { toast.error("Logo is required");   return; }
-    if (!state.bannerUrl) { toast.error("Banner is required"); return; }
+    if (validationErrors.length > 0) {
+      toast.error("Please fix the highlighted issues before submitting.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -151,6 +189,39 @@ export default function Review() {
                 <Upload className="h-4 w-4 text-orange-500 shrink-0 animate-pulse" />
                 <p className="flex-1 text-sm font-medium text-orange-800 min-w-0">{progress}</p>
                 {loading && <Loader2 className="h-4 w-4 text-orange-500 shrink-0 animate-spin" />}
+              </div>
+          )}
+
+          {/* ── Validation errors ── */}
+          {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-200">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <p className="text-sm font-semibold text-red-800">
+                    {validationErrors.length} issue{validationErrors.length > 1 ? "s" : ""} need{validationErrors.length === 1 ? "s" : ""} to be fixed before submitting
+                  </p>
+                </div>
+                <ul className="divide-y divide-red-100">
+                  {validationErrors.map((err, i) => (
+                      <li key={i} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <X className="h-3.5 w-3.5 text-red-400 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium text-red-800">{err.field}</span>
+                            <span className="text-xs text-red-500 block">{err.message}</span>
+                          </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => handleEdit(err.step)}
+                            disabled={loading}
+                            className="flex items-center gap-1 text-xs text-red-600 bg-red-100 hover:bg-red-200 px-2.5 py-1.5 rounded-lg shrink-0 disabled:opacity-50 transition-colors whitespace-nowrap"
+                        >
+                          <Edit className="h-3 w-3" /> Fix
+                        </button>
+                      </li>
+                  ))}
+                </ul>
               </div>
           )}
 
@@ -429,12 +500,14 @@ export default function Review() {
               <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={loading || validationErrors.length > 0}
                   className="w-full h-12 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 {loading
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account...</>
-                    : <><CheckCircle2 className="h-4 w-4" /> Create Account</>
+                    : validationErrors.length > 0
+                        ? <><AlertCircle className="h-4 w-4" /> Fix {validationErrors.length} Issue{validationErrors.length > 1 ? "s" : ""} Above</>
+                        : <><CheckCircle2 className="h-4 w-4" /> Create Account</>
                 }
               </button>
               <button

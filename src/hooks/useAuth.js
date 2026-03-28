@@ -65,10 +65,19 @@ export const useAuth = () => {
 
             dispatch(setAuth({ user: userData }));
 
-            // Always route vendors to their dashboard regardless of
-            // isActive / isVerified — the dashboard itself shows the
-            // appropriate pending-approval or deactivated banner.
-            const destination = ROLE_ROUTES[userData.role] ?? "/";
+            // Vendors and admins always go to their own dashboards.
+            // Customers return to wherever they were trying to go (set by
+            // AuthInitializer when it bounced them to the sign-in modal),
+            // falling back to home if there's nothing stored.
+            const roleRoute = ROLE_ROUTES[userData.role];
+            let destination;
+            if (roleRoute) {
+                destination = roleRoute;
+            } else {
+                const returnTo = sessionStorage.getItem('returnTo');
+                sessionStorage.removeItem('returnTo');
+                destination = returnTo || "/";
+            }
             router.push(destination);
             return destination;
 

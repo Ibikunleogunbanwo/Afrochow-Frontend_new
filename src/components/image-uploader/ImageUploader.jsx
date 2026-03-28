@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Upload, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import CropModal from './CropModal';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -70,11 +71,14 @@ function ImageUploader({
                            showRetry = true,
                            labelExtra,
                            shape = 'round', // 'round' or 'square'
+                           cropAspect,      // e.g. 1 for square, 16/9 for banner — enables crop modal
+                           cropLabel,       // label shown inside the crop modal header
                        }) {
     const [preview, setPreview] = useState('');
     const [uploading, setUploading] = useState(false);
     const [validationError, setValidationError] = useState('');
     const [uploadError, setUploadError] = useState('');
+    const [cropFile, setCropFile] = useState(null); // file pending crop
     const fileRef = useRef(null);
 
 
@@ -90,27 +94,15 @@ function ImageUploader({
         }
     }, [value]);
 
-    async function handleFileSelect(e) {
-        const file = e.target?.files?.[0];
-        if (!file) return;
-
-        const validationErr = validateImageFile(file);
-        if (validationErr) {
-            setValidationError(validationErr);
-            if (onChange) onChange(null);
-            return;
-        }
-
+    async function processFile(file) {
         if (preview && preview.startsWith('blob:')) {
             revokePreview(preview);
         }
-
         const url = createPreview(file);
         setPreview(url);
         setValidationError('');
         setUploadError('');
         fileRef.current = file;
-
 
         if (onChange && !onUpload) {
             onChange(file);
@@ -131,6 +123,35 @@ function ImageUploader({
                 setUploading(false);
             }
         }
+    }
+
+    async function handleFileSelect(e) {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+
+        const validationErr = validateImageFile(file);
+        if (validationErr) {
+            setValidationError(validationErr);
+            if (onChange) onChange(null);
+            return;
+        }
+
+        // If a crop aspect is specified, open the crop modal instead of uploading directly
+        if (cropAspect) {
+            setCropFile(file);
+            return;
+        }
+
+        await processFile(file);
+    }
+
+    async function handleCropConfirm(croppedFile) {
+        setCropFile(null);
+        await processFile(croppedFile);
+    }
+
+    function handleCropCancel() {
+        setCropFile(null);
     }
 
     async function handleRetry() {
@@ -287,6 +308,17 @@ function ImageUploader({
 
             {helpText && !currentError && (
                 <p className="text-xs text-slate-500">{helpText}</p>
+            )}
+
+            {/* Crop modal — shown after file selection when cropAspect is set */}
+            {cropFile && (
+                <CropModal
+                    file={cropFile}
+                    aspectRatio={cropAspect}
+                    label={cropLabel || label}
+                    onConfirm={handleCropConfirm}
+                    onCancel={handleCropCancel}
+                />
             )}
         </div>
     );

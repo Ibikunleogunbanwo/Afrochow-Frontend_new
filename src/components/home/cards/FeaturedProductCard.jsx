@@ -75,7 +75,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
             <div className="w-full h-full flex flex-col overflow-hidden rounded-2xl bg-white shadow-md">
 
                 {/* ── Image section ── */}
-                <div className="relative h-56 w-full overflow-hidden">
+                <div className="relative h-56 w-full overflow-hidden bg-gray-100">
                     {resolveImageUrl(imageUrl) && !imgError ? (
                         <Image
                             src={resolveImageUrl(imageUrl)}

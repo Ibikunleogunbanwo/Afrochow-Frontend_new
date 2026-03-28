@@ -10,6 +10,7 @@ import FormContainer from "@/components/register/vendor/shared/FormContainer";
 import FormActions from "@/components/register/vendor/vendorComponent/FormActions";
 import FormField from "@/components/register/vendor/vendorComponent/Formfield";
 import ImageUploader from "@/components/image-uploader/ImageUploader";
+import CropModal from "@/components/image-uploader/CropModal";
 import { ImageUploadAPI, deleteImage } from "@/lib/api/imageUpload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +27,10 @@ const step3Schema = businessSchema.merge(addressSchema);
 // ── Banner uploader ───────────────────────────────────────────────────────
 function BannerUploader({ onChange, error, initialUrl, uploading }) {
   const [dragActive, setDragActive] = useState(false);
-  const [fileError, setFileError] = useState(null);
+  const [fileError, setFileError]   = useState(null);
+  const [cropFile, setCropFile]     = useState(null); // file pending 16:9 crop
 
-  const processFile = (file) => {
+  const validateAndCrop = (file) => {
     if (!file) return;
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
@@ -40,12 +42,15 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
       return;
     }
     setFileError(null);
-    onChange?.(file);
+    // Open crop modal — actual onChange is called after user confirms crop
+    setCropFile(file);
   };
 
-  const handleFileSelect = (e) => processFile(e.target?.files?.[0]);
+  const handleFileSelect = (e) => validateAndCrop(e.target?.files?.[0]);
   const handleRemove    = () => { setFileError(null); onChange?.(null); };
-  const handleDrop      = (e) => { e.preventDefault(); setDragActive(false); processFile(e.dataTransfer?.files?.[0]); };
+  const handleDrop      = (e) => { e.preventDefault(); setDragActive(false); validateAndCrop(e.dataTransfer?.files?.[0]); };
+  const handleCropConfirm = (croppedFile) => { setCropFile(null); onChange?.(croppedFile); };
+  const handleCropCancel  = () => setCropFile(null);
 
   const displayError = fileError || error;
 
@@ -123,6 +128,17 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <p className="text-sm">{displayError}</p>
             </div>
+        )}
+
+        {/* 16:9 crop modal */}
+        {cropFile && (
+            <CropModal
+                file={cropFile}
+                aspectRatio={16 / 9}
+                label="Store Banner"
+                onConfirm={handleCropConfirm}
+                onCancel={handleCropCancel}
+            />
         )}
       </div>
   );
@@ -465,6 +481,8 @@ export default function Step3() {
                         required
                         helpText="Square images work best (recommended: 512×512px)"
                         value={field.value}
+                        cropAspect={1}
+                        cropLabel="Store Logo"
                     />
                   </div>
               )}

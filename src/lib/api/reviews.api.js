@@ -50,6 +50,15 @@ export const ReviewsAPI = {
 
   // ================= CUSTOMER REVIEWS (authenticated) =================
 
+  /**
+   * Check whether the authenticated customer can review a vendor.
+   * Returns { canReview, hasOrdered, alreadyReviewed, eligibleOrders: [{ publicOrderId, orderTime, totalAmount }] }
+   */
+  getEligibleOrders: (vendorPublicId) =>
+    fetchWithCredentials(
+      `${API_BASE_URL}/customer/reviews/eligible?vendorPublicId=${encodeURIComponent(vendorPublicId)}`
+    ),
+
   createReview: (data) =>
     fetchWithCredentials(`${API_BASE_URL}/customer/reviews`, {
       method: 'POST',

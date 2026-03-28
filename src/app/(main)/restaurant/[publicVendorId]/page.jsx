@@ -13,6 +13,7 @@ import {
     Store,
     BadgeCheck,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
 import { PromotionsAPI } from '@/lib/api';
@@ -48,6 +49,8 @@ const vendorCache = {};
 const VendorProfilePage = () => {
     const params = useParams();
     const publicVendorId = params.publicVendorId;
+    const { isAuthenticated, role } = useAuth();
+    const isCustomer = isAuthenticated && role?.toUpperCase() === 'CUSTOMER';
 
     const cached = vendorCache[publicVendorId];
 
@@ -72,6 +75,9 @@ const VendorProfilePage = () => {
 
     const [showWriteReview, setShowWriteReview]       = useState(false);
     const [writeReviewProduct, setWriteReviewProduct] = useState(null);
+
+    // Review eligibility — null = not fetched yet, false = not eligible
+    const [reviewEligibility, setReviewEligibility] = useState(null);
 
     // ── data fetching ─────────────────────────────────────────────────────────
 
@@ -286,6 +292,14 @@ const VendorProfilePage = () => {
         fetchVendorProducts();
     }, [publicVendorId, fetchVendorDetails, fetchVendorProducts]);
 
+    // Fetch review eligibility once we know the user is an authenticated customer
+    useEffect(() => {
+        if (!publicVendorId || !isCustomer) return;
+        ReviewsAPI.getEligibleOrders(publicVendorId)
+            .then(res => setReviewEligibility(res?.data ?? null))
+            .catch(() => setReviewEligibility(null));
+    }, [publicVendorId, isCustomer]);
+
     // ── event handlers ────────────────────────────────────────────────────────
 
     const handleProductCardClick = useCallback(async (product) => {
@@ -336,6 +350,9 @@ const VendorProfilePage = () => {
         setWriteReviewProduct(product);
         setShowWriteReview(true);
     }, []);
+
+    // The order ID that will be attached to the review submission
+    const eligibleOrderId = reviewEligibility?.eligibleOrders?.[0]?.publicOrderId ?? null;
 
     const handleReviewSuccess = useCallback(() => {
         if (showReviewsModal && reviewType === 'vendor') fetchVendorReviews(ratingFilter);
@@ -499,12 +516,24 @@ const VendorProfilePage = () => {
                                                 ({reviewCount || 0} reviews)
                                             </span>
                                         </button>
-                                        <button
-                                            onClick={handleWriteVendorReview}
-                                            className="px-3 py-1.5 text-sm font-semibold text-orange-600 border border-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
-                                        >
-                                            Write a Review
-                                        </button>
+                                        {isCustomer ? (
+                                            reviewEligibility?.canReview ? (
+                                                <button
+                                                    onClick={handleWriteVendorReview}
+                                                    className="px-3 py-1.5 text-sm font-semibold text-orange-600 border border-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                                                >
+                                                    Write a Review
+                                                </button>
+                                            ) : reviewEligibility?.alreadyReviewed ? (
+                                                <span className="px-3 py-1.5 text-sm text-gray-400 border border-gray-200 rounded-lg cursor-default">
+                                                    ✓ Review submitted
+                                                </span>
+                                            ) : reviewEligibility?.hasOrdered === false ? (
+                                                <span title="Order from this store first to leave a review" className="px-3 py-1.5 text-sm text-gray-400 border border-gray-200 rounded-lg cursor-default">
+                                                    Order first to review
+                                                </span>
+                                            ) : null
+                                        ) : null}
                                     </div>
                                 </div>
 
@@ -692,6 +721,13 @@ const VendorProfilePage = () => {
                     productName={selectedProduct?.name}
                     ratingFilter={ratingFilter}
                     onRatingFilterChange={handleRatingFilterChange}
+                    canWriteReview={isCustomer && (reviewType === 'product' || Boolean(reviewEligibility?.canReview))}
+                    reviewBlockedReason={
+                        !isCustomer ? null
+                        : reviewEligibility?.alreadyReviewed ? "You've already reviewed this store"
+                        : reviewEligibility?.hasOrdered === false ? "Order from this store first to leave a review"
+                        : null
+                    }
                     onWriteReview={
                         reviewType === 'product'
                             ? () => handleWriteProductReview(selectedProduct)
@@ -708,6 +744,7 @@ const VendorProfilePage = () => {
                 vendorPublicId={publicVendorId}
                 vendorName={vendor?.restaurantName}
                 product={writeReviewProduct}
+                eligibleOrderId={eligibleOrderId}
                 onSuccess={handleReviewSuccess}
             />
         </div>

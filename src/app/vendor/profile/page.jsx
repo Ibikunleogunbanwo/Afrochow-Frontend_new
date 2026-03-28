@@ -1110,6 +1110,8 @@ export default function VendorProfilePage() {
                                     helpText="512×512 px recommended"
                                     onUpload={handleLogoUpload}
                                     onChange={(val) => { if (typeof val === 'string' || val === null) setLogoUrl(val ?? ''); }}
+                                    cropAspect={1}
+                                    cropLabel="Store Logo"
                                 />
                             </section>
 
@@ -1129,6 +1131,8 @@ export default function VendorProfilePage() {
                                     helpText="Wide / landscape · JPG, PNG, WEBP · max 5 MB"
                                     onUpload={handleBannerUpload}
                                     onChange={(val) => { if (typeof val === 'string' || val === null) setBannerUrl(val ?? ''); }}
+                                    cropAspect={16 / 9}
+                                    cropLabel="Store Banner"
                                 />
                             </section>
                         </div>
