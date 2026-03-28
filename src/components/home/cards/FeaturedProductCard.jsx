@@ -138,7 +138,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-900 text-xs font-bold rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition-colors"
                                 aria-label={`View menu for ${restaurantName || name}`}
                             >
-                                View Menu
+                                View Store
                                 <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
