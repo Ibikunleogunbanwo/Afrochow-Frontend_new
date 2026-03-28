@@ -492,7 +492,7 @@ const AdminDashboardContent = () => {
                     {loadingAnalytics ? (
                         <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
                     ) : revenueData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={192}>
+                        <ResponsiveContainer width="100%" height={192} minHeight={192}>
                             <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -533,7 +533,7 @@ const AdminDashboardContent = () => {
                     {loadingAnalytics ? (
                         <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
                     ) : ordersData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={192}>
+                        <ResponsiveContainer width="100%" height={192} minHeight={192}>
                             <BarChart data={ordersData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />

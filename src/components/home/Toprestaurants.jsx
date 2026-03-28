@@ -222,18 +222,13 @@ const TopStores = () => {
                 ) : stores.length > 0 ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {stores.map((store, index) => (
-                            <div
+                            <StoreCard
                                 key={store.vendorPublicId || `store-${index}`}
-                                className="animate-fade-in"
-                                style={{ animationDelay: `${index * 50}ms` }}
-                            >
-                                <StoreCard
-                                    store={store}
-                                    priority={index < 3}
-                                    isAuthenticated={isAuthenticated}
-                                    onUnauthenticated={openSignIn}
-                                />
-                            </div>
+                                store={store}
+                                priority={index < 3}
+                                isAuthenticated={isAuthenticated}
+                                onUnauthenticated={openSignIn}
+                            />
                         ))}
                     </div>
                 ) : (

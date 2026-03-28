@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Star, Flame, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
 
 const getPromoBadge = (promotions) => {
@@ -183,4 +183,4 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     );
 };
 
-export default FeaturedProductCard;
+export default memo(FeaturedProductCard);

@@ -470,7 +470,7 @@ const DashboardContent = () => {
                         <DollarSign className="w-5 h-5 text-gray-400" />
                     </div>
                     {stats.last30DaysRevenue > 0 || stats.last7DaysRevenue > 0 || stats.todayRevenue > 0 ? (
-                        <ResponsiveContainer width="100%" height={240}>
+                        <ResponsiveContainer width="100%" height={240} minHeight={240}>
                             <BarChart
                                 data={[
                                     { period: 'Today',      revenue: parseFloat((stats.todayRevenue     || 0).toFixed(2)) },

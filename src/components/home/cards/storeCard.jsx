@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PropTypes from 'prop-types';
 import { Heart, Star, Clock, Truck, MapPin, Store } from 'lucide-react';
@@ -25,10 +25,11 @@ const getPromoBadge = (promotions) => {
     return null;
 };
 
-const StoreCard = ({ store, isLoading = false, priority = false, promotions = [] }) => {
+const StoreCard = ({ store, isLoading = false, priority = false, promotions = [], onUnauthenticated }) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
+    // Only used when onUnauthenticated prop is NOT provided (standalone usage in allstore / DisplayRestaurant)
     const [showSignIn, setShowSignIn] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
     const { isAuthenticated } = useAuth();
@@ -79,7 +80,12 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
     const handleCardClick = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            setShowSignIn(true);
+            // Delegate to parent modal when provided, otherwise use internal modal
+            if (onUnauthenticated) {
+                onUnauthenticated();
+            } else {
+                setShowSignIn(true);
+            }
         } else {
             const restaurantId = vendorPublicId || storeId;
             router.push(`/restaurant/${restaurantId}`);
@@ -291,23 +297,28 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                 </div>
             </div>
 
-            <SignInModal
-                isOpen={showSignIn}
-                onClose={() => setShowSignIn(false)}
-                onSignUpClick={() => {
-                    setShowSignIn(false);
-                    setShowSignUp(true);
-                }}
-            />
+            {/* Modals only mount when no parent handler is provided (allstore / DisplayRestaurant) */}
+            {!onUnauthenticated && (
+                <>
+                    <SignInModal
+                        isOpen={showSignIn}
+                        onClose={() => setShowSignIn(false)}
+                        onSignUpClick={() => {
+                            setShowSignIn(false);
+                            setShowSignUp(true);
+                        }}
+                    />
 
-            <SignUpModal
-                isOpen={showSignUp}
-                onClose={() => setShowSignUp(false)}
-                onSignInClick={() => {
-                    setShowSignUp(false);
-                    setShowSignIn(true);
-                }}
-            />
+                    <SignUpModal
+                        isOpen={showSignUp}
+                        onClose={() => setShowSignUp(false)}
+                        onSignInClick={() => {
+                            setShowSignUp(false);
+                            setShowSignIn(true);
+                        }}
+                    />
+                </>
+            )}
         </>
     );
 };
@@ -331,6 +342,7 @@ StoreCard.propTypes = {
     isLoading: PropTypes.bool,
     priority: PropTypes.bool,
     promotions: PropTypes.array,
+    onUnauthenticated: PropTypes.func,
 };
 
-export default StoreCard;
+export default memo(StoreCard);

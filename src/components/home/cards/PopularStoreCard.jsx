@@ -1,38 +1,10 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
-import { Star, Flame, Clock, MapPin, Store,Truck } from "lucide-react";
+import { Star, Flame, Clock, MapPin, Store, Truck, DollarSign } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
-
-// ── Badge sub-components ──────────────────────────────────────────────────────
-
-const CategoryBadge = ({ category }) => (
-    <div className="absolute top-3 left-3">
-        <span className="px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-sm">
-            {category}
-        </span>
-    </div>
-);
-
-const OrdersBadge = ({ totalOrders }) => (
-    <div className="absolute top-3 right-3">
-        <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
-            <Flame className="w-3 h-3" />
-            {totalOrders >= 1000 ? `${(totalOrders / 1000).toFixed(1)}k` : totalOrders} orders
-        </span>
-    </div>
-);
-
-const OpenStatusBadge = ({ isOpen }) => (
-    <div
-        className={`absolute bottom-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-sm shadow-sm ${
-            isOpen ? "bg-green-500/90 text-white" : "bg-red-500/90 text-white"
-        }`}
-    >
-        {isOpen ? "🟢 Open Now" : "🔴 Closed"}
-    </div>
-);
 
 // ── Promo badge helper ────────────────────────────────────────────────────────
 
@@ -70,6 +42,14 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
         }
     };
 
+    const promoBadge = getPromoBadge(promotions);
+
+    const deliveryFeeLabel = product.deliveryFee === 0 || product.deliveryFee === '0'
+        ? 'Free delivery'
+        : product.deliveryFee != null
+            ? `CA$${product.deliveryFee} delivery`
+            : null;
+
     return (
         <div
             onClick={handleClick}
@@ -78,139 +58,156 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
             role="button"
             tabIndex={0}
         >
-            <div className="h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
-                {/* Image */}
-                <div className="relative w-full aspect-4/3 overflow-hidden bg-gray-100">
+                {/* ── Image ── */}
+                <div className="relative w-full h-52 overflow-hidden bg-gray-100">
                     {resolveImageUrl(product.imageUrl) ? (
                         <Image
                             src={resolveImageUrl(product.imageUrl)}
-                            alt={product.name}
+                            alt={product.restaurantName || product.name}
                             fill
                             priority={priority}
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            quality={75}
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            unoptimized
                         />
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-orange-50">
-                            <Flame className="w-10 h-10 text-orange-300" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+                            <Flame className="w-12 h-12 text-orange-200" />
                         </div>
                     )}
 
-                    {product.categoryName && <CategoryBadge category={product.categoryName} />}
-                    {product.totalOrders > 0 && <OrdersBadge totalOrders={product.totalOrders} />}
-                    {product.isOpenNow !== null && <OpenStatusBadge isOpen={product.isOpenNow} />}
+                    {/* Subtle gradient for badge legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-                    {/* Promo Badge */}
-                    {(() => {
-                        const promo = getPromoBadge(promotions);
-                        return promo ? (
-                            <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-sm ${promo.bg}`}>
-                                {promo.label}
-                            </div>
-                        ) : null;
-                    })()}
+                    {/* Top-left: cuisine category */}
+                    {product.categoryName && (
+                        <div className="absolute top-3 left-3">
+                            <span className="px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-sm">
+                                {product.categoryName}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Top-right: orders badge OR promo */}
+                    {product.totalOrders > 0 ? (
+                        <div className="absolute top-3 right-3">
+                            <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
+                                <Flame className="w-3 h-3" />
+                                {product.totalOrders >= 1000
+                                    ? `${(product.totalOrders / 1000).toFixed(1)}k`
+                                    : product.totalOrders} orders
+                            </span>
+                        </div>
+                    ) : promoBadge ? (
+                        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-sm ${promoBadge.bg}`}>
+                            {promoBadge.label}
+                        </div>
+                    ) : null}
+
+                    {/* Bottom-left: open/closed status */}
+                    {product.isOpenNow !== null && product.isOpenNow !== undefined && (
+                        <div className={`absolute bottom-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-sm shadow-sm ${
+                            product.isOpenNow ? "bg-green-500/90 text-white" : "bg-red-500/90 text-white"
+                        }`}>
+                            {product.isOpenNow ? "🟢 Open Now" : "🔴 Closed"}
+                        </div>
+                    )}
+
+                    {/* Bottom-right: promo (when orders badge occupies top-right) */}
+                    {product.totalOrders > 0 && promoBadge && (
+                        <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-sm ${promoBadge.bg}`}>
+                            {promoBadge.label}
+                        </div>
+                    )}
                 </div>
 
-                {/* Content */}
-                <div className="p-4 flex flex-col">
-                    {/* Variable content — grows to fill available space */}
-                    <div className="flex-1">
-                        <h3 className="text-sm font-bold text-gray-900 truncate mb-0.5">
-                            {product.name}
-                        </h3>
+                {/* ── Body ── */}
+                <div className="p-4">
 
-                        {product.restaurantName && (
-                            <p className="text-xs text-orange-500 font-medium truncate mb-1 flex items-center gap-1">
-                                <MapPin className="w-3 h-3 shrink-0" /> {product.restaurantName}
-                            </p>
-                        )}
+                    {/* Restaurant name */}
+                    <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-1 mb-1">
+                        {product.restaurantName || product.name}
+                    </h3>
 
-                        {product.location && (
-                            <p className="text-xs text-gray-400 truncate mb-3">{product.location}</p>
-                        )}
+                    {/* Location */}
+                    {product.location && (
+                        <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-2">
+                            <MapPin className="w-3 h-3 shrink-0 text-gray-300" />
+                            {product.location}
+                        </p>
+                    )}
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                    {/* Today's hours */}
+                    {product.todayHoursFormatted && (
+                        <p className="flex items-center gap-1 text-xs text-gray-400 truncate mb-3">
+                            <Clock className="w-3 h-3 shrink-0 text-gray-300" />
+                            {product.todayHoursFormatted}
+                        </p>
+                    )}
 
-                                {/* Rating */}
-                                <div className="flex items-center gap-1">
-                                    <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-                                    <span className="text-xs font-bold text-gray-800">
-                                        {product.averageRating > 0 ? product.averageRating.toFixed(1) : "0"}
-                                    </span>
-                                    {product.reviewCount > 0 && (
-                                        <span className="text-xs text-gray-400">
-                                            ({product.reviewCount >= 1000
-                                            ? `${(product.reviewCount / 1000).toFixed(1)}k`
-                                            : product.reviewCount})
-                                        </span>
-                                    )}
-                                </div>
+                    {/* Delivery fee pill */}
+                    {deliveryFeeLabel && (
+                        <div className="mb-3">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
+                                product.deliveryFee === 0 || product.deliveryFee === '0'
+                                    ? 'bg-green-50 text-green-700 border-green-100'
+                                    : 'bg-gray-50 text-gray-500 border-gray-100'
+                            }`}>
+                                <Truck className="w-3 h-3 shrink-0" />
+                                {deliveryFeeLabel}
+                            </span>
+                        </div>
+                    )}
 
-                                {/* Prep time */}
-                                {product.preparationTimeMinutes > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                                        <Clock className="w-3 h-3" /> {product.preparationTimeMinutes} min
-                                    </div>
-                                )}
-                            </div>
+                    {/* ── Stats row ── */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
 
-                            {/* Price */}
-                            {product.price != null && (
-                                <span className="text-sm font-bold text-gray-900">
-                                    ${Number(product.price).toFixed(2)}
+                        {/* Rating */}
+                        <div className="flex flex-col items-center gap-0.5 flex-1">
+                            <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
+                                <span className="text-sm font-bold text-gray-800">
+                                    {product.averageRating > 0 ? product.averageRating.toFixed(1) : "—"}
                                 </span>
-                            )}
+                            </div>
+                            <span className="text-[10px] text-gray-400">
+                                {product.reviewCount > 0
+                                    ? `${product.reviewCount >= 1000 ? `${(product.reviewCount / 1000).toFixed(1)}k` : product.reviewCount} reviews`
+                                    : "No reviews"}
+                            </span>
                         </div>
 
-                        {/* Dietary badges */}
-                        {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                                {product.isVegan && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                        🌱 Vegan
-                                    </span>
-                                )}
-                                {product.isVegetarian && !product.isVegan && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                        🥬 Vegetarian
-                                    </span>
-                                )}
-                                {product.isGlutenFree && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                        🌾 Gluten-Free
-                                    </span>
-                                )}
-                                {product.isSpicy && (
-                                    <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                                        🌶️ Spicy
-                                    </span>
-                                )}
+                        <div className="w-px h-8 bg-gray-100" />
+
+                        {/* Prep time */}
+                        <div className="flex flex-col items-center gap-0.5 flex-1">
+                            <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm font-bold text-gray-800">
+                                    {product.preparationTimeMinutes > 0 ? `${product.preparationTimeMinutes}` : "—"}
+                                </span>
                             </div>
-                        )}
+                            <span className="text-[10px] text-gray-400">min prep</span>
+                        </div>
 
-                        {product.todayHoursFormatted && (
-                            <p className="text-[11px] text-gray-400 mt-2 truncate">
-                                {product.todayHoursFormatted}
-                            </p>
-                        )}
-                    </div>
+                        <div className="w-px h-8 bg-gray-100" />
 
-                    {/* Fulfilment — always rendered so all cards share the same bottom height */}
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                        {product.offersPickup ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-teal-50 text-teal-700 text-xs font-semibold rounded-xl border border-teal-100 w-full justify-center">
-                                <Store className="w-3.5 h-3.5 shrink-0" />
-                                Store pickup available
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 text-gray-400 text-xs font-medium rounded-xl border border-gray-100 w-full justify-center">
-                                <Truck className="w-3.5 h-3.5 shrink-0" />
-                                Delivery only
-                            </span>
-                        )}
+                        {/* Fulfillment */}
+                        <div className="flex flex-col items-center gap-0.5 flex-1">
+                            {product.offersPickup ? (
+                                <>
+                                    <Store className="w-4 h-4 text-teal-500" />
+                                    <span className="text-[10px] text-gray-400">Pickup</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Truck className="w-4 h-4 text-gray-400" />
+                                    <span className="text-[10px] text-gray-400">Delivery</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,4 +215,4 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
     );
 };
 
-export default PopularStoreCard;
+export default React.memo(PopularStoreCard);
