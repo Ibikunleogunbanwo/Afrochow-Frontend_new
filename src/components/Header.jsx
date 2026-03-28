@@ -19,15 +19,15 @@ import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import CustomerNotificationDropdown from "@/components/customer/CustomerNotificationDropdown";
 
 // ─── Sign-in param watcher ───────────────────────────────────────────────────
+// Strips any stale ?signin=true from the URL without triggering the modal.
+// The modal only opens via explicit user action (clicking Sign In).
 
-const SignInParamWatcher = ({ onTrigger }) => {
+const SignInParamWatcher = () => {
     const searchParams = useSearchParams();
     const router = useNextRouter();
     const pathname = usePathname();
     useEffect(() => {
         if (searchParams.get('signin') === 'true') {
-            onTrigger();
-            // Strip the signin param so the modal doesn't re-open on remount
             const params = new URLSearchParams(searchParams.toString());
             params.delete('signin');
             const qs = params.toString();
@@ -121,7 +121,7 @@ const Header = () => {
     return (
         <>
             <Suspense fallback={null}>
-                <SignInParamWatcher onTrigger={handleOpenSignIn} />
+                <SignInParamWatcher />
             </Suspense>
 
             <div className="sticky top-0 z-50 w-full flex justify-center px-3 sm:px-4 py-3 bg-transparent pointer-events-none">

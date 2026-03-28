@@ -223,17 +223,26 @@ export default function Step2() {
                   inputProps={{ type: "text", placeholder: "AfroChow Kitchen", ...register("restaurantName") }}
               />
 
-              <FormField
-                  label="Product Type"
-                  id="cuisineType"
-                  type="select"
-                  icon={UtensilsCrossed}
-                  error={errors.cuisineType?.message}
-                  value={watch("cuisineType")}
-                  helpText="Helps customers find your store when searching by product type"
-                  placeholder="Select product type…"
-                  options={cuisineTypes}
-                  selectProps={{ ...register("cuisineType") }}
+              <Controller
+                  name="cuisineType"
+                  control={control}
+                  render={({ field }) => (
+                      <FormField
+                          label="Product Type"
+                          id="cuisineType"
+                          type="select"
+                          icon={UtensilsCrossed}
+                          error={errors.cuisineType?.message}
+                          value={field.value}
+                          helpText="Helps customers find your store when searching by product type"
+                          placeholder="Select product type…"
+                          options={cuisineTypes}
+                          selectProps={{
+                              ...field,
+                              onChange: (e) => field.onChange(e.target.value),
+                          }}
+                      />
+                  )}
               />
 
               <div className="space-y-2">

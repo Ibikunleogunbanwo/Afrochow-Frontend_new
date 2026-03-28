@@ -90,7 +90,9 @@ export const useAuth = () => {
         } finally {
             dispatch(clearAuth());
             clearCart();
-            router.push("/");
+            // replace() removes the current entry from history so pressing
+            // Back after logout cannot navigate back into authenticated pages.
+            router.replace("/");
         }
     };
 
@@ -203,7 +205,9 @@ export const useAuth = () => {
         if (isLoading) return false;
 
         if (!isAuthenticated) {
-            router.push("/?signin=true");
+            // replace() so the protected page isn't left in history.
+            // No ?signin=true — the modal only opens when the user clicks Sign In.
+            router.replace("/");
             return false;
         }
 
