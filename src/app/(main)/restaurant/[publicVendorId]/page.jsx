@@ -529,8 +529,8 @@ const VendorProfilePage = () => {
                                                     ✓ Review submitted
                                                 </span>
                                             ) : reviewEligibility?.hasOrdered === false ? (
-                                                <span title="Order from this store first to leave a review" className="px-3 py-1.5 text-sm text-gray-400 border border-gray-200 rounded-lg cursor-default">
-                                                    Order first to review
+                                                <span title="Place an order with this store to unlock reviews" className="px-3 py-1.5 text-sm text-gray-400 border border-gray-200 rounded-lg cursor-default">
+                                                    🔒 Order to unlock reviews
                                                 </span>
                                             ) : null
                                         ) : null}
@@ -729,7 +729,7 @@ const VendorProfilePage = () => {
                     reviewBlockedReason={
                         !isCustomer ? null
                         : reviewEligibility?.alreadyReviewed ? "You've already reviewed this store"
-                        : reviewEligibility?.hasOrdered === false ? "Order from this store first to leave a review"
+                        : reviewEligibility?.hasOrdered === false ? "Place an order with this store to unlock reviews"
                         : null
                     }
                     onWriteReview={

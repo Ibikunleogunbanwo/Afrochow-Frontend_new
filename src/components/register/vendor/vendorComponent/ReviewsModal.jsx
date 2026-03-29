@@ -108,7 +108,7 @@ const ReviewsModal = ({
                                     title={reviewBlockedReason}
                                     className="px-4 py-2 text-sm text-gray-400 border border-gray-200 rounded-xl cursor-default select-none"
                                 >
-                                    {reviewBlockedReason}
+                                    🔒 Order to unlock reviews
                                 </span>
                             ) : null}
                             <button
