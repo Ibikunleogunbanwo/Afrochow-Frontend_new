@@ -70,6 +70,17 @@ export default function AuthInitializer({ children }) {
         const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
 
         if (isAuth) {
+            // Redirect vendors/admins to their dashboard when on public routes
+            if (isAdminRole && isPublicRoute(pathname)) {
+                router.replace('/admin/dashboard');
+                return;
+            }
+
+            if (userRole === 'VENDOR' && isPublicRoute(pathname)) {
+                router.replace('/vendor/dashboard');
+                return;
+            }
+
             // Redirect authenticated users away from public auth routes
             if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
                 const dashboardRoute = isAdminRole
@@ -77,18 +88,18 @@ export default function AuthInitializer({ children }) {
                     : userRole === 'VENDOR'
                         ? '/vendor/dashboard'
                         : '/';
-                router.push(dashboardRoute);
+                router.replace(dashboardRoute);
                 return;
             }
 
             // Role-based redirects
             if (isAdminRole && pathname.startsWith('/vendor')) {
-                router.push('/admin/dashboard');
+                router.replace('/admin/dashboard');
                 return;
             }
 
             if (userRole === 'VENDOR' && pathname.startsWith('/admin')) {
-                router.push('/vendor/dashboard');
+                router.replace('/vendor/dashboard');
                 return;
             }
         } else {
