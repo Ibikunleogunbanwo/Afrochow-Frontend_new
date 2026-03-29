@@ -56,17 +56,37 @@ const FILTERS = [
     { key: 'revoked',   label: 'Revoked' },
 ];
 
-const StatusBadge = ({ verified, active }) => {
-    if (!active) return (
+const StatusBadge = ({ verified, active, isRevoked }) => {
+    // Suspended: verified vendor manually deactivated by admin
+    if (active === false && verified) return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
             Suspended
+        </span>
+    );
+    // Inactive + unverified — distinguish rejected (never verified) vs revoked (was verified)
+    if (active === false && !verified) return isRevoked ? (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+            Revoked
+        </span>
+    ) : (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+            Rejected
         </span>
     );
     if (verified) return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-900 text-white">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
             Verified
+        </span>
+    );
+    // Active + unverified — revoked (was once verified) vs truly pending (new applicant)
+    if (isRevoked) return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+            Revoked
         </span>
     );
     return (
@@ -375,7 +395,7 @@ export default function AdminVendorsPage() {
                                         <p className="text-xs text-gray-400 truncate">{v.cuisineType || 'N/A'}</p>
                                         {/* Mobile-only: status + date */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
-                                            <StatusBadge verified={v.isVerified} active={v.isActive} />
+                                            <StatusBadge verified={v.isVerified} active={v.isActive} verifiedAt={v.verifiedAt} isRevoked={isRevoked(v)} />
                                             <span className="text-[11px] text-gray-400">{formatDate(v.createdAt)}</span>
                                         </div>
                                     </div>
@@ -383,7 +403,7 @@ export default function AdminVendorsPage() {
 
                                 {/* Status — desktop only */}
                                 <div className="hidden md:block w-32 shrink-0">
-                                    <StatusBadge verified={v.isVerified} active={v.isActive} />
+                                    <StatusBadge verified={v.isVerified} active={v.isActive} verifiedAt={v.verifiedAt} isRevoked={isRevoked(v)} />
                                 </div>
 
                                 {/* Joined — desktop only */}

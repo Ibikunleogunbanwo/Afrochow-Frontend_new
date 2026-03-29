@@ -84,7 +84,12 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
 
     /* ── fetch full detail on open ── */
     useEffect(() => {
-        if (!vendor?.publicVendorId) return;
+        if (!vendor?.publicVendorId) {
+            // No ID — use summary data immediately, don't block action buttons
+            setDetail(vendor);
+            setLoadingDetail(false);
+            return;
+        }
         setLoadingDetail(true);
         setFetchError(null);
         AdminVendorsAPI.getById(vendor.publicVendorId)
@@ -107,6 +112,11 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
 
     const busy = approving || rejecting;
 
+    // Determine vendor state for UI context
+    const isRejected = d.isActive === false && !d.isVerified;
+    const approveLabel = isRejected ? "Re-approve Vendor" : "Approve Vendor";
+    const approveConfirmLabel = isRejected ? "Confirm Re-approve" : "Confirm Approve";
+
     // Operating hours: from detail endpoint it's a flat map on `d.operatingHours`
     const ops = d.operatingHours ?? {};
 
@@ -115,10 +125,10 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setApproving(true);
         setActionError(null);
         try {
+            // verify sets isVerified=true and isActive=true (backend handles both)
             await AdminVendorsAPI.verify(vendor.publicVendorId);
             toast.success('Vendor Approved', { description: `${d.restaurantName || 'Vendor'} has been verified and can now receive orders.` });
             onApprove?.(vendor);
-            onClose();
         } catch (e) {
             setActionError(e.message || "Failed to approve vendor");
             toast.error('Approval Failed', { description: e.message || 'Failed to approve vendor' });
@@ -135,7 +145,6 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
             await AdminVendorsAPI.reject(vendor.publicVendorId, rejectionReason.trim() || null);
             toast.success('Vendor Rejected', { description: `${d.restaurantName || 'Vendor'} has been notified by email.` });
             onReject?.(vendor);
-            onClose();
         } catch (e) {
             setActionError(e.message || "Failed to reject vendor");
             toast.error('Rejection Failed', { description: e.message || 'Failed to reject vendor' });
@@ -176,10 +185,17 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 {val(d.restaurantName, "Unnamed Vendor")}
                             </h2>
                             <div className="flex items-center gap-2 mt-0.5">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
-                                    <AlertCircle className="w-3 h-3" />
-                                    Pending Approval
-                                </span>
+                                {isRejected ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                                        <XCircle className="w-3 h-3" />
+                                        Previously Rejected
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                                        <AlertCircle className="w-3 h-3" />
+                                        Pending Approval
+                                    </span>
+                                )}
                                 <span className="text-xs text-gray-400">Applied {fmtDate(d.createdAt)}</span>
                             </div>
                         </div>
@@ -451,12 +467,14 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                         <div className="space-y-3">
                             <p className="text-sm font-semibold text-gray-900 text-center">
                                 {confirmAction === "approve"
-                                    ? `Approve ${d.restaurantName || "this vendor"}?`
+                                    ? `${approveLabel.replace(" Vendor", "")} ${d.restaurantName || "this vendor"}?`
                                     : `Reject ${d.restaurantName || "this vendor"}?`}
                             </p>
                             <p className="text-xs text-gray-500 text-center">
                                 {confirmAction === "approve"
-                                    ? "The vendor will be verified and able to receive orders immediately. A confirmation email will be sent to them."
+                                    ? isRejected
+                                        ? "The vendor will be re-verified, activated, and able to receive orders immediately. A confirmation email will be sent."
+                                        : "The vendor will be verified and able to receive orders immediately. A confirmation email will be sent to them."
                                     : "The vendor's application will be rejected and they will be notified by email."}
                             </p>
 
@@ -496,7 +514,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                     {busy ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : confirmAction === "approve" ? (
-                                        <><CheckCircle2 className="w-4 h-4" /> Confirm Approve</>
+                                        <><CheckCircle2 className="w-4 h-4" /> {approveConfirmLabel}</>
                                     ) : (
                                         <><XCircle className="w-4 h-4" /> Confirm Reject</>
                                     )}
@@ -520,7 +538,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 className="flex-1 h-11 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
                             >
                                 <CheckCircle2 className="w-4 h-4" />
-                                Approve Vendor
+                                {approveLabel}
                             </button>
                         </div>
                     )}
