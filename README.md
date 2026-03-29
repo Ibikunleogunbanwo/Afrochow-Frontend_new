@@ -1,4 +1,4 @@
-# 🍽️ **Food_Frontend**
+# 🍽️ **Afrochow Frontend**
 
 A modern frontend application for managing, browsing, and ordering food, built using **JavaScript** and **TypeScript**.  
 This project provides a dynamic user interface for a food delivery or restaurant platform, featuring a responsive layout and seamless UX.
