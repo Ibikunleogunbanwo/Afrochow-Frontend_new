@@ -308,7 +308,7 @@ const VendorOrdersPage = () => {
                         <p className="text-gray-500 text-sm">
                             {activeCount > 0
                                 ? `${activeCount} active order${activeCount > 1 ? 's' : ''} · auto-refreshes every 30s`
-                                : 'Manage and track all your restaurant orders'}
+                                : 'Manage and track all your store orders'}
                         </p>
                     </div>
                     <button

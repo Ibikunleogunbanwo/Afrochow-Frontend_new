@@ -60,7 +60,7 @@ const VendorReviewsModal = ({ isOpen, onClose, vendorPublicId, restaurantName })
                                 <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                             </div>
                             <h2 className="text-xl sm:text-2xl font-black text-white truncate">
-                                {restaurantName || 'Restaurant'} Reviews
+                                {restaurantName || 'Store'} Reviews
                             </h2>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 ml-0 sm:ml-11">
@@ -95,7 +95,7 @@ const VendorReviewsModal = ({ isOpen, onClose, vendorPublicId, restaurantName })
                             <MessageSquare className="h-16 w-16 text-gray-300 mb-4" />
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Reviews Yet</h3>
                             <p className="text-sm sm:text-base text-gray-600 max-w-md">
-                                Your restaurant hasn&#39;t received any reviews yet. Keep providing great service to earn your first review!
+                                Your store hasn&#39;t received any reviews yet. Keep providing great service to earn your first review!
                             </p>
                         </div>
                     ) : (

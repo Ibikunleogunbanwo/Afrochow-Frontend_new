@@ -38,7 +38,7 @@ const CUISINE_TYPES_FALLBACK = [
 ];
 
 const TABS = [
-    { id: 'info',          label: 'Restaurant Info', icon: Store    },
+    { id: 'info',          label: 'Store Info', icon: Store    },
     { id: 'hours',         label: 'Operating Hours', icon: Calendar },
     { id: 'branding',      label: 'Branding',        icon: ImageIcon },
     { id: 'notifications', label: 'Notifications',   icon: Bell     },
@@ -123,7 +123,7 @@ function validateInfo(infoForm, addrForm) {
 
     // --- Basic details ---
     if (!infoForm.restaurantName.trim()) {
-        e.restaurantName = 'Restaurant name is required';
+        e.restaurantName = 'Store name is required';
     } else if (infoForm.restaurantName.length > 100) {
         e.restaurantName = 'Must be under 100 characters';
     }
@@ -455,7 +455,7 @@ export default function VendorProfilePage() {
                     _phone:  infoForm.phone.trim() || prev?._phone,
                     address: addrComplete ? { ...(prev?.address ?? {}), ...addrForm } : prev?.address,
                 }));
-                toast.success('Restaurant info saved');
+                toast.success('Store info saved');
             } else {
                 throw new Error(firstErr || 'Update failed');
             }
@@ -595,7 +595,7 @@ export default function VendorProfilePage() {
                             {bannerUrl ? (
                                 <Image
                                     src={bannerUrl}
-                                    alt="Restaurant banner"
+                                    alt="Store banner"
                                     fill
                                     sizes="100vw"
                                     className="object-cover"
@@ -637,7 +637,7 @@ export default function VendorProfilePage() {
                         <div className="mb-4">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="text-xl sm:text-2xl font-black text-gray-900 break-words">
-                                    {profile?.restaurantName || 'Your Restaurant'}
+                                    {profile?.restaurantName || 'Your Store'}
                                 </h1>
                                 {(() => {
                                     const isOpen = computeIsOpenFromHours(hoursForm);
@@ -718,7 +718,7 @@ export default function VendorProfilePage() {
                                 </h3>
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     <div>
-                                        <Label required>Restaurant name</Label>
+                                        <Label required>Store name</Label>
                                         <input {...fi('restaurantName')} placeholder="e.g. Mama's Kitchen" />
                                         <FieldError msg={infoErrors.restaurantName} />
                                     </div>
@@ -754,7 +754,7 @@ export default function VendorProfilePage() {
                                     <div className="sm:col-span-2">
                                         <Label>Description</Label>
                                         <textarea {...fi('description')} rows={3}
-                                            placeholder="Tell customers about your restaurant…" />
+                                            placeholder="Tell customers about your store…" />
                                         <div className="flex items-start justify-between mt-1">
                                             <FieldError msg={infoErrors.description} />
                                             <span className="text-xs text-gray-400 ml-auto shrink-0">
@@ -1092,14 +1092,14 @@ export default function VendorProfilePage() {
                                 <Info className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                                 <p className="text-xs text-amber-700 leading-relaxed">
                                     Images save immediately — no separate Save button needed.
-                                    Your logo appears in search results; the banner is shown at the top of your restaurant page.
+                                    Your logo appears in search results; the banner is shown at the top of your store page.
                                 </p>
                             </div>
 
                             {/* Logo */}
                             <section className="space-y-3">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Logo</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Store Logo</p>
                                     <p className="text-xs text-gray-500">Square images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
                                 <ImageUploader
@@ -1120,7 +1120,7 @@ export default function VendorProfilePage() {
                             {/* Banner */}
                             <section className="space-y-3">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Restaurant Banner</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">Store Banner</p>
                                     <p className="text-xs text-gray-500">Wide / landscape images work best · JPG, PNG, WEBP · max 5 MB</p>
                                 </div>
                                 <ImageUploader

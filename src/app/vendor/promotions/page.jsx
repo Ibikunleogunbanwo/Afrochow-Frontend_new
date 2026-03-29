@@ -280,7 +280,7 @@ const VendorPromotionsPage = () => {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-gray-900">Promotions &amp; Discounts</h1>
-                <p className="text-gray-600 mt-1">View promotional offers for your restaurant</p>
+                <p className="text-gray-600 mt-1">View promotional offers for your store</p>
             </div>
 
             {/* Stats Cards */}
@@ -383,7 +383,7 @@ const VendorPromotionsPage = () => {
                             <p className="text-sm text-gray-500 max-w-sm">
                                 {searchQuery || filterStatus !== 'all'
                                     ? 'Try adjusting your filters.'
-                                    : 'No promotions have been set up for your restaurant yet.'}
+                                    : 'No promotions have been set up for your store yet.'}
                             </p>
                         </div>
                     ) : (

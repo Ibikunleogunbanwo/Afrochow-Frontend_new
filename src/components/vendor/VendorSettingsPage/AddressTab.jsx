@@ -13,11 +13,11 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                         <MapPin className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        Restaurant Address
+                        Store Address
                     </h2>
                 </div>
                 <p className="text-gray-600 ml-0 sm:ml-14 mt-1 sm:mt-0">
-                    Manage your restaurant&#39;s physical location details
+                    Manage your store&#39;s physical location details
                 </p>
             </div>
 
@@ -133,7 +133,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                             <p className="text-sm text-blue-700">
                                 Your full address will only be shared with customers after they
                                 place an order. The general area will be shown to help them find
-                                nearby restaurants.
+                                nearby stores.
                             </p>
                         </div>
                     </div>

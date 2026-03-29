@@ -10,7 +10,7 @@ const LoadingState = () => {
                         <div className="absolute inset-0 animate-ping h-16 w-16 border-4 border-orange-300 rounded-full opacity-20"></div>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Loading Your Settings</h3>
-                    <p className="text-gray-600">Please wait while we fetch your restaurant details...</p>
+                    <p className="text-gray-600">Please wait while we fetch your store details...</p>
                 </div>
             </div>
         </div>

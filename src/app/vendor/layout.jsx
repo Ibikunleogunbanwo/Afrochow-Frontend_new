@@ -2,7 +2,7 @@ import VendorDashboardLayout from '@/components/vendor/VendorDashboardLayout';
 
 export const metadata = {
     title: 'Vendor Dashboard - Afrochow',
-    description: 'Manage your restaurant on Afrochow',
+    description: 'Manage your store on Afrochow',
 };
 
 export default function VendorLayout({ children }) {

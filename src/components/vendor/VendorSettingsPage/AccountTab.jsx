@@ -57,7 +57,7 @@ const AccountTab = ({ profile }) => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
-                                    Restaurant Name
+                                    Store Name
                                 </p>
                                 <p className="font-bold text-gray-900 text-base sm:text-lg wrap-break-word">
                                     {profile.restaurantName}

@@ -12,7 +12,7 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                     <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Restaurant Branding</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Store Branding</h2>
                     <p className="text-sm sm:text-base text-gray-500 mt-1">Upload your logo and banner to showcase your brand identity</p>
                 </div>
             </div>
@@ -25,9 +25,9 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                             <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">Restaurant Logo</h3>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">Store Logo</h3>
                             <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
-                                Upload a square logo (recommended 512×512 px). This appears on your restaurant profile and menu listings.
+                                Upload a square logo (recommended 512×512 px). This appears on your store profile and menu listings.
                             </p>
                         </div>
                     </div>
@@ -53,9 +53,9 @@ const BrandingTab = ({ logoFile, setLogoFile, bannerFile, setBannerFile, onImage
                             <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">Restaurant Banner</h3>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5 sm:mb-2">Store Banner</h3>
                             <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
-                                Upload a wide banner image (recommended 1920×600 px) to showcase your restaurant&#39;s atmosphere or signature dishes.
+                                Upload a wide banner image (recommended 1920×600 px) to showcase your store&#39;s atmosphere or signature dishes.
                             </p>
                         </div>
                     </div>

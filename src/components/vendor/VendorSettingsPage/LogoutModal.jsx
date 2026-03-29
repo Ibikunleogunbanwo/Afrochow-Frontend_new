@@ -20,7 +20,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
                     <div className="flex gap-3">
                         <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                         <p className="text-sm text-amber-800">
-                            You&#39;ll need to log in again to access your restaurant dashboard and manage orders.
+                            You&#39;ll need to log in again to access your store dashboard and manage orders.
                         </p>
                     </div>
                 </div>

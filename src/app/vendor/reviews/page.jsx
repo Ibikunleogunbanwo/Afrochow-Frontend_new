@@ -95,7 +95,7 @@ const ReviewsPage = () => {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-black text-gray-900">Reviews</h1>
-                <p className="text-gray-600 mt-1">Manage your restaurant and product reviews</p>
+                <p className="text-gray-600 mt-1">Manage your store and product reviews</p>
             </div>
 
             {/* Stats */}
@@ -168,7 +168,7 @@ const ReviewsPage = () => {
                             <h3 className="text-lg font-bold text-gray-900 mb-1">No reviews yet</h3>
                             <p className="text-sm text-gray-500 max-w-sm">
                                 {activeTab === 'vendor'
-                                    ? 'Your restaurant hasn\'t received any reviews yet. Keep providing great service to earn your first review!'
+                                    ? 'Your store hasn\'t received any reviews yet. Keep providing great service to earn your first review!'
                                     : 'Your products haven\'t received any reviews yet. Deliver quality products to earn reviews!'}
                             </p>
                         </div>

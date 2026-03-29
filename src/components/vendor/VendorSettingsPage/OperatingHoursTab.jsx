@@ -147,7 +147,7 @@ const OperatingHoursTab = ({
                                 Automatic Updates
                             </p>
                             <p className="text-sm text-amber-700">
-                                Your restaurant status will automatically update based on the
+                                Your store status will automatically update based on the
                                 hours you set. Customers will see when you&rsquo;re open or
                                 closed in real-time.
                             </p>
