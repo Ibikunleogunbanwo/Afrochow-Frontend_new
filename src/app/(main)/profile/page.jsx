@@ -284,6 +284,7 @@ export default function ProfilePage() {
             if (response?.success !== false) {
                 await invalidateAndRefetch();
                 sectionSave.setSaved();
+                toast.success('Profile updated');
                 setTimeout(() => setEditingSection(null), 1200);
             } else {
                 throw new Error(response?.message || "Failed to update profile");
@@ -314,6 +315,7 @@ export default function ProfilePage() {
             if (response?.success !== false) {
                 await invalidateAndRefetch();
                 addressSave.setSaved();
+                toast.success('Address added');
                 setTimeout(() => { setShowAddressForm(false); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to add address");
         } catch (error) {
@@ -330,6 +332,7 @@ export default function ProfilePage() {
             if (response?.success !== false) {
                 await invalidateAndRefetch();
                 addressSave.setSaved();
+                toast.success('Address updated');
                 setTimeout(() => { setEditingAddressId(null); setAddressForm(emptyAddress()); }, 1200);
             } else throw new Error("Failed to update address");
         } catch (error) {
@@ -344,6 +347,7 @@ export default function ProfilePage() {
             const response = await CustomerAPI.deleteAddress(publicAddressId);
             if (response?.success !== false) {
                 await invalidateAndRefetch();
+                toast.success('Address deleted');
             } else throw new Error("Failed to delete");
         } catch (error) {
             toast.error(error.message || "Failed to delete address. Please try again.");
@@ -355,6 +359,7 @@ export default function ProfilePage() {
             const response = await CustomerAPI.setDefaultAddress(addressId);
             if (response?.success !== false) {
                 await invalidateAndRefetch();
+                toast.success('Default address updated');
             } else throw new Error("Failed to set default");
         } catch (error) {
             toast.error(error.message || "Failed to set default address. Please try again.");
@@ -408,6 +413,7 @@ export default function ProfilePage() {
                 await invalidateAndRefetch();
                 setImageError(false);
                 setPhotoSaved(true);
+                toast.success('Profile photo updated');
                 setTimeout(() => setPhotoSaved(false), 2000);
             } else {
                 throw new Error("Failed to update profile image");

@@ -7,6 +7,7 @@ import {
     Trash2, Edit2, X, AlertCircle, CheckCircle,
 } from 'lucide-react';
 import { AdminPromotionsAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 
@@ -124,13 +125,16 @@ export default function AdminPromotionsPage() {
             const payload = buildPayload(form);
             if (editTarget) {
                 await AdminPromotionsAPI.update(editTarget.publicPromotionId ?? editTarget.id, payload);
+                toast.success('Promotion Updated', { description: `"${payload.code}" has been updated.` });
             } else {
                 await AdminPromotionsAPI.create(payload);
+                toast.success('Promotion Created', { description: `"${payload.code}" is now active.` });
             }
             setShowForm(false);
             await fetchPromotions();
         } catch (e) {
             setFormError(e.message || 'Failed to save promotion');
+            toast.error('Save Failed', { description: e.message || 'Failed to save promotion' });
         } finally {
             setSaving(false);
         }
@@ -143,8 +147,9 @@ export default function AdminPromotionsPage() {
         try {
             await AdminPromotionsAPI.deactivate(id);
             await fetchPromotions();
+            toast.success('Promotion Deactivated', { description: `"${p.code}" has been deactivated.` });
         } catch (e) {
-            alert(e.message || 'Failed to deactivate');
+            toast.error('Deactivation Failed', { description: e.message || 'Failed to deactivate promotion' });
         } finally {
             setActionLoading(prev => ({ ...prev, [id]: false }));
         }

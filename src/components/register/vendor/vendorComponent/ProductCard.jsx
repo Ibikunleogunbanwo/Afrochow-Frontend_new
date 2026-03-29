@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-import { Star } from 'lucide-react';
+import { Star, ChevronRight } from 'lucide-react';
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -110,9 +110,13 @@ const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) =
                     </span>
                 </button>
 
-                <div className="flex items-center pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className="text-2xl font-black text-orange-600">
                         ${product.price?.toFixed(2)}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-semibold text-gray-400 group-hover:text-orange-500 transition-colors">
+                        View &amp; order
+                        <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                 </div>
             </div>

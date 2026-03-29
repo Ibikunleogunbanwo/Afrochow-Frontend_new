@@ -43,6 +43,7 @@ const inDateRange = (dateStr, bounds) => {
     return d >= bounds.start && d <= bounds.end;
 };
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import { selectUserRole } from '@/redux-store/authSlice';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
@@ -137,14 +138,22 @@ export default function AdminUsersPage() {
         searchTimer.current = setTimeout(() => setSearch(val), 400);
     };
 
+    const USER_ACTION_LABELS = {
+        promote:    'User Promoted to Super Admin',
+        deactivate: 'User Suspended',
+        activate:   'User Activated',
+        delete:     'User Deleted',
+    };
+
     const doAction = async (id, fn, label) => {
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
             await fn(id);
             await fetchUsers();
             await fetchStats();
+            toast.success(USER_ACTION_LABELS[label] || 'Action completed');
         } catch (e) {
-            alert(e.message || `Failed: ${label}`);
+            toast.error('Action Failed', { description: e.message || `Failed to ${label} user` });
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
         }
@@ -156,8 +165,9 @@ export default function AdminUsersPage() {
         try {
             await AdminUsersAPI.changeRole(id, role);
             await fetchUsers();
+            toast.success('Role Updated', { description: `User role changed to ${role}` });
         } catch (e) {
-            alert(e.message || 'Failed to change role');
+            toast.error('Role Change Failed', { description: e.message || 'Failed to change role' });
         } finally {
             setActionLoading(p => ({ ...p, [id + 'role']: false }));
         }

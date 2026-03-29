@@ -161,9 +161,10 @@ const VendorMenuPage = () => {
                 await fetchProducts();
                 setShowEditModal(false);
                 resetForm();
+                toast.success('Product updated');
             }
         } catch (error) {
-            console.error('Error updating product:', error);
+            toast.error('Failed to update product', { description: error?.message });
         }
     };
 
@@ -193,8 +194,10 @@ const VendorMenuPage = () => {
             );
             if (response?.success) {
                 await fetchProducts();
+                toast.success(product.available ? 'Product marked unavailable' : 'Product marked available');
             }
         } catch (error) {
+            toast.error('Failed to update availability', { description: error?.message });
         }
     };
 

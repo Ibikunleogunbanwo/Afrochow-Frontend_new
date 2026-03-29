@@ -200,6 +200,7 @@ export default function OrdersPage() {
             setOrders(prev => prev.map(o =>
                 o.publicOrderId === publicOrderId ? { ...o, ...res.data, canBeCancelled: false } : o
             ));
+            toast.success('Order cancelled', { description: 'Your order has been successfully cancelled.' });
         } catch (e) {
             toast.error("Could not cancel order", { description: e.message });
         } finally {

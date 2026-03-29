@@ -8,6 +8,7 @@ import {
     LayoutGrid,
 } from 'lucide-react';
 import { AdminCategoriesAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
@@ -80,13 +81,16 @@ export default function AdminCategoriesPage() {
             };
             if (editTarget) {
                 await AdminCategoriesAPI.update(resolveId(editTarget), payload);
+                toast.success('Category Updated', { description: `"${payload.name}" has been updated.` });
             } else {
                 await AdminCategoriesAPI.create(payload);
+                toast.success('Category Created', { description: `"${payload.name}" has been added.` });
             }
             setShowForm(false);
             await fetchCategories();
         } catch (e) {
             setFormError(e.message || 'Failed to save category');
+            toast.error('Save Failed', { description: e.message || 'Failed to save category' });
         } finally {
             setSaving(false);
         }
@@ -99,8 +103,9 @@ export default function AdminCategoriesPage() {
         try {
             await AdminCategoriesAPI.delete(id);
             await fetchCategories();
+            toast.success('Category Deleted', { description: `"${c.name}" has been removed.` });
         } catch (e) {
-            alert(e.message || 'Failed to delete');
+            toast.error('Delete Failed', { description: e.message || 'Failed to delete category' });
         } finally {
             setActionLoading(prev => ({ ...prev, [id + 'del']: false }));
         }
@@ -113,14 +118,16 @@ export default function AdminCategoriesPage() {
         try {
             if (c.isActive) {
                 await AdminCategoriesAPI.deactivate(id);
+                toast.success('Category Deactivated', { description: `"${c.name}" is now inactive.` });
             } else {
                 await AdminCategoriesAPI.activate(id);
+                toast.success('Category Activated', { description: `"${c.name}" is now active.` });
             }
             setCategories(prev => prev.map(cat =>
                 resolveId(cat) === id ? { ...cat, isActive: !c.isActive } : cat
             ));
         } catch (e) {
-            alert(e.message || 'Failed to update status');
+            toast.error('Status Update Failed', { description: e.message || 'Failed to update status' });
             await fetchCategories();
         } finally {
             setActionLoading(prev => ({ ...prev, [key]: false }));
@@ -140,8 +147,9 @@ export default function AdminCategoriesPage() {
             await AdminCategoriesAPI.setDisplayOrder(id, parseInt(orderValue, 10));
             setOrderTarget(null);
             await fetchCategories();
+            toast.success('Display Order Updated');
         } catch (e) {
-            alert(e.message || 'Failed to update order');
+            toast.error('Update Failed', { description: e.message || 'Failed to update order' });
         } finally {
             setActionLoading(prev => ({ ...prev, [id + 'order']: false }));
         }

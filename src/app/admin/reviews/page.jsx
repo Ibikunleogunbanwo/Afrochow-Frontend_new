@@ -8,6 +8,7 @@ import {
     Store, UtensilsCrossed,
 } from 'lucide-react';
 import { AdminReviewsAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
@@ -63,9 +64,15 @@ export default function AdminReviewsPage() {
 
     useEffect(() => { fetchReviews(); fetchStats(); }, [fetchReviews, fetchStats]);
 
+    const REVIEW_ACTION_LABELS = {
+        hide:   'Review Hidden',
+        show:   'Review Restored',
+        delete: 'Review Deleted',
+    };
+
     const doAction = async (id, fn, label) => {
         if (!id && id !== 0) {
-            alert('Unable to perform action: review ID is missing.');
+            toast.error('Action Failed', { description: 'Unable to perform action: review ID is missing.' });
             return;
         }
         setActionLoading(p => ({ ...p, [id + label]: true }));
@@ -88,8 +95,9 @@ export default function AdminReviewsPage() {
                 setReviews(prev => prev.filter(r => resolveId(r) !== id));
             }
             await fetchStats();
+            toast.success(REVIEW_ACTION_LABELS[label] || 'Action completed');
         } catch (e) {
-            alert(e.message || `Failed: ${label}`);
+            toast.error('Action Failed', { description: e.message || `Failed to ${label} review` });
             await fetchReviews(); // revert to server truth on error
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));

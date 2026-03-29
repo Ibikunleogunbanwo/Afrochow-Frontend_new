@@ -97,6 +97,7 @@ export default function SettingsPage() {
             if (res?.data?.notificationsEnabled != null) {
                 setNotifEnabled(res.data.notificationsEnabled);
             }
+            toast.success(next ? 'Notifications enabled' : 'Notifications disabled');
         } catch (err) {
             setNotifEnabled(!next);     // rollback
             toast.error(err.message || "Could not update notification preference");
@@ -141,6 +142,7 @@ export default function SettingsPage() {
             const res = await AuthAPI.changePassword(pwForm.currentPassword, pwForm.newPassword);
             if (res?.success) {
                 setPwSaved(true);
+                toast.success('Password changed', { description: 'Your password has been updated successfully.' });
                 setTimeout(() => { setShowPwModal(false); setPwSaved(false); }, 1500);
             } else {
                 throw new Error(res?.message || "Failed to change password");
@@ -294,6 +296,7 @@ export default function SettingsPage() {
         try {
             await CustomerAPI.setDefaultAddress(id);
             setAddresses(prev => prev.map(a => ({ ...a, defaultAddress: a.publicAddressId === id })));
+            toast.success('Default address updated');
         } catch (err) {
             toast.error(err.message || "Could not set default address");
         } finally {

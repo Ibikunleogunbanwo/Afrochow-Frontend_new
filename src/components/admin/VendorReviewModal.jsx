@@ -9,6 +9,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import { AdminVendorsAPI } from "@/lib/api/admin.api";
+import { toast } from "@/components/ui/toast";
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
 const val = (v, fallback = "—") => (v != null && v !== "" ? v : fallback);
@@ -115,10 +116,12 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setActionError(null);
         try {
             await AdminVendorsAPI.verify(vendor.publicVendorId);
+            toast.success('Vendor Approved', { description: `${d.restaurantName || 'Vendor'} has been verified and can now receive orders.` });
             onApprove?.(vendor);
             onClose();
         } catch (e) {
             setActionError(e.message || "Failed to approve vendor");
+            toast.error('Approval Failed', { description: e.message || 'Failed to approve vendor' });
         } finally {
             setApproving(false);
             setConfirmAction(null);
@@ -130,10 +133,12 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setActionError(null);
         try {
             await AdminVendorsAPI.reject(vendor.publicVendorId, rejectionReason.trim() || null);
+            toast.success('Vendor Rejected', { description: `${d.restaurantName || 'Vendor'} has been notified by email.` });
             onReject?.(vendor);
             onClose();
         } catch (e) {
             setActionError(e.message || "Failed to reject vendor");
+            toast.error('Rejection Failed', { description: e.message || 'Failed to reject vendor' });
         } finally {
             setRejecting(false);
             setConfirmAction(null);

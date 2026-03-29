@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, ChevronRight, Save, Loader2, CheckCircle2, User, Mail, Phone, Shield } from 'lucide-react';
 import { AdminProfileAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 
 const FIELD_CLS = "w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 text-gray-900 bg-white transition";
 
@@ -35,8 +36,10 @@ export default function AdminProfilePage() {
             setProfile(d);
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
+            toast.success('Profile Updated', { description: 'Your profile details have been saved.' });
         } catch (e) {
             setError(e.message || 'Failed to save profile');
+            toast.error('Save Failed', { description: e.message || 'Failed to save profile' });
         } finally {
             setSaving(false);
         }

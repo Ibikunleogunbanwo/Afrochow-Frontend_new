@@ -40,6 +40,7 @@ const inDateRange = (dateStr, bounds) => {
     return d >= bounds.start && d <= bounds.end;
 };
 import { AdminVendorsAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
@@ -107,6 +108,13 @@ export default function AdminVendorsPage() {
 
     useEffect(() => { fetchVendors(); }, [fetchVendors]);
 
+    const VENDOR_ACTION_LABELS = {
+        deactivate: 'Vendor Suspended',
+        activate:   'Vendor Reinstated',
+        unverify:   'Verification Revoked',
+        verify:     'Vendor Re-verified',
+    };
+
     const doAction = async (id, fn, label) => {
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
@@ -119,8 +127,9 @@ export default function AdminVendorsPage() {
                 setRevokedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
             }
             await fetchVendors();
+            toast.success(VENDOR_ACTION_LABELS[label] || 'Action completed');
         } catch (e) {
-            alert(e.message || `Failed: ${label}`);
+            toast.error('Action Failed', { description: e.message || `Failed to ${label} vendor` });
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
         }

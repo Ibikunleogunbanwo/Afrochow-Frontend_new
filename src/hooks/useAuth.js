@@ -22,6 +22,7 @@ import { AuthAPI } from "@/lib/api/auth.api";
 import { RegistrationAPI } from "@/lib/api/registration.api";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "@/components/ui/toast";
 
 const ROLE_ROUTES = {
     VENDOR: "/vendor/dashboard",
@@ -99,6 +100,7 @@ export const useAuth = () => {
         } finally {
             dispatch(clearAuth());
             clearCart();
+            toast.success("Signed out", { description: "You have been successfully signed out." });
             // replace() removes the current entry from history so pressing
             // Back after logout cannot navigate back into authenticated pages.
             router.replace("/");

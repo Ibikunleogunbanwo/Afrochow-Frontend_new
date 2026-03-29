@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { RegistrationAPI } from '@/lib/api/registration.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
+import { toast } from '@/components/ui/toast';
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 const DEPARTMENTS = [
@@ -33,13 +34,12 @@ const PERMISSIONS = [
     { key: 'canViewReports',      label: 'View Reports',      desc: 'Access platform analytics and reports' },
     { key: 'canManagePayments',   label: 'Manage Payments',   desc: 'View and process payment records' },
     { key: 'canManageCategories', label: 'Manage Categories', desc: 'Create and update food categories' },
-    { key: 'canResolveDisputes',  label: 'Resolve Disputes',  desc: 'Handle customer and vendor disputes' },
 ];
 
 const PERMISSION_PRESETS = {
-    MODERATOR:   { canVerifyVendors: false, canManageUsers: false, canViewReports: true,  canManagePayments: false, canManageCategories: false, canResolveDisputes: true  },
-    MANAGER:     { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: false, canManageCategories: true,  canResolveDisputes: true  },
-    SUPER_ADMIN: { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: true,  canManageCategories: true,  canResolveDisputes: true  },
+    MODERATOR:   { canVerifyVendors: false, canManageUsers: false, canViewReports: true,  canManagePayments: false, canManageCategories: false },
+    MANAGER:     { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: false, canManageCategories: true  },
+    SUPER_ADMIN: { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: true,  canManageCategories: true  },
 };
 
 const EMPTY_FORM = {
@@ -47,7 +47,7 @@ const EMPTY_FORM = {
     password: '', confirmPassword: '',
     department: '', accessLevel: '',
     canVerifyVendors: false, canManageUsers: false, canViewReports: false,
-    canManagePayments: false, canManageCategories: false, canResolveDisputes: false,
+    canManagePayments: false, canManageCategories: false,
 };
 
 /* ─── small components ───────────────────────────────────────────────────── */
@@ -148,19 +148,21 @@ export default function AdminRegisterPage() {
                 canViewReports:      form.canViewReports,
                 canManagePayments:   form.canManagePayments,
                 canManageCategories: form.canManageCategories,
-                canResolveDisputes:  form.canResolveDisputes,
                 acceptTerms: true,
             };
 
             const res = await RegistrationAPI.registerAdmin(payload);
             if (res?.success === false) throw new Error(res.message || 'Registration failed');
 
-            setSuccess(`${form.firstName} ${form.lastName} has been registered as ${ACCESS_LEVELS.find(l => l.value === form.accessLevel)?.label}.`);
+            const successMsg = `${form.firstName} ${form.lastName} has been registered as ${ACCESS_LEVELS.find(l => l.value === form.accessLevel)?.label}.`;
+            setSuccess(successMsg);
+            toast.success('Admin Account Created', { description: successMsg });
             setForm(EMPTY_FORM);
             setImageFile(null);
             setImagePreview(null);
         } catch (err) {
             setErrors({ submit: err.message || 'Failed to register admin. Please try again.' });
+            toast.error('Registration Failed', { description: err.message || 'Failed to register admin. Please try again.' });
         } finally {
             setSaving(false);
         }

@@ -171,32 +171,35 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
     }
 
     // ── Render ─────────────────────────────────────────────────────────────
+
+    // ── Success screen — full-page background ──────────────────────────────
+    if (success) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center p-4">
+                <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10 text-center">
+                    <h2 className="text-3xl font-black text-gray-900 mb-3">
+                        Email Verified
+                    </h2>
+                    <p className="text-gray-500 leading-relaxed mb-8">
+                        Your email address has been successfully verified.
+                        You may now sign in to access your account and begin placing orders.
+                    </p>
+                    <button
+                        onClick={handleSignIn}
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3.5 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        Continue to Sign In
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-
-                {/* ── Success state ─────────────────────────────────────── */}
-                {success ? (
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
-                        <div className="flex items-center justify-center mx-auto mb-5">
-                            <SuccessIcon state={true} size={80} color="#22c55e" />
-                        </div>
-                        <h2 className="text-2xl font-black text-gray-900 mb-2">Email Verified! 🎉</h2>
-                        <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-                            Your email has been successfully verified.<br />
-                            You can now sign in and start ordering delicious African cuisine!
-                        </p>
-                        <button
-                            onClick={handleSignIn}
-                            className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-                        >
-                            Continue to Sign In
-                            <ArrowRight className="h-4 w-4" />
-                        </button>
-                    </div>
-                ) : (
-                    /* ── Verification form ──────────────────────────────── */
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+                {/* ── Verification form ──────────────────────────────── */}
+                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
 
                         {/* Header */}
                         <div className="text-center mb-8">
@@ -310,8 +313,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                         >
                             ← Back to Home
                         </button>
-                    </div>
-                )}
+                </div>
 
             </div>
         </div>
