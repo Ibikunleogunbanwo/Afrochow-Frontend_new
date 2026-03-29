@@ -725,7 +725,7 @@ const VendorProfilePage = () => {
                     productName={selectedProduct?.name}
                     ratingFilter={ratingFilter}
                     onRatingFilterChange={handleRatingFilterChange}
-                    canWriteReview={isCustomer && (reviewType === 'product' || Boolean(reviewEligibility?.canReview))}
+                    canWriteReview={isCustomer && Boolean(reviewEligibility?.canReview)}
                     reviewBlockedReason={
                         !isCustomer ? null
                         : reviewEligibility?.alreadyReviewed ? "You've already reviewed this store"
