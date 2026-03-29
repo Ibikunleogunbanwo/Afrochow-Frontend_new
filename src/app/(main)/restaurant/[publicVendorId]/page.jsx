@@ -706,7 +706,11 @@ const VendorProfilePage = () => {
                         handleCloseProductModal();
                         handleViewProductReviews(selectedProductModal);
                     }}
-                    onWriteReview={() => handleWriteProductReview(selectedProductModal)}
+                    onWriteReview={
+                        isCustomer && reviewEligibility?.canReview
+                            ? () => handleWriteProductReview(selectedProductModal)
+                            : undefined
+                    }
                 />
             )}
 

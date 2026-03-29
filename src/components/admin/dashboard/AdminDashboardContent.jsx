@@ -492,7 +492,8 @@ const AdminDashboardContent = () => {
                     {loadingAnalytics ? (
                         <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
                     ) : revenueData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={192} minHeight={192}>
+                        <div style={{ width: '100%', height: 192 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -515,6 +516,7 @@ const AdminDashboardContent = () => {
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
+                        </div>
                     ) : (
                         <div className="h-48 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                             <p className="text-sm text-gray-400">No trend data available</p>
@@ -533,7 +535,8 @@ const AdminDashboardContent = () => {
                     {loadingAnalytics ? (
                         <div className="h-48 bg-gray-50 rounded-xl animate-pulse" />
                     ) : ordersData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={192} minHeight={192}>
+                        <div style={{ width: '100%', height: 192 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={ordersData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
@@ -542,6 +545,7 @@ const AdminDashboardContent = () => {
                                 <Bar dataKey="orders" name="Orders" fill="#f97316" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
+                        </div>
                     ) : (
                         <div className="h-48 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                             <p className="text-sm text-gray-400">No trend data available</p>

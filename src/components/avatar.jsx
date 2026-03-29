@@ -1,4 +1,5 @@
-export const getAvatarUrl = (user = {}) => {
+export const getAvatarUrl = (user) => {
+    user = user ?? {};
     if (user.avatar) {
         try {
             const u = new URL(user.avatar);
