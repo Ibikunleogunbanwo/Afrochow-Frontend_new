@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import WriteReviewModal from "@/components/register/vendor/vendorComponent/WriteReviewModal";
 
 // ── Status config — matches backend OrderStatus enum ─────────────────────────
 
@@ -46,7 +47,7 @@ function StatusBadge({ status, statusLabel }) {
     );
 }
 
-function OrderCard({ order, onCancel, cancelling }) {
+function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
     const isActive   = ACTIVE_STATUSES.has(order.status);
     const isDelivery = order.fulfillmentType === "DELIVERY";
     const itemCount  = order.items?.length ?? order.itemCount ?? null;
@@ -148,6 +149,20 @@ function OrderCard({ order, onCancel, cancelling }) {
                             }
                         </button>
                     )}
+                    {order.status === "DELIVERED" && (
+                        reviewed ? (
+                            <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Reviewed
+                            </span>
+                        ) : (
+                            <button
+                                onClick={() => onReview(order)}
+                                className="sm:w-auto w-full flex items-center justify-center px-5 py-2.5 rounded-xl border border-orange-200 text-orange-600 text-sm font-semibold hover:bg-orange-50 transition-colors"
+                            >
+                                Leave a review
+                            </button>
+                        )
+                    )}
                 </div>
             </div>
         </div>
@@ -165,6 +180,8 @@ export default function OrdersPage() {
     const [error, setError]         = useState(null);
     const [tab, setTab]             = useState("all");
     const [cancelling, setCancelling] = useState(null); // publicOrderId being cancelled
+    const [reviewTarget, setReviewTarget] = useState(null); // order being reviewed
+    const [reviewedOrders, setReviewedOrders] = useState(new Set());
 
     useEffect(() => {
         if (authLoading) return;
@@ -307,6 +324,8 @@ export default function OrdersPage() {
                                 order={order}
                                 onCancel={handleCancel}
                                 cancelling={cancelling}
+                                onReview={setReviewTarget}
+                                reviewed={reviewedOrders.has(order.publicOrderId)}
                             />
                         ))}
                     </div>
@@ -314,5 +333,19 @@ export default function OrdersPage() {
 
             </div>
         </div>
+
+        {reviewTarget && (
+            <WriteReviewModal
+                isOpen={!!reviewTarget}
+                onClose={() => setReviewTarget(null)}
+                vendorPublicId={reviewTarget.vendorPublicId}
+                vendorName={reviewTarget.vendorName}
+                eligibleOrderId={reviewTarget.publicOrderId}
+                onSuccess={() => {
+                    setReviewedOrders(prev => new Set(prev).add(reviewTarget.publicOrderId));
+                    setReviewTarget(null);
+                }}
+            />
+        )}
     );
 }
