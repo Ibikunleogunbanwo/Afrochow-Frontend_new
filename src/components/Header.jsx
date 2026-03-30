@@ -89,6 +89,22 @@ const Header = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, [isMobileMenuOpen]);
 
+    // Close the desktop profile dropdown when the user scrolls more than 10px
+    useEffect(() => {
+        if (!isMenuOpen) return;
+
+        let startY = window.scrollY;
+
+        const handleScroll = () => {
+            if (Math.abs(window.scrollY - startY) > 10) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [isMenuOpen]);
+
     // Close the notification dropdown when the user scrolls more than 10px
     useEffect(() => {
         if (!notifOpen) return;

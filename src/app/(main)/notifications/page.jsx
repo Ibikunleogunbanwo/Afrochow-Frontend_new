@@ -50,9 +50,13 @@ const TYPE_META = {
 const getMeta = (notification) => {
     const meta = TYPE_META[notification?.type];
     if (!meta) return { Icon: Bell, bg: 'bg-gray-100', accent: 'bg-gray-300', icon: 'text-gray-400', label: 'Notice', href: null };
-    // Use the base route only — deep-linking to /order-confirmation/:id can break
-    // because relatedEntityId may not match the publicOrderId the page expects.
-    return { ...meta, href: meta.baseHref };
+    // Deep-link to the specific order when a relatedEntityId is present.
+    // The order-confirmation page handles "not found / deleted" gracefully.
+    let href = meta.baseHref;
+    if (href === '/orders' && notification?.relatedEntityId) {
+        href = `/order-confirmation/${notification.relatedEntityId}`;
+    }
+    return { ...meta, href };
 };
 
 const TYPE_FILTERS = [

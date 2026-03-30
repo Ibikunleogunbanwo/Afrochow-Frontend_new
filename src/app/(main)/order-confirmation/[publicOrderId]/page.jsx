@@ -62,12 +62,16 @@ export default function OrderConfirmationPage() {
         if (silent) setRefreshing(true); else setLoading(true);
         return OrderAPI.getOrder(publicOrderId)
             .then(res => {
-                if (!res?.data?.publicOrderId) throw new Error("Order not found.");
+                if (!res?.data?.publicOrderId) {
+                    const e = new Error("This order is no longer available.");
+                    e.status = 404;
+                    throw e;
+                }
                 setOrder(res.data);
                 setError(null);
                 return res.data;
             })
-            .catch(err => setError(err.message || "Could not load order details."))
+            .catch(err => setError({ message: err.message || "Could not load order details.", status: err.status }))
             .finally(() => { setLoading(false); setRefreshing(false); });
     };
 
@@ -102,21 +106,33 @@ export default function OrderConfirmationPage() {
 
     // ── Error state ───────────────────────────────────────────────────────────
     if (!loading && error) {
+        const isGone = error.status === 404 || error.status === 410;
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="text-center space-y-4 max-w-sm">
-                    <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto">
-                        <AlertCircle className="w-7 h-7 text-red-500" />
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto ${isGone ? 'bg-gray-100' : 'bg-red-50'}`}>
+                        {isGone
+                            ? <XCircle className="w-7 h-7 text-gray-400" />
+                            : <AlertCircle className="w-7 h-7 text-red-500" />
+                        }
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Could not load order</h2>
-                    <p className="text-sm text-gray-500">{error}</p>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        {isGone ? 'Order no longer available' : 'Could not load order'}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                        {isGone
+                            ? 'This order has been removed or is no longer accessible. You can view your other orders below.'
+                            : error.message}
+                    </p>
                     <div className="flex gap-3 justify-center">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                            Go back
-                        </button>
+                        {!isGone && (
+                            <button
+                                onClick={() => router.back()}
+                                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                Go back
+                            </button>
+                        )}
                         <Link
                             href="/orders"
                             className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
