@@ -115,7 +115,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) =
                         ${product.price?.toFixed(2)}
                     </span>
                     <span className="flex items-center gap-1 text-xs font-semibold text-gray-400 group-hover:text-orange-500 transition-colors">
-                        View &amp; order
+                        View Product detail
                         <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                 </div>

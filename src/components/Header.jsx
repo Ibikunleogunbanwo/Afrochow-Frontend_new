@@ -38,6 +38,10 @@ const SignInParamWatcher = () => {
     return null;
 };
 
+// ─── Nav category cache (module-level — survives re-renders and remounts) ─────
+
+let _navCategoryCache = null;
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 
 const Header = () => {
@@ -55,22 +59,21 @@ const Header = () => {
         useCustomerNotifications();
 
     useEffect(() => {
-        const loadCategories = async () => {
-            try {
-                const response = await SearchAPI.getAllCategories();
+        if (_navCategoryCache) {
+            setNavCategories(_navCategoryCache);
+            return;
+        }
+        SearchAPI.getAllCategories()
+            .then(response => {
                 if (response?.success && response?.data) {
-                    setNavCategories(
-                        response.data.slice(0, 4).map(cat => ({
-                            href: `/restaurants?categoryId=${cat.categoryId}`,
-                            label: cat.name,
-                        }))
-                    );
+                    _navCategoryCache = response.data.slice(0, 4).map(cat => ({
+                        href: `/restaurants?categoryId=${cat.categoryId}`,
+                        label: cat.name,
+                    }));
+                    setNavCategories(_navCategoryCache);
                 }
-            } catch (error) {
-                console.error("Error loading nav categories:", error);
-            }
-        };
-        loadCategories();
+            })
+            .catch(error => console.error("Error loading nav categories:", error));
     }, []);
 
     // Close the mobile menu when the user scrolls more than 10px
