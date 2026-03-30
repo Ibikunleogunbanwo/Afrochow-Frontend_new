@@ -1075,7 +1075,7 @@ export default function VendorProfilePage() {
                                         <button
                                             onClick={handleStripeDashboard}
                                             disabled={stripeDashboardLoading}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 shrink-0"
                                         >
                                             {stripeDashboardLoading
                                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
