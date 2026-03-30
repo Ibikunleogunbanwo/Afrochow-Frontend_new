@@ -29,6 +29,7 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
     const handleClick = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
+            sessionStorage.setItem('returnTo', `/restaurant/${product.vendorPublicId}`);
             onUnauthenticated();
         } else {
             router.push(`/restaurant/${product.vendorPublicId}`);

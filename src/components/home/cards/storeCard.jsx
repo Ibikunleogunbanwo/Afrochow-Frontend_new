@@ -75,6 +75,8 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
     const handleCardClick = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
+            const restaurantId = vendorPublicId || storeId;
+            sessionStorage.setItem('returnTo', `/restaurant/${restaurantId}`);
             // Delegate to parent modal when provided, otherwise use internal modal
             if (onUnauthenticated) {
                 onUnauthenticated();

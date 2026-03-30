@@ -52,6 +52,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     const handleClick = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
+            sessionStorage.setItem('returnTo', `/restaurant/${vendorPublicId}`);
             onUnauthenticated();
         } else {
             router.push(`/restaurant/${vendorPublicId}`);

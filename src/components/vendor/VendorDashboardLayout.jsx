@@ -44,12 +44,12 @@ const VendorDashboardLayout = ({ children }) => {
     const router = useRouter();
 
     useEffect(() => {
-        fetchProfile()
-            .then(() => {
-            })
-            .catch(() => {
-            });
-    }, []);
+        if (!isAuthenticated) return; // Don't fetch until session is confirmed — prevents
+        // the "Session expired" toast that fires when the layout briefly renders before
+        // the route-protection redirect completes for unauthenticated users.
+        fetchProfile().catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated]);
 
 
 

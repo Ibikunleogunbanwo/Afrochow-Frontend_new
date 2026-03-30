@@ -50,12 +50,9 @@ const TYPE_META = {
 const getMeta = (notification) => {
     const meta = TYPE_META[notification?.type];
     if (!meta) return { Icon: Bell, bg: 'bg-gray-100', accent: 'bg-gray-300', icon: 'text-gray-400', label: 'Notice', href: null };
-    // Build a deep-link href when we have a relatedEntityId, otherwise fall back to baseHref
-    let href = meta.baseHref;
-    if (href === '/orders' && notification?.relatedEntityId) {
-        href = `/order-confirmation/${notification.relatedEntityId}`;
-    }
-    return { ...meta, href };
+    // Use the base route only — deep-linking to /order-confirmation/:id can break
+    // because relatedEntityId may not match the publicOrderId the page expects.
+    return { ...meta, href: meta.baseHref };
 };
 
 const TYPE_FILTERS = [

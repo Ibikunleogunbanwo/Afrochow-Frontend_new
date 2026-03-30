@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
     ShoppingCart, User, LogOut, Settings,
-    Package, ChevronDown, ChevronRight, Store, HelpCircle,
+    Package, ChevronDown, ChevronRight, Store, HelpCircle, Bell,
 } from "lucide-react";
 import { MenuCloseIcon, NotificationIcon } from "@/components/ui/animated-state-icons";
 import Link from "next/link";
@@ -265,10 +265,11 @@ const Header = () => {
                                                 {/* Nav links */}
                                                 <div className="p-1.5">
                                                     {[
-                                                        { href: "/profile",       icon: User,        label: "Profile" },
-                                                        { href: "/orders",        icon: Package,     label: "My Orders" },
-                                                        { href: "/settings",      icon: Settings,    label: "Settings" },
-                                                        { href: "/help",          icon: HelpCircle,  label: "Help & Support" },
+                                                        { href: "/profile",        icon: User,        label: "Profile" },
+                                                        { href: "/orders",         icon: Package,     label: "My Orders" },
+                                                        { href: "/notifications",  icon: Bell,        label: "Notifications" },
+                                                        { href: "/settings",       icon: Settings,    label: "Settings" },
+                                                        { href: "/help",           icon: HelpCircle,  label: "Help & Support" },
                                                     ].map(({ href, icon: Icon, label }) => (
                                                         <Link
                                                             key={href}

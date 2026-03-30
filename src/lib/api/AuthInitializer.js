@@ -146,8 +146,12 @@ export default function AuthInitializer({ children }) {
             idleTimerRef.id = setTimeout(() => {
                 toast.dismiss('idle-warning');
                 toast.info('You were logged out due to inactivity.');
-                dispatch(clearAuth());
-                router.push('/?signin=true');
+                // Call the backend logout so the refresh token is invalidated —
+                // without this, refreshing the page re-hydrates the session.
+                AuthAPI.logout().catch(() => {}).finally(() => {
+                    dispatch(clearAuth());
+                    router.push('/?signin=true');
+                });
             }, IDLE_TIMEOUT_MS);
         };
 
@@ -201,6 +205,18 @@ export default function AuthInitializer({ children }) {
     }, [isAuth, dispatch, router]);
 
     if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
+            </div>
+        );
+    }
+
+    // Prevent flash of the public homepage while an authenticated vendor or admin
+    // is being redirected to their dashboard. Keep showing the spinner until the
+    // route-protection effect fires and navigation completes.
+    const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
+    if (isAuth && (userRole === 'VENDOR' || isAdminRole) && isPublicRoute(pathname)) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
