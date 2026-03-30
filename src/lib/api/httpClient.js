@@ -127,7 +127,12 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
         // Network error on retry — fall through to error handling below
       }
     }
-    // If refresh failed, fall through and throw the 401 error below
+    // If refresh failed, fire a global event so layouts can redirect to login
+    if (!refreshed) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('session-expired'));
+      }
+    }
   }
 
   const json = await safeParseJson(response);

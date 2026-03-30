@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
@@ -53,11 +54,12 @@ import VendorReviewModal from '@/components/admin/VendorReviewModal';
 const PAGE_SIZE = 15;
 
 const FILTERS = [
-    { key: 'all',       label: 'All' },
-    { key: 'pending',   label: 'Pending' },
-    { key: 'verified',  label: 'Verified' },
-    { key: 'suspended', label: 'Suspended' },
-    { key: 'revoked',   label: 'Revoked' },
+    { key: 'all',              label: 'All' },
+    { key: 'pending',          label: 'Pending' },
+    { key: 'verified',         label: 'Verified' },
+    { key: 'suspended',        label: 'Suspended' },
+    { key: 'revoked',          label: 'Revoked' },
+    { key: 'stripe-incomplete', label: 'Stripe Incomplete' },
 ];
 
 const StatusBadge = ({ verified, active, isRevoked }) => {
@@ -102,6 +104,7 @@ const StatusBadge = ({ verified, active, isRevoked }) => {
 };
 
 export default function AdminVendorsPage() {
+    const router = useRouter();
     const [vendors, setVendors]       = useState([]);
     const [revokedIds, setRevokedIds] = useState(new Set()); // track revoked in-session
     const [filter, setFilter]         = useState('all');
@@ -132,6 +135,13 @@ export default function AdminVendorsPage() {
 
     useEffect(() => { fetchVendors(); }, [fetchVendors]);
 
+    // Redirect to login when the httpClient fires session-expired
+    useEffect(() => {
+        const handle = () => router.push('/admin/login');
+        window.addEventListener('session-expired', handle);
+        return () => window.removeEventListener('session-expired', handle);
+    }, [router]);
+
     const VENDOR_ACTION_LABELS = {
         deactivate: 'Vendor Suspended',
         activate:   'Vendor Reinstated',
@@ -153,6 +163,11 @@ export default function AdminVendorsPage() {
             await fetchVendors();
             toast.success(VENDOR_ACTION_LABELS[label] || 'Action completed');
         } catch (e) {
+            if (e?.status === 401) {
+                toast.error('Session expired. Please log in again.');
+                router.push('/admin/login');
+                return;
+            }
             toast.error('Action Failed', { description: e.message || `Failed to ${label} vendor` });
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
@@ -175,11 +190,12 @@ export default function AdminVendorsPage() {
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
         // status tab filter
         switch (filter) {
-            case 'pending':   return !v.isVerified && v.isActive !== false && !isRevoked(v);
-            case 'verified':  return v.isVerified === true;
-            case 'suspended': return v.isActive === false && v.isVerified === true;
-            case 'revoked':   return isRevoked(v);
-            default:          return true;
+            case 'pending':          return !v.isVerified && v.isActive !== false && !isRevoked(v);
+            case 'verified':         return v.isVerified === true;
+            case 'suspended':        return v.isActive === false && v.isVerified === true;
+            case 'revoked':          return isRevoked(v);
+            case 'stripe-incomplete': return v.stripeOnboardingComplete === false;
+            default:                 return true;
         }
     });
 

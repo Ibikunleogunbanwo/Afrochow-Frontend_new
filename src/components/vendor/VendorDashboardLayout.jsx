@@ -51,6 +51,17 @@ const VendorDashboardLayout = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
+    // Listen for the global session-expired event fired by httpClient when a token
+    // refresh fails. Clears auth state and sends the vendor back to the login page.
+    useEffect(() => {
+        const handleSessionExpired = () => {
+            toast.error("Session expired. Please log in again.");
+            logout().finally(() => router.push("/?signin=true"));
+        };
+        window.addEventListener('session-expired', handleSessionExpired);
+        return () => window.removeEventListener('session-expired', handleSessionExpired);
+    }, [logout, router]);
+
 
 
     const fetchProfile = async () => {
