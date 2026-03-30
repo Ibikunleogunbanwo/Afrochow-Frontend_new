@@ -70,10 +70,13 @@ const toUiNotification = (dto) => ({
 export const useVendorNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading]             = useState(true);
-    const channelRef = useRef(null);
+    const channelRef    = useRef(null);
+    const authFailedRef = useRef(false);  // stop polling after token refresh fails
 
     // ── fetch from server ──────────────────────────────────────────────────────
     const refresh = useCallback(async () => {
+        // Don't poll if we've already confirmed the session is gone
+        if (authFailedRef.current) return;
         try {
             const res = await NotificationsAPI.getRecent();
             if (res?.success && Array.isArray(res.data)) {
@@ -85,7 +88,11 @@ export const useVendorNotifications = () => {
                     });
                 setNotifications(items);
             }
-        } catch {
+        } catch (err) {
+            if (err?.status === 401) {
+                // Token refresh already failed inside httpClient — stop hammering the server
+                authFailedRef.current = true;
+            }
             // silently fail — stale state stays visible
         } finally {
             setLoading(false);
