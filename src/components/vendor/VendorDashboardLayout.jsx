@@ -2,9 +2,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {usePathname, useRouter} from 'next/navigation';
 import Link from 'next/link';
-import { Menu, Search, Bell, Clock, ShieldOff, XCircle, RefreshCw, Pencil, CheckCircle2, Loader2 } from 'lucide-react';
+import { Menu, Search, Bell, Clock, ShieldOff, XCircle, RefreshCw, Pencil, CheckCircle2, Loader2, CreditCard, ExternalLink } from 'lucide-react';
 import { toast } from "@/components/ui/toast";
-import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
+import { VendorProfileAPI, VendorStripeAPI } from '@/lib/api/vendor/profile.api';
 import { AuthAPI } from '@/lib/api/auth.api';
 import { getAvatarUrl } from "@/components/avatar";
 import Sidebar from '@/components/VendorDashboardLayout/Sidebar';
@@ -99,6 +99,24 @@ const VendorDashboardLayout = ({ children }) => {
 
     const [resubmitting, setResubmitting] = useState(false);
     const [resubmitDone, setResubmitDone] = useState(false);
+
+    const [stripeConnecting, setStripeConnecting] = useState(false);
+
+    const handleStripeConnect = async () => {
+        setStripeConnecting(true);
+        try {
+            const res = await VendorStripeAPI.startOnboarding();
+            if (res?.success && res?.data?.onboardingUrl) {
+                window.location.href = res.data.onboardingUrl;
+            } else {
+                toast.error("Could not start Stripe onboarding. Please try again.");
+            }
+        } catch (e) {
+            toast.error(e.message || "Could not start Stripe onboarding. Please try again.");
+        } finally {
+            setStripeConnecting(false);
+        }
+    };
 
     const handleResubmit = async () => {
         setResubmitting(true);
@@ -325,6 +343,32 @@ const VendorDashboardLayout = ({ children }) => {
                             <p className="text-orange-700 text-sm mt-0.5">
                                 Your store is under review — this typically takes 24–48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
                             </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Stripe Connect: verified but payout account not connected ── */}
+                {vendorIsVerified === true && profile && !profile.stripeOnboardingComplete && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-purple-200 bg-purple-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <CreditCard className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-purple-800 text-sm">Connect your payout account</p>
+                                <p className="text-purple-700 text-sm mt-0.5">
+                                    Set up your Stripe payout account to receive payments from orders.
+                                    It only takes a few minutes and is required before you can receive payouts.
+                                </p>
+                                <button
+                                    onClick={handleStripeConnect}
+                                    disabled={stripeConnecting}
+                                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60"
+                                >
+                                    {stripeConnecting
+                                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Connecting…</>
+                                        : <><ExternalLink className="w-3.5 h-3.5" /> Connect Payout Account</>
+                                    }
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

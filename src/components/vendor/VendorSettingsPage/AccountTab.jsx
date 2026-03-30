@@ -13,15 +13,54 @@ import {
     CheckCircle,
     XCircle,
     MessageSquare,
+    CreditCard,
+    ExternalLink,
+    Loader2,
 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import VendorReviewsModal from '@/components/vendor/VendorReviewsModal';
+import { VendorStripeAPI } from '@/lib/api/vendor/profile.api';
+import { toast } from '@/components/ui/toast';
 
 const AccountTab = ({ profile }) => {
     const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [stripeConnecting, setStripeConnecting] = useState(false);
+    const [stripeDashboardLoading, setStripeDashboardLoading] = useState(false);
 
     const handleOpenReviews = () => {
         setShowReviewsModal(true);
+    };
+
+    const handleStripeConnect = async () => {
+        setStripeConnecting(true);
+        try {
+            const res = await VendorStripeAPI.startOnboarding();
+            if (res?.success && res?.data?.onboardingUrl) {
+                window.location.href = res.data.onboardingUrl;
+            } else {
+                toast.error('Could not start Stripe onboarding. Please try again.');
+            }
+        } catch (e) {
+            toast.error(e.message || 'Could not start Stripe onboarding. Please try again.');
+        } finally {
+            setStripeConnecting(false);
+        }
+    };
+
+    const handleStripeDashboard = async () => {
+        setStripeDashboardLoading(true);
+        try {
+            const res = await VendorStripeAPI.getDashboardLink();
+            if (res?.success && res?.data?.dashboardUrl) {
+                window.open(res.data.dashboardUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                toast.error('Could not open Stripe dashboard. Please try again.');
+            }
+        } catch (e) {
+            toast.error(e.message || 'Could not open Stripe dashboard. Please try again.');
+        } finally {
+            setStripeDashboardLoading(false);
+        }
     };
 
     return (
@@ -127,6 +166,65 @@ const AccountTab = ({ profile }) => {
                         }
                         color="gray"
                     />
+                </div>
+
+                {/* Payout Account */}
+                <div className="bg-linear-to-br from-purple-50 to-violet-50 rounded-xl p-4 sm:p-6 border border-purple-100">
+                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base sm:text-lg">
+                        <CreditCard className="h-5 w-5 text-purple-600" />
+                        Payout Account
+                    </h3>
+
+                    {profile.stripeOnboardingComplete ? (
+                        <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-sm">Stripe payout account connected</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        You&apos;re set up to receive payouts. Manage your banking details and view payout history in your Stripe dashboard.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleStripeDashboard}
+                                disabled={stripeDashboardLoading}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                            >
+                                {stripeDashboardLoading
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
+                                    : <><ExternalLink className="w-4 h-4" /> Stripe Dashboard</>
+                                }
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
+                                    <CreditCard className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-sm">No payout account connected</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Connect a Stripe payout account to receive earnings from your orders.
+                                        This takes only a few minutes.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleStripeConnect}
+                                disabled={stripeConnecting}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                            >
+                                {stripeConnecting
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>
+                                    : <><ExternalLink className="w-4 h-4" /> Connect Payout Account</>
+                                }
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Business Statistics */}
@@ -295,6 +393,8 @@ AccountTab.propTypes = {
         phone: PropTypes.string,
         isActive: PropTypes.bool,
         createdAt: PropTypes.string,
+        stripeAccountId: PropTypes.string,
+        stripeOnboardingComplete: PropTypes.bool,
         totalOrdersCompleted: PropTypes.number,
         totalRevenue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         averageRating: PropTypes.number,

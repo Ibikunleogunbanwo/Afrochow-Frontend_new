@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star, Flame, Clock, ArrowRight } from "lucide-react";
+import { Star, Flame, Clock, ArrowRight, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { memo, useState } from "react";
 import { motion } from "framer-motion";
@@ -39,11 +39,15 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         totalOrders,
         categoryName,
         preparationTimeMinutes,
+        scheduleType,
+        advanceNoticeHours,
         isVegan,
         isVegetarian,
         isGlutenFree,
         isSpicy,
     } = product;
+
+    const isAdvance = scheduleType === 'ADVANCE_ORDER';
 
     const router = useRouter();
     const [imgError, setImgError] = useState(false);
@@ -64,6 +68,9 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         isVegetarian && !isVegan && { label: '🥬 Vegetarian',  bg: 'bg-green-50 text-green-700 border-green-100' },
         isGlutenFree   && { label: '🌾 Gluten-Free',  bg: 'bg-blue-50 text-blue-700 border-blue-100' },
         isSpicy        && { label: '🌶️ Spicy',        bg: 'bg-red-50 text-red-700 border-red-100' },
+        isAdvance
+            ? { label: advanceNoticeHours ? `📅 ${advanceNoticeHours}h notice` : '📅 Advance booking', bg: 'bg-blue-50 text-blue-700 border-blue-100' }
+            : { label: '⚡ Same day',  bg: 'bg-orange-50 text-orange-700 border-orange-100' },
     ].filter(Boolean);
 
     return (
@@ -183,10 +190,17 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                                 : '⭐ 0'}
                         />
                         <div className="w-px h-8 bg-gray-100" />
-                        <StatItem
-                            label="Prep time"
-                            value={preparationTimeMinutes > 0 ? `${preparationTimeMinutes} min` : '0 min'}
-                        />
+                        {isAdvance ? (
+                            <StatItem
+                                label="Notice"
+                                value={advanceNoticeHours ? `${advanceNoticeHours}h` : '24h+'}
+                            />
+                        ) : (
+                            <StatItem
+                                label="Prep time"
+                                value={preparationTimeMinutes > 0 ? `${preparationTimeMinutes} min` : '—'}
+                            />
+                        )}
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem
                             label="Price"

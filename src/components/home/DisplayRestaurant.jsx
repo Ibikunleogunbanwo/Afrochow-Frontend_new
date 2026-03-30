@@ -78,12 +78,15 @@ const DisplayRestaurant = () => {
     const urlCategoryId  = searchParams.get('categoryId') || '';
     const urlCategory    = searchParams.get('category')   || '';
 
-    const [searchQuery,  setSearchQuery]  = useState(urlSearchQuery);
-    const [cityFilter,   setCityFilter]   = useState(urlCity);
-    const [isLoading,    setIsLoading]    = useState(true);
-    const [products,     setProducts]     = useState([]);
-    const [error,        setError]        = useState(null);
-    const [categoryName, setCategoryName] = useState('');
+    const urlSchedule    = searchParams.get('schedule')    || '';
+
+    const [searchQuery,    setSearchQuery]    = useState(urlSearchQuery);
+    const [cityFilter,     setCityFilter]     = useState(urlCity);
+    const [scheduleFilter, setScheduleFilter] = useState(urlSchedule);
+    const [isLoading,      setIsLoading]      = useState(true);
+    const [products,       setProducts]       = useState([]);
+    const [error,          setError]          = useState(null);
+    const [categoryName,   setCategoryName]   = useState('');
 
     const [currentPage,   setCurrentPage]   = useState(0);
     const [totalPages,    setTotalPages]     = useState(0);
@@ -96,8 +99,9 @@ const DisplayRestaurant = () => {
     const pageSize = 20;
 
     // ── Sync inputs when URL changes (back/forward navigation) ──
-    useEffect(() => { setSearchQuery(urlSearchQuery); }, [urlSearchQuery]);
-    useEffect(() => { setCityFilter(urlCity);         }, [urlCity]);
+    useEffect(() => { setSearchQuery(urlSearchQuery);     }, [urlSearchQuery]);
+    useEffect(() => { setCityFilter(urlCity);             }, [urlCity]);
+    useEffect(() => { setScheduleFilter(urlSchedule);    }, [urlSchedule]);
 
     // ── Resolve category display name from id ──
     useEffect(() => {
@@ -184,6 +188,9 @@ const DisplayRestaurant = () => {
                                 isVegetarian:   product.isVegetarian   || false,
                                 isGlutenFree:   product.isGlutenFree   || false,
                                 isSpicy:        product.isSpicy        || false,
+                                // fulfillment schedule
+                                scheduleType:          product.scheduleType    || 'SAME_DAY',
+                                advanceNoticeHours:    product.advanceNoticeHours || null,
                                 // open status (used for sort)
                                 isOpenNow,
                             };
@@ -191,7 +198,14 @@ const DisplayRestaurant = () => {
 
                     // Open first → unknown (null) → closed last
                     const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
-                    const sortedResults = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
+                    let sortedResults = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
+
+                    // Client-side schedule filter
+                    if (urlSchedule === 'SAME_DAY') {
+                        sortedResults = sortedResults.filter(p => p.scheduleType !== 'ADVANCE_ORDER');
+                    } else if (urlSchedule === 'ADVANCE_ORDER') {
+                        sortedResults = sortedResults.filter(p => p.scheduleType === 'ADVANCE_ORDER');
+                    }
 
                     setProducts(sortedResults);
                     setTotalPages(pageData.totalPages      || 0);
@@ -232,7 +246,7 @@ const DisplayRestaurant = () => {
         };
 
         void fetchResults();
-    }, [urlSearchQuery, urlCity, urlCategoryId, urlCategory, currentPage]);
+    }, [urlSearchQuery, urlCity, urlCategoryId, urlCategory, urlSchedule, currentPage]);
 
     // ── Derived display values ──
     const decodedQuery     = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
@@ -315,8 +329,20 @@ const DisplayRestaurant = () => {
     const handleSearch = () => {
         setCurrentPage(0);
         const params = new URLSearchParams();
-        if (searchQuery) params.set('search', searchQuery);
-        if (cityFilter)  params.set('city',   cityFilter);
+        if (searchQuery)    params.set('search',   searchQuery);
+        if (cityFilter)     params.set('city',     cityFilter);
+        if (scheduleFilter) params.set('schedule', scheduleFilter);
+        router.push(`/restaurants?${params.toString()}`);
+    };
+
+    const handleScheduleFilter = (value) => {
+        setCurrentPage(0);
+        const params = new URLSearchParams(searchParams.toString());
+        if (value) {
+            params.set('schedule', value);
+        } else {
+            params.delete('schedule');
+        }
         router.push(`/restaurants?${params.toString()}`);
     };
 
@@ -324,11 +350,12 @@ const DisplayRestaurant = () => {
         setSearchQuery('');
         setCityFilter('');
         setCategoryName('');
+        setScheduleFilter('');
         setCurrentPage(0);
         router.push('/restaurants');
     };
 
-    const hasActiveFilters = !!(urlSearchQuery || urlCity || urlCategoryId || urlCategory);
+    const hasActiveFilters = !!(urlSearchQuery || urlCity || urlCategoryId || urlCategory || urlSchedule);
 
     return (
         <div className="min-h-screen bg-white py-12">
@@ -439,6 +466,28 @@ const DisplayRestaurant = () => {
                         </button>
                     </div>
 
+                    {/* Fulfillment Schedule Filter */}
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                        <span className="text-sm font-semibold text-gray-500 mr-1">Schedule:</span>
+                        {[
+                            { value: '',              label: '🍽️ All' },
+                            { value: 'SAME_DAY',      label: '⚡ Same day' },
+                            { value: 'ADVANCE_ORDER', label: '📅 Advance booking' },
+                        ].map(({ value, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => handleScheduleFilter(value)}
+                                className={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition-all ${
+                                    urlSchedule === value
+                                        ? 'bg-orange-600 border-orange-600 text-white shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+
                     {/* Results Count */}
                     {!isLoading && totalElements > 0 && (
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
@@ -467,6 +516,16 @@ const DisplayRestaurant = () => {
                             {urlCity && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                                     📍 {decodedCity}
+                                </span>
+                            )}
+                            {urlSchedule === 'SAME_DAY' && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                    ⚡ Same day
+                                </span>
+                            )}
+                            {urlSchedule === 'ADVANCE_ORDER' && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                    📅 Advance booking
                                 </span>
                             )}
                             <button

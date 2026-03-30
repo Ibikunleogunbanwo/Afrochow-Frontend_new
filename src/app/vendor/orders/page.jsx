@@ -6,7 +6,7 @@ import { toast } from '@/components/ui/toast';
 import {
     Clock, Package, CheckCircle, XCircle, Truck, Search,
     Filter, ChevronDown, Eye, DollarSign, User, MapPin,
-    Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight,
+    Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight, CalendarClock,
 } from 'lucide-react';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -405,6 +405,12 @@ const VendorOrdersPage = () => {
                                                         <Calendar className="h-3.5 w-3.5" />
                                                         {formatDate(order.orderTime)}
                                                     </span>
+                                                    {order.requestedFulfillmentTime && (
+                                                        <span className="flex items-center gap-1 font-medium text-blue-600">
+                                                            <CalendarClock className="h-3.5 w-3.5" />
+                                                            Fulfil by {formatDate(order.requestedFulfillmentTime)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -455,6 +461,17 @@ const VendorOrdersPage = () => {
                                 <span className="text-gray-500 font-mono">{selectedOrder.publicOrderId}</span>
                                 <span className="text-gray-500">{formatDate(selectedOrder.orderTime)}</span>
                             </div>
+
+                            {/* Requested fulfillment time — shown for advance orders */}
+                            {selectedOrder.requestedFulfillmentTime && (
+                                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+                                    <CalendarClock className="h-5 w-5 text-blue-500 shrink-0" />
+                                    <div>
+                                        <p className="font-semibold text-blue-800">Requested fulfilment time</p>
+                                        <p className="text-blue-700">{formatDate(selectedOrder.requestedFulfillmentTime)}</p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Customer */}
                             <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">

@@ -1,5 +1,35 @@
 import { API_BASE_URL, fetchWithCredentials, extractErrorMessage } from '../httpClient';
 
+export const VendorStripeAPI = {
+  /**
+   * Creates/retrieves a Stripe Express account and returns the onboarding URL.
+   * Frontend should redirect the vendor to the returned onboardingUrl.
+   */
+  startOnboarding: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/vendor/stripe/connect`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Returns a fresh onboarding URL for vendors who haven't finished setup.
+   */
+  refreshOnboardingLink: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/vendor/stripe/connect/onboarding-link`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Returns a Stripe Express dashboard URL (view payouts, update banking info).
+   */
+  getDashboardLink: async () => {
+    return fetchWithCredentials(`${API_BASE_URL}/vendor/stripe/connect/dashboard`, {
+      method: 'GET',
+    });
+  },
+};
+
 export const VendorProfileAPI = {
   getVendorProfile: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/vendor/profile`, {

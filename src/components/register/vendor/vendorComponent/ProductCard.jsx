@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-import { Star, ChevronRight } from 'lucide-react';
+import { Star, ChevronRight, Clock, Calendar } from 'lucide-react';
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -92,6 +92,25 @@ const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) =
                             )}
                         </div>
                     )}
+
+                    {/* Fulfillment schedule badge */}
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                        {product.scheduleType === 'ADVANCE_ORDER' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                <Calendar className="w-3 h-3" />
+                                {product.advanceNoticeHours
+                                    ? `${product.advanceNoticeHours}h advance booking`
+                                    : 'Advance booking'}
+                            </span>
+                        ) : (
+                            product.preparationTimeMinutes > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                    <Clock className="w-3 h-3" />
+                                    {product.preparationTimeMinutes} min prep
+                                </span>
+                            )
+                        )}
+                    </div>
                 </div>
 
                 <button
