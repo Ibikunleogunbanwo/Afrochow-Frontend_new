@@ -35,6 +35,10 @@ export const AdminVendorsAPI = {
         method: 'POST',
         body: JSON.stringify({ reason }),
     }),
+    linkStripeAccount: (id, stripeAccountId) => fetchWithCredentials(
+        `${API_BASE_URL}/admin/vendors/${id}/stripe-account`,
+        { method: 'PATCH', body: JSON.stringify({ stripeAccountId }) }
+    ),
 };
 
 // ── Admin Order Management ─────────────────────────────────────────────────

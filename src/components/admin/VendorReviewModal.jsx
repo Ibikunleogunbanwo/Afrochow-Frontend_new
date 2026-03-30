@@ -6,7 +6,7 @@ import {
     CheckCircle2, XCircle, Shield, Phone, Mail,
     Globe, Timer, DollarSign, Package, Navigation,
     Image as ImageIcon, FileText, Loader2, AlertCircle,
-    ExternalLink,
+    ExternalLink, CreditCard,
 } from "lucide-react";
 import { AdminVendorsAPI } from "@/lib/api/admin.api";
 import { toast } from "@/components/ui/toast";
@@ -75,6 +75,10 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
     const [detail, setDetail]           = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(true);
     const [fetchError, setFetchError]   = useState(null);
+
+    const [stripeInput, setStripeInput]   = useState("");
+    const [linkingStripe, setLinkingStripe] = useState(false);
+    const [stripeError, setStripeError]   = useState(null);
 
     const [approving, setApproving]     = useState(false);
     const [rejecting, setRejecting]     = useState(false);
@@ -151,6 +155,26 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         } finally {
             setRejecting(false);
             setConfirmAction(null);
+        }
+    };
+
+    const handleLinkStripe = async () => {
+        const id = stripeInput.trim();
+        if (!id.startsWith("acct_")) {
+            setStripeError("Must start with 'acct_'");
+            return;
+        }
+        setLinkingStripe(true);
+        setStripeError(null);
+        try {
+            await AdminVendorsAPI.linkStripeAccount(vendor.publicVendorId, id);
+            toast.success("Stripe account linked");
+            setDetail(prev => ({ ...prev, stripeAccountId: id, stripeOnboardingComplete: true }));
+            setStripeInput("");
+        } catch (e) {
+            setStripeError(e.message || "Failed to link Stripe account");
+        } finally {
+            setLinkingStripe(false);
         }
     };
 
@@ -291,6 +315,52 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                         )}
                                     </Field>
                                 </Grid2>
+                            </Section>
+
+                            {/* ── Stripe Payout ── */}
+                            <Section icon={CreditCard} title="Stripe Payout">
+                                <div className="space-y-3">
+                                    {d.stripeOnboardingComplete ? (
+                                        <div className="flex items-center gap-2 px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
+                                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-green-800">Payout account connected</p>
+                                                {d.stripeAccountId && (
+                                                    <p className="text-xs font-mono text-green-700 truncate">{d.stripeAccountId}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+                                            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                            <p className="text-xs font-semibold text-amber-800">No payout account connected</p>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                            {d.stripeOnboardingComplete ? "Replace Stripe Account ID" : "Link Existing Stripe Account ID"}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={stripeInput}
+                                                onChange={e => { setStripeInput(e.target.value); setStripeError(null); }}
+                                                placeholder="acct_1TGjssLNkccUh7Qs"
+                                                className="flex-1 px-3 py-2 text-sm font-mono border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-900 placeholder-gray-400"
+                                            />
+                                            <button
+                                                onClick={handleLinkStripe}
+                                                disabled={linkingStripe || !stripeInput.trim()}
+                                                className="px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 shrink-0"
+                                            >
+                                                {linkingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : "Link"}
+                                            </button>
+                                        </div>
+                                        {stripeError && (
+                                            <p className="text-xs text-red-500 mt-1.5">{stripeError}</p>
+                                        )}
+                                    </div>
+                                </div>
                             </Section>
 
                             {/* ── Business Address ── */}
