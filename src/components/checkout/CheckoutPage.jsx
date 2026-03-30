@@ -71,6 +71,20 @@ export default function CheckoutPage() {
     });
     const [deliveryNote, setDeliveryNote] = useState("");
 
+    // Advance order scheduling
+    const advanceItems = cartItems.filter(i => i.scheduleType === 'ADVANCE_ORDER');
+    const hasAdvanceItems = advanceItems.length > 0;
+    const maxNoticeHours = hasAdvanceItems
+        ? Math.max(...advanceItems.map(i => i.advanceNoticeHours ?? 24))
+        : 0;
+    const minFulfillmentDatetime = (() => {
+        if (!hasAdvanceItems) return '';
+        const d = new Date(Date.now() + maxNoticeHours * 60 * 60 * 1000 + 60 * 1000);
+        // datetime-local needs "YYYY-MM-DDTHH:MM"
+        return d.toISOString().slice(0, 16);
+    })();
+    const [requestedFulfillmentTime, setRequestedFulfillmentTime] = useState('');
+
     // Promo code
     const [promoInput,   setPromoInput]   = useState("");
     const [promoCode,    setPromoCode]    = useState("");   // applied code
@@ -154,7 +168,8 @@ export default function CheckoutPage() {
         stripeFieldComplete.expiry &&
         stripeFieldComplete.cvc;
 
-    const canSubmit = !belowMinimum && cardComplete && stripeReady;
+    const canSubmit = !belowMinimum && cardComplete && stripeReady &&
+        (!hasAdvanceItems || !!requestedFulfillmentTime);
 
     // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -249,7 +264,15 @@ export default function CheckoutPage() {
             return;
         }
 
-        // 3 — Validate delivery address
+        // 3 — Validate advance order fulfilment time
+        if (hasAdvanceItems && !requestedFulfillmentTime) {
+            toast.error("Fulfilment time required", {
+                description: `Your cart contains items that require at least ${maxNoticeHours} hours advance notice. Please select a requested fulfilment time.`,
+            });
+            return;
+        }
+
+        // 4 — Validate delivery address
         if (fulfillment === "delivery") {
             if (!showNewAddress && !selectedAddressId) {
                 toast.error("No address selected", {
@@ -294,6 +317,12 @@ export default function CheckoutPage() {
                 ...(promoCode && { promoCode }),             // applied promo code (if any)
                 ...(fulfillment === "delivery" && {
                     deliveryAddressPublicId: deliveryAddressId, // backend field: deliveryAddressPublicId
+                }),
+                // Advance-order fulfilment time (ISO 8601 without offset — backend expects LocalDateTime)
+                ...(hasAdvanceItems && requestedFulfillmentTime && {
+                    requestedFulfillmentTime: requestedFulfillmentTime.length === 16
+                        ? requestedFulfillmentTime + ':00'
+                        : requestedFulfillmentTime,
                 }),
             };
 
@@ -619,6 +648,46 @@ export default function CheckoutPage() {
                             </div>
                         </div>
 
+                        {/* Advance order fulfilment time */}
+                        {hasAdvanceItems && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden">
+                                <div className="px-5 py-4 border-b border-blue-100 flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+                                        <Clock className="w-3.5 h-3.5 text-blue-600" />
+                                    </div>
+                                    <h2 className="text-sm font-semibold text-gray-900">Requested Fulfilment Time</h2>
+                                    <span className="text-xs text-red-500 font-medium">Required</span>
+                                </div>
+                                <div className="p-4 space-y-3">
+                                    <p className="text-xs text-blue-700">
+                                        Your cart includes items that require advance notice:
+                                    </p>
+                                    <ul className="text-xs text-blue-700 space-y-0.5 pl-3">
+                                        {advanceItems.map(item => (
+                                            <li key={item.publicProductId}>
+                                                • <span className="font-medium">{item.name}</span> — {item.advanceNoticeHours ?? 24}hr notice required
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                            When would you like this fulfilled?
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            value={requestedFulfillmentTime}
+                                            min={minFulfillmentDatetime}
+                                            onChange={e => setRequestedFulfillmentTime(e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-900 bg-white"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Earliest available: {new Date(Date.now() + maxNoticeHours * 3600000).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Promo code */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -825,6 +894,9 @@ export default function CheckoutPage() {
                                             )}
                                             {!stripeReady && (
                                                 <p>Stripe is still loading. Please wait.</p>
+                                            )}
+                                            {hasAdvanceItems && !requestedFulfillmentTime && (
+                                                <p>Please select a requested fulfilment time for your advance order items.</p>
                                             )}
                                         </div>
                                     </div>

@@ -35,8 +35,12 @@ const getDateBounds = (preset, customStart, customEnd) => {
 };
 
 const inDateRange = (dateStr, bounds) => {
-    if (!bounds || !dateStr) return true;
-    const d = new Date(dateStr);
+    if (!bounds) return true;
+    if (!dateStr) return false; // exclude records with no date when a filter is active
+    // Java LocalDateTime may include nano/microseconds; strip to milliseconds so Date can parse it
+    const normalized = typeof dateStr === 'string' ? dateStr.replace(/(\.\d{3})\d+/, '$1') : dateStr;
+    const d = new Date(normalized);
+    if (isNaN(d.getTime())) return false;
     return d >= bounds.start && d <= bounds.end;
 };
 import { AdminVendorsAPI } from '@/lib/api/admin.api';

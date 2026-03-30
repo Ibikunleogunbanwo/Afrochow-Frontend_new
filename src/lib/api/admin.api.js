@@ -43,6 +43,7 @@ export const AdminOrdersAPI = {
     getActive:  ()       => fetchWithCredentials(`${API_BASE_URL}/admin/orders/active`),
     getByStatus:(status) => fetchWithCredentials(`${API_BASE_URL}/admin/orders/status/${status}`),
     getById:    (id)     => fetchWithCredentials(`${API_BASE_URL}/admin/orders/${id}`),
+    cancel:     (id)     => fetchWithCredentials(`${API_BASE_URL}/admin/orders/${id}/cancel`, { method: 'POST' }),
 };
 
 // ── Analytics ──────────────────────────────────────────────────────────────
@@ -70,9 +71,11 @@ export const AdminReviewsAPI = {
 export const AdminPromotionsAPI = {
     getAll:    ()         => fetchWithCredentials(`${API_BASE_URL}/promotions/admin`),
     getById:   (id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`),
-    create:    (data)     => fetchWithCredentials(`${API_BASE_URL}/promotions/admin`,      { method: 'POST',   body: JSON.stringify(data) }),
-    update:    (id, data) => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`, { method: 'PUT',    body: JSON.stringify(data) }),
-    deactivate:(id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`, { method: 'DELETE' }),
+    create:    (data)     => fetchWithCredentials(`${API_BASE_URL}/promotions/admin`,                    { method: 'POST',   body: JSON.stringify(data) }),
+    update:    (id, data) => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`,              { method: 'PUT',    body: JSON.stringify(data) }),
+    deactivate:(id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}`,              { method: 'DELETE' }),
+    activate:  (id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}/activate`,     { method: 'PATCH' }),
+    delete:    (id)       => fetchWithCredentials(`${API_BASE_URL}/promotions/admin/${id}/permanent`,    { method: 'DELETE' }),
 };
 
 // ── Admin Categories ───────────────────────────────────────────────────────

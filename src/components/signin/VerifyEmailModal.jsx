@@ -172,10 +172,10 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
 
     // ── Render ─────────────────────────────────────────────────────────────
 
-    // ── Success screen — full-page background ──────────────────────────────
+    // ── Success screen ─────────────────────────────────────────────────────
     if (success) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                 <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10 text-center">
                     <h2 className="text-3xl font-black text-gray-900 mb-3">
                         Email Verified
@@ -196,7 +196,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="w-full max-w-md">
                 {/* ── Verification form ──────────────────────────────── */}
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">

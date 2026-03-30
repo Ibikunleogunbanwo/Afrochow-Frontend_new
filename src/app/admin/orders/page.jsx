@@ -10,6 +10,7 @@ import {
     Receipt, AlertCircle, Loader2, Tag,
 } from 'lucide-react';
 import { AdminOrdersAPI } from '@/lib/api/admin.api';
+import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
@@ -94,7 +95,7 @@ const TimelineRow = ({ label, ts }) => {
 };
 
 /* ─── Detail modal ──────────────────────────────────────────────────────── */
-const OrderDetailModal = ({ order, onClose }) => {
+const OrderDetailModal = ({ order, onClose, onCancel, cancelling }) => {
     if (!order) return null;
 
     const address = fmtAddress(order.deliveryAddress);
@@ -280,11 +281,17 @@ const OrderDetailModal = ({ order, onClose }) => {
                             <TimelineRow label="Delivered"           ts={order.deliveredAt} />
                             <TimelineRow label="Cancelled"           ts={order.cancelledAt} />
                         </div>
-                        {order.canBeCancelled && (
-                            <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                This order can still be cancelled
-                            </p>
+                        {!TERMINAL_STATUSES.has(order.status) && (
+                            <button
+                                onClick={onCancel}
+                                disabled={cancelling}
+                                className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                {cancelling
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Cancelling…</>
+                                    : <><XCircle className="w-4 h-4" /> Cancel Order</>
+                                }
+                            </button>
                         )}
                     </section>
 
@@ -306,6 +313,7 @@ export default function AdminOrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalLoading, setModalLoading]   = useState(false);
     const [modalError, setModalError]       = useState(null);
+    const [cancelling, setCancelling]       = useState(false);
 
     /* ── fetch list ── */
     const fetchOrders = useCallback(async () => {
@@ -326,6 +334,24 @@ export default function AdminOrdersPage() {
     }, [statusFilter]);
 
     useEffect(() => { fetchOrders(); setPage(1); }, [fetchOrders]);
+
+    /* ── cancel order (admin) ── */
+    const handleCancelOrder = async () => {
+        if (!selectedOrder) return;
+        if (!confirm(`Cancel order ${selectedOrder.publicOrderId}? This will refund the customer.`)) return;
+        setCancelling(true);
+        try {
+            const res = await AdminOrdersAPI.cancel(selectedOrder.publicOrderId);
+            const updated = res?.data ?? res;
+            setSelectedOrder(updated);
+            await fetchOrders();
+            toast.success('Order Cancelled', { description: `Order ${selectedOrder.publicOrderId} has been cancelled.` });
+        } catch (e) {
+            toast.error('Cancel Failed', { description: e.message || 'Failed to cancel order' });
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     /* ── open detail modal ── */
     const openDetail = async (publicOrderId) => {
@@ -619,7 +645,12 @@ export default function AdminOrdersPage() {
 
             {/* Detail modal */}
             {selectedOrder && (
-                <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+                <OrderDetailModal
+                    order={selectedOrder}
+                    onClose={() => setSelectedOrder(null)}
+                    onCancel={handleCancelOrder}
+                    cancelling={cancelling}
+                />
             )}
         </div>
     );

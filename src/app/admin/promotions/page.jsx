@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
     Tag, LayoutDashboard, ChevronRight, RefreshCw, Plus,
-    Trash2, Edit2, X, AlertCircle, CheckCircle,
+    Trash2, Edit2, X, AlertCircle, CheckCircle, ToggleLeft, ToggleRight,
 } from 'lucide-react';
 import { AdminPromotionsAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
@@ -143,7 +143,7 @@ export default function AdminPromotionsPage() {
     const handleDeactivate = async (p) => {
         if (!confirm(`Deactivate promotion "${p.code}"?`)) return;
         const id = p.publicPromotionId ?? p.id;
-        setActionLoading(prev => ({ ...prev, [id]: true }));
+        setActionLoading(prev => ({ ...prev, [id + 'toggle']: true }));
         try {
             await AdminPromotionsAPI.deactivate(id);
             await fetchPromotions();
@@ -151,7 +151,36 @@ export default function AdminPromotionsPage() {
         } catch (e) {
             toast.error('Deactivation Failed', { description: e.message || 'Failed to deactivate promotion' });
         } finally {
-            setActionLoading(prev => ({ ...prev, [id]: false }));
+            setActionLoading(prev => ({ ...prev, [id + 'toggle']: false }));
+        }
+    };
+
+    const handleActivate = async (p) => {
+        const id = p.publicPromotionId ?? p.id;
+        setActionLoading(prev => ({ ...prev, [id + 'toggle']: true }));
+        try {
+            await AdminPromotionsAPI.activate(id);
+            await fetchPromotions();
+            toast.success('Promotion Activated', { description: `"${p.code}" is now active.` });
+        } catch (e) {
+            toast.error('Activation Failed', { description: e.message || 'Failed to activate promotion' });
+        } finally {
+            setActionLoading(prev => ({ ...prev, [id + 'toggle']: false }));
+        }
+    };
+
+    const handleDelete = async (p) => {
+        if (!confirm(`Permanently delete promotion "${p.code}"? This cannot be undone.`)) return;
+        const id = p.publicPromotionId ?? p.id;
+        setActionLoading(prev => ({ ...prev, [id + 'del']: true }));
+        try {
+            await AdminPromotionsAPI.delete(id);
+            await fetchPromotions();
+            toast.success('Promotion Deleted', { description: `"${p.code}" has been permanently deleted.` });
+        } catch (e) {
+            toast.error('Delete Failed', { description: e.message || 'Failed to delete promotion' });
+        } finally {
+            setActionLoading(prev => ({ ...prev, [id + 'del']: false }));
         }
     };
 
@@ -412,7 +441,7 @@ export default function AdminPromotionsPage() {
                             { label: 'Code',    className: 'flex-1 min-w-[200px]' },
                             { label: 'Details', className: 'w-52 shrink-0' },
                             { label: 'Status',  className: 'w-24 shrink-0' },
-                            { label: 'Actions', className: 'w-36 shrink-0' },
+                            { label: 'Actions', className: 'w-32 shrink-0' },
                         ]} />
                         {promotions.map(p => {
                             const id        = p.publicPromotionId ?? p.id;
@@ -472,21 +501,40 @@ export default function AdminPromotionsPage() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="md:w-36 md:shrink-0 flex items-center gap-1.5">
+                                    <div className="md:w-36 md:shrink-0 flex items-center gap-1.5 flex-wrap">
                                         <button
                                             onClick={() => openEdit(p)}
-                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                                         >
                                             <Edit2 className="w-3.5 h-3.5" />
                                             Edit
                                         </button>
+                                        {isActive ? (
+                                            <button
+                                                onClick={() => handleDeactivate(p)}
+                                                disabled={!!actionLoading[id + 'toggle']}
+                                                title="Deactivate"
+                                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                <ToggleRight className="w-4 h-4 text-green-600" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleActivate(p)}
+                                                disabled={!!actionLoading[id + 'toggle']}
+                                                title="Activate"
+                                                className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                <ToggleLeft className="w-4 h-4" />
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => handleDeactivate(p)}
-                                            disabled={!!actionLoading[id]}
-                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
+                                            onClick={() => handleDelete(p)}
+                                            disabled={!!actionLoading[id + 'del']}
+                                            title="Delete permanently"
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
-                                            Deactivate
                                         </button>
                                     </div>
                                 </AdminTableRow>

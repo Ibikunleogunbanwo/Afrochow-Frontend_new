@@ -77,7 +77,7 @@ export default function AdminCategoriesPage() {
                 name:         form.name.trim(),
                 description:  form.description.trim() || null,
                 displayOrder: form.displayOrder !== '' ? parseInt(form.displayOrder, 10) : null,
-                imageUrl:     form.imageUrl.trim() || null,
+                iconUrl:      form.imageUrl.trim() || null,
             };
             if (editTarget) {
                 await AdminCategoriesAPI.update(resolveId(editTarget), payload);

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { OrderAPI } from "@/lib/api/order/order.api";
 import {
     CheckCircle2, Clock, MapPin, ShoppingBag,
-    ChevronRight, Loader2, AlertCircle, Truck, Store, RefreshCw, XCircle,
+    ChevronRight, Loader2, AlertCircle, Truck, Store, RefreshCw, XCircle, Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
@@ -263,6 +263,25 @@ export default function OrderConfirmationPage() {
                     </div>
                 )}
 
+                {/* ── Requested fulfilment time ──────────────────────────── */}
+                {!loading && order?.requestedFulfillmentTime && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+                        <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-xs font-semibold text-blue-700 mb-0.5">Requested Fulfilment Time</p>
+                            <p className="text-sm text-blue-800 font-medium">
+                                {new Date(order.requestedFulfillmentTime).toLocaleString(undefined, {
+                                    weekday: 'long', year: 'numeric', month: 'long',
+                                    day: 'numeric', hour: '2-digit', minute: '2-digit',
+                                })}
+                            </p>
+                            <p className="text-xs text-blue-600 mt-0.5">
+                                The vendor will aim to have your order ready by this time.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* ── Special instructions ───────────────────────────────── */}
                 {!loading && order?.specialInstructions && (
                     <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4">
@@ -291,6 +310,31 @@ export default function OrderConfirmationPage() {
                                 </li>
                             ))}
                         </ol>
+                    </div>
+                )}
+
+                {/* ── Payment & Refund policy ────────────────────────────── */}
+                {!loading && (
+                    <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 space-y-2">
+                        <h2 className="text-xs font-semibold text-amber-800 uppercase tracking-wide">Payment & Refund Policy</h2>
+                        <ul className="text-xs text-amber-800 space-y-1.5">
+                            <li className="flex items-start gap-1.5">
+                                <span className="shrink-0 mt-0.5">•</span>
+                                Your card was charged when this order was placed.
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                                <span className="shrink-0 mt-0.5">•</span>
+                                If the vendor cannot fulfil your order you will receive a <span className="font-semibold">full automatic refund</span> within 3–5 business days.
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                                <span className="shrink-0 mt-0.5">•</span>
+                                You can cancel for a full refund while the order is <span className="font-semibold">Pending</span> or <span className="font-semibold">Confirmed</span>.
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                                <span className="shrink-0 mt-0.5">•</span>
+                                Cancellations after the vendor starts preparing may not be eligible for a refund.
+                            </li>
+                        </ul>
                     </div>
                 )}
 
