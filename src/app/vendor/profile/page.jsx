@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
+import { useSearchParams } from 'next/navigation';
+import { VendorProfileAPI, VendorStripeAPI } from '@/lib/api/vendor/profile.api';
 import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { AuthAPI } from '@/lib/api/auth.api';
@@ -16,6 +17,7 @@ import {
     Calendar, Truck, X, ImageIcon,
     LayoutDashboard, Home, Phone, Navigation, Timer, Info,
     AlertCircle, Bell, CheckCheck, Trash2, RefreshCw,
+    CreditCard, ExternalLink, CheckCircle,
 } from 'lucide-react';
 import { useVendorNotifications } from '@/hooks/useVendorNotifications';
 import { SearchAPI } from '@/lib/api/search.api';
@@ -38,10 +40,11 @@ const CUISINE_TYPES_FALLBACK = [
 ];
 
 const TABS = [
-    { id: 'info',          label: 'Store Info', icon: Store    },
-    { id: 'hours',         label: 'Operating Hours', icon: Calendar },
-    { id: 'branding',      label: 'Branding',        icon: ImageIcon },
-    { id: 'notifications', label: 'Notifications',   icon: Bell     },
+    { id: 'info',          label: 'Store Info',       icon: Store      },
+    { id: 'hours',         label: 'Operating Hours',  icon: Calendar   },
+    { id: 'branding',      label: 'Branding',         icon: ImageIcon  },
+    { id: 'payout',        label: 'Payout',           icon: CreditCard },
+    { id: 'notifications', label: 'Notifications',    icon: Bell       },
 ];
 
 const DAYS = [
@@ -282,11 +285,50 @@ function SaveBar({ saving, onSave, onCancel, disabled }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function VendorProfilePage() {
+    const searchParams = useSearchParams();
+    const stripeParam  = searchParams.get('stripe'); // 'return' | 'refresh' | null
+
     const [profile,      setProfile]      = useState(null);
     const [analytics,    setAnalytics]    = useState(null);
     const [loading,      setLoading]      = useState(true);
-    const [activeTab,    setActiveTab]    = useState('info');
+    const [activeTab,    setActiveTab]    = useState(stripeParam ? 'payout' : 'info');
     const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
+
+    // Stripe payout state
+    const [stripeConnecting,       setStripeConnecting]       = useState(false);
+    const [stripeDashboardLoading, setStripeDashboardLoading] = useState(false);
+
+    const handleStripeConnect = async () => {
+        setStripeConnecting(true);
+        try {
+            const res = await VendorStripeAPI.startOnboarding();
+            if (res?.success && res?.data?.onboardingUrl) {
+                window.location.href = res.data.onboardingUrl;
+            } else {
+                toast.error('Could not start Stripe onboarding. Please try again.');
+            }
+        } catch (e) {
+            toast.error(e.message || 'Could not start Stripe onboarding.');
+        } finally {
+            setStripeConnecting(false);
+        }
+    };
+
+    const handleStripeDashboard = async () => {
+        setStripeDashboardLoading(true);
+        try {
+            const res = await VendorStripeAPI.getDashboardLink();
+            if (res?.success && res?.data?.dashboardUrl) {
+                window.open(res.data.dashboardUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                toast.error('Could not open Stripe dashboard. Please try again.');
+            }
+        } catch (e) {
+            toast.error(e.message || 'Could not open Stripe dashboard.');
+        } finally {
+            setStripeDashboardLoading(false);
+        }
+    };
 
     // Pull live category names from the admin-managed Category table so the
     // dropdown matches what admins configure (same list as header nav).
@@ -979,6 +1021,94 @@ export default function VendorProfilePage() {
                                     setHoursForm(normaliseHours(profile?.weeklySchedule ?? null));
                                     setHoursErrors({});
                                 }} />
+                        </div>
+                    )}
+
+                    {/* ── Tab: Payout ───────────────────────────────── */}
+                    {activeTab === 'payout' && (
+                        <div className="p-5 sm:p-8 space-y-4">
+
+                            {/* Return / refresh banners */}
+                            {stripeParam === 'return' && (
+                                <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-semibold text-green-800">Onboarding submitted</p>
+                                        <p className="text-xs text-green-700 mt-0.5">
+                                            Stripe is reviewing your details. Your payout account will be marked connected once verified.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                            {stripeParam === 'refresh' && (
+                                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-semibold text-amber-800">Onboarding incomplete</p>
+                                        <p className="text-xs text-amber-700 mt-0.5">
+                                            Your Stripe session expired. Click below to resume onboarding.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payout card */}
+                            <div className="bg-purple-50 rounded-xl p-5 border border-purple-100">
+                                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <CreditCard className="h-5 w-5 text-purple-600" />
+                                    Payout Account
+                                </h3>
+
+                                {profile?.stripeOnboardingComplete ? (
+                                    <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
+                                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 text-sm">Stripe payout account connected</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    You&apos;re set up to receive payouts. Manage banking details and payout history in your Stripe dashboard.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleStripeDashboard}
+                                            disabled={stripeDashboardLoading}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                                        >
+                                            {stripeDashboardLoading
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
+                                                : <><ExternalLink className="w-4 h-4" /> Stripe Dashboard</>
+                                            }
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
+                                                <CreditCard className="h-5 w-5 text-amber-600" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 text-sm">No payout account connected</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    Connect a Stripe payout account to receive earnings from your orders. Takes only a few minutes.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleStripeConnect}
+                                            disabled={stripeConnecting}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                                        >
+                                            {stripeConnecting
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>
+                                                : <><ExternalLink className="w-4 h-4" /> Connect Payout Account</>
+                                            }
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
