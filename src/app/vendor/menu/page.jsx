@@ -387,143 +387,174 @@ const VendorMenuPage = () => {
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="w-full">
                             <thead>
-                                <tr className="bg-gray-900 text-white">
-                                    <th className="w-16 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Image</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
-                                    <th className="w-32 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Category</th>
-                                    <th className="w-24 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Price</th>
-                                    <th className="w-36 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Schedule</th>
-                                    <th className="w-24 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Dietary</th>
-                                    <th className="w-24 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Rating</th>
-                                    <th className="w-28 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Available</th>
-                                    <th className="w-20 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Actions</th>
+                                <tr className="bg-gray-900 text-white text-[11px] uppercase tracking-wider">
+                                    <th className="w-14 px-3 py-2.5 text-left">Item</th>
+                                    <th className="px-3 py-2.5 text-left">Name &amp; Details</th>
+                                    <th className="w-28 px-3 py-2.5 text-left">Category</th>
+                                    <th className="w-20 px-3 py-2.5 text-right">Price</th>
+                                    <th className="w-36 px-3 py-2.5 text-center">Order Type</th>
+                                    <th className="w-20 px-3 py-2.5 text-center">Rating</th>
+                                    <th className="w-24 px-3 py-2.5 text-center">Status</th>
+                                    <th className="w-16 px-3 py-2.5 text-center">Edit</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100">
                                 {filteredProducts.map((product, index) => (
                                     <tr
                                         key={product.publicProductId}
-                                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}
+                                        className={`hover:bg-amber-50/40 transition-colors ${index % 2 !== 0 ? 'bg-gray-50/60' : 'bg-white'}`}
                                     >
-                                        {/* Image */}
-                                        <td className="px-4 py-3">
+                                        {/* Thumbnail */}
+                                        <td className="px-3 py-2.5">
                                             {product.imageUrl ? (
                                                 // eslint-disable-next-line @next/next/no-img-element
                                                 <img
                                                     src={product.imageUrl}
                                                     alt={product.name}
-                                                    className="w-12 h-12 object-cover rounded-lg"
+                                                    className="w-10 h-10 object-cover rounded-lg border border-gray-200"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                                    <ImageIcon className="w-5 h-5 text-gray-300" />
+                                                <div className="w-10 h-10 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                                                    <ImageIcon className="w-4 h-4 text-gray-300" />
                                                 </div>
                                             )}
                                         </td>
 
-                                        {/* Name + Description */}
-                                        <td className="px-4 py-3">
-                                            <p className="font-semibold text-gray-900">{product.name}</p>
-                                            <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
-                                                {product.description || '—'}
-                                            </p>
-                                            {(product.preparationTimeMinutes || product.calories) && (
-                                                <div className="flex gap-2 mt-1 text-xs text-gray-400">
-                                                    {product.preparationTimeMinutes && <span>⏱️ {product.preparationTimeMinutes} min</span>}
-                                                    {product.calories && <span>🔥 {product.calories} cal</span>}
+                                        {/* Name + meta */}
+                                        <td className="px-3 py-2.5 min-w-0">
+                                            <p className="text-[13px] font-semibold text-gray-900 leading-tight truncate">{product.name}</p>
+                                            {product.description && (
+                                                <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{product.description}</p>
+                                            )}
+                                            {/* Prep / Calories / Orders row */}
+                                            <div className="flex flex-wrap gap-x-2.5 mt-1 text-[11px] text-gray-400">
+                                                {product.preparationTimeMinutes && (
+                                                    <span>⏱ {product.preparationTimeMinutes} min prep</span>
+                                                )}
+                                                {product.calories && (
+                                                    <span>{product.calories} kcal</span>
+                                                )}
+                                                {product.totalOrders > 0 && (
+                                                    <span>{product.totalOrders} orders</span>
+                                                )}
+                                            </div>
+                                            {/* Dietary badges */}
+                                            {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                    {product.isVegan && (
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">
+                                                            🌱 Vegan
+                                                        </span>
+                                                    )}
+                                                    {product.isVegetarian && !product.isVegan && (
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-medium">
+                                                            🥬 Vegetarian
+                                                        </span>
+                                                    )}
+                                                    {product.isGlutenFree && (
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">
+                                                            🌾 Gluten-Free
+                                                        </span>
+                                                    )}
+                                                    {product.isSpicy && (
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">
+                                                            🌶 Spicy
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </td>
 
                                         {/* Category */}
-                                        <td className="px-4 py-3">
+                                        <td className="px-3 py-2.5">
                                             {product.categoryName ? (
-                                                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
+                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">
                                                     {product.categoryName}
                                                 </span>
                                             ) : (
-                                                <span className="text-gray-400 text-xs">—</span>
+                                                <span className="text-gray-300 text-[11px]">—</span>
                                             )}
                                         </td>
 
                                         {/* Price */}
-                                        <td className="px-4 py-3 text-right font-bold text-gray-900 whitespace-nowrap">
-                                            CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                        <td className="px-3 py-2.5 text-right">
+                                            <span className="text-[13px] font-bold text-gray-900 whitespace-nowrap">
+                                                CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                            </span>
                                         </td>
 
-                                        {/* Schedule */}
-                                        <td className="px-4 py-3 text-center">
+                                        {/* Order Type */}
+                                        <td className="px-3 py-2.5 text-center">
                                             {product.scheduleType === 'ADVANCE_ORDER' ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium whitespace-nowrap">
-                                                    📅 {product.advanceNoticeHours}hr notice
-                                                </span>
+                                                <div className="inline-flex flex-col items-center gap-0.5">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold whitespace-nowrap">
+                                                        📅 Advance Order
+                                                    </span>
+                                                    <span className="text-[10px] text-blue-500">
+                                                        {product.advanceNoticeHours}h notice required
+                                                    </span>
+                                                </div>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                                    ⚡ Same day
-                                                </span>
+                                                <div className="inline-flex flex-col items-center gap-0.5">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-semibold">
+                                                        ⚡ Ready to Order
+                                                    </span>
+                                                    <span className="text-[10px] text-green-500">no advance notice needed</span>
+                                                </div>
                                             )}
                                         </td>
 
-                                        {/* Dietary */}
-                                        <td className="px-4 py-3 text-center">
-                                            <div className="flex gap-1 justify-center">
-                                                {product.isVegan && <span title="Vegan">🌱</span>}
-                                                {product.isVegetarian && !product.isVegan && <span title="Vegetarian">🥬</span>}
-                                                {product.isGlutenFree && <span title="Gluten-Free">🌾</span>}
-                                                {product.isSpicy && <span title="Spicy">🌶️</span>}
-                                                {!product.isVegan && !product.isVegetarian && !product.isGlutenFree && !product.isSpicy && (
-                                                    <span className="text-gray-400 text-xs">—</span>
-                                                )}
-                                            </div>
-                                        </td>
-
                                         {/* Rating */}
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="px-3 py-2.5 text-center">
                                             <button
                                                 onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
-                                                className="inline-flex items-center gap-1 text-xs hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors"
+                                                className="inline-flex flex-col items-center gap-0.5 hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors"
+                                                title="View reviews"
                                             >
-                                                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                                                <span className="font-semibold text-gray-900">
-                                                    {typeof product.averageRating === 'number' && product.averageRating > 0
-                                                        ? product.averageRating.toFixed(1) : '0.0'}
+                                                <span className="inline-flex items-center gap-0.5">
+                                                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                                    <span className="text-[12px] font-bold text-gray-900">
+                                                        {typeof product.averageRating === 'number' && product.averageRating > 0
+                                                            ? product.averageRating.toFixed(1) : '—'}
+                                                    </span>
                                                 </span>
-                                                <span className="text-gray-400">({product.reviewCount || 0})</span>
+                                                <span className="text-[10px] text-gray-400">{product.reviewCount || 0} reviews</span>
                                             </button>
                                         </td>
 
-                                        {/* Available toggle */}
-                                        <td className="px-4 py-3 text-center">
+                                        {/* Status toggle */}
+                                        <td className="px-3 py-2.5 text-center">
                                             <button
                                                 onClick={() => handleToggleAvailability(product)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                                                     product.available
-                                                        ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
-                                                        : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
+                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
                                                 }`}
                                             >
-                                                {product.available ? 'Available' : 'Unavailable'}
+                                                <span className={`w-1.5 h-1.5 rounded-full ${product.available ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                                {product.available ? 'Live' : 'Hidden'}
                                             </button>
                                         </td>
 
                                         {/* Actions */}
-                                        <td className="px-4 py-3 text-center">
-                                            <div className="flex items-center justify-center gap-1">
+                                        <td className="px-3 py-2.5 text-center">
+                                            <div className="flex items-center justify-center gap-0.5">
                                                 <button
                                                     onClick={() => openEditModal(product)}
                                                     className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                                    title="Edit"
+                                                    title="Edit product"
                                                 >
-                                                    <Edit className="w-4 h-4 text-gray-600" />
+                                                    <Edit className="w-3.5 h-3.5 text-gray-500" />
                                                 </button>
                                                 <button
                                                     onClick={() => openDeleteModal(product)}
                                                     className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
+                                                    title="Delete product"
                                                 >
-                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
                                                 </button>
                                             </div>
                                         </td>
