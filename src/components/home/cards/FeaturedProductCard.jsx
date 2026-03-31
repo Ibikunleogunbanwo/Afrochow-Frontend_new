@@ -197,14 +197,14 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             label="Rating"
                             value={averageRating > 0
                                 ? `⭐ ${averageRating.toFixed(1)}${reviewCount > 0 ? ` (${reviewCount >= 1000 ? `${(reviewCount / 1000).toFixed(1)}k` : reviewCount})` : ''}`
-                                : '⭐ —'}
+                                : '⭐ 0'}
                         />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem
                             label="Orders"
                             value={totalOrders > 0
                                 ? (totalOrders >= 1000 ? `${(totalOrders / 1000).toFixed(1)}k` : totalOrders)
-                                : '—'}
+                                : 0}
                         />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem

@@ -517,7 +517,7 @@ const VendorMenuPage = () => {
                                                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                                                     <span className="text-[12px] font-bold text-gray-900">
                                                         {typeof product.averageRating === 'number' && product.averageRating > 0
-                                                            ? product.averageRating.toFixed(1) : '—'}
+                                                            ? product.averageRating.toFixed(1) : '0.0'}
                                                     </span>
                                                 </span>
                                                 <span className="text-[10px] text-gray-400">{product.reviewCount || 0} reviews</span>
