@@ -385,177 +385,153 @@ const VendorMenuPage = () => {
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredProducts.map((product) => (
-                        <div
-                            key={product.publicProductId}
-                            className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden hover:border-gray-400 hover:shadow-lg transition-all group"
-                        >
-                            {/* Product Image */}
-                            <div className="relative h-48 bg-linear-to-br from-gray-100 to-gray-200">
-                                {product.imageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <ImageIcon className="w-16 h-16 text-gray-400" />
-                                    </div>
-                                )}
-
-                                {/* Availability Badge */}
-                                <div className="absolute top-3 left-3">
-                                    <button
-                                        onClick={() => handleToggleAvailability(product)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm transition-all ${
-                                            product.available
-                                                ? 'bg-green-100/90 text-green-700 border-2 border-green-200'
-                                                : 'bg-red-100/90 text-red-700 border-2 border-red-200'
-                                        }`}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-900 text-white">
+                                    <th className="w-16 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Image</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
+                                    <th className="w-32 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Category</th>
+                                    <th className="w-24 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Price</th>
+                                    <th className="w-36 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Schedule</th>
+                                    <th className="w-24 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Dietary</th>
+                                    <th className="w-24 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Rating</th>
+                                    <th className="w-28 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Available</th>
+                                    <th className="w-20 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredProducts.map((product, index) => (
+                                    <tr
+                                        key={product.publicProductId}
+                                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}
                                     >
-                                        {product.available ? 'Available' : 'Unavailable'}
-                                    </button>
-                                </div>
+                                        {/* Image */}
+                                        <td className="px-4 py-3">
+                                            {product.imageUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    className="w-12 h-12 object-cover rounded-lg"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                                    <ImageIcon className="w-5 h-5 text-gray-300" />
+                                                </div>
+                                            )}
+                                        </td>
 
-                                {/* Actions Menu — always visible on mobile, hover-reveal on desktop */}
-                                <div className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => openEditModal(product)}
-                                            className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-all shadow-md"
-                                        >
-                                            <Edit className="w-4 h-4 text-gray-700" />
-                                        </button>
-                                        <button
-                                            onClick={() => openDeleteModal(product)}
-                                            className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-all shadow-md"
-                                        >
-                                            <Trash2 className="w-4 h-4 text-red-600" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                                        {/* Name + Description */}
+                                        <td className="px-4 py-3">
+                                            <p className="font-semibold text-gray-900">{product.name}</p>
+                                            <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+                                                {product.description || '—'}
+                                            </p>
+                                            {(product.preparationTimeMinutes || product.calories) && (
+                                                <div className="flex gap-2 mt-1 text-xs text-gray-400">
+                                                    {product.preparationTimeMinutes && <span>⏱️ {product.preparationTimeMinutes} min</span>}
+                                                    {product.calories && <span>🔥 {product.calories} cal</span>}
+                                                </div>
+                                            )}
+                                        </td>
 
-                            {/* Product Info */}
-                            <div className="p-4">
-                                <div className="flex items-start justify-between mb-2">
-                                    <h3 className="font-bold text-gray-900 text-lg">{product.name}</h3>
-                                    <span className="text-xl font-black text-gray-900">
-                                        CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
-                                    </span>
-                                </div>
-
-                                {/* Category and Rating Row */}
-                                <div className="flex items-center justify-between mb-2">
-                                    {(product.category || product.categoryName) && (
-                                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
-                                            {product.categoryName || product.category}
-                                        </span>
-                                    )}
-
-                                    {/* Rating Display - Always Clickable */}
-                                    <button
-                                        onClick={() => {
-                                            setSelectedProduct(product);
-                                            setShowReviewsModal(true);
-                                        }}
-                                        className="flex items-center gap-1 text-xs hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors group"
-                                    >
-                                        <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 group-hover:scale-110 transition-transform" />
-                                        <span className="font-semibold text-gray-900">
-                                            {typeof product.averageRating === 'number' && product.averageRating > 0
-                                                ? product.averageRating.toFixed(1)
-                                                : '0.0'}
-                                        </span>
-                                        <span className="text-gray-500">
-                                            ({product.reviewCount || 0})
-                                        </span>
-                                    </button>
-                                </div>
-
-                                <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                                    {product.description || 'No description available'}
-                                </p>
-
-                                {/* Dietary Information */}
-                                {(product.isVegetarian || product.isVegan || product.isGlutenFree || product.isSpicy) && (
-                                    <div className="flex flex-wrap gap-1.5 mb-3">
-                                        {product.isVegan && (
-                                            <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                                🌱 Vegan
-                                            </span>
-                                        )}
-                                        {product.isVegetarian && !product.isVegan && (
-                                            <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                                🥬 Vegetarian
-                                            </span>
-                                        )}
-                                        {product.isGlutenFree && (
-                                            <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                                🌾 Gluten-Free
-                                            </span>
-                                        )}
-                                        {product.isSpicy && (
-                                            <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                                                🌶️ Spicy
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Additional Details Footer */}
-                                <div className="pt-3 border-t border-gray-100 space-y-2">
-                                    {/* Schedule type + Prep Time + Calories */}
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                                        {product.scheduleType === 'ADVANCE_ORDER' ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
-                                                📅 {product.advanceNoticeHours}hr notice
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
-                                                ⚡ Same day
-                                            </span>
-                                        )}
-                                        {product.preparationTimeMinutes && (
-                                            <span className="flex items-center gap-1">
-                                                ⏱️ {product.preparationTimeMinutes} min
-                                            </span>
-                                        )}
-                                        {product.calories && (
-                                            <span className="flex items-center gap-1">
-                                                🔥 {product.calories} cal
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* ID and Status */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-xs text-gray-500">
-                                            ID: {product.publicProductId?.substring(0, 8) || 'N/A'}
-                                        </div>
-
-                                        {/* Status Indicator */}
-                                        <div className="flex items-center gap-2">
-                                            {product.available ? (
-                                                <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                                                    In Stock
+                                        {/* Category */}
+                                        <td className="px-4 py-3">
+                                            {product.categoryName ? (
+                                                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
+                                                    {product.categoryName}
                                                 </span>
                                             ) : (
-                                                <span className="text-xs text-red-600 font-medium flex items-center gap-1">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                                    Out of Stock
+                                                <span className="text-gray-400 text-xs">—</span>
+                                            )}
+                                        </td>
+
+                                        {/* Price */}
+                                        <td className="px-4 py-3 text-right font-bold text-gray-900 whitespace-nowrap">
+                                            CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                        </td>
+
+                                        {/* Schedule */}
+                                        <td className="px-4 py-3 text-center">
+                                            {product.scheduleType === 'ADVANCE_ORDER' ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium whitespace-nowrap">
+                                                    📅 {product.advanceNoticeHours}hr notice
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                                    ⚡ Same day
                                                 </span>
                                             )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                                        </td>
+
+                                        {/* Dietary */}
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="flex gap-1 justify-center">
+                                                {product.isVegan && <span title="Vegan">🌱</span>}
+                                                {product.isVegetarian && !product.isVegan && <span title="Vegetarian">🥬</span>}
+                                                {product.isGlutenFree && <span title="Gluten-Free">🌾</span>}
+                                                {product.isSpicy && <span title="Spicy">🌶️</span>}
+                                                {!product.isVegan && !product.isVegetarian && !product.isGlutenFree && !product.isSpicy && (
+                                                    <span className="text-gray-400 text-xs">—</span>
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* Rating */}
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
+                                                className="inline-flex items-center gap-1 text-xs hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors"
+                                            >
+                                                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                                                <span className="font-semibold text-gray-900">
+                                                    {typeof product.averageRating === 'number' && product.averageRating > 0
+                                                        ? product.averageRating.toFixed(1) : '0.0'}
+                                                </span>
+                                                <span className="text-gray-400">({product.reviewCount || 0})</span>
+                                            </button>
+                                        </td>
+
+                                        {/* Available toggle */}
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                onClick={() => handleToggleAvailability(product)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                                    product.available
+                                                        ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
+                                                        : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
+                                                }`}
+                                            >
+                                                {product.available ? 'Available' : 'Unavailable'}
+                                            </button>
+                                        </td>
+
+                                        {/* Actions */}
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <button
+                                                    onClick={() => openEditModal(product)}
+                                                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <Edit className="w-4 h-4 text-gray-600" />
+                                                </button>
+                                                <button
+                                                    onClick={() => openDeleteModal(product)}
+                                                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
