@@ -301,59 +301,57 @@ const VendorMenuPage = () => {
     return (
         <div className="space-y-6">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+            <nav className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
                 <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
-                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <LayoutDashboard className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     Dashboard
                 </Link>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />
                 <span className="font-semibold text-gray-900">Products</span>
             </nav>
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900">Products</h1>
-                    <p className="text-gray-600 mt-1">Manage your product catalogue</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Products</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Manage your catalogue</p>
                 </div>
                 <button
-                    onClick={() => {
-                        resetForm();
-                        setShowCreateModal(true);
-                    }}
-                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all"
+                    onClick={() => { resetForm(); setShowCreateModal(true); }}
+                    className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 active:bg-gray-700 transition-all shrink-0 text-sm"
                 >
-                    <Plus className="w-5 h-5" />
-                    <span>Add Product</span>
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden xs:inline">Add Product</span>
+                    <span className="xs:hidden">Add</span>
                 </button>
             </div>
 
             {/* Search and Filter */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+                <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
                     {/* Search */}
                     <div className="flex-1">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Search products..."
+                                placeholder="Search products…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{ color: 'black', backgroundColor: 'white' }}
-                                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+                                className="w-full pl-9 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                             />
                         </div>
                     </div>
 
                     {/* Category Filter */}
-                    <div className="flex items-center space-x-2">
-                        <Filter className="text-gray-400 w-5 h-5" />
+                    <div className="flex items-center gap-2">
+                        <Filter className="text-gray-400 w-4 h-4 shrink-0" />
                         <select
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all font-medium"
+                            className="flex-1 xs:flex-none px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all font-medium text-sm"
                         >
                             <option value="all">All Categories</option>
                             {categories.map((cat) => (
@@ -362,23 +360,20 @@ const VendorMenuPage = () => {
                                 </option>
                             ))}
                         </select>
-
                     </div>
                 </div>
             </div>
 
-            {/* Products Grid */}
+            {/* Products — Mobile cards + Desktop table */}
             {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
+                <div className="flex items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-400" />
                 </div>
             ) : filteredProducts.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-                    <div className="text-gray-400 mb-4">
-                        <ImageIcon className="w-16 h-16 mx-auto" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">No products found</h3>
-                    <p className="text-gray-600">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 text-center">
+                    <ImageIcon className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                    <h3 className="text-base font-bold text-gray-900 mb-1">No products found</h3>
+                    <p className="text-sm text-gray-500">
                         {searchQuery || filterCategory !== 'all'
                             ? 'Try adjusting your search or filters'
                             : 'Get started by adding your first product'}
@@ -386,7 +381,82 @@ const VendorMenuPage = () => {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
+
+                    {/* ── Mobile card list (hidden on sm+) ── */}
+                    <div className="sm:hidden divide-y divide-gray-100">
+                        {filteredProducts.map((product) => (
+                            <div key={product.publicProductId} className="flex items-start gap-3 p-3 active:bg-gray-50">
+                                {/* Thumbnail */}
+                                {product.imageUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={product.imageUrl} alt={product.name}
+                                        className="w-14 h-14 object-cover rounded-xl border border-gray-100 shrink-0" />
+                                ) : (
+                                    <div className="w-14 h-14 bg-gray-100 rounded-xl border border-gray-100 flex items-center justify-center shrink-0">
+                                        <ImageIcon className="w-5 h-5 text-gray-300" />
+                                    </div>
+                                )}
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <p className="text-sm font-bold text-gray-900 leading-tight truncate">{product.name}</p>
+                                        <span className="text-sm font-bold text-gray-900 shrink-0">CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                        {product.categoryName && (
+                                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded">{product.categoryName}</span>
+                                        )}
+                                        <button
+                                            onClick={() => handleToggleAvailability(product)}
+                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                                product.available
+                                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                                            }`}
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full ${product.available ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                            {product.available ? 'Live' : 'Hidden'}
+                                        </button>
+                                        <button
+                                            onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
+                                            className="inline-flex items-center gap-0.5 text-[10px] text-gray-500"
+                                        >
+                                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                            {typeof product.averageRating === 'number' && product.averageRating > 0
+                                                ? product.averageRating.toFixed(1) : '—'}
+                                        </button>
+                                    </div>
+                                    {/* Dietary badges */}
+                                    {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                            {product.isVegan && <span className="px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">🌱 Vegan</span>}
+                                            {product.isVegetarian && !product.isVegan && <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-medium">🥬 Veg</span>}
+                                            {product.isGlutenFree && <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">🌾 GF</span>}
+                                            {product.isSpicy && <span className="px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">🌶 Spicy</span>}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex flex-col gap-1.5 shrink-0">
+                                    <button onClick={() => openEditModal(product)}
+                                        className="p-2.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl transition-colors"
+                                        title="Edit">
+                                        <Edit className="w-4 h-4 text-gray-600" />
+                                    </button>
+                                    <button onClick={() => openDeleteModal(product)}
+                                        className="p-2.5 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-xl transition-colors"
+                                        title="Delete">
+                                        <Trash2 className="w-4 h-4 text-red-500" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ── Desktop table (hidden on mobile) ── */}
+                    <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-gray-900 text-white text-[11px] uppercase tracking-wider">
@@ -428,41 +498,17 @@ const VendorMenuPage = () => {
                                             {product.description && (
                                                 <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{product.description}</p>
                                             )}
-                                            {/* Prep / Calories / Orders row */}
                                             <div className="flex flex-wrap gap-x-2.5 mt-1 text-[11px] text-gray-400">
-                                                {product.preparationTimeMinutes && (
-                                                    <span>⏱ {product.preparationTimeMinutes} min prep</span>
-                                                )}
-                                                {product.calories && (
-                                                    <span>{product.calories} kcal</span>
-                                                )}
-                                                {product.totalOrders > 0 && (
-                                                    <span>{product.totalOrders} orders</span>
-                                                )}
+                                                {product.preparationTimeMinutes && (<span>⏱ {product.preparationTimeMinutes} min prep</span>)}
+                                                {product.calories && (<span>{product.calories} kcal</span>)}
+                                                {product.totalOrders > 0 && (<span>{product.totalOrders} orders</span>)}
                                             </div>
-                                            {/* Dietary badges */}
                                             {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
                                                 <div className="flex flex-wrap gap-1 mt-1.5">
-                                                    {product.isVegan && (
-                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">
-                                                            🌱 Vegan
-                                                        </span>
-                                                    )}
-                                                    {product.isVegetarian && !product.isVegan && (
-                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-medium">
-                                                            🥬 Vegetarian
-                                                        </span>
-                                                    )}
-                                                    {product.isGlutenFree && (
-                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">
-                                                            🌾 Gluten-Free
-                                                        </span>
-                                                    )}
-                                                    {product.isSpicy && (
-                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">
-                                                            🌶 Spicy
-                                                        </span>
-                                                    )}
+                                                    {product.isVegan && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">🌱 Vegan</span>}
+                                                    {product.isVegetarian && !product.isVegan && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-medium">🥬 Vegetarian</span>}
+                                                    {product.isGlutenFree && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">🌾 Gluten-Free</span>}
+                                                    {product.isSpicy && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">🌶 Spicy</span>}
                                                 </div>
                                             )}
                                         </td>
@@ -470,9 +516,7 @@ const VendorMenuPage = () => {
                                         {/* Category */}
                                         <td className="px-3 py-2.5">
                                             {product.categoryName ? (
-                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">
-                                                    {product.categoryName}
-                                                </span>
+                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">{product.categoryName}</span>
                                             ) : (
                                                 <span className="text-gray-300 text-[11px]">—</span>
                                             )}
@@ -489,18 +533,12 @@ const VendorMenuPage = () => {
                                         <td className="px-3 py-2.5 text-center">
                                             {product.scheduleType === 'ADVANCE_ORDER' ? (
                                                 <div className="inline-flex flex-col items-center gap-0.5">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold whitespace-nowrap">
-                                                        📅 Advance Order
-                                                    </span>
-                                                    <span className="text-[10px] text-blue-500">
-                                                        {product.advanceNoticeHours}h notice required
-                                                    </span>
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold whitespace-nowrap">📅 Advance Order</span>
+                                                    <span className="text-[10px] text-blue-500">{product.advanceNoticeHours}h notice required</span>
                                                 </div>
                                             ) : (
                                                 <div className="inline-flex flex-col items-center gap-0.5">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-semibold">
-                                                        ⚡ Ready to Order
-                                                    </span>
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-semibold">⚡ Ready to Order</span>
                                                     <span className="text-[10px] text-green-500">no advance notice needed</span>
                                                 </div>
                                             )}
@@ -542,18 +580,10 @@ const VendorMenuPage = () => {
                                         {/* Actions */}
                                         <td className="px-3 py-2.5 text-center">
                                             <div className="flex items-center justify-center gap-0.5">
-                                                <button
-                                                    onClick={() => openEditModal(product)}
-                                                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                                    title="Edit product"
-                                                >
+                                                <button onClick={() => openEditModal(product)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Edit product">
                                                     <Edit className="w-3.5 h-3.5 text-gray-500" />
                                                 </button>
-                                                <button
-                                                    onClick={() => openDeleteModal(product)}
-                                                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete product"
-                                                >
+                                                <button onClick={() => openDeleteModal(product)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" title="Delete product">
                                                     <Trash2 className="w-3.5 h-3.5 text-red-400" />
                                                 </button>
                                             </div>
@@ -568,27 +598,23 @@ const VendorMenuPage = () => {
 
             {/* Create/Edit Product Modal */}
             {(showCreateModal || showEditModal) && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8">
+                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col">
                         {/* Modal Header */}
-                        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                            <h2 className="text-2xl font-black text-gray-900">
+                        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between rounded-t-2xl shrink-0">
+                            <h2 className="text-lg sm:text-2xl font-black text-gray-900">
                                 {showCreateModal ? 'Add New Product' : 'Edit Product'}
                             </h2>
                             <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setShowEditModal(false);
-                                    resetForm();
-                                }}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                onClick={() => { setShowCreateModal(false); setShowEditModal(false); resetForm(); }}
+                                className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5 text-gray-600" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 space-y-4 max-h-[calc(90vh-140px)] overflow-y-auto">
+                        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                             {/* Image Upload */}
                             <div className="flex justify-center">
                                 <ImageUploader
@@ -609,7 +635,7 @@ const VendorMenuPage = () => {
 
                             {/* Product Name */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                                     Product Name *
                                 </label>
                                 <input
@@ -618,29 +644,29 @@ const VendorMenuPage = () => {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g., Jollof Rice"
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+                                    className="w-full px-3 sm:px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                                 />
                             </div>
 
                             {/* Description */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                                     Description
                                 </label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Describe your product..."
+                                    placeholder="Describe your product…"
                                     rows={3}
                                     style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all resize-none"
+                                    className="w-full px-3 sm:px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all resize-none text-sm"
                                 />
                             </div>
 
-                            {/* Price, Category and Prep Time */}
-                            <div className="grid grid-cols-3 gap-4">
+                            {/* Price, Category, Prep Time — 2-col on mobile, 3-col on sm */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                                         Price * ($)
                                     </label>
                                     <input
@@ -651,33 +677,32 @@ const VendorMenuPage = () => {
                                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                         placeholder="0.00"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                                         Category *
                                     </label>
                                     <select
                                         value={formData.categoryId}
                                         onChange={(e) =>
-                                            setFormData({ ...formData, categoryId: Number(e.target.value) }) // 👈 convert to number if needed
+                                            setFormData({ ...formData, categoryId: Number(e.target.value) })
                                         }
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                                     >
-                                        <option value="">Select category</option>
+                                        <option value="">Category</option>
                                         {categories.map((cat) => (
                                             <option key={cat.categoryId} value={cat.categoryId}>
                                                 {cat.iconUrl} {cat.name}
                                             </option>
                                         ))}
                                     </select>
-
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Prep Time * (mins)
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                                        Prep time (mins) *
                                     </label>
                                     <input
                                         type="number"
@@ -686,7 +711,7 @@ const VendorMenuPage = () => {
                                         onChange={(e) => setFormData({ ...formData, preparationTimeMinutes: e.target.value })}
                                         placeholder="15"
                                         style={{ color: 'black', backgroundColor: 'white' }}
-                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                                     />
                                 </div>
                             </div>
@@ -831,14 +856,10 @@ const VendorMenuPage = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3 rounded-b-2xl">
+                        <div className="bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-end gap-2 xs:gap-3 rounded-b-2xl shrink-0">
                             <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setShowEditModal(false);
-                                    resetForm();
-                                }}
-                                className="px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all"
+                                onClick={() => { setShowCreateModal(false); setShowEditModal(false); resetForm(); }}
+                                className="px-5 py-3 xs:py-2.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-all text-sm text-center"
                             >
                                 Cancel
                             </button>
@@ -849,7 +870,7 @@ const VendorMenuPage = () => {
                                     (formData.scheduleType === 'ADVANCE_ORDER' && !formData.advanceNoticeHours) ||
                                     isCreating || uploadingImage
                                 }
-                                className="px-6 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-5 py-3 xs:py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 active:bg-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm text-center"
                             >
                                 {isCreating ? 'Creating…' : showCreateModal ? 'Create Product' : 'Update Product'}
                             </button>
