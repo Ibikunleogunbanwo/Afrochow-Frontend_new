@@ -136,9 +136,10 @@ const DisplayRestaurant = () => {
                 // (/search/products/advanced) — every param is optional on the backend.
                 const [response, vendorsResponse] = await Promise.all([
                     SearchAPI.searchProductsAdvanced({
-                        ...(urlSearchQuery && { query:      urlSearchQuery }),
-                        ...(urlCity        && { city:       urlCity        }),
-                        ...(urlCategoryId  && { categoryId: urlCategoryId  }),
+                        ...(urlSearchQuery && { query:        urlSearchQuery }),
+                        ...(urlCity        && { city:         urlCity        }),
+                        ...(urlCategoryId  && { categoryId:   urlCategoryId  }),
+                        ...(urlSchedule    && { scheduleType: urlSchedule    }),
                         page: currentPage,
                         size: pageSize,
                     }),
@@ -199,13 +200,6 @@ const DisplayRestaurant = () => {
                     // Open first → unknown (null) → closed last
                     const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
                     let sortedResults = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
-
-                    // Client-side schedule filter
-                    if (urlSchedule === 'SAME_DAY') {
-                        sortedResults = sortedResults.filter(p => p.scheduleType !== 'ADVANCE_ORDER');
-                    } else if (urlSchedule === 'ADVANCE_ORDER') {
-                        sortedResults = sortedResults.filter(p => p.scheduleType === 'ADVANCE_ORDER');
-                    }
 
                     setProducts(sortedResults);
                     setTotalPages(pageData.totalPages      || 0);
