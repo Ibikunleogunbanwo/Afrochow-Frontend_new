@@ -68,9 +68,6 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         isVegetarian && !isVegan && { label: '🥬 Vegetarian',  bg: 'bg-green-50 text-green-700 border-green-100' },
         isGlutenFree   && { label: '🌾 Gluten-Free',  bg: 'bg-blue-50 text-blue-700 border-blue-100' },
         isSpicy        && { label: '🌶️ Spicy',        bg: 'bg-red-50 text-red-700 border-red-100' },
-        isAdvance
-            ? { label: advanceNoticeHours ? `📅 ${advanceNoticeHours}h notice` : '📅 Advance booking', bg: 'bg-blue-50 text-blue-700 border-blue-100' }
-            : { label: '⚡ Same day',  bg: 'bg-orange-50 text-orange-700 border-orange-100' },
     ].filter(Boolean);
 
     return (
@@ -161,14 +158,27 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                 </div>
 
                 {/* ── Bottom section ── */}
-                <div className="p-4 flex flex-col flex-1">
+                <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
 
-                    {/* Dietary tags — always reserve space so cards stay uniform */}
-                    <div className="flex flex-wrap gap-2 mb-3 min-h-[2rem]">
+                    {/* Order type pill — fulfilment, not dietary */}
+                    <div className="mb-2">
+                        {isAdvance ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[11px] font-semibold">
+                                📅 Advance order &mdash; {advanceNoticeHours ? `${advanceNoticeHours}h` : '24h+'} notice required
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-[11px] font-semibold">
+                                ⚡ Ready to order &mdash; {preparationTimeMinutes > 0 ? `ready in ${preparationTimeMinutes} min` : 'same day'}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Dietary tags — reserve min height so cards stay uniform */}
+                    <div className="flex flex-wrap gap-1.5 mb-3 min-h-[1.75rem]">
                         {dietaryTags.map((tag) => (
                             <span
                                 key={tag.label}
-                                className={`px-3 py-1 text-base font-semibold rounded-full border ${tag.bg}`}
+                                className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${tag.bg}`}
                             >
                                 {tag.label}
                             </span>
@@ -187,20 +197,15 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             label="Rating"
                             value={averageRating > 0
                                 ? `⭐ ${averageRating.toFixed(1)}${reviewCount > 0 ? ` (${reviewCount >= 1000 ? `${(reviewCount / 1000).toFixed(1)}k` : reviewCount})` : ''}`
-                                : '⭐ 0'}
+                                : '⭐ —'}
                         />
                         <div className="w-px h-8 bg-gray-100" />
-                        {isAdvance ? (
-                            <StatItem
-                                label="Notice"
-                                value={advanceNoticeHours ? `${advanceNoticeHours}h` : '24h+'}
-                            />
-                        ) : (
-                            <StatItem
-                                label="Prep time"
-                                value={preparationTimeMinutes > 0 ? `${preparationTimeMinutes} min` : '—'}
-                            />
-                        )}
+                        <StatItem
+                            label="Orders"
+                            value={totalOrders > 0
+                                ? (totalOrders >= 1000 ? `${(totalOrders / 1000).toFixed(1)}k` : totalOrders)
+                                : '—'}
+                        />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem
                             label="Price"
