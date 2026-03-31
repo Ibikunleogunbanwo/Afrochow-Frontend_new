@@ -17,9 +17,9 @@ export const SearchAPI = {
   /**
    * All product browsing goes through /search/products/advanced.
    * Every param is optional on the backend — query, city, categoryId,
-   * minPrice, maxPrice, isVegetarian, isVegan, isGlutenFree, page, size.
+   * minPrice, maxPrice, isVegetarian, isVegan, isGlutenFree, scheduleType, page, size.
    */
-  searchProducts: async (filters = {}) => {
+  searchProductsAdvanced: async (filters = {}) => {
     const qs = buildQuery(filters);
     return fetchWithCredentials(
         `${API_BASE_URL}/search/products/advanced${qs ? `?${qs}` : ''}`,
@@ -27,7 +27,8 @@ export const SearchAPI = {
     );
   },
 
-  searchProductsAdvanced: async (filters = {}) => {
+  // Alias kept for any callers using the old name
+  searchProducts: async (filters = {}) => {
     const qs = buildQuery(filters);
     return fetchWithCredentials(
         `${API_BASE_URL}/search/products/advanced${qs ? `?${qs}` : ''}`,

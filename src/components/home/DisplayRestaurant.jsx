@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HiSearch } from 'react-icons/hi';
@@ -12,128 +12,145 @@ import { useAuth } from '@/hooks/useAuth';
 import { SignInModal } from '@/components/signin/SignInModal';
 import { SignUpModal } from '@/components/register/SignUpModal';
 
-// Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
-// Avoids timezone bugs where the backend calculates isOpenNow in UTC
-// but vendor hours are stored in their local timezone.
-const computeIsOpenNow = (todayHoursFormatted) => {
-    if (!todayHoursFormatted) return null;
-    // 24-hour: "Open 09:00 - 22:00" or "09:00 - 22:00"
-    const m24 = todayHoursFormatted.match(/^(?:open\s+)?(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/i);
-    if (m24) {
-        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-        const o = parseInt(m24[1]) * 60 + parseInt(m24[2]);
-        const c = parseInt(m24[3]) * 60 + parseInt(m24[4]);
-        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
+// ── Shared time-range check ──────────────────────────────────────────────────
+// Returns true if current local time falls within [openMins, closeMins).
+// Handles overnight ranges (e.g. 22:00 – 02:00).
+const isTimeInRange = (openMins, closeMins) => {
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    return closeMins > openMins
+        ? cur >= openMins && cur < closeMins
+        : cur >= openMins || cur < closeMins;
+};
+
+// Parses a "HH:MM" or "HH:MM AM/PM" token to minutes-since-midnight.
+const parseTimeMins = (token) => {
+    const t = token.trim();
+    const ampm = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (ampm) {
+        let h = parseInt(ampm[1]); const m = parseInt(ampm[2]);
+        if (ampm[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (ampm[3].toUpperCase() === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
     }
-    // 12-hour: "06:00 AM - 10:00 PM"
-    const m12 = todayHoursFormatted.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (m12) {
-        const to24 = (h, m, p) => { let hr = parseInt(h); const mn = parseInt(m); if (p.toUpperCase()==='PM'&&hr!==12) hr+=12; if (p.toUpperCase()==='AM'&&hr===12) hr=0; return hr*60+mn; };
-        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-        const o = to24(m12[1], m12[2], m12[3]); const c = to24(m12[4], m12[5], m12[6]);
-        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
+    const plain = t.match(/^(\d{1,2}):(\d{2})$/);
+    if (plain) return parseInt(plain[1]) * 60 + parseInt(plain[2]);
+    return null;
+};
+
+// Single entry-point for "is this vendor open right now?".
+// Accepts the raw weeklySchedule object (preferred) and an optional
+// pre-formatted fallback string like "09:00 - 22:00" or "06:00 AM - 10:00 PM".
+const computeIsOpenFromSchedule = (weeklySchedule, todayHoursFormatted) => {
+    // ── Try raw schedule object first ──
+    if (weeklySchedule && typeof weeklySchedule === 'object' && !Array.isArray(weeklySchedule)) {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const today = days[new Date().getDay()];
+        const cap   = today.charAt(0).toUpperCase() + today.slice(1);
+        const day   = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
+        if (day) {
+            if (!(day.isOpen ?? day.open ?? false)) return false;
+            const ot = day.openTime  ?? day.open_time  ?? day.startTime;
+            const ct = day.closeTime ?? day.close_time ?? day.endTime;
+            if (ot && ct) {
+                const o = parseTimeMins(ot);
+                const c = parseTimeMins(ct);
+                if (o !== null && c !== null) return isTimeInRange(o, c);
+            }
+        }
+    }
+    // ── Fallback: formatted string ──
+    if (todayHoursFormatted) {
+        const sep = /[-–]/;
+        const parts = todayHoursFormatted
+            .replace(/^open\s+/i, '')
+            .split(sep)
+            .map(s => s.trim());
+        if (parts.length === 2) {
+            const o = parseTimeMins(parts[0]);
+            const c = parseTimeMins(parts[1]);
+            if (o !== null && c !== null) return isTimeInRange(o, c);
+        }
     }
     return null;
 };
 
-// Extract today's formatted hours from weeklySchedule using browser local day.
-const computeTodayHoursFromSchedule = (weeklySchedule) => {
-    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    const today = days[new Date().getDay()];
-    const cap = today.charAt(0).toUpperCase() + today.slice(1);
-    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
-    if (!day) return null;
-    if (!(day.isOpen ?? day.open ?? false)) return 'Closed today';
-    const ot = day.openTime ?? day.open_time ?? day.startTime;
-    const ct = day.closeTime ?? day.close_time ?? day.endTime;
-    if (!ot || !ct) return null;
-    return `${ot} - ${ct}`;
-};
-
-// Compute from full weeklySchedule object using browser local day (most accurate).
-const computeIsOpenFromSchedule = (weeklySchedule) => {
-    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    const today = days[new Date().getDay()];
-    const cap = today.charAt(0).toUpperCase() + today.slice(1);
-    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
-    if (!day) return null;
-    if (!(day.isOpen ?? day.open ?? false)) return false;
-    const ot = day.openTime ?? day.open_time ?? day.startTime;
-    const ct = day.closeTime ?? day.close_time ?? day.endTime;
-    if (!ot || !ct) return null;
-    const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-    const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-    const o = toMins(ot), c = toMins(ct);
-    return c > o ? cur >= o && cur < c : cur >= o || cur < c;
-};
+// ── Pagination sentinel ──────────────────────────────────────────────────────
+const ELLIPSIS = '…';
 
 const DisplayRestaurant = () => {
-    const router      = useRouter();
+    const router       = useRouter();
     const searchParams = useSearchParams();
 
+    // URL is the source of truth for all filters.
     const urlSearchQuery = searchParams.get('search')     || '';
     const urlCity        = searchParams.get('city')       || '';
     const urlCategoryId  = searchParams.get('categoryId') || '';
     const urlCategory    = searchParams.get('category')   || '';
+    const urlSchedule    = searchParams.get('schedule')   || '';
 
-    const urlSchedule    = searchParams.get('schedule')    || '';
+    // Controlled input values — initialized once from the URL, not synced on
+    // every URL change (URL changes re-mount the component anyway).
+    const [inputSearchQuery, setInputSearchQuery] = useState(urlSearchQuery);
+    const [inputCity,        setInputCity]        = useState(urlCity);
 
-    const [searchQuery,    setSearchQuery]    = useState(urlSearchQuery);
-    const [cityFilter,     setCityFilter]     = useState(urlCity);
-    const [scheduleFilter, setScheduleFilter] = useState(urlSchedule);
     const [isLoading,      setIsLoading]      = useState(true);
     const [products,       setProducts]       = useState([]);
     const [error,          setError]          = useState(null);
     const [categoryName,   setCategoryName]   = useState('');
-
-    const [currentPage,   setCurrentPage]   = useState(0);
-    const [totalPages,    setTotalPages]     = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [hasMore,       setHasMore]       = useState(false);
-    const [promoMap,      setPromoMap]       = useState({});
-    const [showSignIn,    setShowSignIn]     = useState(false);
-    const [showSignUp,    setShowSignUp]     = useState(false);
+    const [currentPage,    setCurrentPage]    = useState(0);
+    const [totalPages,     setTotalPages]     = useState(0);
+    const [totalElements,  setTotalElements]  = useState(0);
+    const [hasMore,        setHasMore]        = useState(false);
+    const [promoMap,       setPromoMap]       = useState({});
+    const [showSignIn,     setShowSignIn]     = useState(false);
+    const [showSignUp,     setShowSignUp]     = useState(false);
+    // True after the first successful product load — suppresses re-animation on
+    // page changes and filter updates.
+    const hasLoadedRef = useRef(false);
     const { isAuthenticated } = useAuth();
     const pageSize = 20;
 
-    // ── Sync inputs when URL changes (back/forward navigation) ──
-    useEffect(() => { setSearchQuery(urlSearchQuery);     }, [urlSearchQuery]);
-    useEffect(() => { setCityFilter(urlCity);             }, [urlCity]);
-    useEffect(() => { setScheduleFilter(urlSchedule);    }, [urlSchedule]);
-
-    // ── Resolve category display name from id ──
+    // ── Promotions: fetch once on mount, not on every page/filter change ──────
     useEffect(() => {
-        if (!urlCategoryId) {
-            setCategoryName('');
-            return;
-        }
-        const fetchCategoryName = async () => {
-            try {
-                const response = await SearchAPI.getAllCategories();
-                if (response?.success && response?.data) {
-                    const match = response.data.find(
-                        cat => String(cat.categoryId) === String(urlCategoryId)
-                    );
+        PromotionsAPI.getActivePromotions()
+            .then(res => {
+                const list = res?.success && Array.isArray(res.data)
+                    ? res.data
+                    : Array.isArray(res) ? res : [];
+                setPromoMap(list.reduce((map, p) => {
+                    if (p.vendorPublicId) {
+                        if (!map[p.vendorPublicId]) map[p.vendorPublicId] = [];
+                        map[p.vendorPublicId].push(p);
+                    }
+                    return map;
+                }, {}));
+            })
+            .catch(() => { /* promos are optional */ });
+    }, []);
+
+    // ── Resolve category display name from id ─────────────────────────────────
+    useEffect(() => {
+        if (!urlCategoryId) { setCategoryName(''); return; }
+        SearchAPI.getAllCategories()
+            .then(res => {
+                if (res?.success && res?.data) {
+                    const match = res.data.find(cat => String(cat.categoryId) === String(urlCategoryId));
                     if (match) setCategoryName(match.name);
                 }
-            } catch (err) {
-                console.error('Error fetching category name:', err);
-            }
-        };
-        void fetchCategoryName();
+            })
+            .catch(err => console.error('Error fetching category name:', err));
     }, [urlCategoryId]);
 
-    // ── Main data fetch ──
+    // ── Main data fetch ───────────────────────────────────────────────────────
+    // urlCategory intentionally excluded — urlCategoryId already triggers a
+    // re-fetch when the category changes; urlCategory is only a display label.
     useEffect(() => {
         const fetchResults = async () => {
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // All filter combinations go through searchProductsAdvanced
-                // (/search/products/advanced) — every param is optional on the backend.
                 const [response, vendorsResponse] = await Promise.all([
                     SearchAPI.searchProductsAdvanced({
                         ...(urlSearchQuery && { query:        urlSearchQuery }),
@@ -150,77 +167,54 @@ const DisplayRestaurant = () => {
                     const pageData    = response.data;
                     const productList = pageData.content || [];
 
-                    const vendors = Array.isArray(vendorsResponse)
-                        ? vendorsResponse
-                        : vendorsResponse?.success && vendorsResponse?.data
-                            ? vendorsResponse.data
-                            : [];
+                    // fetchWithCredentials always returns {success, data} — no raw-array branch needed
+                    const vendors = vendorsResponse?.success ? (vendorsResponse.data ?? []) : [];
 
-                    // Build lookup map by publicUserId
                     const vendorMap = vendors.reduce((map, vendor) => {
                         map[vendor.publicUserId] = vendor;
                         return map;
                     }, {});
 
-                    const transformedResults = productList
-                        .map(product => {
-                            const vendor = vendorMap[product.vendorPublicId] || {};
-                            const isOpenNow = computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
-                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
-                                ?? vendor.isOpenNow
-                                ?? null;
-                            return {
-                                // identity
-                                publicProductId:        product.publicProductId,
-                                vendorPublicId:         product.vendorPublicId,
-                                // FeaturedProductCard core props
-                                name:                   product.name,
-                                restaurantName:         product.restaurantName || vendor.restaurantName || '',
-                                imageUrl:               product.imageUrl || null,
-                                price:                  product.price ?? null,
-                                averageRating:          product.averageRating || 0,
-                                reviewCount:            product.reviewCount   || 0,
-                                totalOrders:            product.totalOrders   || 0,
-                                categoryName:           product.categoryName  || null,
-                                preparationTimeMinutes: product.preparationTimeMinutes
-                                    || vendor.estimatedDeliveryMinutes
-                                    || 0,
-                                isVegan:        product.isVegan        || false,
-                                isVegetarian:   product.isVegetarian   || false,
-                                isGlutenFree:   product.isGlutenFree   || false,
-                                isSpicy:        product.isSpicy        || false,
-                                // fulfillment schedule
-                                scheduleType:          product.scheduleType    || 'SAME_DAY',
-                                advanceNoticeHours:    product.advanceNoticeHours || null,
-                                // open status (used for sort)
-                                isOpenNow,
-                            };
-                        });
+                    const transformedResults = productList.map(product => {
+                        const vendor    = vendorMap[product.vendorPublicId] || {};
+                        const isOpenNow = computeIsOpenFromSchedule(
+                            vendor.weeklySchedule ?? vendor.operatingHours,
+                            vendor.todayHoursFormatted
+                        ) ?? vendor.isOpenNow ?? null;
+
+                        return {
+                            publicProductId:        product.publicProductId,
+                            vendorPublicId:         product.vendorPublicId,
+                            name:                   product.name,
+                            restaurantName:         product.restaurantName || vendor.restaurantName || '',
+                            imageUrl:               product.imageUrl || null,
+                            price:                  product.price ?? null,
+                            averageRating:          product.averageRating || 0,
+                            reviewCount:            product.reviewCount   || 0,
+                            totalOrders:            product.totalOrders   || 0,
+                            categoryName:           product.categoryName  || null,
+                            preparationTimeMinutes: product.preparationTimeMinutes
+                                || vendor.estimatedDeliveryMinutes
+                                || 0,
+                            isVegan:        product.isVegan        || false,
+                            isVegetarian:   product.isVegetarian   || false,
+                            isGlutenFree:   product.isGlutenFree   || false,
+                            isSpicy:        product.isSpicy        || false,
+                            scheduleType:       product.scheduleType    || 'SAME_DAY',
+                            advanceNoticeHours: product.advanceNoticeHours || null,
+                            isOpenNow,
+                        };
+                    });
 
                     // Open first → unknown (null) → closed last
-                    const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
-                    let sortedResults = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
+                    const openRank = v => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
+                    const sorted   = [...transformedResults].sort((a, b) => openRank(a) - openRank(b));
 
-                    setProducts(sortedResults);
+                    hasLoadedRef.current = true;
+                    setProducts(sorted);
                     setTotalPages(pageData.totalPages      || 0);
                     setTotalElements(pageData.totalElements || 0);
                     setHasMore(pageData.hasNext            || false);
-
-                    // Fetch active promos in the background — never blocks product rendering
-                    PromotionsAPI.getActivePromotions()
-                        .then(res => {
-                            const list = res?.success && Array.isArray(res.data)
-                                ? res.data
-                                : Array.isArray(res) ? res : [];
-                            setPromoMap(list.reduce((map, p) => {
-                                if (p.vendorPublicId) {
-                                    if (!map[p.vendorPublicId]) map[p.vendorPublicId] = [];
-                                    map[p.vendorPublicId].push(p);
-                                }
-                                return map;
-                            }, {}));
-                        })
-                        .catch(() => { /* promos are optional — silently skip */ });
                 } else {
                     setProducts([]);
                     setTotalPages(0);
@@ -240,13 +234,13 @@ const DisplayRestaurant = () => {
         };
 
         void fetchResults();
-    }, [urlSearchQuery, urlCity, urlCategoryId, urlCategory, urlSchedule, currentPage]);
+    }, [urlSearchQuery, urlCity, urlCategoryId, urlSchedule, currentPage]);
 
-    // ── Derived display values ──
-    const decodedQuery     = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
-    const decodedCity      = urlCity        ? decodeURIComponent(urlCity)        : '';
-    const decodedCategory  = urlCategory    ? decodeURIComponent(urlCategory)    : '';
-    const resolvedCategory = categoryName   || decodedCategory;
+    // ── Derived display values ────────────────────────────────────────────────
+    const decodedQuery    = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
+    const decodedCity     = urlCity        ? decodeURIComponent(urlCity)        : '';
+    const decodedCategory = urlCategory    ? decodeURIComponent(urlCategory)    : '';
+    const resolvedCategory = categoryName  || decodedCategory;
 
     const getPageTitle = () => {
         if (resolvedCategory && decodedCity) return `${resolvedCategory} in ${decodedCity}`;
@@ -258,16 +252,11 @@ const DisplayRestaurant = () => {
     };
 
     const getPageSubtitle = () => {
-        if (resolvedCategory && decodedCity)
-            return `Browsing ${resolvedCategory} vendors and products in ${decodedCity}`;
-        if (resolvedCategory)
-            return `Explore all ${resolvedCategory} options from verified African vendors across Canada`;
-        if (decodedQuery && decodedCity)
-            return `Showing African food matching "${decodedQuery}" available in ${decodedCity}`;
-        if (decodedQuery)
-            return `African dishes and stores matching "${decodedQuery}" across Canada`;
-        if (decodedCity)
-            return `Discover authentic African cuisine from the best kitchens and stores in ${decodedCity}`;
+        if (resolvedCategory && decodedCity)  return `Browsing ${resolvedCategory} vendors and products in ${decodedCity}`;
+        if (resolvedCategory)                 return `Explore all ${resolvedCategory} options from verified African vendors across Canada`;
+        if (decodedQuery && decodedCity)      return `Showing African food matching "${decodedQuery}" available in ${decodedCity}`;
+        if (decodedQuery)                     return `African dishes and stores matching "${decodedQuery}" across Canada`;
+        if (decodedCity)                      return `Discover authentic African cuisine from the best kitchens and stores in ${decodedCity}`;
         return 'Discover authentic African cuisine from the best kitchens and stores near you';
     };
 
@@ -283,16 +272,11 @@ const DisplayRestaurant = () => {
     };
 
     const getEmptyStateMessage = () => {
-        if (resolvedCategory && decodedCity)
-            return `No ${resolvedCategory} products found in ${decodedCity}. Try browsing all stores or a different city.`;
-        if (resolvedCategory)
-            return `No products found in the ${resolvedCategory} category. Try browsing all stores.`;
-        if (decodedQuery && decodedCity)
-            return `No results for "${decodedQuery}" in ${decodedCity}. Try a different search term or city.`;
-        if (decodedQuery)
-            return `No results for "${decodedQuery}". Try a different search term.`;
-        if (decodedCity)
-            return `No stores found in ${decodedCity}. Try a different city.`;
+        if (resolvedCategory && decodedCity)  return `No ${resolvedCategory} products found in ${decodedCity}. Try browsing all stores or a different city.`;
+        if (resolvedCategory)                 return `No products found in the ${resolvedCategory} category. Try browsing all stores.`;
+        if (decodedQuery && decodedCity)      return `No results for "${decodedQuery}" in ${decodedCity}. Try a different search term or city.`;
+        if (decodedQuery)                     return `No results for "${decodedQuery}". Try a different search term.`;
+        if (decodedCity)                      return `No stores found in ${decodedCity}. Try a different city.`;
         return "We couldn't find any products. Try searching for something specific.";
     };
 
@@ -306,12 +290,11 @@ const DisplayRestaurant = () => {
             pages.push(0);
             const startPage = Math.max(1, currentPage - 1);
             const endPage   = Math.min(totalPages - 2, currentPage + 1);
-            if (startPage > 1) pages.push('ellipsis-start');
+            if (startPage > 1)               pages.push(ELLIPSIS);
             for (let i = startPage; i <= endPage; i++) pages.push(i);
-            if (endPage < totalPages - 2) pages.push('ellipsis-end');
+            if (endPage < totalPages - 2)    pages.push(ELLIPSIS);
             pages.push(totalPages - 1);
         }
-
         return pages;
     };
 
@@ -323,28 +306,23 @@ const DisplayRestaurant = () => {
     const handleSearch = () => {
         setCurrentPage(0);
         const params = new URLSearchParams();
-        if (searchQuery)    params.set('search',   searchQuery);
-        if (cityFilter)     params.set('city',     cityFilter);
-        if (scheduleFilter) params.set('schedule', scheduleFilter);
+        if (inputSearchQuery) params.set('search',   inputSearchQuery);
+        if (inputCity)        params.set('city',     inputCity);
+        if (urlSchedule)      params.set('schedule', urlSchedule);
         router.push(`/restaurants?${params.toString()}`);
     };
 
     const handleScheduleFilter = (value) => {
         setCurrentPage(0);
         const params = new URLSearchParams(searchParams.toString());
-        if (value) {
-            params.set('schedule', value);
-        } else {
-            params.delete('schedule');
-        }
+        if (value) params.set('schedule', value);
+        else       params.delete('schedule');
         router.push(`/restaurants?${params.toString()}`);
     };
 
     const handleClearAll = () => {
-        setSearchQuery('');
-        setCityFilter('');
-        setCategoryName('');
-        setScheduleFilter('');
+        setInputSearchQuery('');
+        setInputCity('');
         setCurrentPage(0);
         router.push('/restaurants');
     };
@@ -432,9 +410,9 @@ const DisplayRestaurant = () => {
                             <HiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                                value={inputSearchQuery}
+                                onChange={e => setInputSearchQuery(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="Search Jollof Rice, Egusi, Suya, Groceries..."
                                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
@@ -443,9 +421,9 @@ const DisplayRestaurant = () => {
                         <div className="relative w-full sm:w-64">
                             <input
                                 type="text"
-                                value={cityFilter}
-                                onChange={(e) => setCityFilter(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                                value={inputCity}
+                                onChange={e => setInputCity(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="Calgary, Toronto, Vancouver..."
                                 className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
@@ -553,8 +531,10 @@ const DisplayRestaurant = () => {
                             {products.map((product, index) => (
                                 <div
                                     key={product.publicProductId || `product-${index}`}
-                                    className="h-full animate-fade-up"
-                                    style={{ animationDelay: `${index * 50}ms` }}
+                                    // Only animate the first load — re-animating on every page
+                                    // change or filter update looks jarring.
+                                    className={`h-full ${!hasLoadedRef.current ? 'animate-fade-up' : ''}`}
+                                    style={!hasLoadedRef.current ? { animationDelay: `${index * 50}ms` } : undefined}
                                 >
                                     <FeaturedProductCard
                                         product={product}
@@ -574,6 +554,7 @@ const DisplayRestaurant = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 0}
+                                        aria-label="Previous page"
                                         className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Previous
@@ -585,6 +566,8 @@ const DisplayRestaurant = () => {
                                                 <button
                                                     key={index}
                                                     onClick={() => handlePageChange(page)}
+                                                    aria-label={`Go to page ${page + 1}`}
+                                                    aria-current={currentPage === page ? 'page' : undefined}
                                                     className={`min-w-10 px-3 py-2 rounded-lg font-semibold transition-all ${
                                                         currentPage === page
                                                             ? 'bg-orange-600 text-white shadow-lg'
@@ -594,7 +577,7 @@ const DisplayRestaurant = () => {
                                                     {page + 1}
                                                 </button>
                                             ) : (
-                                                <span key={index} className="px-2 text-gray-400">...</span>
+                                                <span key={index} className="px-2 text-gray-400" aria-hidden="true">…</span>
                                             )
                                         ))}
                                     </div>
@@ -602,6 +585,7 @@ const DisplayRestaurant = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={!hasMore}
+                                        aria-label="Next page"
                                         className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Next

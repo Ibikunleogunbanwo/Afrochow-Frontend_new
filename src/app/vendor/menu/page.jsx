@@ -85,6 +85,22 @@ const VendorMenuPage = () => {
         }
     };
 
+    // Converts empty strings to null for numeric/enum fields so the backend
+    // doesn't receive "" where it expects a number or null.
+    const sanitizeProductPayload = (data) => {
+        const toIntOrNull    = v => (v === '' || v === null || v === undefined) ? null : parseInt(v, 10) || null;
+        const toFloatOrNull  = v => (v === '' || v === null || v === undefined) ? null : parseFloat(v) || null;
+        const toLongOrNull   = v => (v === '' || v === null || v === undefined) ? null : parseInt(v, 10) || null;
+        return {
+            ...data,
+            price:                  toFloatOrNull(data.price),
+            preparationTimeMinutes: toIntOrNull(data.preparationTimeMinutes),
+            advanceNoticeHours:     toIntOrNull(data.advanceNoticeHours),
+            calories:               toIntOrNull(data.calories),
+            categoryId:             toLongOrNull(data.categoryId),
+        };
+    };
+
     const handleCreateProduct = async () => {
         if (isCreating) return;
         setIsCreating(true);
@@ -106,11 +122,7 @@ const VendorMenuPage = () => {
                 }
             }
 
-            // Create product with image URL
-            const productData = {
-                ...formData,
-                imageUrl
-            };
+            const productData = sanitizeProductPayload({ ...formData, imageUrl });
 
             const response = await createProduct(productData);
             if (response?.success) {
@@ -131,15 +143,10 @@ const VendorMenuPage = () => {
         try {
             if (!selectedProduct?.publicProductId) return;
 
-            // If productImage is already a string it means handleImageUpload already
-            // uploaded it and returned the new URL via onChange — use that.
-            // If it's a File the user picked a new image without an immediate upload,
-            // so we upload it here.  Fall back to formData.imageUrl if no image at all.
             let imageUrl = typeof productImage === 'string' && productImage
                 ? productImage
                 : formData.imageUrl;
 
-            // Upload new image if a File was selected (create-style flow)
             if (productImage && typeof productImage !== 'string') {
                 try {
                     setUploadingImage(true);
@@ -152,11 +159,8 @@ const VendorMenuPage = () => {
                 }
             }
 
-            // Update product with image URL
-            const productData = {
-                ...formData,
-                imageUrl
-            };
+            // Sanitize: backend numeric fields must be null, not empty string
+            const productData = sanitizeProductPayload({ ...formData, imageUrl });
 
             const response = await updateProduct(selectedProduct.publicProductId, productData);
             if (response?.success) {
