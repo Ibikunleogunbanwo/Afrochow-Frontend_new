@@ -220,14 +220,14 @@ function validateHours(hoursForm) {
 
 function Breadcrumb({ crumbs }) {
     return (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
             {crumbs.map((c, i) => (
                 <React.Fragment key={c.label}>
-                    {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />}
+                    {i > 0 && <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />}
                     {c.href ? (
                         <Link href={c.href}
                             className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
-                            {c.icon && <c.icon className="w-3.5 h-3.5" />}
+                            {c.icon && <c.icon className="w-3 h-3" />}
                             {c.label}
                         </Link>
                     ) : (
@@ -268,14 +268,14 @@ function Toggle({ checked, onChange, colorOn = 'bg-gray-900' }) {
 
 function SaveBar({ saving, onSave, onCancel, disabled }) {
     return (
-        <div className="flex items-center gap-2 pt-5 border-t border-gray-100 mt-6">
+        <div className="flex flex-col xs:flex-row sm:flex-row items-stretch sm:items-center gap-2 pt-5 border-t border-gray-100 mt-6">
             <button onClick={onSave} disabled={saving || disabled}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60 w-full sm:w-auto">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 {saving ? 'Saving…' : 'Save changes'}
             </button>
             <button onClick={onCancel} disabled={saving}
-                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50">
+                className="px-5 py-3 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 w-full sm:w-auto text-center">
                 Cancel
             </button>
         </div>
@@ -619,7 +619,7 @@ export default function VendorProfilePage() {
     // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
 
                 {/* Breadcrumb */}
                 <Breadcrumb crumbs={[
@@ -628,12 +628,12 @@ export default function VendorProfilePage() {
                 ]} />
 
                 {/* ── Hero card ──────────────────────────────────────────── */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-3 sm:mb-6">
 
-                    {/* Banner + logo: logo is absolutely anchored to the banner bottom */}
+                    {/* Banner + logo */}
                     <div className="relative">
-                        {/* Banner */}
-                        <div className="h-52 sm:h-64 relative bg-gray-900 overflow-hidden">
+                        {/* Banner — shorter on mobile */}
+                        <div className="h-28 xs:h-36 sm:h-52 relative bg-gray-900 overflow-hidden">
                             {bannerUrl ? (
                                 <Image
                                     src={bannerUrl}
@@ -645,82 +645,83 @@ export default function VendorProfilePage() {
                                 />
                             ) : (
                                 <div className="absolute inset-0 opacity-10 pointer-events-none">
-                                    {[...Array(6)].map((_, i) => (
-                                        <Store key={i} className="absolute text-white w-16 h-16"
-                                            style={{ top: `${(i * 30) % 80}%`, left: `${(i * 18) % 90}%` }} />
+                                    {[...Array(4)].map((_, i) => (
+                                        <Store key={i} className="absolute text-white w-12 h-12 sm:w-16 sm:h-16"
+                                            style={{ top: `${(i * 30) % 80}%`, left: `${(i * 25) % 85}%` }} />
                                     ))}
                                 </div>
                             )}
-                            {/* Subtle gradient so the edit button stays readable over any image */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+                            {/* Edit branding — icon-only on tiny screens */}
                             <button onClick={() => setActiveTab('branding')}
-                                className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white text-xs font-semibold rounded-lg backdrop-blur-sm transition-colors">
-                                <Pencil className="w-3 h-3" /> Edit branding
+                                className="absolute top-2 right-2 sm:top-3 sm:right-3 inline-flex items-center gap-1 sm:gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-black/30 hover:bg-black/50 active:bg-black/60 text-white text-xs font-semibold rounded-lg backdrop-blur-sm transition-colors">
+                                <Pencil className="w-3.5 h-3.5 shrink-0" />
+                                <span className="hidden sm:inline">Edit branding</span>
                             </button>
                         </div>
 
-                        {/* Logo — absolute at banner bottom-left, half hangs below */}
-                        <div className="absolute bottom-0 left-4 sm:left-8 translate-y-1/2 z-10
-                                        w-20 h-20 sm:w-24 sm:h-24
-                                        rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
+                        {/* Logo — smaller on mobile */}
+                        <div className="absolute bottom-0 left-3 sm:left-6 translate-y-1/2 z-10
+                                        w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20
+                                        rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white bg-white shadow-lg overflow-hidden">
                             {logoUrl
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                                 : <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                                    <Store className="w-10 h-10 text-gray-400" />
+                                    <Store className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                                   </div>
                             }
                         </div>
                     </div>
 
-                    {/* Info below banner — pt clears the half-logo that hangs down */}
-                    <div className="px-4 sm:px-8 pt-14 sm:pt-16 pb-5">
+                    {/* Info below banner */}
+                    <div className="px-3 sm:px-6 pt-10 xs:pt-11 sm:pt-14 pb-4 sm:pb-5">
                         {/* Name + meta */}
-                        <div className="mb-4">
+                        <div className="mb-3 sm:mb-4">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <h1 className="text-xl sm:text-2xl font-black text-gray-900 break-words">
+                                <h1 className="text-lg sm:text-2xl font-black text-gray-900 break-words">
                                     {profile?.restaurantName || 'Your Store'}
                                 </h1>
                                 {(() => {
                                     const isOpen = computeIsOpenFromHours(hoursForm);
                                     if (isOpen === null) return null;
                                     return (
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 ${isOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${isOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                            {isOpen ? 'Open Now' : 'Closed'}
+                                            {isOpen ? 'Open' : 'Closed'}
                                         </span>
                                     );
                                 })()}
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs sm:text-sm text-gray-500">
                                 {profile?.cuisineType && <span className="font-medium">{profile.cuisineType}</span>}
                                 {avgRating > 0 && (
-                                    <span className="flex items-center gap-1">
-                                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                                    <span className="flex items-center gap-0.5">
+                                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                         {parseFloat(avgRating).toFixed(1)}
                                         {totalReviews > 0 && <span className="text-gray-400">({totalReviews})</span>}
                                     </span>
                                 )}
                                 {addressLine && (
-                                    <span className="flex items-center gap-1 min-w-0">
-                                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                        <span className="truncate">{addressLine}</span>
+                                    <span className="flex items-center gap-0.5 min-w-0">
+                                        <MapPin className="w-3 h-3 shrink-0" />
+                                        <span className="truncate max-w-[160px] sm:max-w-none">{addressLine}</span>
                                     </span>
                                 )}
                             </div>
                         </div>
 
-                        {/* Stats row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Stats row — 4-col on all sizes, compact on mobile */}
+                        <div className="grid grid-cols-4 gap-2 sm:gap-3">
                             {[
                                 { label: 'Orders',   value: totalOrders },
-                                { label: 'Revenue',  value: `CA$${parseFloat(totalRevenue).toLocaleString('en-CA', { minimumFractionDigits: 2 })}` },
-                                { label: 'Products', value: totalProducts },
+                                { label: 'Revenue',  value: `$${parseFloat(totalRevenue).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` },
+                                { label: 'Items',    value: totalProducts },
                                 { label: 'Rating',   value: avgRating > 0 ? parseFloat(avgRating).toFixed(1) : '—' },
                             ].map(s => (
-                                <div key={s.label} className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
-                                    <p className="text-lg font-black text-gray-900 leading-none">{s.value}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                                <div key={s.label} className="bg-gray-50 rounded-xl p-2 sm:p-3 text-center border border-gray-100">
+                                    <p className="text-sm sm:text-base font-black text-gray-900 leading-tight break-all">{s.value}</p>
+                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{s.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -730,19 +731,20 @@ export default function VendorProfilePage() {
                 {/* ── Tabs ─────────────────────────────────────────────── */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                    {/* Tab bar */}
-                    <div className="flex border-b border-gray-100 overflow-x-auto">
+                    {/* Tab bar — icon-only on mobile, icon+label on sm+ */}
+                    <div className="flex border-b border-gray-100">
                         {TABS.map(({ id, label, icon: Icon }) => (
                             <button key={id} onClick={() => setActiveTab(id)}
-                                className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px
+                                title={label}
+                                className={`relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-semibold transition-colors border-b-2 -mb-px min-h-[48px]
                                     ${activeTab === id
-                                        ? 'border-gray-900 text-gray-900'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
-                                <Icon className="w-4 h-4" />
-                                {label}
+                                        ? 'border-gray-900 text-gray-900 bg-gray-50'
+                                        : 'border-transparent text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}>
+                                <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" />
+                                <span className="hidden sm:inline whitespace-nowrap">{label}</span>
                                 {id === 'notifications' && notifUnread > 0 && (
-                                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] font-black bg-orange-500 text-white rounded-full flex items-center justify-center leading-none">
-                                        {notifUnread > 9 ? '9+' : notifUnread}
+                                    <span className="absolute top-1.5 right-1.5 sm:static sm:min-w-[18px] sm:h-[18px] sm:px-1 w-2 h-2 sm:w-auto sm:h-auto text-[10px] font-black bg-orange-500 text-white rounded-full flex items-center justify-center leading-none">
+                                        <span className="hidden sm:inline">{notifUnread > 9 ? '9+' : notifUnread}</span>
                                     </span>
                                 )}
                             </button>
@@ -751,14 +753,14 @@ export default function VendorProfilePage() {
 
                     {/* ── Tab: Restaurant Info ──────────────────────── */}
                     {activeTab === 'info' && (
-                        <div className="p-5 sm:p-8 space-y-8">
+                        <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
 
                             {/* Basic details */}
                             <section>
-                                <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3 sm:mb-4 uppercase tracking-wide">
                                     Basic Details
                                 </h3>
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div>
                                         <Label required>Store name</Label>
                                         <input {...fi('restaurantName')} placeholder="e.g. Mama's Kitchen" />
@@ -809,7 +811,7 @@ export default function VendorProfilePage() {
 
                             {/* Services */}
                             <section>
-                                <h3 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 uppercase tracking-wide">
                                     Services
                                 </h3>
                                 {infoErrors.services && (
@@ -837,30 +839,30 @@ export default function VendorProfilePage() {
                                         </div>
 
                                         {infoForm.offersDelivery && (
-                                            <div className="grid sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+                                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
                                                 <div>
-                                                    <Label required>Delivery fee (CAD)</Label>
+                                                    <Label required>Fee (CAD)</Label>
                                                     <input type="number" min={0} step="0.01"
                                                         {...fi('deliveryFee')} placeholder="5.00"
                                                         className={`${fi('deliveryFee').className} ${NO_SPIN}`} />
                                                     <FieldError msg={infoErrors.deliveryFee} />
                                                 </div>
                                                 <div>
-                                                    <Label required>Min. order amount (CAD)</Label>
+                                                    <Label required>Min. order (CAD)</Label>
                                                     <input type="number" min={0} step="0.01"
                                                         {...fi('minimumOrderAmount')} placeholder="15.00"
                                                         className={`${fi('minimumOrderAmount').className} ${NO_SPIN}`} />
                                                     <FieldError msg={infoErrors.minimumOrderAmount} />
                                                 </div>
                                                 <div>
-                                                    <Label required>Est. delivery time (min)</Label>
+                                                    <Label required>Est. time (min)</Label>
                                                     <input type="number" min={10}
                                                         {...fi('estimatedDeliveryMinutes')} placeholder="45"
                                                         className={`${fi('estimatedDeliveryMinutes').className} ${NO_SPIN}`} />
                                                     <FieldError msg={infoErrors.estimatedDeliveryMinutes} />
                                                 </div>
                                                 <div>
-                                                    <Label required>Max delivery radius (km)</Label>
+                                                    <Label required>Max radius (km)</Label>
                                                     <div className="relative">
                                                         <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                                         <input type="number" min={1} step="0.1"
@@ -895,13 +897,13 @@ export default function VendorProfilePage() {
 
                             {/* Address */}
                             <section>
-                                <h3 className="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 uppercase tracking-wide">
                                     Address
                                 </h3>
-                                <p className="text-xs text-gray-500 mb-4">
-                                    Leave blank to keep the existing address unchanged.
+                                <p className="text-xs text-gray-500 mb-3">
+                                    Leave blank to keep existing address.
                                 </p>
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div className="sm:col-span-2">
                                         <Label>Street address</Label>
                                         <div className="relative">
@@ -953,7 +955,7 @@ export default function VendorProfilePage() {
 
                     {/* ── Tab: Operating Hours ──────────────────────── */}
                     {activeTab === 'hours' && (
-                        <div className="p-5 sm:p-8">
+                        <div className="p-4 sm:p-6 lg:p-8">
                             <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
                                 <Info className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
                                 <p className="text-xs text-gray-600 leading-relaxed">
@@ -974,9 +976,9 @@ export default function VendorProfilePage() {
                                     const day = hoursForm[key] ?? { isOpen: false, openTime: '09:00', closeTime: '22:00' };
                                     const closeErr = hoursErrors[`${key}_closeTime`];
                                     return (
-                                        <div key={key} className={`rounded-xl border-2 p-3 sm:p-4 transition-all ${day.isOpen ? 'border-gray-400 bg-white' : 'border-gray-200 bg-gray-50'}`}>
-                                            {/* Row 1 — toggle + day name (always visible) */}
-                                            <div className="flex items-center justify-between gap-3">
+                                        <div key={key} className={`rounded-xl border-2 p-3 transition-all ${day.isOpen ? 'border-gray-400 bg-white' : 'border-gray-100 bg-gray-50'}`}>
+                                            {/* Toggle row */}
+                                            <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <Toggle checked={day.isOpen}
                                                         onChange={v => updateHoursField(key, 'isOpen', v)} />
@@ -984,32 +986,29 @@ export default function VendorProfilePage() {
                                                         {label}
                                                     </span>
                                                 </div>
-                                                {/* "Closed" badge inline on mobile */}
                                                 {!day.isOpen && (
                                                     <span className="text-xs text-gray-400 italic">Closed</span>
                                                 )}
                                             </div>
 
-                                            {/* Row 2 — time inputs, only when open, full-width below day name */}
+                                            {/* Time inputs — stacked on mobile */}
                                             {day.isOpen && (
-                                                <div className="mt-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <input type="time" value={day.openTime}
-                                                            onChange={e => updateHoursField(key, 'openTime', e.target.value)}
-                                                            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-900 bg-white" />
-                                                        <span className="text-xs text-gray-400 shrink-0 font-medium">to</span>
-                                                        <input type="time" value={day.closeTime}
-                                                            onChange={e => updateHoursField(key, 'closeTime', e.target.value)}
-                                                            className={`flex-1 min-w-0 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 text-gray-900 bg-white
-                                                                ${closeErr ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-gray-400'}`} />
-                                                    </div>
-                                                    {closeErr && (
-                                                        <div className="flex items-center gap-1.5 mt-1.5">
-                                                            <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
-                                                            <p className="text-xs text-red-500">{closeErr}</p>
-                                                        </div>
-                                                    )}
+                                                <div className="mt-3 flex items-center gap-2">
+                                                    <input type="time" value={day.openTime}
+                                                        onChange={e => updateHoursField(key, 'openTime', e.target.value)}
+                                                        className="flex-1 min-w-0 px-2.5 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-gray-900 bg-white" />
+                                                    <span className="text-xs text-gray-400 shrink-0">–</span>
+                                                    <input type="time" value={day.closeTime}
+                                                        onChange={e => updateHoursField(key, 'closeTime', e.target.value)}
+                                                        className={`flex-1 min-w-0 px-2.5 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 text-gray-900 bg-white
+                                                            ${closeErr ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-gray-400'}`} />
+                                                    {closeErr && <AlertCircle className="w-4 h-4 text-red-500 shrink-0" title={closeErr} />}
                                                 </div>
+                                            )}
+                                            {closeErr && (
+                                                <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3 shrink-0" />{closeErr}
+                                                </p>
                                             )}
                                         </div>
                                     );
@@ -1026,7 +1025,7 @@ export default function VendorProfilePage() {
 
                     {/* ── Tab: Payout ───────────────────────────────── */}
                     {activeTab === 'payout' && (
-                        <div className="p-5 sm:p-8 space-y-4">
+                        <div className="p-4 sm:p-6 lg:p-8 space-y-4">
 
                             {/* Return / refresh banners */}
                             {stripeParam === 'return' && (
@@ -1060,8 +1059,8 @@ export default function VendorProfilePage() {
                                 </h3>
 
                                 {profile?.stripeOnboardingComplete ? (
-                                    <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
-                                        <div className="flex items-center gap-3 flex-1">
+                                    <div className="bg-white p-4 rounded-xl flex flex-col gap-4">
+                                        <div className="flex items-center gap-3">
                                             <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
                                                 <CheckCircle className="h-5 w-5 text-green-600" />
                                             </div>
@@ -1075,7 +1074,7 @@ export default function VendorProfilePage() {
                                         <button
                                             onClick={handleStripeDashboard}
                                             disabled={stripeDashboardLoading}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 shrink-0"
+                                            className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2.5 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
                                         >
                                             {stripeDashboardLoading
                                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
@@ -1084,8 +1083,8 @@ export default function VendorProfilePage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
-                                        <div className="flex items-center gap-3 flex-1">
+                                    <div className="bg-white p-4 rounded-xl flex flex-col gap-4">
+                                        <div className="flex items-center gap-3">
                                             <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
                                                 <CreditCard className="h-5 w-5 text-amber-600" />
                                             </div>
@@ -1099,7 +1098,7 @@ export default function VendorProfilePage() {
                                         <button
                                             onClick={handleStripeConnect}
                                             disabled={stripeConnecting}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                                            className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2.5 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60"
                                         >
                                             {stripeConnecting
                                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>
@@ -1114,7 +1113,7 @@ export default function VendorProfilePage() {
 
                     {/* ── Tab: Notifications ────────────────────────── */}
                     {activeTab === 'notifications' && (
-                        <div className="p-5 sm:p-6 space-y-4">
+                        <div className="p-4 space-y-4">
 
                             {/* Header row */}
                             <div className="flex items-center justify-between">
@@ -1169,17 +1168,17 @@ export default function VendorProfilePage() {
                                                             <p className="text-[11px] text-gray-400 whitespace-nowrap shrink-0 mt-0.5">{n.time}</p>
                                                         </div>
                                                         {n.text && (
-                                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{n.text}</p>
+                                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 sm:line-clamp-1">{n.text}</p>
                                                         )}
                                                     </div>
 
-                                                    {/* Actions */}
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                    {/* Actions — always visible on mobile, hover-only on desktop */}
+                                                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                                                         {isUnread && (
                                                             <button
                                                                 onClick={() => notifMarkRead(n.id)}
                                                                 title="Mark as read"
-                                                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
                                                             >
                                                                 <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
                                                             </button>
@@ -1187,7 +1186,7 @@ export default function VendorProfilePage() {
                                                         <button
                                                             onClick={() => notifDelete(n.id)}
                                                             title="Delete"
-                                                            className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                                            className="p-1.5 rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors"
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-500" />
                                                         </button>
@@ -1215,7 +1214,7 @@ export default function VendorProfilePage() {
 
                     {/* ── Tab: Branding ─────────────────────────────── */}
                     {activeTab === 'branding' && (
-                        <div className="p-5 sm:p-8 space-y-6">
+                        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
                             {/* Info banner */}
                             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl p-4">
