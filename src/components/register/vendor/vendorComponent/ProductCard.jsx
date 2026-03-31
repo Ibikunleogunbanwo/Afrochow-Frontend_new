@@ -103,12 +103,10 @@ const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) =
                                     : 'Advance booking'}
                             </span>
                         ) : (
-                            product.preparationTimeMinutes > 0 && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                                    <Clock className="w-3 h-3" />
-                                    {product.preparationTimeMinutes} min prep
-                                </span>
-                            )
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                                <Clock className="w-3 h-3" />
+                                Same Day
+                            </span>
                         )}
                     </div>
                 </div>
