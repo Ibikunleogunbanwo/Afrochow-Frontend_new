@@ -385,14 +385,17 @@ const VendorMenuPage = () => {
                     {/* ── Mobile card list (hidden on sm+) ── */}
                     <div className="sm:hidden divide-y divide-gray-100">
                         {filteredProducts.map((product) => (
-                            <div key={product.publicProductId} className="flex items-start gap-3 p-3 active:bg-gray-50">
+                            <div key={product.publicProductId}
+                                className={`flex items-start gap-3 p-3 border-l-4 transition-colors ${
+                                    product.available ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50'
+                                }`}>
                                 {/* Thumbnail */}
                                 {product.imageUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={product.imageUrl} alt={product.name}
-                                        className="w-14 h-14 object-cover rounded-xl border border-gray-100 shrink-0" />
+                                        className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0" />
                                 ) : (
-                                    <div className="w-14 h-14 bg-gray-100 rounded-xl border border-gray-100 flex items-center justify-center shrink-0">
+                                    <div className="w-14 h-14 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center shrink-0">
                                         <ImageIcon className="w-5 h-5 text-gray-300" />
                                     </div>
                                 )}

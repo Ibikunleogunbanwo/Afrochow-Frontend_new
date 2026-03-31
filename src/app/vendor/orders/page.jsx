@@ -288,62 +288,62 @@ const VendorOrdersPage = () => {
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
             <div className="max-w-7xl mx-auto">
 
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+                <nav className="flex items-center gap-1 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
                     <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
-                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        <LayoutDashboard className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         Dashboard
                     </Link>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                    <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />
                     <span className="font-semibold text-gray-900">Orders</span>
                 </nav>
 
                 {/* Header */}
-                <div className="mb-8 flex items-start justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-1">Orders</h1>
-                        <p className="text-gray-500 text-sm">
+                <div className="mb-4 sm:mb-8 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Orders</h1>
+                        <p className="text-gray-500 text-xs sm:text-sm truncate">
                             {activeCount > 0
-                                ? `${activeCount} active order${activeCount > 1 ? 's' : ''} · auto-refreshes every 30s`
-                                : 'Manage and track all your store orders'}
+                                ? `${activeCount} active order${activeCount > 1 ? 's' : ''} · auto-refreshes`
+                                : 'Manage and track your orders'}
                         </p>
                     </div>
                     <button
                         onClick={() => fetchOrders()}
                         disabled={loading}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 shrink-0"
                     >
-                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
+                        <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span className="hidden xs:inline">Refresh</span>
                     </button>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="relative">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4 sm:mb-6">
+                    <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                        <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search by order ID or customer name…"
+                                placeholder="Search orders…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                             />
                         </div>
-                        <div className="relative">
+                        <div className="relative flex-1 xs:flex-none">
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
+                                className="w-full xs:w-auto pl-9 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer"
                                 style={{ color: 'black', backgroundColor: 'white' }}
                             >
                                 <option value="ALL">All orders</option>
-                                <option value="PENDING">Awaiting confirmation</option>
+                                <option value="PENDING">Awaiting</option>
                                 <option value="CONFIRMED">Confirmed</option>
                                 <option value="PREPARING">Preparing</option>
                                 <option value="READY_FOR_PICKUP">Ready</option>
@@ -358,14 +358,14 @@ const VendorOrdersPage = () => {
 
                 {/* Orders list */}
                 {loading ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <Loader2 className="h-10 w-10 text-gray-400 animate-spin mx-auto mb-4" />
-                        <p className="text-gray-500">Loading orders…</p>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+                        <Loader2 className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-3" />
+                        <p className="text-gray-500 text-sm">Loading orders…</p>
                     </div>
                 ) : filteredOrders.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <Package className="h-14 w-14 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">No orders found</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+                        <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                        <h3 className="text-base font-semibold text-gray-900 mb-1">No orders found</h3>
                         <p className="text-gray-500 text-sm">
                             {searchQuery || selectedStatus !== 'ALL'
                                 ? 'Try adjusting your filters'
@@ -373,41 +373,44 @@ const VendorOrdersPage = () => {
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                         {filteredOrders.map((order) => {
                             const isActioning = actionLoading === order.publicOrderId;
+                            const cfg = ORDER_STATUSES[order.status];
                             return (
                                 <div key={order.publicOrderId}
-                                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                    <div className="p-5">
-                                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden">
+                                    {/* Coloured top accent bar */}
+                                    <div className={`h-1 w-full ${cfg?.color ?? 'bg-gray-300'}`} />
+                                    <div className="p-3 sm:p-5">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                             {/* Order info */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                    <h3 className="text-base font-semibold text-gray-900">
-                                                        #{order.publicOrderId?.slice(-10)}
+                                                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">
+                                                        #{order.publicOrderId?.slice(-8)}
                                                     </h3>
                                                     <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                                                     <FulfillmentBadge type={order.fulfillmentType} />
                                                 </div>
-                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
                                                     {order.customerName && (
                                                         <span className="flex items-center gap-1">
-                                                            <User className="h-3.5 w-3.5" />
+                                                            <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                             {order.customerName}
                                                         </span>
                                                     )}
                                                     <span className="flex items-center gap-1">
-                                                        <DollarSign className="h-3.5 w-3.5" />
+                                                        <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                         <span className="font-semibold text-gray-900">{formatCurrency(order.totalAmount)}</span>
                                                     </span>
                                                     <span className="flex items-center gap-1">
-                                                        <Calendar className="h-3.5 w-3.5" />
+                                                        <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                         {formatDate(order.orderTime)}
                                                     </span>
                                                     {order.requestedFulfillmentTime && (
                                                         <span className="flex items-center gap-1 font-medium text-blue-600">
-                                                            <CalendarClock className="h-3.5 w-3.5" />
+                                                            <CalendarClock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                             Fulfil by {formatDate(order.requestedFulfillmentTime)}
                                                         </span>
                                                     )}
@@ -415,12 +418,12 @@ const VendorOrdersPage = () => {
                                             </div>
 
                                             {/* Actions */}
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 shrink-0">
                                                 <button
                                                     onClick={() => viewOrderDetails(order.publicOrderId)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+                                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs sm:text-sm hover:bg-gray-200 active:bg-gray-300 transition-colors"
                                                 >
-                                                    <Eye className="h-4 w-4" />
+                                                    <Eye className="h-3.5 w-3.5" />
                                                     View
                                                 </button>
                                                 <StatusDropdown
@@ -440,26 +443,26 @@ const VendorOrdersPage = () => {
 
             {/* ── Order detail modal ──────────────────────────────────────────── */}
             {showDetailModal && selectedOrder && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center sm:p-4 z-50">
+                    <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col shadow-2xl">
 
                         {/* Modal header */}
-                        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-lg font-bold text-gray-900">Order details</h2>
+                        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between rounded-t-2xl shrink-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-base sm:text-lg font-bold text-gray-900">Order details</h2>
                                 <StatusBadge status={selectedOrder.status} statusLabel={selectedOrder.statusLabel} />
                                 <FulfillmentBadge type={selectedOrder.fulfillmentType} />
                             </div>
-                            <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <XCircle className="h-6 w-6" />
+                            <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600 p-1 active:text-gray-800">
+                                <XCircle className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-5">
+                        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
                             {/* ID & time */}
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-500 font-mono">{selectedOrder.publicOrderId}</span>
-                                <span className="text-gray-500">{formatDate(selectedOrder.orderTime)}</span>
+                            <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                                <span className="text-gray-500 font-mono truncate">{selectedOrder.publicOrderId}</span>
+                                <span className="text-gray-500 shrink-0">{formatDate(selectedOrder.orderTime)}</span>
                             </div>
 
                             {/* Requested fulfillment time — shown for advance orders */}

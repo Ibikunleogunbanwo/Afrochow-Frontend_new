@@ -198,28 +198,28 @@ const VendorEarningsPage = () => {
     return (
         <div className="space-y-6">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+            <nav className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
                 <Link href="/vendor/dashboard" className="flex items-center gap-1 hover:text-gray-900 transition-colors font-medium">
-                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <LayoutDashboard className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     Dashboard
                 </Link>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />
                 <span className="font-semibold text-gray-900">Earnings</span>
             </nav>
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900">Earnings</h1>
-                    <p className="text-gray-600 mt-1">Track your revenue and order statistics</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Earnings</h1>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Revenue & order stats</p>
                 </div>
                 <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-gray-900 text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-gray-800 active:bg-gray-700 transition-colors disabled:opacity-50 shrink-0"
                 >
-                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    {refreshing ? 'Refreshing…' : 'Refresh'}
+                    <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden xs:inline">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
                 </button>
             </div>
 
@@ -230,40 +230,40 @@ const VendorEarningsPage = () => {
                 </div>
             ) : (
                 <>
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Stats Cards — 2-col on mobile, 4-col on lg */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         {statCards.map((stat, index) => (
-                            <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className={`w-11 h-11 ${stat.iconBg} rounded-xl flex items-center justify-center`}>
-                                        <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                            <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-5">
+                                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                    <div className={`w-8 h-8 sm:w-11 sm:h-11 ${stat.iconBg} rounded-xl flex items-center justify-center`}>
+                                        <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
                                     </div>
                                     {stat.trend === 'up' && (
-                                        <div className="flex items-center gap-1 text-green-600 text-xs font-semibold">
-                                            <TrendingUp className="h-3.5 w-3.5" />
+                                        <div className="flex items-center gap-0.5 text-green-600 text-xs font-semibold">
+                                            <TrendingUp className="h-3 w-3" />
                                             +{calculateGrowth()}%
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-sm text-gray-500 mb-0.5">{stat.title}</p>
-                                <p className="text-2xl font-black text-gray-900 mb-1">{stat.value}</p>
-                                <p className="text-xs text-gray-400">{stat.description}</p>
+                                <p className="text-[10px] sm:text-sm text-gray-500 mb-0.5">{stat.title}</p>
+                                <p className="text-base sm:text-2xl font-black text-gray-900 mb-0.5 break-all leading-tight">{stat.value}</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400">{stat.description}</p>
                             </div>
                         ))}
                     </div>
 
                     {/* Revenue Breakdown */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-5">Revenue Breakdown</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-5">Revenue Breakdown</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                                 <div className="border-l-4 border-gray-300 pl-4">
-                                    <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Revenue</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 break-all">{formatCurrency(stats.totalRevenue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">All-time earnings</p>
                                 </div>
                                 <div className="border-l-4 border-gray-300 pl-4">
-                                    <p className="text-sm text-gray-600 mb-1">Today's Revenue</p>
-                                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todayRevenue)}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Today's Revenue</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 break-all">{formatCurrency(stats.todayRevenue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">
                                         {stats.totalRevenue > 0
                                             ? `${((stats.todayRevenue / stats.totalRevenue) * 100).toFixed(1)}% of total`
@@ -271,8 +271,8 @@ const VendorEarningsPage = () => {
                                     </p>
                                 </div>
                                 <div className="border-l-4 border-gray-300 pl-4">
-                                    <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
-                                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600 mb-1">Average Order Value</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 break-all">{formatCurrency(stats.averageOrderValue)}</p>
                                     <p className="text-xs text-gray-500 mt-1">Per order average</p>
                                 </div>
                             </div>
@@ -313,9 +313,9 @@ const VendorEarningsPage = () => {
                         </div>
 
                         {recentOrders.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <Package className="h-14 w-14 text-gray-200 mb-4" />
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">No delivered orders yet</h3>
+                            <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center">
+                                <Package className="h-12 w-12 text-gray-200 mb-3" />
+                                <h3 className="text-base font-bold text-gray-900 mb-1">No delivered orders yet</h3>
                                 <p className="text-sm text-gray-500">Delivered orders will appear here</p>
                             </div>
                         ) : (
@@ -323,27 +323,27 @@ const VendorEarningsPage = () => {
                                 {recentOrders.map((order, idx) => {
                                     const isPickup = order.fulfillmentType === 'PICKUP' || order.fulfillmentType === 'pickup';
                                     return (
-                                        <div key={order.publicOrderId ?? idx} className="px-6 py-5 hover:bg-gray-50 transition-colors">
+                                        <div key={order.publicOrderId ?? idx} className="px-3 sm:px-6 py-3 sm:py-5 hover:bg-gray-50 transition-colors border-l-4 border-l-green-300">
                                             {/* Top row: order ID + badge + amount */}
-                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                            <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-mono text-sm font-bold text-gray-900">
+                                                    <span className="font-mono text-xs sm:text-sm font-bold text-gray-900">
                                                         #{order.publicOrderId?.slice(-8) ?? '—'}
                                                     </span>
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                                                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                         <CheckCircle2 className="w-3 h-3" /> Delivered
                                                     </span>
                                                     {isPickup ? (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                                                        <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                             <Store className="w-3 h-3" /> Pickup
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                                                        <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                                             <Truck className="w-3 h-3" /> Delivery
                                                         </span>
                                                     )}
                                                 </div>
-                                                <span className="text-lg font-black text-gray-900 whitespace-nowrap shrink-0">
+                                                <span className="text-base sm:text-lg font-black text-gray-900 whitespace-nowrap shrink-0">
                                                     {formatCurrency(order.totalAmount)}
                                                 </span>
                                             </div>
