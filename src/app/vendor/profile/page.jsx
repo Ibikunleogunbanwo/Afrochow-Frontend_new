@@ -40,11 +40,11 @@ const CUISINE_TYPES_FALLBACK = [
 ];
 
 const TABS = [
-    { id: 'info',          label: 'Store Info',       icon: Store      },
-    { id: 'hours',         label: 'Operating Hours',  icon: Calendar   },
-    { id: 'branding',      label: 'Branding',         icon: ImageIcon  },
-    { id: 'payout',        label: 'Payout',           icon: CreditCard },
-    { id: 'notifications', label: 'Notifications',    icon: Bell       },
+    { id: 'info',          label: 'Store Info',      short: 'Info',    icon: Store      },
+    { id: 'hours',         label: 'Hours',           short: 'Hours',   icon: Calendar   },
+    { id: 'branding',      label: 'Branding',        short: 'Brand',   icon: ImageIcon  },
+    { id: 'payout',        label: 'Payout',          short: 'Payout',  icon: CreditCard },
+    { id: 'notifications', label: 'Notifications',   short: 'Alerts',  icon: Bell       },
 ];
 
 const DAYS = [
