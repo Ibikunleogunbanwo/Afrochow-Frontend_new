@@ -7,7 +7,7 @@ import {
     Users, UserCheck, UserX, Trash2, ChevronDown,
     LayoutDashboard, ChevronRight, Search,
     RefreshCw, AlertCircle, ShieldAlert, ArrowUp, ArrowDown,
-    Calendar, Filter, X,
+    Calendar, Filter, X, LockOpen, Lock,
 } from 'lucide-react';
 
 // ── Date filter helpers ────────────────────────────────────────────────────
@@ -83,6 +83,13 @@ const StatusDot = ({ active }) => (
     </span>
 );
 
+const LockedBadge = () => (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+        <Lock className="w-3 h-3" />
+        Locked
+    </span>
+);
+
 export default function AdminUsersPage() {
     const currentRole = useSelector(selectUserRole); // 'ADMIN' or 'SUPERADMIN'
     const isSuperAdmin = currentRole === 'SUPERADMIN';
@@ -147,6 +154,7 @@ export default function AdminUsersPage() {
         deactivate: 'User Suspended',
         activate:   'User Activated',
         delete:     'User Deleted',
+        unlock:     'Account Unlocked',
     };
 
     const doAction = async (id, fn, label) => {
@@ -401,6 +409,7 @@ export default function AdminUsersPage() {
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <RoleBadge role={u.role} />
                                             <StatusDot active={u.isActive} />
+                                            {u.isLocked && <LockedBadge />}
                                             <span className="text-[11px] text-gray-400">{formatDate(u.createdAt)}</span>
                                         </div>
                                     </div>
@@ -412,8 +421,9 @@ export default function AdminUsersPage() {
                                 </div>
 
                                 {/* Status col — desktop only */}
-                                <div className="hidden md:block w-28 shrink-0">
+                                <div className="hidden md:flex md:flex-col w-28 shrink-0 gap-1">
                                     <StatusDot active={u.isActive} />
+                                    {u.isLocked && <LockedBadge />}
                                 </div>
 
                                 {/* Joined col — desktop only */}
@@ -486,6 +496,17 @@ export default function AdminUsersPage() {
                                                         Activate
                                                     </button>
                                                 )
+                                            )}
+                                            {u.isLocked && !isProtected(u) && (
+                                                <button
+                                                    onClick={() => doAction(u.publicUserId, AdminUsersAPI.unlock, 'unlock')}
+                                                    disabled={!!actionLoading[u.publicUserId + 'unlock']}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors disabled:opacity-50"
+                                                    title="Clear login lockout"
+                                                >
+                                                    <LockOpen className="w-3.5 h-3.5" />
+                                                    Unlock
+                                                </button>
                                             )}
                                             {isSuperAdmin && !isAdminRole(u) && (
                                                 <button

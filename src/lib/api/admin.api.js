@@ -17,6 +17,7 @@ export const AdminUsersAPI = {
     getStats:    ()           => fetchWithCredentials(`${API_BASE_URL}/admin/users/stats`),
     activate:    (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}/activate`,   { method: 'PATCH' }),
     deactivate:  (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}/deactivate`, { method: 'PATCH' }),
+    unlock:      (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}/unlock`,     { method: 'PATCH' }),
     changeRole:  (id, role)   => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}/role?newRole=${role}`, { method: 'PATCH' }),
     deleteUser:  (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}`,            { method: 'DELETE' }),
 };

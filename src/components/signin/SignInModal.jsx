@@ -92,6 +92,14 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                 toast.error("Invalid Credentials", {
                     description: "Double-check your email and password and try again.",
                 })
+            } else if (errorMessage.includes("locked")) {
+                toast.error("Account Temporarily Locked", {
+                    description: err?.message || "Too many failed attempts. Try again later or reset your password.",
+                })
+            } else if (errorMessage.includes("too many")) {
+                toast.error("Too Many Attempts", {
+                    description: err?.message || "Please wait a moment before trying again.",
+                })
             } else {
                 toast.error("Login Failed", {
                     description: err?.message || "Something went wrong. Please try again.",

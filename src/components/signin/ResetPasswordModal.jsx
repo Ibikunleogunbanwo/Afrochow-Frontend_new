@@ -87,7 +87,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
             return
         }
 
-        if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(formData.password)) {
+        if (!/[!@#$%^&*()_+\-=\[\]{}|;':"\\,.<>/?]/.test(formData.password)) {
             toast.error("Password Too Weak", { description: "Password must contain at least one special character (!@#$%^&* etc.)" })
             return
         }
@@ -299,9 +299,9 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                             </h3>
                             <ul className="text-xs text-slate-700 space-y-0.5">
                                 <li>• Minimum 8 characters</li>
-                                <li>• Include uppercase and lowercase letters</li>
-                                <li>• Include at least one number</li>
-                                <li>• Special characters recommended</li>
+                                <li>• At least one uppercase and one lowercase letter</li>
+                                <li>• At least one number</li>
+                                <li>• At least one special character (!@#$%^&* etc.)</li>
                             </ul>
                         </div>
                     </>

@@ -3,18 +3,32 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 /**
  * Extract meaningful error message from a wrapped API response body.
  *
- * When the backend returns a validation-error array (MethodArgumentNotValidException),
- * the shape is: { success: false, message: "Validation failed", data: [{ field, message }] }
- * We format those field errors into a human-readable string instead of just "Validation failed".
+ * Two possible shapes for data arrays:
+ *
+ * 1. MethodArgumentNotValidException (bean-validation):
+ *    { success: false, message: "Validation failed", data: [{ field, message }] }
+ *
+ * 2. PasswordPolicyViolationException:
+ *    { success: false, message: "Password does not meet policy requirements", data: ["msg1", "msg2"] }
+ *
+ * We surface both into a human-readable string instead of just the envelope message.
  */
 export const extractErrorMessage = (errorData, defaultMessage) => {
-  // Prefer inline field validation errors over the generic "Validation failed" envelope message
   if (Array.isArray(errorData?.data) && errorData.data.length > 0) {
-    const fieldErrors = errorData.data
-        .filter(e => e?.message)
-        .slice(0, 3)
-        .map(e => (e.field && e.field !== e.message ? `${humaniseField(e.field)}: ${e.message}` : e.message));
-    if (fieldErrors.length > 0) return fieldErrors.join(' · ');
+    const firstItem = errorData.data[0];
+
+    if (typeof firstItem === 'string') {
+      // Plain string array — PasswordPolicyViolationException
+      const messages = errorData.data.filter(s => typeof s === 'string' && s).slice(0, 3);
+      if (messages.length > 0) return messages.join(' · ');
+    } else {
+      // Object array — MethodArgumentNotValidException field errors
+      const fieldErrors = errorData.data
+          .filter(e => e?.message)
+          .slice(0, 3)
+          .map(e => (e.field && e.field !== e.message ? `${humaniseField(e.field)}: ${e.message}` : e.message));
+      if (fieldErrors.length > 0) return fieldErrors.join(' · ');
+    }
   }
 
   return (

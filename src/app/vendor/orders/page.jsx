@@ -7,6 +7,7 @@ import {
     Clock, Package, CheckCircle, XCircle, Truck, Search,
     Filter, ChevronDown, Eye, DollarSign, User, MapPin,
     Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight, CalendarClock,
+    AlertTriangle, Timer,
 } from 'lucide-react';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -143,6 +144,66 @@ function FulfillmentBadge({ type }) {
             ${isDelivery ? 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-700'}`}>
             {isDelivery ? <Truck className="h-3 w-3" /> : <Store className="h-3 w-3" />}
             {isDelivery ? 'Delivery' : 'Pickup'}
+        </span>
+    );
+}
+
+/**
+ * Live SLA countdown badge for PENDING orders.
+ * Shows how long the vendor has left to accept — ticks every second.
+ *
+ * Colours:
+ *   > 3 min  → green  (plenty of time)
+ *   1–3 min  → amber  (warn)
+ *   < 1 min  → red + pulse (urgent)
+ *   expired  → red    ("Window expired")
+ */
+function SlaCountdown({ slaExpiresAt }) {
+    const computeRemaining = () => {
+        if (!slaExpiresAt) return null;
+        return Math.floor((new Date(slaExpiresAt) - Date.now()) / 1000);
+    };
+
+    const [remaining, setRemaining] = useState(computeRemaining);
+
+    useEffect(() => {
+        if (!slaExpiresAt) return;
+        const id = setInterval(() => setRemaining(computeRemaining()), 1000);
+        return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [slaExpiresAt]);
+
+    if (remaining === null) return null;
+
+    const expired = remaining <= 0;
+    const urgent  = !expired && remaining < 60;
+    const warning = !expired && remaining < 180;
+
+    const fmt = (s) => {
+        const m = Math.floor(Math.abs(s) / 60);
+        const sec = Math.abs(s) % 60;
+        return `${m}:${String(sec).padStart(2, '0')}`;
+    };
+
+    if (expired) {
+        return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-300">
+                <AlertTriangle className="h-3 w-3" />
+                Window expired
+            </span>
+        );
+    }
+
+    const colour = urgent
+        ? 'bg-red-100 text-red-700 border-red-300'
+        : warning
+        ? 'bg-amber-100 text-amber-700 border-amber-300'
+        : 'bg-green-100 text-green-700 border-green-300';
+
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${colour} ${urgent ? 'animate-pulse' : ''}`}>
+            <Timer className="h-3 w-3" />
+            Accept within {fmt(remaining)}
         </span>
     );
 }
@@ -392,6 +453,9 @@ const VendorOrdersPage = () => {
                                                     </h3>
                                                     <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                                                     <FulfillmentBadge type={order.fulfillmentType} />
+                                                    {order.status === 'PENDING' && (
+                                                        <SlaCountdown slaExpiresAt={order.slaExpiresAt} />
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
                                                     {order.customerName && (
