@@ -21,8 +21,22 @@ export const profileSchema = z.object({
 
     phone: z
         .string()
-        .min(10, "Phone number must be at least 10 digits")
-        .regex(/^[\d\s\-\(\)\+]+$/, "Invalid phone number format"),
+        .min(1, "Phone number is required")
+        .refine(
+            (val) => /^[\d\s\-\(\)\+.]+$/.test(val),
+            { message: "Phone number contains invalid characters — only digits, spaces, dashes, dots, and parentheses are allowed" }
+        )
+        .refine(
+            (val) => {
+                // Mirror PhoneUtils.normalize(): strip non-digits, strip leading country code
+                const digits = val.replace(/[^\d]/g, '');
+                const normalized = digits.length === 11 && digits.startsWith('1')
+                    ? digits.slice(1)
+                    : digits;
+                return normalized.length === 10;
+            },
+            { message: "Enter a valid 10-digit Canadian number (e.g. 416-234-5678 or +1 416 234 5678)" }
+        ),
 
     profileImageUrl: z
         .string()

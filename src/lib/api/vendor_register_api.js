@@ -53,7 +53,14 @@ const apiCall = async (endpoint, options = {}, _retry = false) => {
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || `API error: ${res.status}`);
+  if (!res.ok) {
+    // Include the full response body on the error so callers can extract
+    // field-level validation details (e.g. data.data array of ValidationErrorDto)
+    const err = new Error(data.message || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.data   = data;
+    throw err;
+  }
   return data;
 };
 

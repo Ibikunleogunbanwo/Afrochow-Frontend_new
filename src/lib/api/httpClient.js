@@ -2,8 +2,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 
 /**
  * Extract meaningful error message from a wrapped API response body.
+ *
+ * When the backend returns a validation-error array (MethodArgumentNotValidException),
+ * the shape is: { success: false, message: "Validation failed", data: [{ field, message }] }
+ * We format those field errors into a human-readable string instead of just "Validation failed".
  */
 export const extractErrorMessage = (errorData, defaultMessage) => {
+  // Prefer inline field validation errors over the generic "Validation failed" envelope message
+  if (Array.isArray(errorData?.data) && errorData.data.length > 0) {
+    const fieldErrors = errorData.data
+        .filter(e => e?.message)
+        .slice(0, 3)
+        .map(e => (e.field && e.field !== e.message ? `${humaniseField(e.field)}: ${e.message}` : e.message));
+    if (fieldErrors.length > 0) return fieldErrors.join(' · ');
+  }
+
   return (
       errorData?.message ||
       errorData?.error ||
@@ -12,6 +25,18 @@ export const extractErrorMessage = (errorData, defaultMessage) => {
       (typeof errorData === 'string' ? errorData : null) ||
       defaultMessage
   );
+};
+
+/**
+ * Convert camelCase / dot-separated field path to a readable label.
+ * e.g. "address.postalCode" → "Postal Code", "restaurantName" → "Restaurant Name"
+ */
+const humaniseField = (field = '') => {
+  const last = field.split('.').pop();
+  return last
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, s => s.toUpperCase())
+      .trim();
 };
 
 /**

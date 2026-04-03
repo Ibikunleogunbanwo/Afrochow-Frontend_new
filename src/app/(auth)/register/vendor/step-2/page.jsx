@@ -141,7 +141,16 @@ export default function Step2() {
       dispatch({ type: "UPDATE", payload: { profileImageUrl: imageUrl } });
 
     } catch (error) {
-      toast.error(error.message || "Image upload failed. Please try again.");
+      // Don't expose internal Cloudinary/storage errors — show a safe message
+      const isUserFacingError =
+          error.message === 'File is required' ||
+          error.message === 'Category is required' ||
+          error.message === 'No URL returned from upload';
+      toast.error(
+          isUserFacingError
+              ? error.message
+              : "Image upload failed. Please check your file and try again."
+      );
     } finally {
       setUploadingImage(false);
     }

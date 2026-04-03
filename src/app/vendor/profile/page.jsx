@@ -121,7 +121,7 @@ const computeIsOpenFromHours = (hoursForm) => {
  * Returns { field: errorMessage } for the Restaurant Info + Address tab.
  * Empty object = valid.
  */
-function validateInfo(infoForm, addrForm) {
+function validateInfo(infoForm, addrForm, cuisineTypes) {
     const e = {};
 
     // --- Basic details ---
@@ -445,7 +445,7 @@ export default function VendorProfilePage() {
 
     // ── Info save ────────────────────────────────────────────────────────────
     const handleSaveInfo = async () => {
-        const errors = validateInfo(infoForm, addrForm);
+        const errors = validateInfo(infoForm, addrForm, cuisineTypes);
         if (Object.keys(errors).length) {
             setInfoErrors(errors);
             toast.error('Please fix the errors below before saving');

@@ -153,21 +153,63 @@ export default function Review() {
       const response = await registerVendor(state);
 
       if (!response?.data?.publicUserId) {
-        toast.error(response?.data?.message || "Registration failed");
+        const fallback = response?.data?.message || "Registration failed. Please try again.";
+        toast.error(fallback);
+        setError(fallback);
         setProgress(null);
         return;
       }
 
-      setProgress("Registration complete! 🎉");
+      setProgress("Registration complete!");
       dispatch?.({ type: "RESET" });
       localStorage.removeItem("vendorRegistrationData");
       localStorage.removeItem("vendorRegistrationStep");
       router.replace("/register/vendor/success");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      toast.error(msg);
-      setError(msg);
       setProgress(null);
+
+      const status = err?.status;
+      const message = err instanceof Error ? err.message : "Registration failed. Please try again.";
+
+      if (status === 409) {
+        // Email or phone already registered — tell the user exactly which field
+        // and which step they need to go back to in order to fix it.
+        const lower = message.toLowerCase();
+        if (lower.includes("email")) {
+          toast.error("Email already registered", {
+            description: "An account already exists for this email address. Go back to Step 1 to use a different email or sign in instead.",
+          });
+          setError("This email address is already registered. Go back to Step 1 to change it.");
+        } else if (lower.includes("phone")) {
+          toast.error("Phone number already registered", {
+            description: "This phone number is linked to an existing account. Go back to Step 2 to use a different number.",
+          });
+          setError("This phone number is already registered. Go back to Step 2 to change it.");
+        } else {
+          toast.error("Account already exists", { description: message });
+          setError(message);
+        }
+
+      } else if (status === 400) {
+        // Field-level validation errors from the backend
+        const fieldErrors = err?.data?.data;
+        if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+          const lines = fieldErrors
+              .filter(e => e?.message)
+              .slice(0, 5)
+              .map(e => `• ${e.message}`)
+              .join('\n');
+          toast.error("Please fix the highlighted issues", { description: lines });
+          setError(`Some information needs to be corrected:\n${lines}`);
+        } else {
+          toast.error("Validation failed", { description: message });
+          setError(message);
+        }
+
+      } else {
+        toast.error("Registration failed", { description: message });
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

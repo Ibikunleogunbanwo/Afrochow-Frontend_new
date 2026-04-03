@@ -637,6 +637,35 @@ export default function CustomerRegistration() {
           if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
 
+      } else if (status === 400) {
+        // Backend validation errors — map field-level errors inline when available
+        const fieldErrors = error.data?.data;
+        if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+          const mapped = {};
+          fieldErrors.forEach(({ field, message: msg }) => {
+            if (field && msg) {
+              // Normalise nested field paths: "address.city" → "address.city"
+              mapped[field] = msg;
+            }
+          });
+          if (Object.keys(mapped).length > 0) {
+            setErrors((prev) => ({ ...prev, ...mapped }));
+            toast.error("Please fix the highlighted fields", {
+              description: "Some information needs to be corrected before you can continue.",
+            });
+            setTimeout(() => {
+              const el = document.querySelector(".border-red-400");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+          } else {
+            toast.error("Registration Failed", { description: message || "Please check your information and try again." });
+          }
+        } else {
+          toast.error("Registration Failed", {
+            description: message || "Please check your information and try again.",
+          });
+        }
+
       } else {
         // Generic error — just show the message
         toast.error("Registration Failed", {

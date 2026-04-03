@@ -94,7 +94,7 @@ export const businessOpsSchema = z.object({
         data.maxDeliveryDistanceKm !== null
     );
 }, {
-    message: "All delivery profile are required when delivery is enabled",
+    message: "All delivery settings are required when delivery is enabled",
     path: ["deliveryFee"],
 });
 

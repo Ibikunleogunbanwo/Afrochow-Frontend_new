@@ -12,11 +12,13 @@ export const passwordSchema = z.string()
     });
 
 export const accountSchema = z.object({
-    email: z.string().email({ message: "Invalid email address" }),
+    email: z.string()
+        .min(1, { message: "Email address is required" })
+        .email({ message: "Please enter a valid email address (e.g. name@example.com)" }),
     password: passwordSchema,
     confirmPassword: z.string().min(1, { message: "Please confirm your password" }),
     acceptTerms: z.boolean().refine((val) => val === true, {
-        message: "You must accept the terms",
+        message: "You must accept the terms and conditions to continue",
     }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
