@@ -63,9 +63,11 @@ const toUiNotification = (dto) => ({
 export const useAdminNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading]             = useState(true);
-    const channelRef = useRef(null);
+    const channelRef    = useRef(null);
+    const authFailedRef = useRef(false);
 
     const refresh = useCallback(async () => {
+        if (authFailedRef.current) return;
         try {
             const res = await NotificationsAPI.getRecent();
             if (res?.success && Array.isArray(res.data)) {
@@ -77,8 +79,11 @@ export const useAdminNotifications = () => {
                     });
                 setNotifications(items);
             }
-        } catch {
-            // silently fail — stale state stays visible
+        } catch (err) {
+            if (err?.status === 401) {
+                authFailedRef.current = true; // stop polling after permanent auth failure
+            }
+            // silently fail for other errors — stale state stays visible
         } finally {
             setLoading(false);
         }
