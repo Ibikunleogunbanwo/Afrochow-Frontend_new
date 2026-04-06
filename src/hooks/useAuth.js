@@ -30,6 +30,23 @@ const ROLE_ROUTES = {
     SUPERADMIN: "/admin/dashboard",
 };
 
+// Prefixes that are restricted to specific roles.
+// Used to sanitise a stale `returnTo` value stored before the user logged in —
+// e.g. an expired admin session stores returnTo=/admin/dashboard, a customer
+// then logs in and must NOT be sent there.
+const ROLE_RESTRICTED_PREFIXES = {
+    "/admin":  ["ADMIN", "SUPERADMIN"],
+    "/vendor": ["VENDOR"],
+};
+
+function isValidReturnTo(path, role) {
+    if (!path) return false;
+    for (const [prefix, allowed] of Object.entries(ROLE_RESTRICTED_PREFIXES)) {
+        if (path.startsWith(prefix)) return allowed.includes(role);
+    }
+    return true; // no restriction — any authenticated role may return here
+}
+
 export const useAuth = () => {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -77,7 +94,12 @@ export const useAuth = () => {
             } else {
                 const returnTo = sessionStorage.getItem('returnTo');
                 sessionStorage.removeItem('returnTo');
-                destination = returnTo || "/";
+                // Sanitise returnTo: if it points to a role-restricted prefix that
+                // doesn't match the current user's role (e.g. a stale /admin path
+                // stored from a previous admin session) fall back to home rather
+                // than landing a CUSTOMER on the admin dashboard.
+                const safeReturnTo = isValidReturnTo(returnTo, userData.role) ? returnTo : null;
+                destination = safeReturnTo || "/";
             }
             router.push(destination);
             return destination;

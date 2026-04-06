@@ -79,7 +79,10 @@ export default function CheckoutPage() {
         : 0;
     const minFulfillmentDatetime = (() => {
         if (!hasAdvanceItems) return '';
-        const d = new Date(Date.now() + maxNoticeHours * 60 * 60 * 1000 + 60 * 1000);
+        // Add 10-minute buffer so the minimum stays valid for the duration of form completion.
+        // toISOString() gives UTC which the datetime-local input treats as local — this aligns
+        // with the server (UTC) when it compares LocalDateTime.now() to the submitted value.
+        const d = new Date(Date.now() + maxNoticeHours * 60 * 60 * 1000 + 10 * 60 * 1000);
         // datetime-local needs "YYYY-MM-DDTHH:MM"
         return d.toISOString().slice(0, 16);
     })();
@@ -344,15 +347,22 @@ export default function CheckoutPage() {
 
         } catch (e) {
             const raw = e.message || "";
-            const description =
-                raw.includes("card was declined") || raw.includes("Your card")
-                    ? raw                                                    // Stripe card errors — safe to show
-                    : raw.includes("minimum amount")
-                    ? raw                                                    // Business rule — safe to show
-                    : raw.includes("not available")
-                    ? raw                                                    // Product unavailable — safe to show
-                    : "Something went wrong processing your payment. Please try again or use a different card.";
-            toast.error("Order could not be placed", { description });
+            if (raw.includes("advance notice") || raw.includes("requires at least")) {
+                // Advance-notice timing error — clearly unrelated to the card
+                toast.error("Selected date & time is too soon", {
+                    description: raw,
+                });
+            } else {
+                const description =
+                    raw.includes("card was declined") || raw.includes("Your card")
+                        ? raw                                                    // Stripe card errors — safe to show
+                        : raw.includes("minimum amount")
+                        ? raw                                                    // Business rule — safe to show
+                        : raw.includes("not available")
+                        ? raw                                                    // Product unavailable — safe to show
+                        : "Something went wrong processing your payment. Please try again or use a different card.";
+                toast.error("Order could not be placed", { description });
+            }
         } finally {
             setPlacing(false);
         }

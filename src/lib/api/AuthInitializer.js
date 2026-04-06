@@ -92,7 +92,7 @@ export default function AuthInitializer({ children }) {
                 return;
             }
 
-            // Role-based redirects
+            // Role-based redirects — keep each role within its own section
             if (isAdminRole && pathname.startsWith('/vendor')) {
                 router.replace('/admin/dashboard');
                 return;
@@ -100,6 +100,16 @@ export default function AuthInitializer({ children }) {
 
             if (userRole === 'VENDOR' && pathname.startsWith('/admin')) {
                 router.replace('/vendor/dashboard');
+                return;
+            }
+
+            // Customers must never reach /admin or /vendor routes.
+            // This fires if a stale returnTo (from a previous admin session) somehow
+            // slipped through the sanitisation in useAuth.login(), or if the URL
+            // was typed / linked directly.
+            if (userRole === 'CUSTOMER' &&
+                (pathname.startsWith('/admin') || pathname.startsWith('/vendor'))) {
+                router.replace('/unauthorized');
                 return;
             }
         } else {
