@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { OrderAPI } from "@/lib/api/order/order.api";
 import {
     CheckCircle2, Clock, MapPin, ShoppingBag,
-    ChevronRight, Loader2, AlertCircle, Truck, Store, RefreshCw, XCircle, Calendar,
+    ChevronRight, Loader2, AlertCircle, Truck, Store, RefreshCw, XCircle, Calendar, Ban,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
@@ -36,6 +36,15 @@ function StatusBadge({ status, statusLabel }) {
         </span>
     );
 }
+
+// ── Cancellation actor labels (mirrors backend values) ────────────────────────
+const CANCELLED_BY_LABEL = {
+    CUSTOMER:           'You cancelled this order.',
+    VENDOR:             'The restaurant declined this order.',
+    VENDOR_POST_ACCEPT: 'The restaurant was unable to fulfil this order.',
+    SYSTEM:             'This order was automatically cancelled — the restaurant did not respond in time.',
+    ADMIN:              'This order was cancelled by Afrochow support.',
+};
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 
@@ -290,8 +299,34 @@ export default function OrderConfirmationPage() {
                     </div>
                 )}
 
+                {/* ── Cancellation info ─────────────────────────────────── */}
+                {!loading && order?.status === 'CANCELLED' && (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Ban className="w-4 h-4 text-red-600 shrink-0" />
+                            <h2 className="text-sm font-semibold text-red-800">Order Cancelled</h2>
+                        </div>
+                        <p className="text-sm text-red-700">
+                            {order.cancelledBy
+                                ? CANCELLED_BY_LABEL[order.cancelledBy] ?? 'This order has been cancelled.'
+                                : 'This order has been cancelled.'
+                            }
+                        </p>
+                        {order.cancellationReason && order.cancelledBy !== 'CUSTOMER' && order.cancelledBy !== 'SYSTEM' && (
+                            <p className="text-sm text-red-600 italic border-t border-red-100 pt-2">
+                                &ldquo;{order.cancellationReason}&rdquo;
+                            </p>
+                        )}
+                        {(order.cancelledBy === 'VENDOR' || order.cancelledBy === 'VENDOR_POST_ACCEPT' || order.cancelledBy === 'SYSTEM') && (
+                            <p className="text-xs text-red-600 pt-1">
+                                A full refund has been issued and will appear on your statement within 3–5 business days.
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {/* ── What happens next ──────────────────────────────────── */}
-                {!loading && (
+                {!loading && order?.status !== 'CANCELLED' && (
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
                         <h2 className="text-sm font-semibold text-gray-800">What happens next</h2>
                         <ol className="space-y-2.5">

@@ -84,4 +84,16 @@ export const VendorOrdersAPI = {
       method: 'PUT',
     });
   },
+
+  /**
+   * Vendor cancels an order they already accepted (CONFIRMED or PREPARING).
+   * A reason is required — it is shown to the customer and stored on the order.
+   */
+  unableToFulfil: async (publicOrderId, reason) => {
+    return fetchWithCredentials(`${API_BASE_URL}/vendor/orders/${publicOrderId}/unable-to-fulfil`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+  },
 };
