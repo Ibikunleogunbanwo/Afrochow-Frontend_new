@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
     Bell, ShoppingBag, Truck, CreditCard, Tag,
@@ -8,6 +8,10 @@ import {
     ArrowRight, Package, Info,
 } from 'lucide-react';
 import { NotificationsAPI } from '@/lib/api/notifications.api';
+
+// Keep in sync with useCustomerNotifications.js channel name + message types
+const NOTIF_CHANNEL = 'afrochow_customer_notifications';
+const BC = { MARK_READ: 'MARK_READ', MARK_ALL_READ: 'MARK_ALL_READ', DELETE: 'DELETE', REFRESH: 'REFRESH' };
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -174,6 +178,16 @@ export default function CustomerNotificationsPage() {
     const [stats,          setStats]         = useState(null);
     const [selected,       setSelected]      = useState(null);
 
+    // BroadcastChannel — keep Header badge in sync when actions happen on this page
+    const channelRef = useRef(null);
+    useEffect(() => {
+        try { channelRef.current = new BroadcastChannel(NOTIF_CHANNEL); } catch { /* ignore */ }
+        return () => { channelRef.current?.close(); channelRef.current = null; };
+    }, []);
+    const broadcast = useCallback((msg) => {
+        try { channelRef.current?.postMessage(msg); } catch { /* ignore */ }
+    }, []);
+
     const fetchPage = useCallback(async (page = 0, replace = true) => {
         page === 0 ? setLoading(true) : setLoadingMore(true);
         try {
@@ -214,28 +228,34 @@ export default function CustomerNotificationsPage() {
     const markRead = useCallback(async (id) => {
         setAll(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
         setSelected(prev => prev?.notificationId === id ? { ...prev, isRead: true } : prev);
+        broadcast({ type: BC.MARK_READ, id });
         setActionLoading(p => ({ ...p, [id + 'r']: true }));
         try { await NotificationsAPI.markRead(id); }
-        catch { fetchPage(0); }
+        catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
         finally { setActionLoading(p => ({ ...p, [id + 'r']: false })); }
-    }, [fetchPage]);
+    }, [fetchPage, broadcast]);
 
     const deleteOne = useCallback(async (id) => {
         setAll(prev => prev.filter(n => n.notificationId !== id));
+        broadcast({ type: BC.DELETE, id });
         setActionLoading(p => ({ ...p, [id + 'd']: true }));
         try { await NotificationsAPI.deleteOne(id); }
-        catch { fetchPage(0); }
+        catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
         finally { setActionLoading(p => ({ ...p, [id + 'd']: false })); }
-    }, [fetchPage]);
+    }, [fetchPage, broadcast]);
 
     const markAllRead = async () => {
         setAll(prev => prev.map(n => ({ ...n, isRead: true })));
-        try { await NotificationsAPI.markAllRead(); } catch { fetchPage(0); }
+        broadcast({ type: BC.MARK_ALL_READ });
+        try { await NotificationsAPI.markAllRead(); }
+        catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
     };
 
     const clearRead = async () => {
         setAll(prev => prev.filter(n => !n.isRead));
-        try { await NotificationsAPI.deleteAllRead(); } catch { fetchPage(0); }
+        broadcast({ type: BC.REFRESH });
+        try { await NotificationsAPI.deleteAllRead(); }
+        catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
     };
 
     const openNotification = (n) => {

@@ -186,6 +186,48 @@ export default function AdminPromotionsPage() {
 
     const field = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
+    // ── Filter state ──────────────────────────────────────────────────────────
+    const [tab,         setTab]         = useState('ALL');   // ALL | ACTIVE | INACTIVE | EXPIRED
+    const [search,      setSearch]      = useState('');
+    const [scopeFilter, setScopeFilter] = useState('ALL');   // ALL | GLOBAL | VENDOR
+
+    const now = new Date();
+
+    const isExpiredFn   = (p) => p.endDate && new Date(p.endDate) < now;
+    const isActiveFn    = (p) => (p.isActive ?? p.isCurrentlyActive ?? false) && !isExpiredFn(p);
+    const isInactiveFn  = (p) => !(p.isActive ?? p.isCurrentlyActive ?? false) && !isExpiredFn(p);
+
+    const counts = {
+        ALL:      promotions.length,
+        ACTIVE:   promotions.filter(isActiveFn).length,
+        INACTIVE: promotions.filter(isInactiveFn).length,
+        EXPIRED:  promotions.filter(isExpiredFn).length,
+    };
+
+    const filtered = promotions.filter(p => {
+        if (tab === 'ACTIVE'   && !isActiveFn(p))   return false;
+        if (tab === 'INACTIVE' && !isInactiveFn(p)) return false;
+        if (tab === 'EXPIRED'  && !isExpiredFn(p))  return false;
+        if (scopeFilter === 'GLOBAL' && p.vendorPublicId)  return false;
+        if (scopeFilter === 'VENDOR' && !p.vendorPublicId) return false;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            if (
+                !p.code?.toLowerCase().includes(q) &&
+                !p.title?.toLowerCase().includes(q) &&
+                !p.vendorName?.toLowerCase().includes(q)
+            ) return false;
+        }
+        return true;
+    });
+
+    const TABS = [
+        { key: 'ALL',      label: 'All' },
+        { key: 'ACTIVE',   label: 'Active' },
+        { key: 'INACTIVE', label: 'Inactive' },
+        { key: 'EXPIRED',  label: 'Expired' },
+    ];
+
     return (
         <div className="space-y-6">
             {/* Breadcrumb */}
@@ -215,6 +257,77 @@ export default function AdminPromotionsPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Stats strip */}
+            {!loading && !error && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                        { key: 'ALL',      label: 'Total',    color: 'text-gray-900',   bg: 'bg-gray-50',   border: 'border-gray-200' },
+                        { key: 'ACTIVE',   label: 'Active',   color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200' },
+                        { key: 'INACTIVE', label: 'Inactive', color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
+                        { key: 'EXPIRED',  label: 'Expired',  color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200' },
+                    ].map(s => (
+                        <button
+                            key={s.key}
+                            onClick={() => setTab(s.key)}
+                            className={`rounded-xl border px-4 py-3 text-left transition-all ${s.bg} ${s.border} ${tab === s.key ? 'ring-2 ring-offset-1 ring-gray-400' : 'hover:opacity-80'}`}
+                        >
+                            <p className={`text-2xl font-black ${s.color}`}>{counts[s.key]}</p>
+                            <p className={`text-xs font-semibold mt-0.5 ${s.color}`}>{s.label}</p>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Filters row */}
+            {!loading && !error && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Tab pills */}
+                    <div className="flex gap-2 flex-wrap">
+                        {TABS.map(t => (
+                            <button
+                                key={t.key}
+                                onClick={() => setTab(t.key)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                    tab === t.key
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                }`}
+                            >
+                                {t.label}
+                                <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${tab === t.key ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                                    {counts[t.key]}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search + scope — push to right on sm+ */}
+                    <div className="flex gap-2 sm:ml-auto flex-wrap">
+                        <div className="relative">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
+                            <input
+                                type="text"
+                                placeholder="Search code, title, vendor…"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                style={{ color: 'black', backgroundColor: 'white' }}
+                                className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300 w-52"
+                            />
+                        </div>
+                        <select
+                            value={scopeFilter}
+                            onChange={e => setScopeFilter(e.target.value)}
+                            style={{ color: 'black', backgroundColor: 'white' }}
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        >
+                            <option value="ALL">All scopes</option>
+                            <option value="GLOBAL">Global only</option>
+                            <option value="VENDOR">Vendor-scoped</option>
+                        </select>
+                    </div>
+                </div>
+            )}
 
             {/* Create / Edit Modal */}
             {showForm && (
@@ -435,21 +548,28 @@ export default function AdminPromotionsPage() {
                         <p className="text-sm text-gray-400">No promotions yet</p>
                         <button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl">Create first promotion</button>
                     </div>
+                ) : filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-2">
+                        <Tag className="h-10 w-10 text-gray-200" />
+                        <p className="text-sm font-semibold text-gray-500">No promotions match your filters</p>
+                        <button onClick={() => { setTab('ALL'); setSearch(''); setScopeFilter('ALL'); }} className="text-xs text-gray-400 underline hover:text-gray-600">Clear filters</button>
+                    </div>
                 ) : (
                     <AdminTableRoot>
                         <AdminTableHeader columns={[
                             { label: 'Code',    className: 'flex-1 min-w-[200px]' },
-                            { label: 'Details', className: 'w-52 shrink-0' },
-                            { label: 'Status',  className: 'w-24 shrink-0' },
+                            { label: 'Details', className: 'w-56 shrink-0' },
+                            { label: 'Status',  className: 'w-28 shrink-0' },
                             { label: 'Actions', className: 'w-32 shrink-0' },
                         ]} />
-                        {promotions.map(p => {
+                        {filtered.map(p => {
                             const id        = p.publicPromotionId ?? p.id;
-                            const isExpired = p.endDate && new Date(p.endDate) < new Date();
-                            const isActive  = p.isActive ?? p.isCurrentlyActive ?? false;
+                            const expired   = isExpiredFn(p);
+                            const active    = isActiveFn(p);
+                            const isVendor  = !!p.vendorPublicId;
                             return (
                                 <AdminTableRow key={id}>
-                                    {/* Code + type */}
+                                    {/* Code + type + scope */}
                                     <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                         <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                             <Tag className="w-4 h-4 text-gray-600" />
@@ -462,11 +582,18 @@ export default function AdminPromotionsPage() {
                                                     {p.type === 'FIXED_AMOUNT'  && `CA$${p.value} off`}
                                                     {p.type === 'FREE_DELIVERY' && 'Free Delivery'}
                                                 </span>
-                                                {/* Mobile-only: status + expiry inline */}
+                                                {/* Scope badge */}
+                                                {isVendor
+                                                    ? <span className="px-2 py-0.5 text-xs font-semibold bg-purple-50 text-purple-700 rounded-full border border-purple-200 truncate max-w-[120px]" title={p.vendorName}>{p.vendorName ?? 'Vendor'}</span>
+                                                    : <span className="px-2 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-full border border-blue-200">Global</span>
+                                                }
+                                                {/* Mobile-only: status */}
                                                 <span className="md:hidden">
-                                                    {isActive
+                                                    {expired
+                                                        ? <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
+                                                        : active
                                                         ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200"><CheckCircle className="w-3 h-3" />Active</span>
-                                                        : <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
+                                                        : <span className="px-2 py-0.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-200">Inactive</span>
                                                     }
                                                 </span>
                                             </div>
@@ -478,30 +605,36 @@ export default function AdminPromotionsPage() {
                                     </div>
 
                                     {/* Details — desktop only */}
-                                    <div className="hidden md:block w-52 shrink-0 overflow-hidden">
+                                    <div className="hidden md:block w-56 shrink-0 overflow-hidden">
                                         <p className="text-xs font-medium text-gray-700 truncate">{p.title}</p>
                                         <p className="text-xs text-gray-400 truncate mt-0.5">
                                             Used {p.totalUsageCount ?? 0}{p.usageLimit ? `/${p.usageLimit}` : ''}
                                             {p.endDate ? ` · Ends ${formatDate(p.endDate)}` : ''}
                                         </p>
-                                        {isExpired && (
-                                            <span className="inline-block mt-0.5 px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
-                                        )}
+                                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                                            {p.startDate ? `From ${formatDate(p.startDate)}` : 'No start date'}
+                                        </p>
                                     </div>
 
                                     {/* Status — desktop only */}
-                                    <div className="hidden md:block w-24 shrink-0">
-                                        {isActive ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
+                                    <div className="hidden md:flex flex-col gap-1 w-28 shrink-0">
+                                        {expired ? (
+                                            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full w-fit">Expired</span>
+                                        ) : active ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200 w-fit">
                                                 <CheckCircle className="w-3 h-3" /> Active
                                             </span>
                                         ) : (
-                                            <span className="px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200">Inactive</span>
+                                            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-200 w-fit">Inactive</span>
+                                        )}
+                                        {/* isActive flag vs isCurrentlyActive discrepancy hint */}
+                                        {p.isActive && expired && (
+                                            <span className="text-[10px] text-gray-400">Enabled but expired</span>
                                         )}
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="md:w-36 md:shrink-0 flex items-center gap-1.5 flex-wrap">
+                                    <div className="md:w-32 md:shrink-0 flex items-center gap-1.5 flex-wrap">
                                         <button
                                             onClick={() => openEdit(p)}
                                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -509,7 +642,7 @@ export default function AdminPromotionsPage() {
                                             <Edit2 className="w-3.5 h-3.5" />
                                             Edit
                                         </button>
-                                        {isActive ? (
+                                        {active ? (
                                             <button
                                                 onClick={() => handleDeactivate(p)}
                                                 disabled={!!actionLoading[id + 'toggle']}
