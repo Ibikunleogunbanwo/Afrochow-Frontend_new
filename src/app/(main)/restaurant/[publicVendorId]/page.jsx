@@ -619,13 +619,13 @@ const VendorProfilePage = () => {
                     </div>
 
                     {productsLoading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                             {[...Array(SKELETON_COUNTS.products)].map((_, i) => (
-                                <div key={i} className="bg-white rounded-xl h-80 animate-pulse" />
+                                <div key={i} className="bg-white rounded-2xl h-64 animate-pulse" />
                             ))}
                         </div>
                     ) : products.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                             {products.map((product) => (
                                 <ProductCard
                                     key={product.publicProductId}
@@ -674,10 +674,10 @@ const VendorProfilePage = () => {
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">Loved by customers near you</p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                             {relatedLoading
                                 ? [...Array(SKELETON_COUNTS.relatedProducts)].map((_, i) => (
-                                    <div key={i} className="bg-white rounded-xl h-80 animate-pulse" />
+                                    <div key={i} className="bg-white rounded-2xl h-64 animate-pulse" />
                                 ))
                                 : relatedProducts.map((product) => (
                                     <ProductCard

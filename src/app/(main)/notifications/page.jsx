@@ -225,27 +225,57 @@ export default function CustomerNotificationsPage() {
 
     const unreadCount = all.filter(n => !n.isRead).length;
 
+    // ── stats helpers ─────────────────────────────────────────────────────────
+    const patchStats = useCallback((fn) => {
+        setStats(prev => prev ? fn(prev) : prev);
+    }, []);
+
     const markRead = useCallback(async (id) => {
+        // Check if unread BEFORE mutating so we know whether to adjust stats
+        const wasUnread = all.some(n => n.notificationId === id && !n.isRead);
         setAll(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
         setSelected(prev => prev?.notificationId === id ? { ...prev, isRead: true } : prev);
+        if (wasUnread) {
+            patchStats(s => ({
+                ...s,
+                unreadNotifications: Math.max(0, (s.unreadNotifications ?? 0) - 1),
+                readNotifications:   (s.readNotifications   ?? 0) + 1,
+            }));
+        }
         broadcast({ type: BC.MARK_READ, id });
         setActionLoading(p => ({ ...p, [id + 'r']: true }));
         try { await NotificationsAPI.markRead(id); }
         catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
         finally { setActionLoading(p => ({ ...p, [id + 'r']: false })); }
-    }, [fetchPage, broadcast]);
+    }, [fetchPage, broadcast, patchStats, all]);
 
     const deleteOne = useCallback(async (id) => {
+        const wasUnread = all.some(n => n.notificationId === id && !n.isRead);
         setAll(prev => prev.filter(n => n.notificationId !== id));
+        patchStats(s => ({
+            ...s,
+            totalNotifications:  Math.max(0, (s.totalNotifications  ?? 0) - 1),
+            unreadNotifications: wasUnread
+                ? Math.max(0, (s.unreadNotifications ?? 0) - 1)
+                : (s.unreadNotifications ?? 0),
+            readNotifications:   !wasUnread
+                ? Math.max(0, (s.readNotifications   ?? 0) - 1)
+                : (s.readNotifications ?? 0),
+        }));
         broadcast({ type: BC.DELETE, id });
         setActionLoading(p => ({ ...p, [id + 'd']: true }));
         try { await NotificationsAPI.deleteOne(id); }
         catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
         finally { setActionLoading(p => ({ ...p, [id + 'd']: false })); }
-    }, [fetchPage, broadcast]);
+    }, [fetchPage, broadcast, patchStats, all]);
 
     const markAllRead = async () => {
         setAll(prev => prev.map(n => ({ ...n, isRead: true })));
+        patchStats(s => ({
+            ...s,
+            unreadNotifications: 0,
+            readNotifications:   s.totalNotifications ?? (s.readNotifications ?? 0) + (s.unreadNotifications ?? 0),
+        }));
         broadcast({ type: BC.MARK_ALL_READ });
         try { await NotificationsAPI.markAllRead(); }
         catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }
@@ -253,6 +283,11 @@ export default function CustomerNotificationsPage() {
 
     const clearRead = async () => {
         setAll(prev => prev.filter(n => !n.isRead));
+        patchStats(s => ({
+            ...s,
+            totalNotifications: s.unreadNotifications ?? 0,
+            readNotifications:  0,
+        }));
         broadcast({ type: BC.REFRESH });
         try { await NotificationsAPI.deleteAllRead(); }
         catch { fetchPage(0); broadcast({ type: BC.REFRESH }); }

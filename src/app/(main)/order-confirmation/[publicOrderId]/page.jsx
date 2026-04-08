@@ -31,15 +31,15 @@ const HERO = {
         title: 'Order Confirmed!',
         subtitle: (isDelivery) =>
             isDelivery
-                ? 'Great news — the restaurant has accepted your order and will start preparing it shortly.'
-                : 'Great news — the restaurant has confirmed your order and will prepare it for pickup.',
+                ? 'Great news — the vendor has accepted your order and will start preparing it shortly.'
+                : 'Great news — the vendor has confirmed your order and will have it ready for pickup.',
     },
     PREPARING: {
         gradient: 'from-orange-400 to-amber-600',
         ringColor: 'ring-amber-300',
         Icon: Clock,
         title: 'Being Prepared',
-        subtitle: () => 'The kitchen is working on your order right now. Sit tight!',
+        subtitle: () => 'Your order is being prepared right now. Sit tight!',
     },
     READY_FOR_PICKUP: {
         gradient: 'from-green-500 to-teal-600',
@@ -60,7 +60,7 @@ const HERO = {
         ringColor: 'ring-green-300',
         Icon: CheckCircle2,
         title: 'Delivered!',
-        subtitle: () => 'Your order has been delivered. Enjoy your meal! We\'d love to hear what you thought.',
+        subtitle: () => 'Your order has been delivered. We hope you love it! We\'d love to hear what you thought.',
     },
     CANCELLED: {
         gradient: 'from-gray-500 to-gray-700',
@@ -212,7 +212,7 @@ const STATUS_NOTE = {
                           ? 'The restaurant typically responds within 10–15 minutes. You\'ll receive a notification as soon as your order is accepted.'
                           : 'The restaurant will confirm your order shortly.',
     CONFIRMED:        ()  => 'Your order is confirmed. The restaurant will start preparing it soon.',
-    PREPARING:        ()  => 'The kitchen is on it! Your food is being freshly prepared.',
+    PREPARING:        ()  => 'Your order is being freshly prepared. Sit tight!',
     READY_FOR_PICKUP: ()  => 'Head to the restaurant — your order is packed and ready.',
     OUT_FOR_DELIVERY: ()  => 'Your delivery driver is on the way. Keep an eye out!',
 };
@@ -569,9 +569,9 @@ export default function OrderConfirmationPage() {
                 {/* ── Delivered — celebration message ───────────────────── */}
                 {!loading && status === 'DELIVERED' && (
                     <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 text-center space-y-1">
-                        <p className="text-sm font-semibold text-green-800">Hope you enjoyed your meal! 🍽️</p>
+                        <p className="text-sm font-semibold text-green-800">Hope you love your order! 🎉</p>
                         <p className="text-xs text-green-700">
-                            Leave a review to help others discover great African food on Afrochow.
+                            Leave a review to help others discover great African products on Afrochow.
                         </p>
                     </div>
                 )}
@@ -663,7 +663,7 @@ export default function OrderConfirmationPage() {
                                         <PolicyRow
                                             icon="💳"
                                             title="Your card has been charged"
-                                            body="Your card was charged when the restaurant confirmed your order. The kitchen is now actively preparing your food."
+                                            body="Your card was charged when the vendor confirmed your order. Your items are now actively being prepared."
                                         />
                                         <PolicyRow
                                             icon="🔒"

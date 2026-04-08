@@ -186,6 +186,15 @@ const DashboardContent = () => {
         [allOrders, dateRange, customStartDate, customEndDate]
     );
 
+    // Dashboard "Recent Orders" card — newest 5 only; full list lives in the modal
+    const RECENT_LIMIT = 5;
+    const recentOrders = useMemo(
+        () => [...filteredOrders]
+            .sort((a, b) => new Date(b.orderTime ?? b.createdAt ?? 0) - new Date(a.orderTime ?? a.createdAt ?? 0))
+            .slice(0, RECENT_LIMIT),
+        [filteredOrders]
+    );
+
     const filteredDelivered = filteredOrders.filter(o => o.status === 'DELIVERED');
     const filteredRevenue   = filteredDelivered.reduce((s, o) => s + (o.totalAmount ?? 0), 0);
     const filteredAvg       = filteredDelivered.length > 0 ? filteredRevenue / filteredDelivered.length : 0;
@@ -572,7 +581,10 @@ const DashboardContent = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
-                            <p className="text-sm text-gray-600 mt-1">Manage your latest orders</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Last {RECENT_LIMIT} orders
+                                {filteredOrders.length > RECENT_LIMIT && ` — ${filteredOrders.length} total`}
+                            </p>
                         </div>
                         <button
                             onClick={() => { setAllModalPage(1); setShowAllModal(true); }}
@@ -597,7 +609,7 @@ const DashboardContent = () => {
                             <p className="text-sm mt-1">Orders will appear here once customers place them.</p>
                         </div>
                     )}
-                    {!loading && filteredOrders.map((order) => {
+                    {!loading && recentOrders.map((order) => {
                         const statusConfig = getStatusConfig(order.status);
                         const orderTime = order.orderTime
                             ? new Date(order.orderTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })

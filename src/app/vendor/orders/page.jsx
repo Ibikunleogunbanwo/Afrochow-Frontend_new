@@ -257,13 +257,43 @@ function StatusDropdown({ order, onStatusChange, loading }) {
     );
 }
 
-// ── Cancellation actor labels ─────────────────────────────────────────────────
-const CANCELLED_BY_LABEL = {
-    CUSTOMER:          'Cancelled by customer',
-    VENDOR:            'Declined by restaurant',
-    VENDOR_POST_ACCEPT:'Restaurant unable to fulfil',
-    SYSTEM:            'Auto-cancelled (no response)',
-    ADMIN:             'Cancelled by Afrochow support',
+// ── Cancellation audit config (vendor view) ───────────────────────────────────
+const CANCELLATION_AUDIT = {
+    CUSTOMER: {
+        badge:    'Cancelled by customer',
+        badgeCss: 'bg-gray-100 text-gray-700 border-gray-300',
+        message:  'The customer requested cancellation of this order.',
+        showNote: false,
+        refund:   false,
+    },
+    VENDOR: {
+        badge:    'Declined by you',
+        badgeCss: 'bg-orange-100 text-orange-700 border-orange-300',
+        message:  'This order was declined before preparation began.',
+        showNote: false,
+        refund:   true,
+    },
+    VENDOR_POST_ACCEPT: {
+        badge:    'Cancelled — unable to fulfil',
+        badgeCss: 'bg-orange-100 text-orange-700 border-orange-300',
+        message:  'You accepted this order but subsequently cancelled it.',
+        showNote: true,   // show vendor-supplied reason
+        refund:   true,
+    },
+    SYSTEM: {
+        badge:    'Auto-cancelled',
+        badgeCss: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+        message:  'Order was automatically cancelled because no action was taken within the required response window.',
+        showNote: false,
+        refund:   true,
+    },
+    ADMIN: {
+        badge:    'Cancelled by Afrochow',
+        badgeCss: 'bg-purple-100 text-purple-700 border-purple-300',
+        message:  'This order was cancelled by the Afrochow support team.',
+        showNote: false,
+        refund:   null,
+    },
 };
 
 // ── Unable-to-Fulfil modal ────────────────────────────────────────────────────
@@ -373,9 +403,10 @@ const VendorOrdersPage = () => {
         if (selectedStatus !== 'ALL') f = f.filter(o => o.status === selectedStatus);
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
+            // customerName not in OrderSummaryResponseDto — search publicOrderId + itemNames
             f = f.filter(o =>
                 o.publicOrderId?.toLowerCase().includes(q) ||
-                o.customerName?.toLowerCase().includes(q)
+                o.itemNames?.join(' ').toLowerCase().includes(q)
             );
         }
         setFilteredOrders(f);
@@ -552,14 +583,24 @@ const VendorOrdersPage = () => {
                                                     <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                                                     <FulfillmentBadge type={order.fulfillmentType} />
                                                     {order.status === 'PENDING' && (
-                                                        <SlaCountdown slaExpiresAt={order.slaExpiresAt} />
+                                                        // slaExpiresAt not in OrderSummaryResponseDto — derive from orderTime + 120 min
+                                                        <SlaCountdown slaExpiresAt={
+                                                            order.slaExpiresAt ??
+                                                            (order.orderTime
+                                                                ? new Date(new Date(order.orderTime).getTime() + 120 * 60 * 1000).toISOString()
+                                                                : null)
+                                                        } />
                                                     )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
-                                                    {order.customerName && (
-                                                        <span className="flex items-center gap-1">
-                                                            <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                                            {order.customerName}
+                                                    {/* customerName not in OrderSummaryResponseDto — show item names instead */}
+                                                    {order.itemNames?.length > 0 && (
+                                                        <span className="flex items-center gap-1 truncate max-w-xs">
+                                                            <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                                            <span className="truncate">
+                                                                {order.itemNames.slice(0, 2).join(', ')}
+                                                                {order.itemNames.length > 2 ? ` +${order.itemNames.length - 2} more` : ''}
+                                                            </span>
                                                         </span>
                                                     )}
                                                     <span className="flex items-center gap-1">
@@ -725,22 +766,75 @@ const VendorOrdersPage = () => {
                                 </div>
                             </div>
 
-                            {/* Cancellation info — shown for cancelled orders */}
-                            {selectedOrder.status === 'CANCELLED' && (selectedOrder.cancelledBy || selectedOrder.cancellationReason) && (
-                                <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-1.5">
-                                    <p className="text-xs font-semibold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
-                                        <XCircle className="h-3.5 w-3.5" /> Cancellation details
-                                    </p>
-                                    {selectedOrder.cancelledBy && (
-                                        <p className="text-sm text-red-800 font-medium">
-                                            {CANCELLED_BY_LABEL[selectedOrder.cancelledBy] ?? selectedOrder.cancelledBy}
-                                        </p>
-                                    )}
-                                    {selectedOrder.cancellationReason && (
-                                        <p className="text-sm text-red-700 italic">"{selectedOrder.cancellationReason}"</p>
-                                    )}
-                                </div>
-                            )}
+                            {/* ── Cancellation audit trail ── */}
+                            {selectedOrder.status === 'CANCELLED' && (() => {
+                                const audit = CANCELLATION_AUDIT[selectedOrder.cancelledBy] ?? null;
+                                return (
+                                    <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden">
+                                        {/* Header row */}
+                                        <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
+                                            <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                                            <span className="text-sm font-bold text-red-800 flex-1">Cancellation details</span>
+                                            {selectedOrder.cancelledAt && (
+                                                <span className="text-xs text-red-400 font-mono">
+                                                    {new Date(selectedOrder.cancelledAt).toLocaleString('en-CA', {
+                                                        month: 'short', day: 'numeric', year: 'numeric',
+                                                        hour: '2-digit', minute: '2-digit',
+                                                    })}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="px-4 py-3 space-y-2.5">
+                                            {/* Source badge */}
+                                            <div className="flex items-start gap-3">
+                                                <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Source</span>
+                                                {audit ? (
+                                                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${audit.badgeCss}`}>
+                                                        {audit.badge}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-red-700">{selectedOrder.cancelledBy ?? 'Unknown'}</span>
+                                                )}
+                                            </div>
+
+                                            {/* Explanation */}
+                                            {audit && (
+                                                <div className="flex items-start gap-3">
+                                                    <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Reason</span>
+                                                    <p className="text-sm text-red-700 leading-relaxed">{audit.message}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Vendor-supplied note (VENDOR_POST_ACCEPT) */}
+                                            {audit?.showNote && selectedOrder.cancellationReason && (
+                                                <div className="flex items-start gap-3">
+                                                    <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Note</span>
+                                                    <p className="text-sm text-red-600 italic leading-relaxed">
+                                                        &ldquo;{selectedOrder.cancellationReason}&rdquo;
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Refund status */}
+                                            {audit?.refund === true && (
+                                                <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                    <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Refund</span>
+                                                    <p className="text-xs text-red-700 leading-relaxed">
+                                                        A full refund has been issued to the customer within <strong>3–5 business days</strong>.
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {audit?.refund === false && (
+                                                <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                    <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Refund</span>
+                                                    <p className="text-xs text-red-700">No refund — cancelled by customer.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Status dropdown in modal */}
                             {getStatusOptions(selectedOrder.status, selectedOrder.fulfillmentType).length > 0 && (
