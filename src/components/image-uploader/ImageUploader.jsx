@@ -34,7 +34,7 @@ const SIZE_MAP = {
     lg: 'w-36 h-36',
     xl: 'w-48 h-48',
     'xl-wide': 'w-64 h-48', // Rectangle for products
-    banner: 'w-full h-44',  // Full-width landscape banner
+    banner: 'w-full',       // Full-width landscape banner — height set via aspect-ratio (16/9)
 };
 
 const PLACEHOLDER_MAP = {
@@ -200,6 +200,11 @@ function ImageUploader({
     const isValid = hasValue && !currentError;
     const roundedClass = shape === 'square' ? 'rounded-xl' : 'rounded-full';
 
+    // Banner uses aspect-ratio instead of a fixed height so the preview matches
+    // the 16:9 crop exactly. Other sizes keep their fixed dimensions.
+    const isBanner       = size === 'banner';
+    const containerStyle = isBanner ? { aspectRatio: '16 / 9' } : {};
+
     return (
         <div className={`space-y-2 ${className}`}>
             {/* Label - Matches FormField pattern */}
@@ -218,6 +223,7 @@ function ImageUploader({
             {!preview ? (
                 <label
                     htmlFor={id}
+                    style={containerStyle}
                     className={`relative ${SIZE_MAP[size]} ${roundedClass} border-2 border-dashed flex items-center justify-center cursor-pointer bg-slate-50 transition-colors group ${
                         uploading
                             ? 'opacity-50 cursor-not-allowed border-slate-300'
@@ -253,15 +259,21 @@ function ImageUploader({
                     </div>
                 </label>
             ) : (
-                <div className={`relative ${SIZE_MAP[size]} ${roundedClass} overflow-visible`}>
-                    <div className={`w-full h-full ${roundedClass} overflow-hidden border-4 border-white shadow-lg ring-2 bg-slate-100 ${
-                        currentError ? 'ring-red-500' : isValid ? 'ring-green-500' : 'ring-slate-200'
-                    }`}>
+                <div
+                    style={containerStyle}
+                    className={`relative ${SIZE_MAP[size]} ${roundedClass} overflow-visible`}
+                >
+                    {/* Banner: no thick white frame — just a clean ring.
+                        Other sizes keep the border-4 photo-frame look. */}
+                    <div className={`w-full h-full ${roundedClass} overflow-hidden shadow-lg ring-2 bg-slate-100
+                        ${isBanner ? '' : 'border-4 border-white'}
+                        ${currentError ? 'ring-red-500' : isValid ? 'ring-green-500' : 'ring-slate-200'}
+                    `}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={preview}
                             alt="Preview"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover object-center"
                         />
                     </div>
 

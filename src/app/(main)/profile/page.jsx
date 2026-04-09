@@ -480,18 +480,27 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Stats */}
+                {(() => {
+                    // Abbreviate large counts so they always fit in the narrow 3-col card.
+                    const fmtCount = (n) => {
+                        const v = parseInt(n) || 0;
+                        if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+                        if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K`;
+                        return v.toLocaleString('en-CA');
+                    };
+                    return (
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { icon: ShoppingBag, label: "Orders",    value: profileData.totalOrders       ?? 0, color: "text-gray-700 bg-gray-100", href: "/orders" },
-                        { icon: Coins,       label: "Points",    value: profileData.loyaltyPoints     ?? 0, color: "text-gray-700 bg-gray-100"   },
-                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0, color: "text-gray-700 bg-gray-100"   },
+                        { icon: ShoppingBag, label: "Orders",    value: fmtCount(profileData.totalOrders),       color: "text-gray-700 bg-gray-100", href: "/orders" },
+                        { icon: Coins,       label: "Points",    value: fmtCount(profileData.loyaltyPoints),     color: "text-gray-700 bg-gray-100"   },
+                        { icon: Home,        label: "Addresses", value: profileData.addresses?.length ?? 0,      color: "text-gray-700 bg-gray-100"   },
                     ].map(s => {
                         const inner = (
                             <>
                                 <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mx-auto mb-2`}>
                                     <s.icon className="w-4 h-4" />
                                 </div>
-                                <div className="text-xl font-bold text-gray-900">{s.value}</div>
+                                <div className="text-xl font-bold text-gray-900 tabular-nums">{s.value}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
                             </>
                         );
@@ -507,6 +516,8 @@ export default function ProfilePage() {
                         );
                     })}
                 </div>
+                    );
+                })()}
 
                 {/* ── Profile card ─────────────────────────────────────── */}
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">

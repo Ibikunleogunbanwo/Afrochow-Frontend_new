@@ -24,9 +24,12 @@ const authSlice = createSlice({
             state.isLoading = false;
             state.error = null;
 
-            // Persist vendor status flags from the login response
-            state.vendorIsActive = userData?.vendorIsActive ?? null;
-            state.vendorIsVerified = userData?.vendorIsVerified ?? null;
+            // Persist vendor status flags from the login response.
+            // Fall back to existing state (not null) when the incoming payload doesn't
+            // include these fields — e.g. TokenRefreshResponseDto and UserCustomerSummaryDto
+            // don't carry vendor flags, so we must not overwrite a good value with null.
+            state.vendorIsActive   = userData?.vendorIsActive   ?? state.vendorIsActive;
+            state.vendorIsVerified = userData?.vendorIsVerified ?? state.vendorIsVerified;
         },
 
         clearAuth(state) {

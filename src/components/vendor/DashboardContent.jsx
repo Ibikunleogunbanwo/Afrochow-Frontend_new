@@ -277,7 +277,9 @@ const DashboardContent = () => {
             change: "—",
             trend: "neutral",
             icon: Star,
-            color: "yellow"
+            color: "yellow",
+            // Rating is a global average from the reviews table — no date filter applied
+            note: "All time · not date-filtered",
         },
     ];
 
@@ -462,6 +464,9 @@ const DashboardContent = () => {
                                 </div>
                             </div>
                             <p className="text-3xl font-black text-gray-900">{stat.value}</p>
+                            {stat.note && (
+                                <p className="text-[11px] text-gray-400 mt-1.5 italic">{stat.note}</p>
+                            )}
                         </div>
                     );
                 })}

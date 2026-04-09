@@ -5,10 +5,13 @@ import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { toast } from '@/components/ui/toast';
 import {
     Clock, Package, CheckCircle, XCircle, Truck, Search,
-    Filter, ChevronDown, Eye, DollarSign, User, MapPin,
+    Filter, ChevronDown, ChevronLeft, Eye, DollarSign, User, MapPin,
     Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight, CalendarClock,
     AlertTriangle, Timer,
 } from 'lucide-react';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 20;
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const ORDER_STATUSES = {
@@ -367,6 +370,7 @@ const VendorOrdersPage = () => {
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [loading, setLoading]             = useState(true);
     const [selectedStatus, setSelectedStatus] = useState('ALL');
+    const [page, setPage]                   = useState(1);
     const [searchQuery, setSearchQuery]     = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -410,6 +414,7 @@ const VendorOrdersPage = () => {
             );
         }
         setFilteredOrders(f);
+        setPage(1); // reset to first page whenever filters change
     }, [orders, selectedStatus, searchQuery]);
 
     // ── Status change (supports skipping via chained API calls) ───────────────
@@ -474,7 +479,9 @@ const VendorOrdersPage = () => {
         }
     };
 
-    const activeCount = orders.filter(o => ACTIVE_STATUSES.has(o.status)).length;
+    const activeCount  = orders.filter(o => ACTIVE_STATUSES.has(o.status)).length;
+    const totalPages   = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+    const pagedOrders  = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
@@ -564,7 +571,7 @@ const VendorOrdersPage = () => {
                     </div>
                 ) : (
                     <div className="space-y-2 sm:space-y-3">
-                        {filteredOrders.map((order) => {
+                        {pagedOrders.map((order) => {
                             const isActioning = actionLoading === order.publicOrderId;
                             const cfg = ORDER_STATUSES[order.status];
                             return (
@@ -651,6 +658,74 @@ const VendorOrdersPage = () => {
                                 </div>
                             );
                         })}
+
+                        {/* ── Pagination controls ── */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-2 pb-1">
+                                <p className="text-xs sm:text-sm text-gray-500">
+                                    Showing{' '}
+                                    <span className="font-semibold text-gray-700">
+                                        {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredOrders.length)}
+                                    </span>{' '}
+                                    of{' '}
+                                    <span className="font-semibold text-gray-700">{filteredOrders.length}</span>{' '}
+                                    orders
+                                </p>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        aria-label="Previous page"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+
+                                    {/* Page number pills — show up to 5 around current page */}
+                                    {(() => {
+                                        const delta  = 2;
+                                        const start  = Math.max(1, page - delta);
+                                        const end    = Math.min(totalPages, page + delta);
+                                        const pages  = [];
+                                        if (start > 1) {
+                                            pages.push(1);
+                                            if (start > 2) pages.push('…');
+                                        }
+                                        for (let i = start; i <= end; i++) pages.push(i);
+                                        if (end < totalPages) {
+                                            if (end < totalPages - 1) pages.push('…');
+                                            pages.push(totalPages);
+                                        }
+                                        return pages.map((p, idx) =>
+                                            p === '…' ? (
+                                                <span key={`ellipsis-${idx}`} className="px-1 text-gray-400 text-sm select-none">…</span>
+                                            ) : (
+                                                <button
+                                                    key={p}
+                                                    onClick={() => setPage(p)}
+                                                    className={`min-w-[2rem] h-8 px-2 rounded-lg text-sm font-medium transition-colors border
+                                                        ${p === page
+                                                            ? 'bg-gray-900 text-white border-gray-900'
+                                                            : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                        }`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            )
+                                        );
+                                    })()}
+
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        aria-label="Next page"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

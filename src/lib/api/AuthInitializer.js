@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
-import { setAuth, clearAuth, setLoading, setError } from "@/redux-store/authSlice";
+import { setAuth, clearAuth, setLoading, setError, updateUser } from "@/redux-store/authSlice";
 import { AuthAPI } from "@/lib/api/auth.api";
 import { toast } from '@/components/ui/toast';
 
@@ -195,7 +195,12 @@ export default function AuthInitializer({ children }) {
                 try {
                     const response = await AuthAPI.refreshToken();
                     if (response.success && response.data) {
-                        dispatch(setAuth({ user: response.data }));
+                        // Use updateUser (not setAuth) — the TokenRefreshResponseDto only
+                        // contains basic identity fields (publicUserId, username, email, role).
+                        // setAuth would overwrite vendorIsActive/vendorIsVerified with null
+                        // because those fields are absent from the refresh response, causing
+                        // the sidebar badge to flip to "Revoked" after 14 minutes of activity.
+                        dispatch(updateUser(response.data));
                     }
                 } catch (error) {
                     console.error("Token refresh failed:", error);

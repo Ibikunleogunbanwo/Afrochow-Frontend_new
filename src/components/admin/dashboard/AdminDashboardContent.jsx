@@ -13,10 +13,24 @@ import { AdminVendorsAPI, AdminAnalyticsAPI, AdminUsersAPI } from '@/lib/api/adm
 import VendorReviewModal from '@/components/admin/VendorReviewModal';
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
-const fmt$ = (n) =>
-    n != null ? `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
-const fmtN = (n) =>
-    n != null ? Number(n).toLocaleString() : '—';
+// Abbreviated currency — always fits in a narrow card regardless of magnitude.
+// $999 | $1.2K | $45.6K | $1.2M | $1.2B
+const fmt$ = (n) => {
+    if (n == null) return '—';
+    const v = Number(n);
+    if (v >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(1)}B`;
+    if (v >= 1_000_000)     return `$${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000)         return `$${(v / 1_000).toFixed(1)}K`;
+    return `$${v.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+};
+// Abbreviated count — 1,234 | 12.3K | 1.2M
+const fmtN = (n) => {
+    if (n == null) return '—';
+    const v = Number(n);
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K`;
+    return v.toLocaleString('en-CA');
+};
 const is403 = (msg = '') =>
     /permission|access|forbidden|403/i.test(msg);
 
@@ -447,7 +461,7 @@ const AdminDashboardContent = () => {
                             {s.value === null ? (
                                 <div className="h-9 w-24 bg-gray-100 animate-pulse rounded-lg" />
                             ) : (
-                                <p className="text-3xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-2xl lg:text-3xl font-black text-gray-900 tabular-nums">{s.value}</p>
                             )}
                         </div>
                     );

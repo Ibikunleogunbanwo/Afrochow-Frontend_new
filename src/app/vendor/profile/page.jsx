@@ -632,15 +632,15 @@ export default function VendorProfilePage() {
 
                     {/* Banner + logo */}
                     <div className="relative">
-                        {/* Banner — shorter on mobile */}
-                        <div className="h-28 xs:h-36 sm:h-52 relative bg-gray-900 overflow-hidden">
+                        {/* Banner */}
+                        <div className="h-36 sm:h-52 lg:h-60 relative bg-gray-900 overflow-hidden">
                             {bannerUrl ? (
                                 <Image
                                     src={bannerUrl}
                                     alt="Store banner"
                                     fill
                                     sizes="100vw"
-                                    className="object-cover"
+                                    className="object-cover object-center"
                                     priority
                                 />
                             ) : (
@@ -711,20 +711,38 @@ export default function VendorProfilePage() {
                             </div>
                         </div>
 
-                        {/* Stats row — 4-col on all sizes, compact on mobile */}
-                        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                            {[
-                                { label: 'Orders',   value: totalOrders },
-                                { label: 'Revenue',  value: `$${parseFloat(totalRevenue).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` },
-                                { label: 'Items',    value: totalProducts },
-                                { label: 'Rating',   value: avgRating > 0 ? parseFloat(avgRating).toFixed(1) : '—' },
-                            ].map(s => (
-                                <div key={s.label} className="bg-gray-50 rounded-xl p-2 sm:p-3 text-center border border-gray-100">
-                                    <p className="text-sm sm:text-base font-black text-gray-900 leading-tight break-all">{s.value}</p>
-                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{s.label}</p>
+                        {/* Stats row — 2-col on mobile, 4-col on sm+ */}
+                        {(() => {
+                            // Abbreviates large numbers so they always fit in a narrow cell.
+                            // $1,234,567 → $1.2M  |  $45,600 → $45.6K  |  $999 → $999
+                            const fmtRevenue = (v) => {
+                                const n = parseFloat(v) || 0;
+                                if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+                                if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
+                                return `$${n.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                            };
+                            const fmtCount = (v) => {
+                                const n = parseInt(v) || 0;
+                                if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+                                if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`;
+                                return n.toString();
+                            };
+                            return (
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                                    {[
+                                        { label: 'Orders',  value: fmtCount(totalOrders) },
+                                        { label: 'Revenue', value: fmtRevenue(totalRevenue) },
+                                        { label: 'Items',   value: fmtCount(totalProducts) },
+                                        { label: 'Rating',  value: avgRating > 0 ? parseFloat(avgRating).toFixed(1) : '—' },
+                                    ].map(s => (
+                                        <div key={s.label} className="bg-gray-50 rounded-xl p-2 sm:p-3 text-center border border-gray-100">
+                                            <p className="text-base sm:text-lg font-black text-gray-900 leading-tight tabular-nums">{s.value}</p>
+                                            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{s.label}</p>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            );
+                        })()}
                     </div>
                 </div>
 
