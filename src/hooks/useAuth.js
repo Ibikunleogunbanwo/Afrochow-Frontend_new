@@ -113,6 +113,45 @@ export const useAuth = () => {
         }
     };
 
+    const loginWithGoogle = async (credential) => {
+        dispatch(setLoading(true));
+        dispatch(setError(null));
+
+        try {
+            const result = await AuthAPI.googleAuth(credential);
+
+            if (!result?.data) throw new Error("Invalid response from server");
+
+            const userData = result.data;
+
+            if (!userData.role || !userData.publicUserId) {
+                throw new Error("Invalid user data received");
+            }
+
+            dispatch(setAuth({ user: userData }));
+
+            const roleRoute = ROLE_ROUTES[userData.role];
+            let destination;
+            if (roleRoute) {
+                destination = roleRoute;
+            } else {
+                const returnTo = sessionStorage.getItem('returnTo');
+                sessionStorage.removeItem('returnTo');
+                const safeReturnTo = isValidReturnTo(returnTo, userData.role) ? returnTo : null;
+                destination = safeReturnTo || "/";
+            }
+            router.push(destination);
+            return destination;
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+            dispatch(setError(errorMessage));
+            throw err;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
     const logout = async () => {
         try {
             await AuthAPI.logout();
@@ -271,6 +310,7 @@ export const useAuth = () => {
 
         // Actions
         login,
+        loginWithGoogle,
         logout,
         registerCustomer,
         registerVendor,

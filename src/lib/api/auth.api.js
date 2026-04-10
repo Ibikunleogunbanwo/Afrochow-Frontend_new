@@ -12,6 +12,13 @@ export const AuthAPI = {
     });
   },
 
+  googleAuth: async (credential) => {
+    return fetchWithCredentials(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    });
+  },
+
   logout: async () => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',

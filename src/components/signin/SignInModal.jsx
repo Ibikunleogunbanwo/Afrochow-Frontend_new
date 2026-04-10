@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/useAuth"
+import { GoogleLogin } from "@react-oauth/google"
 
 const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address." }),
@@ -34,7 +35,7 @@ const formSchema = z.object({
 })
 
 export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick }) {
-    const { login, isLoading } = useAuth()
+    const { login, loginWithGoogle, isLoading } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
 
     const form = useForm({
@@ -61,6 +62,19 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
             setShowPassword(false)
         }
     }, [isOpen])
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const destination = await loginWithGoogle(credentialResponse.credential)
+            toast.success("Welcome to Afrochow!", { id: 'google-login-success' })
+            const isRoleRoute = destination?.startsWith('/vendor') || destination?.startsWith('/admin')
+            if (!isRoleRoute) onClose()
+        } catch (err) {
+            toast.error("Google Sign-In Failed", {
+                description: err?.message || "Something went wrong. Please try again.",
+            })
+        }
+    }
 
     const onSubmit = async (values) => {
         if (values.rememberMe) {
@@ -235,9 +249,21 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
 
                     <Separator />
 
-                    <Button variant="google" className="w-full" disabled={isLoading}>
-                        Sign in with Google
-                    </Button>
+                    <div className="flex justify-center">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() =>
+                                toast.error("Google Sign-In Failed", {
+                                    description: "Unable to sign in with Google. Please try again.",
+                                })
+                            }
+                            width={380}
+                            theme="outline"
+                            size="large"
+                            text="signin_with"
+                            shape="rectangular"
+                        />
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
