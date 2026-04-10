@@ -469,7 +469,7 @@ export default function OrderConfirmationPage() {
                 })()}
 
                 {/* ── Requested fulfilment time ──────────────────────────── */}
-                {!loading && order?.requestedFulfillmentTime && (
+                {!loading && order?.requestedFulfillmentTime && !isFinal && (
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 flex items-start gap-3">
                         <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                         <div>
@@ -559,7 +559,7 @@ export default function OrderConfirmationPage() {
                 )}
 
                 {/* ── Special instructions ───────────────────────────────── */}
-                {!loading && order?.specialInstructions && (
+                {!loading && order?.specialInstructions && !isFinal && (
                     <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4">
                         <p className="text-xs font-semibold text-amber-700 mb-1">Note to vendor</p>
                         <p className="text-sm text-amber-800">{order.specialInstructions}</p>
