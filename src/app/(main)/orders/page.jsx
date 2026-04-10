@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
     Package, Clock, CheckCircle2, XCircle, Truck,
     Store, ChevronRight, AlertCircle, Loader2,
-    MapPin, Star, Ban, RefreshCw,
+    MapPin, Star, Ban, RefreshCw, ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
@@ -261,6 +261,9 @@ export default function OrdersPage() {
     const [cancelling, setCancelling] = useState(null); // publicOrderId being cancelled
     const [reviewTarget, setReviewTarget] = useState(null); // order being reviewed
     const [reviewedOrders, setReviewedOrders] = useState(new Set());
+    const [page, setPage] = useState(1);
+
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
         if (authLoading) return;
@@ -292,6 +295,9 @@ export default function OrdersPage() {
         if (tab === "active") return ACTIVE_STATUSES.has(o.status);
         return o.status === tab;
     });
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const totalSpent   = orders.filter(o => o.status === "DELIVERED").reduce((s, o) => s + Number(o.totalAmount ?? 0), 0);
     const completedCount = orders.filter(o => o.status === "DELIVERED").length;
@@ -361,7 +367,7 @@ export default function OrdersPage() {
                     {TABS.map(t => (
                         <button
                             key={t.key}
-                            onClick={() => setTab(t.key)}
+                            onClick={() => { setTab(t.key); setPage(1); }}
                             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                                 tab === t.key
                                     ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
@@ -396,18 +402,42 @@ export default function OrdersPage() {
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {filtered.map(order => (
-                            <OrderCard
-                                key={order.publicOrderId}
-                                order={order}
-                                onCancel={handleCancel}
-                                cancelling={cancelling}
-                                onReview={setReviewTarget}
-                                reviewed={reviewedOrders.has(order.publicOrderId)}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        <div className="space-y-3">
+                            {paginated.map(order => (
+                                <OrderCard
+                                    key={order.publicOrderId}
+                                    order={order}
+                                    onCancel={handleCancel}
+                                    cancelling={cancelling}
+                                    onReview={setReviewTarget}
+                                    reviewed={reviewedOrders.has(order.publicOrderId)}
+                                />
+                            ))}
+                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronLeft className="w-4 h-4" /> Previous
+                                </button>
+                                <span className="text-sm text-gray-500">
+                                    Page {page} of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    Next <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
 
             </div>
