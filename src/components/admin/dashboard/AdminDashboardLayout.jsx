@@ -57,6 +57,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders',  badgeMeta: { label: 'pending',   colors: { default: 'bg-red-100 text-red-700',    active: 'bg-red-400/30 text-red-100'    } } },
         { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
+        { name: 'Products',       icon: Package,         href: '/admin/products',      badgeKey: null },
         { name: 'Categories',     icon: LayoutGrid,      href: '/admin/categories',    badgeKey: null },
         { name: 'Analytics',      icon: BarChart3,       href: '/admin/analytics',     badgeKey: null },
         { name: 'Broadcast',      icon: Megaphone,       href: '/admin/broadcast',     badgeKey: null },

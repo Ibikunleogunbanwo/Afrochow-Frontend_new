@@ -106,6 +106,13 @@ export const AdminSuperAPI = {
     demote:  (id) => fetchWithCredentials(`${API_BASE_URL}/superadmin/users/${id}/demote`,  { method: 'PATCH' }),
 };
 
+// ── Admin Products ─────────────────────────────────────────────────────────
+export const AdminProductsAPI = {
+    getAll:         ()   => fetchWithCredentials(`${API_BASE_URL}/admin/products`),
+    getFeatured:    ()   => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured`),
+    toggleFeature:  (id) => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}/toggle-feature`, { method: 'PUT' }),
+};
+
 // ── Legacy default export ──────────────────────────────────────────────────
 export const AdminAPI = {
     getAdminData: () => AdminProfileAPI.getProfile(),
