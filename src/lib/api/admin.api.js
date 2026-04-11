@@ -108,7 +108,9 @@ export const AdminSuperAPI = {
 
 // ── Admin Products ─────────────────────────────────────────────────────────
 export const AdminProductsAPI = {
-    getAll:        (page = 0, size = 20) => fetchWithCredentials(`${API_BASE_URL}/admin/products?page=${page}&size=${size}`),
+    getAll:        (page = 0, size = 20, search = '') => fetchWithCredentials(
+        `${API_BASE_URL}/admin/products?page=${page}&size=${size}${search ? `&search=${encodeURIComponent(search)}` : ''}`
+    ),
     getFeatured:   ()                    => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured`),
     toggleFeature: (id)                  => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}/toggle-feature`, { method: 'PUT' }),
 };
