@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
     LayoutDashboard, ChevronRight, RefreshCw, Pin, PinOff,
-    Package, AlertCircle, Loader2, Star, Store, Search, X,
+    Package, Loader2, Star, Store, Search, X,
 } from 'lucide-react';
 import { AdminProductsAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
@@ -15,80 +15,61 @@ import Pagination from '@/components/admin/Pagination';
 const PAGE_SIZE = 15;
 
 function PinButton({ product, onToggle, loading }) {
-    const pinned = !!product.isFeatured;
     return (
         <button
             onClick={() => onToggle(product)}
             disabled={loading}
-            title={pinned ? 'Unpin from featured' : 'Pin to featured'}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50
-                ${pinned
-                    ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-                    : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300'
-                }`}
+            title="Unpin from featured"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50 bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100"
         >
             {loading
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : pinned
-                    ? <><Pin className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Pinned</>
-                    : <><PinOff className="w-3.5 h-3.5" /> Pin</>
+                : <><PinOff className="w-3.5 h-3.5" /> Unpin</>
             }
         </button>
     );
 }
 
 export default function AdminProductsPage() {
-    const [products,       setProducts]       = useState([]);
-    const [featured,       setFeatured]       = useState([]);
-    const [loading,        setLoading]        = useState(true);
-    const [error,          setError]          = useState(null);
-    const [pinLoading,     setPinLoading]     = useState({});
-    const [page,           setPage]           = useState(1);
-    const [search,         setSearch]         = useState('');
+    const [featured,   setFeatured]   = useState([]);
+    const [loading,    setLoading]    = useState(true);
+    const [error,      setError]      = useState(null);
+    const [pinLoading, setPinLoading] = useState({});
+    const [page,       setPage]       = useState(1);
+    const [search,     setSearch]     = useState('');
 
-    const fetchAll = useCallback(async () => {
+    const fetchFeatured = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const [prodRes, featRes] = await Promise.all([
-                AdminProductsAPI.getAll(),
-                AdminProductsAPI.getFeatured(),
-            ]);
-            const prods = Array.isArray(prodRes?.data) ? prodRes.data : [];
-            const feats = Array.isArray(featRes?.data) ? featRes.data : [];
-            setProducts(prods);
-            setFeatured(feats);
+            const res  = await AdminProductsAPI.getFeatured();
+            const data = Array.isArray(res?.data) ? res.data : [];
+            setFeatured(data);
         } catch (e) {
-            setError(e.message || 'Failed to load products');
+            setError(e.message || 'Failed to load featured products');
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { fetchAll(); }, [fetchAll]);
+    useEffect(() => { fetchFeatured(); }, [fetchFeatured]);
 
-    const handleToggleFeature = async (product) => {
+    const handleUnpin = async (product) => {
         const id = product.publicProductId;
         setPinLoading(prev => ({ ...prev, [id]: true }));
         try {
             const res  = await AdminProductsAPI.toggleFeature(id);
             const data = res?.data ?? {};
-            const nowFeatured = data.isFeatured;
 
-            // Optimistically update the product list
-            setProducts(prev => prev.map(p =>
-                p.publicProductId === id
-                    ? { ...p, isFeatured: nowFeatured, featuredAt: data.featuredAt }
-                    : p
-            ));
-
-            // Refresh the featured strip
-            const featRes = await AdminProductsAPI.getFeatured();
-            setFeatured(Array.isArray(featRes?.data) ? featRes.data : []);
-
-            toast.success(
-                nowFeatured ? 'Product pinned to featured section' : 'Product removed from featured section'
-            );
+            if (data.isFeatured) {
+                // Toggled back to pinned — refresh to sync
+                await fetchFeatured();
+                toast.success('Product pinned to featured section');
+            } else {
+                // Unpinned — remove from list immediately
+                setFeatured(prev => prev.filter(p => p.publicProductId !== id));
+                toast.success('Product removed from featured section');
+            }
         } catch (e) {
             toast.error('Toggle Failed', { description: e.message || 'Failed to update featured status' });
         } finally {
@@ -96,21 +77,18 @@ export default function AdminProductsPage() {
         }
     };
 
-    const filtered = products.filter(p => {
+    const filtered = featured.filter(p => {
         if (!search.trim()) return true;
         const q = search.toLowerCase();
         return (
             p.name?.toLowerCase().includes(q) ||
             p.vendorName?.toLowerCase().includes(q) ||
-            p.restaurantName?.toLowerCase().includes(q) ||
-            p.categoryName?.toLowerCase().includes(q)
+            p.restaurantName?.toLowerCase().includes(q)
         );
     });
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
     const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-    const featuredCount = products.filter(p => p.isFeatured).length;
 
     if (!loading && error) {
         return (
@@ -120,9 +98,9 @@ export default function AdminProductsPage() {
                         <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
                     </Link>
                     <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                    <span className="font-semibold text-gray-900">Products</span>
+                    <span className="font-semibold text-gray-900">Featured Products</span>
                 </nav>
-                <AdminPageError message={error} onRetry={fetchAll} />
+                <AdminPageError message={error} onRetry={fetchFeatured} />
             </div>
         );
     }
@@ -136,17 +114,17 @@ export default function AdminProductsPage() {
                     <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
                 </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                <span className="font-semibold text-gray-900">Products</span>
+                <span className="font-semibold text-gray-900">Featured Products</span>
             </nav>
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900">Products</h1>
-                    <p className="text-gray-500 mt-1">Pin products to the featured section visible to customers</p>
+                    <h1 className="text-3xl font-black text-gray-900">Featured Products</h1>
+                    <p className="text-gray-500 mt-1">Products currently pinned to the featured section customers see</p>
                 </div>
                 <button
-                    onClick={fetchAll}
+                    onClick={fetchFeatured}
                     disabled={loading}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
@@ -157,70 +135,34 @@ export default function AdminProductsPage() {
 
             {/* Stats */}
             {!loading && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <p className="text-2xl font-black text-gray-900">{products.length}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Total Products</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-black text-amber-600">{featured.length}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Currently featured</p>
+                        </div>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <p className="text-2xl font-black text-amber-600">{featuredCount}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Pinned / Featured</p>
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <p className="text-2xl font-black text-gray-900">{products.length - featuredCount}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Not Featured</p>
-                    </div>
-                </div>
-            )}
-
-            {/* Currently Featured Strip */}
-            {!loading && featured.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <h2 className="text-sm font-bold text-amber-800">Currently Featured</h2>
-                        <span className="ml-auto text-xs text-amber-600 font-medium">{featured.length} pinned</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {featured.map(p => (
-                            <div
-                                key={p.publicProductId}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-amber-200 rounded-xl"
-                            >
-                                {p.imageUrl && (
-                                    <img
-                                        src={p.imageUrl}
-                                        alt={p.name}
-                                        className="w-6 h-6 rounded-md object-cover shrink-0"
-                                    />
-                                )}
-                                <span className="text-xs font-semibold text-gray-800">{p.name}</span>
-                                {(p.restaurantName || p.vendorName) && (
-                                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                                        <Store className="w-3 h-3" />
-                                        {p.restaurantName ?? p.vendorName}
-                                    </span>
-                                )}
-                                {p.featuredAt && (
-                                    <span className="text-[10px] text-amber-500 font-mono">
-                                        {new Date(p.featuredAt).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
-                                    </span>
-                                )}
-                            </div>
-                        ))}
+                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 shadow-sm flex items-center gap-3">
+                        <Pin className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                        <p className="text-xs text-amber-700 leading-relaxed">
+                            To pin a new product, use the <strong>toggle-feature</strong> endpoint via the vendor product panel or API. Unpin here to remove from the featured section.
+                        </p>
                     </div>
                 </div>
             )}
 
             {/* Search */}
-            {!loading && products.length > 0 && (
+            {!loading && featured.length > 0 && (
                 <div className="relative">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     <input
                         type="text"
                         value={search}
                         onChange={e => { setSearch(e.target.value); setPage(1); }}
-                        placeholder="Search by name, vendor or category…"
+                        placeholder="Search featured products…"
                         className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white"
                     />
                     {search && (
@@ -243,13 +185,16 @@ export default function AdminProductsPage() {
                 <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="font-semibold text-gray-700">
-                        {search ? `No products match "${search}"` : 'No products found'}
+                        {search ? `No results for "${search}"` : 'No products are currently featured'}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                        {!search && 'Use the toggle-feature endpoint to pin a product.'}
                     </p>
                 </div>
             ) : (
                 <>
                     <AdminTableRoot>
-                        <AdminTableHeader columns={['Product', 'Vendor', 'Price', 'Category', 'Featured', 'Actions']} />
+                        <AdminTableHeader columns={['Product', 'Vendor', 'Price', 'Pinned on', 'Action']} />
                         {paginated.map(product => {
                             const id = product.publicProductId;
                             return (
@@ -269,7 +214,7 @@ export default function AdminProductsPage() {
                                         )}
                                         <div className="min-w-0">
                                             <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
-                                            <p className="text-xs text-gray-400 font-mono truncate">{id?.slice(-8).toUpperCase()}</p>
+                                            <p className="text-xs text-gray-400 font-mono">{id?.slice(-8).toUpperCase()}</p>
                                         </div>
                                     </div>
 
@@ -284,24 +229,20 @@ export default function AdminProductsPage() {
                                         {product.price != null ? `CA$${Number(product.price).toFixed(2)}` : '—'}
                                     </span>
 
-                                    {/* Category */}
-                                    <span className="text-sm text-gray-500">{product.categoryName ?? '—'}</span>
+                                    {/* Pinned on */}
+                                    <span className="text-xs text-gray-400 font-mono">
+                                        {product.featuredAt
+                                            ? new Date(product.featuredAt).toLocaleDateString('en-CA', {
+                                                month: 'short', day: 'numeric', year: 'numeric',
+                                              })
+                                            : '—'
+                                        }
+                                    </span>
 
-                                    {/* Featured status */}
-                                    <div>
-                                        {product.isFeatured ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                                                <Pin className="w-3 h-3 fill-amber-500" /> Pinned
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs text-gray-400">—</span>
-                                        )}
-                                    </div>
-
-                                    {/* Pin toggle */}
+                                    {/* Unpin */}
                                     <PinButton
                                         product={product}
-                                        onToggle={handleToggleFeature}
+                                        onToggle={handleUnpin}
                                         loading={!!pinLoading[id]}
                                     />
                                 </AdminTableRow>
