@@ -16,6 +16,13 @@ export const CustomerAPI = {
     });
   },
 
+  completeProfile: async (data) => {
+    return fetchWithCredentials(`${API_BASE_URL}/customer/profile/complete`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // ================= ADDRESSES =================
 
   savedAddress: async () => {

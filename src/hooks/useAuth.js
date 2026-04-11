@@ -13,10 +13,12 @@ import {
     selectEmail,
     selectVendorIsActive,
     selectVendorIsVerified,
+    selectIsProfileComplete,
     setAuth,
     clearAuth,
     setError,
     setLoading,
+    markProfileComplete,
 } from "@/redux-store/authSlice";
 import { AuthAPI } from "@/lib/api/auth.api";
 import { RegistrationAPI } from "@/lib/api/registration.api";
@@ -61,6 +63,7 @@ export const useAuth = () => {
     const email = useSelector(selectEmail);
     const vendorIsActive = useSelector(selectVendorIsActive);
     const vendorIsVerified = useSelector(selectVendorIsVerified);
+    const isProfileComplete = useSelector(selectIsProfileComplete);
 
     const { clearCart } = useCart();
 
@@ -130,6 +133,12 @@ export const useAuth = () => {
 
             dispatch(setAuth({ user: userData }));
 
+            // New Google users who haven't completed their profile go to onboarding
+            if (userData.isProfileComplete === false) {
+                router.push("/onboarding");
+                return "/onboarding";
+            }
+
             const roleRoute = ROLE_ROUTES[userData.role];
             let destination;
             if (roleRoute) {
@@ -149,6 +158,18 @@ export const useAuth = () => {
             throw err;
         } finally {
             dispatch(setLoading(false));
+        }
+    };
+
+    const completeOnboarding = async (data) => {
+        try {
+            const result = await CustomerAPI.completeProfile(data);
+            dispatch(markProfileComplete());
+            return result;
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to complete profile";
+            dispatch(setError(errorMessage));
+            throw err;
         }
     };
 
@@ -302,6 +323,7 @@ export const useAuth = () => {
         role,
         vendorIsActive,
         vendorIsVerified,
+        isProfileComplete,
 
         // State
         isAuthenticated,
@@ -311,6 +333,7 @@ export const useAuth = () => {
         // Actions
         login,
         loginWithGoogle,
+        completeOnboarding,
         logout,
         registerCustomer,
         registerVendor,

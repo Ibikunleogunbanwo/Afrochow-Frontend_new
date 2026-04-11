@@ -21,6 +21,8 @@ const PUBLIC_ROUTES = [
     '/verify-email',
 ];
 
+const ONBOARDING_ROUTE = '/onboarding';
+
 const isPublicRoute = (pathname) => {
     if (pathname === '/' || pathname.startsWith('/restaurants')) {
         return true;
@@ -32,7 +34,7 @@ export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
     const router = useRouter();
     const pathname = usePathname();
-    const { isAuthenticated, isLoading, user } = useSelector((state) => state.auth);
+    const { isAuthenticated, isLoading, user, isProfileComplete } = useSelector((state) => state.auth);
 
     const isAuth = Boolean(isAuthenticated);
     const userRole = user?.role?.toUpperCase();
@@ -70,6 +72,18 @@ export default function AuthInitializer({ children }) {
         const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
 
         if (isAuth) {
+            // New Google users: enforce onboarding before going anywhere else
+            if (isProfileComplete === false && pathname !== ONBOARDING_ROUTE) {
+                router.replace(ONBOARDING_ROUTE);
+                return;
+            }
+
+            // Completed users must not revisit onboarding directly
+            if (isProfileComplete === true && pathname === ONBOARDING_ROUTE) {
+                router.replace('/');
+                return;
+            }
+
             // Redirect vendors/admins to their dashboard when on public routes
             if (isAdminRole && isPublicRoute(pathname)) {
                 router.replace('/admin/dashboard');
@@ -124,7 +138,7 @@ export default function AuthInitializer({ children }) {
                 router.push('/?signin=true');
             }
         }
-    }, [pathname, isAuth, isLoading, router, userRole]);
+    }, [pathname, isAuth, isLoading, router, userRole, isProfileComplete]);
 
     // ── Idle-timeout logout ───────────────────────────────────────────────────
     // When the user is inactive for IDLE_TIMEOUT_MS we clear auth state

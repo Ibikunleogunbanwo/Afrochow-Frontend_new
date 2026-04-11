@@ -116,9 +116,15 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                 toast.error("Email Not Verified", {
                     description: "Please check your inbox and verify your email to continue.",
                 })
-            } else if (errorMessage.includes("credentials") || errorMessage.includes("invalid")) {
+            } else if (
+                errorMessage.includes("credentials") ||
+                errorMessage.includes("invalid") ||
+                errorMessage.includes("not found") ||
+                errorMessage.includes("no account") ||
+                !errorMessage  // backend returned null/empty message (e.g. unknown email)
+            ) {
                 toast.error("Invalid Credentials", {
-                    description: "Double-check your email and password and try again.",
+                    description: "No account found with those details. Double-check your email and password.",
                 })
             } else if (errorMessage.includes("locked")) {
                 toast.error("Account Temporarily Locked", {
