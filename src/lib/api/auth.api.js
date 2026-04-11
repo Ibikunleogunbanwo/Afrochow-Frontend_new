@@ -12,10 +12,10 @@ export const AuthAPI = {
     });
   },
 
-  googleAuth: async (credential) => {
+  googleAuth: async (code) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
-      body: JSON.stringify({ credential }),
+      body: JSON.stringify({ code }),
     });
   },
 

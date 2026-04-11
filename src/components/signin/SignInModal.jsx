@@ -65,10 +65,10 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
 
     const [googleLoading, setGoogleLoading] = useState(false)
 
-    const handleGoogleSuccess = async (tokenResponse) => {
+    const handleGoogleSuccess = async (codeResponse) => {
         setGoogleLoading(true)
         try {
-            const destination = await loginWithGoogle(tokenResponse.id_token ?? tokenResponse.access_token)
+            const destination = await loginWithGoogle(codeResponse.code)
             toast.success("Welcome to Afrochow!", { id: 'google-login-success' })
             const isRoleRoute = destination?.startsWith('/vendor') || destination?.startsWith('/admin')
             if (!isRoleRoute) onClose()
@@ -86,7 +86,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
         onError: () => toast.error("Google Sign-In Failed", {
             description: "Unable to sign in with Google. Please try again.",
         }),
-        flow: 'implicit',
+        flow: 'auth-code',
         scope: 'openid email profile',
     })
 

@@ -116,12 +116,12 @@ export const useAuth = () => {
         }
     };
 
-    const loginWithGoogle = async (credential) => {
+    const loginWithGoogle = async (code) => {
         dispatch(setLoading(true));
         dispatch(setError(null));
 
         try {
-            const result = await AuthAPI.googleAuth(credential);
+            const result = await AuthAPI.googleAuth(code);
 
             if (!result?.data) throw new Error("Invalid response from server");
 
