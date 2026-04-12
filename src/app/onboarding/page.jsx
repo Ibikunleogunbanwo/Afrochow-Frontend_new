@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/toast";
 import Logo from "@/components/Logo";
 import {
     User, Mail, Phone, MapPin, Building2, Hash,
-    Globe, ChevronRight, Loader2, CheckCircle2, AlertCircle,
+    Globe, ChevronRight, Loader2, CheckCircle2, AlertCircle, // Hash kept for postal code field
 } from "lucide-react";
 
 // Canadian provinces
@@ -75,9 +75,10 @@ export default function OnboardingPage() {
     const [saving,  setSaving]  = useState(false);
     const [errors,  setErrors]  = useState({});
 
-    // Step 0 fields
+    // Step 0 fields — pre-fill name from Google but allow override
+    const [firstName, setFirstName] = useState(user?.firstName ?? "");
+    const [lastName,  setLastName]  = useState(user?.lastName  ?? "");
     const [phone,    setPhone]    = useState("");
-    const [username, setUsername] = useState("");
 
     // Step 1 fields
     const [addressLine,   setAddressLine]   = useState("");
@@ -93,6 +94,8 @@ export default function OnboardingPage() {
     // ── Step 0 validation ─────────────────────────────────────────────────────
     const validateStep0 = () => {
         const errs = {};
+        if (!firstName.trim()) errs.firstName = "First name is required.";
+        if (!lastName.trim())  errs.lastName  = "Last name is required.";
         const cleaned = phone.replace(/\s|-/g, "");
         if (!cleaned) {
             errs.phone = "Phone number is required.";
@@ -127,10 +130,11 @@ export default function OnboardingPage() {
         setSaving(true);
         try {
             const payload = {
+                firstName: firstName.trim(),
+                lastName:  lastName.trim(),
                 phone: phone.replace(/\s|-/g, "").startsWith("+")
                     ? phone.replace(/\s|-/g, "")
                     : `+1${phone.replace(/\D/g, "").slice(-10)}`,
-                ...(username.trim() && { username: username.trim() }),
                 ...(instructions.trim() && { defaultDeliveryInstructions: instructions.trim() }),
                 ...(!skipAddress && addressLine.trim() && {
                     address: {
@@ -153,9 +157,6 @@ export default function OnboardingPage() {
             const msg = err?.message?.toLowerCase() ?? "";
             if (msg.includes("phone") || msg.includes("already registered")) {
                 setErrors({ phone: "This phone number is already registered to another account." });
-                setStep(0);
-            } else if (msg.includes("username") || msg.includes("taken")) {
-                setErrors({ username: "That username is already taken. Try another." });
                 setStep(0);
             } else {
                 toast.error("Could not save profile", { description: err?.message || "Please try again." });
@@ -216,21 +217,72 @@ export default function OnboardingPage() {
                     {step === 0 && (
                         <div className="space-y-4">
 
-                            {/* Read-only name + email from Google */}
+                            {/* Google profile avatar */}
+                            {(() => {
+                                const photoUrl = user?.profileImageUrl ?? user?.picture ?? user?.photoUrl ?? null;
+                                const initials = `${(user?.firstName ?? "")[0] ?? ""}${(user?.lastName ?? "")[0] ?? ""}`.toUpperCase() || "?";
+                                return (
+                                    <div className="flex justify-center">
+                                        {photoUrl ? (
+                                            <img
+                                                src={photoUrl}
+                                                alt="Profile"
+                                                className="w-16 h-16 rounded-full object-cover border-2 border-orange-200 shadow-sm"
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-full bg-orange-100 border-2 border-orange-200 flex items-center justify-center text-orange-600 text-xl font-black shadow-sm">
+                                                {initials}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Editable first + last name (pre-filled from Google) */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className={labelCls}>Name</label>
-                                    <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50 text-sm text-gray-500">
-                                        <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="truncate">{user?.firstName ?? user?.name ?? "—"}</span>
+                                    <label className={labelCls}>
+                                        First name <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={firstName}
+                                            onChange={e => { setFirstName(e.target.value); setErrors(p => ({ ...p, firstName: undefined })); }}
+                                            placeholder="First name"
+                                            className={`${inputCls} pl-9 ${errors.firstName ? "border-red-300 focus:ring-red-400" : ""}`}
+                                            autoComplete="given-name"
+                                        />
                                     </div>
+                                    <FieldError message={errors.firstName} />
                                 </div>
                                 <div>
-                                    <label className={labelCls}>Email</label>
-                                    <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50 text-sm text-gray-500">
-                                        <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <span className="truncate">{user?.email ?? "—"}</span>
+                                    <label className={labelCls}>
+                                        Last name <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={lastName}
+                                            onChange={e => { setLastName(e.target.value); setErrors(p => ({ ...p, lastName: undefined })); }}
+                                            placeholder="Last name"
+                                            className={`${inputCls} pl-9 ${errors.lastName ? "border-red-300 focus:ring-red-400" : ""}`}
+                                            autoComplete="family-name"
+                                        />
                                     </div>
+                                    <FieldError message={errors.lastName} />
+                                </div>
+                            </div>
+
+                            {/* Read-only email from Google */}
+                            <div>
+                                <label className={labelCls}>Email</label>
+                                <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50 text-sm text-gray-500">
+                                    <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    <span className="truncate">{user?.email ?? "—"}</span>
                                 </div>
                             </div>
 
@@ -251,25 +303,6 @@ export default function OnboardingPage() {
                                     />
                                 </div>
                                 <FieldError message={errors.phone} />
-                            </div>
-
-                            {/* Username (optional) */}
-                            <div>
-                                <label className={labelCls}>
-                                    Username <span className="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <div className="relative">
-                                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                                    <input
-                                        type="text"
-                                        value={username}
-                                        onChange={e => { setUsername(e.target.value); setErrors(p => ({ ...p, username: undefined })); }}
-                                        placeholder="e.g. jollofking"
-                                        className={`${inputCls} pl-9 ${errors.username ? "border-red-300 focus:ring-red-400" : ""}`}
-                                        autoComplete="username"
-                                    />
-                                </div>
-                                <FieldError message={errors.username} />
                             </div>
 
                             <button

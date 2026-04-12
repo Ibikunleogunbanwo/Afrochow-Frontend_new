@@ -123,7 +123,7 @@ export default function AuthInitializer({ children }) {
             // was typed / linked directly.
             if (userRole === 'CUSTOMER' &&
                 (pathname.startsWith('/admin') || pathname.startsWith('/vendor'))) {
-                router.replace('/unauthorized');
+                router.replace('/');
                 return;
             }
         } else {
