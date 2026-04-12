@@ -164,7 +164,15 @@ export const useAuth = () => {
     const completeOnboarding = async (data) => {
         try {
             const result = await CustomerAPI.completeProfile(data);
-            dispatch(markProfileComplete());
+            // Re-fetch the full user from the server so Redux reflects the
+            // updated name, phone, address etc. saved during onboarding —
+            // rather than keeping the stale Google-provided snapshot.
+            const { isAuthenticated: stillAuth, user: freshUser } = await AuthAPI.checkAuth();
+            if (stillAuth && freshUser) {
+                dispatch(setAuth({ user: freshUser }));
+            } else {
+                dispatch(markProfileComplete());
+            }
             return result;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to complete profile";
