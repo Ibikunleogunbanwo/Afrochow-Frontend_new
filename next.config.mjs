@@ -79,6 +79,23 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // Allow Google OAuth popup to post the auth code back via postMessage.
+          // 'same-origin' blocks window.closed calls from cross-origin popups,
+          // breaking the auth-code flow. 'same-origin-allow-popups' fixes this.
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
