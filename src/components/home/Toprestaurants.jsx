@@ -2,28 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import PopularStoreCard from "@/components/home/cards/PopularStoreCard";
-import PopularStoreSkeleton from "@/components/home/cards/PopularStoreSkeleton";
-import LocationSelector from "@/components/LocationSelector";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { SearchAPI } from "@/lib/api/search.api";
 import { useLocation } from "@/contexts/LocationContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import PopularStoreCard from "@/components/home/cards/PopularStoreCard";
+import PopularStoreSkeleton from "@/components/home/cards/PopularStoreSkeleton";
+import LocationFallbackBanner from "@/components/home/LocationFallbackBanner";
 
-// ── Module-level cache keyed by city ─────────────────────────────────────────
-// Survives component remounts within the same session. Each unique city gets
-// its own cached result so switching cities still fetches fresh data, but
-// returning to a previously viewed city renders instantly.
-const storesCache = {};
+// ── Cache keyed by composite of coords + city (same pattern as PopularRestaurants) ──
+const CACHE_TTL_MS = 3 * 60 * 1000;
+const storesCache  = {};
 
-const getCacheKey = (city) =>
-    city ? city.toLowerCase().trim() : "__default__";
+const getCacheKey = (lat, lng, city) =>
+    `${lat ?? ''}:${lng ?? ''}:${city ? city.toLowerCase().trim() : ''}`;
 
-// Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
+const isCacheValid = (key) => {
+    const entry = storesCache[key];
+    return entry && entry.cachedAt && Date.now() - entry.cachedAt < CACHE_TTL_MS;
+};
+
+// ── Hours helpers (shared logic with PopularRestaurants) ──────────────────────
 const computeIsOpenNow = (todayHoursFormatted) => {
     if (!todayHoursFormatted) return null;
-    // 24-hour: "Open 09:00 - 22:00" or "09:00 - 22:00"
     const m24 = todayHoursFormatted.match(/^(?:open\s+)?(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/i);
     if (m24) {
         const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
@@ -31,7 +33,6 @@ const computeIsOpenNow = (todayHoursFormatted) => {
         const c = parseInt(m24[3]) * 60 + parseInt(m24[4]);
         return c > o ? cur >= o && cur < c : cur >= o || cur < c;
     }
-    // 12-hour: "06:00 AM - 10:00 PM"
     const m12 = todayHoursFormatted.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (m12) {
         const to24 = (h, m, p) => { let hr = parseInt(h); const mn = parseInt(m); if (p.toUpperCase()==='PM'&&hr!==12) hr+=12; if (p.toUpperCase()==='AM'&&hr===12) hr=0; return hr*60+mn; };
@@ -42,7 +43,6 @@ const computeIsOpenNow = (todayHoursFormatted) => {
     return null;
 };
 
-// Extract today's formatted hours from weeklySchedule using browser local day.
 const computeTodayHoursFromSchedule = (weeklySchedule) => {
     if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
     const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -57,7 +57,6 @@ const computeTodayHoursFromSchedule = (weeklySchedule) => {
     return `${ot} - ${ct}`;
 };
 
-// Compute from full weeklySchedule object using browser local day (most accurate).
 const computeIsOpenFromSchedule = (weeklySchedule) => {
     if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
     const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -75,26 +74,52 @@ const computeIsOpenFromSchedule = (weeklySchedule) => {
     return c > o ? cur >= o && cur < c : cur >= o || cur < c;
 };
 
+const transformVendor = (vendor) => ({
+    vendorPublicId:         vendor.publicUserId,
+    imageUrl:               vendor.bannerUrl || vendor.logoUrl || null,
+    restaurantName:         vendor.restaurantName || "Store",
+    cuisineType:            vendor.cuisineType    || null,
+    location:               vendor.address?.city && vendor.address?.province
+                                ? `${vendor.address.city}, ${vendor.address.province}`
+                                : vendor.address?.city || "",
+    isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
+                                ?? vendor.isOpenNow
+                                ?? null,
+    todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
+                                ?? vendor.todayHoursFormatted
+                                ?? null,
+    deliveryFee:            vendor.deliveryFee            ?? 2.99,
+    offersPickup:           vendor.offersPickup           ?? false,
+    offersDelivery:         vendor.offersDelivery         ?? true,
+    preparationTimeMinutes: vendor.estimatedDeliveryMinutes ?? vendor.preparationTime ?? 30,
+    averageRating:          vendor.averageRating          ?? 0,
+    reviewCount:            vendor.reviewCount            ?? 0,
+    totalOrders:            vendor.totalOrdersCompleted   ?? 0,
+});
+
 const SKELETON_COUNT = 6;
 
-const TopStores = () => {
-    const { city }           = useLocation();
-    const { isAuthenticated } = useAuth();
-    const { openSignIn }      = useAuthModal();
+const TopStores = ({ locationInput }) => {
+    const { city, coordinates, isDetecting } = useLocation();
+    const { isAuthenticated }                = useAuth();
+    const { openSignIn }                     = useAuthModal();
 
-    const cacheKey = getCacheKey(city);
+    const cacheKey = getCacheKey(coordinates?.lat, coordinates?.lng, city);
 
-    const [stores, setStores]    = useState(storesCache[cacheKey] || []);
-    const [loading, setLoading]  = useState(!storesCache[cacheKey]);
-    const [error, setError]      = useState(false);
-    const [retryCount, setRetry] = useState(0);
+    const [stores,     setStores]     = useState(isCacheValid(cacheKey) ? storesCache[cacheKey].stores : []);
+    const [loading,    setLoading]    = useState(!isCacheValid(cacheKey));
+    const [error,      setError]      = useState(false);
+    const [isFallback, setIsFallback] = useState(false);
+    const [retryCount, setRetry]      = useState(0);
 
     useEffect(() => {
-        const key = getCacheKey(city);
+        if (isDetecting) return;
 
-        // Cache hit — skip fetch entirely
-        if (storesCache[key]) {
-            setStores(storesCache[key]);
+        const key = getCacheKey(coordinates?.lat, coordinates?.lng, city);
+
+        if (isCacheValid(key)) {
+            setStores(storesCache[key].stores);
             setLoading(false);
             setError(false);
             return;
@@ -105,51 +130,46 @@ const TopStores = () => {
                 setLoading(true);
                 setError(false);
 
-                // Use city-specific endpoint when a city is selected.
-                // Both getVendorsByCity and getTopRatedVendors already return
-                // verified vendors — no need to cross-reference getVerifiedVendors().
-                const vendorsResponse = await (city
-                    ? SearchAPI.getVendorsByCity(city)
-                    : SearchAPI.getTopRatedVendors()
-                );
-                const vendors = Array.isArray(vendorsResponse)
-                    ? vendorsResponse
-                    : vendorsResponse?.success && vendorsResponse?.data
-                        ? vendorsResponse.data
-                        : [];
+                let vendorList = [];
 
-                const transformedVendors = vendors.map((vendor) => ({
-                    vendorPublicId:         vendor.publicUserId,
-                    imageUrl:               vendor.bannerUrl || vendor.logoUrl || null,
-                    restaurantName:         vendor.restaurantName || "Store",
-                    cuisineType:            vendor.cuisineType    || null,
-                    location:               vendor.address?.city && vendor.address?.province
-                                                ? `${vendor.address.city}, ${vendor.address.province}`
-                                                : vendor.address?.city || "",
-                    isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
-                                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
-                                                ?? vendor.isOpenNow
-                                                ?? null,
-                    todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule ?? vendor.operatingHours)
-                                                ?? vendor.todayHoursFormatted
-                                                ?? null,
-                    deliveryFee:            vendor.deliveryFee            ?? 2.99,
-                    offersPickup:           vendor.offersPickup           ?? false,
-                    offersDelivery:         vendor.offersDelivery         ?? true,
-                    preparationTimeMinutes: vendor.estimatedDeliveryMinutes ?? vendor.preparationTime ?? 30,
-                    averageRating:          vendor.averageRating          ?? 0,
-                    reviewCount:            vendor.reviewCount            ?? 0,
-                    totalOrders:            vendor.totalOrdersCompleted   ?? 0,
-                }));
+                // Priority 1: GPS coordinates → radius search (most accurate)
+                if (coordinates?.lat && coordinates?.lng) {
+                    const res = await SearchAPI.getVendorsNearCoordinates(
+                        coordinates.lat, coordinates.lng, 25
+                    ).catch(() => null);
+                    vendorList = res?.success && Array.isArray(res.data)
+                        ? res.data
+                        : Array.isArray(res) ? res : [];
+                }
 
-                // Open first → unknown (null) → closed last
+                // Priority 2: City name → city-scoped search
+                if (vendorList.length === 0 && city) {
+                    const res = await SearchAPI.getVendorsByCity(city).catch(() => null);
+                    vendorList = res?.success && Array.isArray(res.data)
+                        ? res.data
+                        : Array.isArray(res) ? res : [];
+                }
+
+                // Priority 3: Global top-rated fallback (no location)
+                let fallback = false;
+                if (vendorList.length === 0) {
+                    const res = await SearchAPI.getTopRatedVendors().catch(() => null);
+                    vendorList = res?.success && Array.isArray(res.data)
+                        ? res.data
+                        : Array.isArray(res) ? res : [];
+                    fallback = vendorList.length > 0 && !!(city || coordinates?.lat);
+                }
+                setIsFallback(fallback);
+
                 const openRank = (v) => v.isOpenNow === true ? 0 : v.isOpenNow === false ? 2 : 1;
-                const sorted = transformedVendors.sort((a, b) => openRank(a) - openRank(b));
+                const sorted = vendorList
+                    .map(transformVendor)
+                    .sort((a, b) => openRank(a) - openRank(b));
 
-                storesCache[key] = sorted;
+                storesCache[key] = { stores: sorted, cachedAt: Date.now() };
                 setStores(sorted);
             } catch (err) {
-                console.error("Error fetching top stores:", err);
+                console.error("TopStores fetch error:", err.message);
                 setError(true);
                 setStores([]);
             } finally {
@@ -158,11 +178,13 @@ const TopStores = () => {
         };
 
         void fetchTopStores();
-    }, [city, retryCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [city, coordinates?.lat, coordinates?.lng, isDetecting, retryCount]);
 
-    // Clears the failed cache entry and increments retryCount to re-trigger the fetch useEffect
     const handleRetry = () => {
-        delete storesCache[getCacheKey(city)];
+        const key = getCacheKey(coordinates?.lat, coordinates?.lng, city);
+        delete storesCache[key];
+        setError(false);
         setRetry((n) => n + 1);
     };
 
@@ -170,8 +192,8 @@ const TopStores = () => {
         <section className="py-16 bg-linear-to-b from-white to-orange-50/30">
             <div className="container px-4 mx-auto max-w-7xl">
 
-                {/* Section Header */}
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-6">
                     <div className="flex-1">
                         <div className="inline-flex items-center space-x-2 px-4 py-2 mb-4 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
                             <TrendingUp className="w-4 h-4 text-orange-600" />
@@ -188,10 +210,15 @@ const TopStores = () => {
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <LocationSelector />
-                    </div>
+                    {locationInput && (
+                        <div className="w-full md:w-80">{locationInput}</div>
+                    )}
                 </div>
+
+                {/* Fallback banner */}
+                {!loading && isFallback && city && (
+                    <LocationFallbackBanner city={city} />
+                )}
 
                 {/* Cards */}
                 {loading ? (
@@ -230,7 +257,7 @@ const TopStores = () => {
                             No stores available {city ? `in ${city}` : "in your area"} at the moment
                         </p>
                         <p className="text-sm text-gray-400 mt-2">
-                            Try selecting a different city from the dropdown above
+                            Try searching a different city or address above
                         </p>
                     </div>
                 )}

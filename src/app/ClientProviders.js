@@ -5,6 +5,7 @@ import { store } from "@/redux-store/store";
 import AuthInitializer from "@/lib/api/AuthInitializer";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { LocationProvider } from "@/contexts/LocationContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function ClientProviders({ children }) {
@@ -14,7 +15,9 @@ export default function ClientProviders({ children }) {
                 <ThemeProvider>
                     <AuthInitializer>
                         <CartProvider>
-                            {children}
+                            <LocationProvider>
+                                {children}
+                            </LocationProvider>
                         </CartProvider>
                     </AuthInitializer>
                 </ThemeProvider>

@@ -7,43 +7,61 @@ import { useAuth } from "@/hooks/useAuth";
 import { SearchAPI } from "@/lib/api/search.api";
 import { PromotionsAPI } from "@/lib/api";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useLocation } from "@/contexts/LocationContext";
 import FeaturedProductCard from "@/components/home/cards/FeaturedProductCard";
 import FeaturedProductSkeleton from "@/components/home/cards/FeaturedProductSkeleton";
+import LocationFallbackBanner from "@/components/home/LocationFallbackBanner";
 
-// ── Module-level cache with 5-minute TTL ─────────────────────────────────────
-// Featured products are global (no location/auth dependency) so a single shared
-// object is correct. The TTL ensures a mid-session vendor spike is picked up on
-// the next mount after the window expires.
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// ── City-keyed cache with 5-minute TTL ───────────────────────────────────────
+// Keyed by city so switching cities fetches fresh results without busting the
+// cache for a previously loaded city.
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-const featuredCache = {
-    products: [],
-    promoMap: {},
-    cachedAt:  null,   // null = never fetched
+const cityCache = {}; // { [city|'global']: { products, promoMap, cachedAt } }
+
+const getCacheEntry = (key) => cityCache[key];
+
+const isCacheValid = (key) => {
+    const entry = getCacheEntry(key);
+    return (
+        entry &&
+        entry.products.length > 0 &&
+        entry.cachedAt !== null &&
+        Date.now() - entry.cachedAt < CACHE_TTL_MS
+    );
 };
 
-const isCacheValid = () =>
-    featuredCache.products.length > 0 &&
-    featuredCache.cachedAt !== null &&
-    Date.now() - featuredCache.cachedAt < CACHE_TTL_MS;
+const setCacheEntry = (key, products, promoMap, isFallback = false) => {
+    cityCache[key] = { products, promoMap, isFallback, cachedAt: Date.now() };
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
-const FeaturedRestaurants = () => {
+const FeaturedRestaurants = ({ locationInput }) => {
     const { isAuthenticated } = useAuth();
     const { openSignIn }      = useAuthModal();
+    const { city, isDetecting } = useLocation();
 
-    const valid = isCacheValid();
+    // Use city as cache key; fall back to 'global' while location is still loading
+    const cacheKey = city || 'global';
 
-    const [featuredProducts, setFeaturedProducts] = useState(valid ? featuredCache.products : []);
-    const [promoMap, setPromoMap]                 = useState(valid ? featuredCache.promoMap  : {});
+    const valid = isCacheValid(cacheKey);
+    const cached = valid ? getCacheEntry(cacheKey) : null;
+
+    const [featuredProducts, setFeaturedProducts] = useState(cached?.products ?? []);
+    const [promoMap, setPromoMap]                 = useState(cached?.promoMap  ?? {});
     const [loading, setLoading]                   = useState(!valid);
     const [error, setError]                       = useState(false);
+    const [isFallback, setIsFallback]             = useState(cached?.isFallback ?? false);
     const [retryCount, setRetry]                  = useState(0);
 
     useEffect(() => {
-        if (isCacheValid()) {
-            setFeaturedProducts(featuredCache.products);
-            setPromoMap(featuredCache.promoMap);
+        // Wait for location detection to settle before fetching
+        if (isDetecting) return;
+
+        if (isCacheValid(cacheKey)) {
+            const entry = getCacheEntry(cacheKey);
+            setFeaturedProducts(entry.products);
+            setPromoMap(entry.promoMap);
             setLoading(false);
             return;
         }
@@ -53,19 +71,25 @@ const FeaturedRestaurants = () => {
                 setLoading(true);
                 setError(false);
 
-                const response = await SearchAPI.getFeaturedProducts();
-
-                // The featured endpoint already returns the full ProductResponseDto —
-                // dietary flags (isVegetarian, isVegan, isGlutenFree, isSpicy),
-                // imageUrl, and all stats are included. No background enrichment needed.
-                const products =
+                // Try city-scoped first
+                let response = await SearchAPI.getFeaturedProducts(city || null);
+                let products =
                     response?.success && response?.data
                         ? response.data
                         : Array.isArray(response) ? response : [];
 
-                featuredCache.products = products;
-                featuredCache.cachedAt = Date.now();
-                setFeaturedProducts(products);
+                // Fallback: city returned nothing → fetch nationwide
+                let fallback = false;
+                if (products.length === 0 && city) {
+                    response = await SearchAPI.getFeaturedProducts(null);
+                    products =
+                        response?.success && response?.data
+                            ? response.data
+                            : Array.isArray(response) ? response : [];
+                    fallback = true;
+                }
+
+                setIsFallback(fallback);
 
                 // Promos fetched in background — never blocks product render
                 PromotionsAPI.getActivePromotions()
@@ -80,10 +104,14 @@ const FeaturedRestaurants = () => {
                             }
                             return m;
                         }, {});
-                        featuredCache.promoMap = map;
+                        setCacheEntry(cacheKey, products, map, fallback);
                         setPromoMap(map);
                     })
-                    .catch(() => { /* promos are optional */ });
+                    .catch(() => {
+                        setCacheEntry(cacheKey, products, {}, fallback);
+                    });
+
+                setFeaturedProducts(products);
 
             } catch (err) {
                 console.error("Error fetching featured products:", err);
@@ -95,12 +123,10 @@ const FeaturedRestaurants = () => {
         };
 
         void fetchFeatured();
-    }, [retryCount]);
+    }, [cacheKey, isDetecting, retryCount]);
 
     const handleRetry = () => {
-        featuredCache.products = [];
-        featuredCache.promoMap = {};
-        featuredCache.cachedAt = null;
+        delete cityCache[cacheKey];
         setError(false);
         setRetry((n) => n + 1);
     };
@@ -117,12 +143,22 @@ const FeaturedRestaurants = () => {
                         </span>
                     </div>
                     <h2 className="text-4xl font-black text-gray-900 mb-4">
-                        Featured Products
+                        Featured Products{city ? ` in ${city}` : ""}
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Discover the most popular African dishes loved by our community
+                    <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+                        {city
+                            ? `Popular African dishes available near you in ${city}`
+                            : "Discover the most popular African dishes loved by our community"}
                     </p>
+                    {locationInput && (
+                        <div className="max-w-md mx-auto">{locationInput}</div>
+                    )}
                 </div>
+
+                {/* Fallback banner */}
+                {!loading && isFallback && city && (
+                    <LocationFallbackBanner city={city} />
+                )}
 
                 {/* Cards */}
                 {loading ? (

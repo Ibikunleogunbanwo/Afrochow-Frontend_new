@@ -130,10 +130,24 @@ export const LocationProvider = ({ children }) => {
 
     const updateCity = (newCity) => {
         setCity(newCity);
+        setCoordinates(null); // clear GPS coords so city-name search is used
         setLocationSource('manual');
         setLocationDetails(prev => ({ ...(prev || {}), city: newCity }));
         localStorage.setItem('userCity',       newCity);
         localStorage.setItem('userCitySource', 'manual');
+    };
+
+    // Called when user picks a Nominatim suggestion — sets both city AND coordinates
+    // so the radius-based vendor search fires (most accurate path).
+    const updateCityWithCoordinates = (newCity, lat, lng, details = null) => {
+        setCity(newCity);
+        setCoordinates({ lat, lng });
+        setLocationSource('manual');
+        const merged = { ...(details || {}), city: newCity };
+        setLocationDetails(merged);
+        localStorage.setItem('userCity',            newCity);
+        localStorage.setItem('userCitySource',      'manual');
+        localStorage.setItem('userLocationDetails', JSON.stringify(merged));
     };
 
     // Build a human-readable location label at whatever granularity is available
@@ -158,6 +172,7 @@ export const LocationProvider = ({ children }) => {
                 locationSource,
                 locationLabel: getLocationLabel(),
                 updateCity,
+                updateCityWithCoordinates,
                 autoDetectCity,
                 requestPreciseLocation,
             }}

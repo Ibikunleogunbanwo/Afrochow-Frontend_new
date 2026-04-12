@@ -64,11 +64,11 @@ export const SearchAPI = {
     );
   },
 
-  getFeaturedProducts: async () => {
-    return fetchWithCredentials(
-        `${API_BASE_URL}/search/products/featured`,
-        { method: 'GET' }
-    );
+  getFeaturedProducts: async (city = null) => {
+    const url = city
+        ? `${API_BASE_URL}/search/products/featured?city=${encodeURIComponent(city)}`
+        : `${API_BASE_URL}/search/products/featured`;
+    return fetchWithCredentials(url, { method: 'GET' });
   },
 
   getProductsNearMe: async (city) => {

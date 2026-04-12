@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Star, MapPin, Loader2 } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import { useLocation } from "@/contexts/LocationContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -9,6 +9,7 @@ import { SearchAPI } from "@/lib/api/search.api";
 import { PromotionsAPI } from "@/lib/api";
 import PopularStoreCard from "@/components/home/cards/PopularStoreCard";
 import PopularStoreSkeleton from "@/components/home/cards/PopularStoreSkeleton";
+import LocationFallbackBanner from "@/components/home/LocationFallbackBanner";
 
 const MAX_POPULAR = 8;
 const SKELETON_COUNT = MAX_POPULAR;
@@ -85,24 +86,6 @@ const cache = {
 const cacheKey = (lat, lng, city) =>
     `${lat ?? ''}:${lng ?? ''}:${city ?? ''}`;
 
-// ── Detect location button ────────────────────────────────────────────────────
-const DetectLocationButton = ({ isDetecting, onClick, label = "Use my exact location" }) => (
-    <button
-        onClick={onClick}
-        disabled={isDetecting}
-        className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-orange-100 text-orange-700 text-sm font-semibold rounded-full hover:bg-orange-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-        {isDetecting ? (
-            <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Detecting...
-            </>
-        ) : (
-            <>
-                <MapPin className="w-3.5 h-3.5" /> {label}
-            </>
-        )}
-    </button>
-);
 
 // ── Transform a VendorProfileResponseDto into a PopularStoreCard-compatible object ──
 const transformVendor = (vendor) => ({
@@ -132,10 +115,10 @@ const transformVendor = (vendor) => ({
 });
 
 // ── Main component ────────────────────────────────────────────────────────────
-const PopularStores = () => {
-    const { isAuthenticated }                                                         = useAuth();
-    const { openSignIn }                                                              = useAuthModal();
-    const { city, isDetecting, locationSource, requestPreciseLocation, coordinates } = useLocation();
+const PopularStores = ({ locationInput }) => {
+    const { isAuthenticated }                        = useAuth();
+    const { openSignIn }                             = useAuthModal();
+    const { city, locationSource, coordinates }      = useLocation();
 
     const currentKey = cacheKey(coordinates?.lat, coordinates?.lng, city);
 
@@ -149,6 +132,7 @@ const PopularStores = () => {
     const [promoMap, setPromoMap]           = useState(isCacheValid() ? cache.promoMap ?? {} : {});
     const [loading, setLoading]             = useState(!isCacheValid());
     const [error, setError]       = useState(false);
+    const [isFallback, setIsFallback] = useState(false);
     const [retryCount, setRetry]  = useState(0);
 
     // Restore scroll position on remount — only when the cache key matches
@@ -203,6 +187,18 @@ const PopularStores = () => {
                         ? res.data
                         : Array.isArray(res) ? res : [];
                 }
+
+                // Fallback: no local results → fetch top-rated nationwide
+                let fallback = false;
+                if (vendorList.length === 0) {
+                    const res = await SearchAPI.getTopRatedVendors().catch(() => null);
+                    vendorList = res?.success && Array.isArray(res.data)
+                        ? res.data
+                        : Array.isArray(res) ? res : [];
+                    fallback = true;
+                }
+
+                setIsFallback(fallback && (!!city || !!(coordinates?.lat)));
 
                 if (vendorList.length === 0) {
                     setPopularStores([]);
@@ -284,14 +280,12 @@ const PopularStores = () => {
         setRetry((n) => n + 1);
     };
 
-    const locationLabel = locationSource === "gps" ? `${city} (GPS)` : city || null;
-
     return (
         <section className="py-20 bg-white">
             <div className="container px-4 mx-auto max-w-7xl">
 
                 {/* Header */}
-                <div className="max-w-3xl mx-auto text-center mb-16">
+                <div className="max-w-2xl mx-auto text-center mb-10">
                     <div className="inline-flex items-center space-x-2 px-4 py-2 mb-6 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
                         <Star className="w-4 h-4 text-orange-600 fill-orange-600" />
                         <span className="text-sm font-semibold text-orange-800">Customer Favorites</span>
@@ -304,18 +298,15 @@ const PopularStores = () => {
                         </span>
                     </h2>
 
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
-                        {locationLabel && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
-                                <MapPin className="w-3.5 h-3.5" /> {locationLabel}
-                            </span>
-                        )}
-                        <DetectLocationButton
-                            isDetecting={isDetecting}
-                            onClick={requestPreciseLocation}
-                        />
-                    </div>
+                    {locationInput && (
+                        <div className="max-w-md mx-auto">{locationInput}</div>
+                    )}
                 </div>
+
+                {/* Fallback banner */}
+                {!loading && isFallback && city && (
+                    <LocationFallbackBanner city={city} />
+                )}
 
                 {/* Cards */}
                 {loading ? (
@@ -356,13 +347,8 @@ const PopularStores = () => {
                             No stores found{city ? ` in ${city}` : " near you"}
                         </p>
                         <p className="text-gray-400 text-sm mb-6">
-                            Try a different city or enable location access for better results
+                            Try searching a different city or address above
                         </p>
-                        <DetectLocationButton
-                            isDetecting={isDetecting}
-                            onClick={requestPreciseLocation}
-                            label="Detect my location"
-                        />
                     </div>
                 )}
             </div>
