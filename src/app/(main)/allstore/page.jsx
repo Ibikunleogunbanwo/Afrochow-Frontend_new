@@ -8,6 +8,7 @@ import PopularStoreCard from '@/components/home/cards/PopularStoreCard';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { SearchAPI } from '@/lib/api/search.api';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from '@/contexts/LocationContext';
 import { SignInModal } from '@/components/signin/SignInModal';
 import { SignUpModal } from '@/components/register/SignUpModal';
 
@@ -132,8 +133,12 @@ const DisplayStores = () => {
     const urlCity  = searchParams.get('city') || '';
     const urlPage  = parseInt(searchParams.get('page') || '0', 10);
 
+    // Fall back to LocationContext city when no city is in the URL.
+    const { city: locationCity } = useLocation();
+    const effectiveCity = urlCity || locationCity || '';
+
     const [queryInput, setQueryInput] = useState(urlQuery);
-    const [cityInput, setCityInput]   = useState(urlCity);
+    const [cityInput, setCityInput]   = useState(effectiveCity);
     const [isLoading, setIsLoading]   = useState(true);
     const [stores, setStores]         = useState([]);
     const [error, setError]           = useState(null);
@@ -146,7 +151,7 @@ const DisplayStores = () => {
 
     // ── fetch ──────────────────────────────────────────────────────────────────
     const fetchStores = useCallback(async () => {
-        const key = getCacheKey(urlQuery, urlCity, urlPage);
+        const key = getCacheKey(urlQuery, effectiveCity, urlPage);
 
         if (storesCache[key]) {
             const c = storesCache[key];
@@ -164,13 +169,13 @@ const DisplayStores = () => {
 
             let rawVendors = [];
 
-            if (urlQuery && urlCity) {
+            if (urlQuery && effectiveCity) {
                 // Both query and city — run vendor name search and product name
                 // search in parallel, then filter both by city and merge
                 const [byNameRes, byProductRes] = await Promise.all([
                     SearchAPI.searchVendorsAdvanced({
                         query: urlQuery,
-                        city: urlCity,
+                        city: effectiveCity,
                         isVerified: true,
                     }),
                     SearchAPI.getVendorsByProductName(urlQuery),
@@ -178,7 +183,7 @@ const DisplayStores = () => {
 
                 const byName    = unwrap(byNameRes);
                 const byProduct = unwrap(byProductRes)
-                    .filter(v => v.address?.city?.toLowerCase() === urlCity.toLowerCase());
+                    .filter(v => v.address?.city?.toLowerCase() === effectiveCity.toLowerCase());
 
                 // Merge and deduplicate by publicUserId
                 const seen = new Set();
@@ -208,9 +213,9 @@ const DisplayStores = () => {
                     return true;
                 });
 
-            } else if (urlCity) {
+            } else if (effectiveCity) {
                 // City only — dedicated DB-level endpoint
-                rawVendors = unwrap(await SearchAPI.getVendorsByCity(urlCity));
+                rawVendors = unwrap(await SearchAPI.getVendorsByCity(effectiveCity));
 
             } else {
                 // No filters — all verified vendors
@@ -244,17 +249,17 @@ const DisplayStores = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [urlQuery, urlCity, urlPage]);
+    }, [urlQuery, urlCity, urlPage, locationCity]);
 
     useEffect(() => {
         void fetchStores();
     }, [fetchStores]);
 
-    // Sync inputs on URL change (browser back/forward)
+    // Sync inputs on URL change (browser back/forward) or location context change
     useEffect(() => {
         setQueryInput(urlQuery);
-        setCityInput(urlCity);
-    }, [urlQuery, urlCity]);
+        setCityInput(urlCity || locationCity || '');
+    }, [urlQuery, urlCity, locationCity]);
 
     // ── navigation helpers ────────────────────────────────────────────────────
     const buildUrl = (overrides = {}) => {
@@ -287,32 +292,32 @@ const DisplayStores = () => {
     };
 
     // ── derived UI values ─────────────────────────────────────────────────────
-    const hasActiveFilters = !!(urlQuery || urlCity);
+    const hasActiveFilters = !!(urlQuery || effectiveCity);
 
     const getPageTitle = () => {
-        if (urlQuery && urlCity) return `"${urlQuery}" in ${urlCity}`;
-        if (urlQuery)            return `Results for "${urlQuery}"`;
-        if (urlCity)             return `Stores in ${urlCity}`;
+        if (urlQuery && effectiveCity) return `"${urlQuery}" in ${effectiveCity}`;
+        if (urlQuery)                  return `Results for "${urlQuery}"`;
+        if (effectiveCity)             return `Stores in ${effectiveCity}`;
         return 'All Stores';
     };
 
     const getPageSubtitle = () => {
-        if (urlQuery && urlCity)
-            return `Verified African stores and dishes matching "${urlQuery}" in ${urlCity}`;
+        if (urlQuery && effectiveCity)
+            return `Verified African stores and dishes matching "${urlQuery}" in ${effectiveCity}`;
         if (urlQuery)
             return `Stores and dishes matching "${urlQuery}" across Canada`;
-        if (urlCity)
-            return `Discover authentic African stores in ${urlCity}`;
+        if (effectiveCity)
+            return `Discover authentic African stores in ${effectiveCity}`;
         return 'Browse all verified African stores across Canada';
     };
 
     const getEmptyMessage = () => {
-        if (urlQuery && urlCity)
-            return `No stores or dishes matching "${urlQuery}" found in ${urlCity}. Try clearing some filters.`;
+        if (urlQuery && effectiveCity)
+            return `No stores or dishes matching "${urlQuery}" found in ${effectiveCity}. Try clearing some filters.`;
         if (urlQuery)
             return `No stores or dishes matching "${urlQuery}" found. Try a different search term.`;
-        if (urlCity)
-            return `No stores found in ${urlCity}. Try a different city.`;
+        if (effectiveCity)
+            return `No stores found in ${effectiveCity}. Try a different city.`;
         return 'No stores available at the moment. Check back soon.';
     };
 
@@ -361,10 +366,10 @@ const DisplayStores = () => {
                             All Stores
                         </Link>
 
-                        {urlCity && (
+                        {effectiveCity && (
                             <>
                                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                                <span className="text-gray-500 font-medium">{urlCity}</span>
+                                <span className="text-gray-500 font-medium">{effectiveCity}</span>
                             </>
                         )}
 
@@ -435,7 +440,7 @@ const DisplayStores = () => {
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
                             <span className="font-semibold text-orange-600">
                                 {totalCount} {totalCount === 1 ? 'store' : 'stores'}
-                                {urlCity ? ` in ${urlCity}` : ''}
+                                {effectiveCity ? ` in ${effectiveCity}` : ''}
                             </span>
                             {totalPages > 1 && (
                                 <span>— Page {currentPage + 1} of {totalPages}</span>
@@ -451,9 +456,10 @@ const DisplayStores = () => {
                                     🔍 {urlQuery}
                                 </span>
                             )}
-                            {urlCity && (
+                            {effectiveCity && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                    📍 {urlCity}
+                                    📍 {effectiveCity}
+                                    {!urlCity && <span className="opacity-60 font-normal"> (your location)</span>}
                                 </span>
                             )}
                             <button

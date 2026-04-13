@@ -9,6 +9,7 @@ import StoreCardSkeleton from "@/components/home/cards/StoreCardSkeleton";
 import { SearchAPI } from '@/lib/api/search.api';
 import { PromotionsAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from '@/contexts/LocationContext';
 import { SignInModal } from '@/components/signin/SignInModal';
 import { SignUpModal } from '@/components/register/SignUpModal';
 
@@ -82,17 +83,22 @@ const DisplayRestaurant = () => {
     const router       = useRouter();
     const searchParams = useSearchParams();
 
-    // URL is the source of truth for all filters.
+    // URL is the source of truth for explicit filters.
     const urlSearchQuery = searchParams.get('search')     || '';
     const urlCity        = searchParams.get('city')       || '';
     const urlCategoryId  = searchParams.get('categoryId') || '';
     const urlCategory    = searchParams.get('category')   || '';
     const urlSchedule    = searchParams.get('schedule')   || '';
 
-    // Controlled input values — initialized once from the URL, not synced on
-    // every URL change (URL changes re-mount the component anyway).
+    // Fall back to LocationContext city when no city is in the URL.
+    // This cascades the navbar location search to these results automatically.
+    const { city: locationCity } = useLocation();
+    const effectiveCity = urlCity || locationCity || '';
+
+    // Controlled input values — initialized once from the URL (or location context).
+    // URL changes re-mount the component so this is set fresh each time.
     const [inputSearchQuery, setInputSearchQuery] = useState(urlSearchQuery);
-    const [inputCity,        setInputCity]        = useState(urlCity);
+    const [inputCity,        setInputCity]        = useState(effectiveCity);
 
     const [isLoading,      setIsLoading]      = useState(true);
     const [products,       setProducts]       = useState([]);
@@ -154,7 +160,7 @@ const DisplayRestaurant = () => {
                 const [response, vendorsResponse] = await Promise.all([
                     SearchAPI.searchProductsAdvanced({
                         ...(urlSearchQuery && { query:        urlSearchQuery }),
-                        ...(urlCity        && { city:         urlCity        }),
+                        ...(effectiveCity  && { city:         effectiveCity  }),
                         ...(urlCategoryId  && { categoryId:   urlCategoryId  }),
                         ...(urlSchedule    && { scheduleType: urlSchedule    }),
                         page: currentPage,
@@ -234,12 +240,12 @@ const DisplayRestaurant = () => {
         };
 
         void fetchResults();
-    }, [urlSearchQuery, urlCity, urlCategoryId, urlSchedule, currentPage]);
+    }, [urlSearchQuery, urlCity, urlCategoryId, urlSchedule, currentPage, locationCity]);
 
     // ── Derived display values ────────────────────────────────────────────────
     const decodedQuery    = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';
-    const decodedCity     = urlCity        ? decodeURIComponent(urlCity)        : '';
-    const decodedCategory = urlCategory    ? decodeURIComponent(urlCategory)    : '';
+    const decodedCity     = effectiveCity  ? decodeURIComponent(effectiveCity)  : '';
+    const decodedCategory = urlCategory   ? decodeURIComponent(urlCategory)    : '';
     const resolvedCategory = categoryName  || decodedCategory;
 
     const getPageTitle = () => {
@@ -327,7 +333,7 @@ const DisplayRestaurant = () => {
         router.push('/restaurants');
     };
 
-    const hasActiveFilters = !!(urlSearchQuery || urlCity || urlCategoryId || urlCategory || urlSchedule);
+    const hasActiveFilters = !!(urlSearchQuery || effectiveCity || urlCategoryId || urlCategory || urlSchedule);
 
     return (
         <div className="min-h-screen bg-white py-12">
@@ -485,9 +491,10 @@ const DisplayRestaurant = () => {
                                     🔍 {decodedQuery}
                                 </span>
                             )}
-                            {urlCity && (
+                            {effectiveCity && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                                     📍 {decodedCity}
+                                    {!urlCity && <span className="opacity-60 font-normal"> (your location)</span>}
                                 </span>
                             )}
                             {urlSchedule === 'SAME_DAY' && (
