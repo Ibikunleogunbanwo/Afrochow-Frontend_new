@@ -253,7 +253,7 @@ const DisplayRestaurant = () => {
         if (resolvedCategory)               return resolvedCategory;
         if (decodedQuery && decodedCity)    return `"${decodedQuery}" in ${decodedCity}`;
         if (decodedQuery)                   return `Results for "${decodedQuery}"`;
-        if (decodedCity)                    return `Stores in ${decodedCity}`;
+        if (decodedCity)                    return `Products in ${decodedCity}`;
         return 'All Products';
     };
 
@@ -262,8 +262,8 @@ const DisplayRestaurant = () => {
         if (resolvedCategory)                 return `Explore all ${resolvedCategory} options from verified African vendors across Canada`;
         if (decodedQuery && decodedCity)      return `Showing African food matching "${decodedQuery}" available in ${decodedCity}`;
         if (decodedQuery)                     return `African dishes and stores matching "${decodedQuery}" across Canada`;
-        if (decodedCity)                      return `Discover authentic African cuisine from the best kitchens and stores in ${decodedCity}`;
-        return 'Discover authentic African cuisine from the best kitchens and stores near you';
+        if (decodedCity)                      return `Discover authentic African products from the best kitchens and vendors in ${decodedCity}`;
+        return 'Discover authentic African cuisine from the best kitchens and vendors near you';
     };
 
     const getResultsLabel = () => {
@@ -273,7 +273,7 @@ const DisplayRestaurant = () => {
         if (resolvedCategory)               return `${count} ${noun} in ${resolvedCategory}`;
         if (decodedQuery && decodedCity)    return `${count} ${noun} for "${decodedQuery}" in ${decodedCity}`;
         if (decodedQuery)                   return `${count} ${noun} for "${decodedQuery}"`;
-        if (decodedCity)                    return `${count} stores in ${decodedCity}`;
+        if (decodedCity)                    return `${count} products in ${decodedCity}`;
         return `${count} products available`;
     };
 
@@ -282,7 +282,7 @@ const DisplayRestaurant = () => {
         if (resolvedCategory)                 return `No products found in the ${resolvedCategory} category. Try browsing all stores.`;
         if (decodedQuery && decodedCity)      return `No results for "${decodedQuery}" in ${decodedCity}. Try a different search term or city.`;
         if (decodedQuery)                     return `No results for "${decodedQuery}". Try a different search term.`;
-        if (decodedCity)                      return `No stores found in ${decodedCity}. Try a different city.`;
+        if (decodedCity)                      return `No products found in ${decodedCity}. Try a different city.`;
         return "We couldn't find any products. Try searching for something specific.";
     };
 
@@ -401,7 +401,7 @@ const DisplayRestaurant = () => {
                             {getPageTitle()}
                             {!isLoading && totalElements > 0 && (
                                 <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
-                                    {totalElements} {totalElements === 1 ? 'result' : 'results'} found
+                                    {totalElements} {totalElements === 1 ? 'product' : 'products'} found
                                 </span>
                             )}
                         </h1>

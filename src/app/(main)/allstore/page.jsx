@@ -389,7 +389,7 @@ const DisplayStores = () => {
                             {getPageTitle()}
                             {!isLoading && totalCount > 0 && (
                                 <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
-                                    {totalCount} {totalCount === 1 ? 'vendor' : 'vendors'} found
+                                    {totalCount} {totalCount === 1 ? 'product' : 'products'} found
                                 </span>
                             )}
                         </h1>
@@ -439,7 +439,7 @@ const DisplayStores = () => {
                     {!isLoading && totalCount > 0 && (
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
                             <span className="font-semibold text-orange-600">
-                                {totalCount} {totalCount === 1 ? 'vendor' : 'vendors'}
+                                {totalCount} {totalCount === 1 ? 'product' : 'products'}
                                 {effectiveCity ? ` in ${effectiveCity}` : ''}
                             </span>
                             {totalPages > 1 && (
