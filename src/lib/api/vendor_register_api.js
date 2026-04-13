@@ -164,9 +164,11 @@ export const registerVendor = async (vendorData) => {
 
 /**
  * Check vendor registration/approval status.
+ * Uses the authenticated vendor profile endpoint — call only after login.
+ * Returns VendorProfileResponseDto which includes `vendorStatus` (state machine).
  */
-export const getVendorStatus = async (vendorId) => {
-  return apiCall(`/auth/vendors/${vendorId}/status`);
+export const getVendorStatus = async () => {
+  return apiCall('/vendor/profile', { method: 'GET' });
 };
 
 /**
@@ -176,15 +178,5 @@ export const resendVerificationEmail = async (email) => {
   return apiCall('/auth/resend-verification', {
     method: 'POST',
     body: JSON.stringify({ email }),
-  });
-};
-
-/**
- * Update vendor operating hours.
- */
-export const updateOperatingHours = async (vendorId, operatingHours) => {
-  return apiCall(`/auth/vendors/${vendorId}/operating-hours`, {
-    method: 'PUT',
-    body: JSON.stringify(normalizeOperatingHours(operatingHours)),
   });
 };

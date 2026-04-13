@@ -24,22 +24,60 @@ export const AdminUsersAPI = {
 
 // ── Admin Vendor Management ────────────────────────────────────────────────
 export const AdminVendorsAPI = {
-    getAll:      ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors`),
-    getById:     (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}`),
-    getPending:  ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/pending`),
-    getVerified: ()   => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/verified`),
-    verify:      (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/verify`,     { method: 'PATCH' }),
-    unverify:    (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/unverify`,   { method: 'PATCH' }),
-    activate:    (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/activate`,   { method: 'PATCH' }),
-    deactivate:  (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/deactivate`, { method: 'PATCH' }),
-    reject:      (id, reason) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/reject`, {
+    // ── List endpoints ──
+    getAll:          ()       => fetchWithCredentials(`${API_BASE_URL}/admin/vendors`),
+    getById:         (id)     => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}`),
+    getPending:      ()       => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/pending`),
+    getProvisional:  ()       => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/provisional`),
+    getVerified:     ()       => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/verified`),
+    getByStatus:     (status) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/by-status/${status}`),
+
+    // ── Status transitions (new state machine) ──
+    /**
+     * Move a PENDING_REVIEW vendor to PROVISIONAL.
+     * Vendor goes live with an order cap; food handling cert still required for full verification.
+     */
+    approveProvisional: (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/approve-provisional`, { method: 'PATCH' }),
+
+    /**
+     * Confirm the vendor's food handling cert and promote PROVISIONAL → VERIFIED.
+     */
+    verifyCert:      (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/verify-cert`, { method: 'PATCH' }),
+
+    /**
+     * Directly promote a vendor to VERIFIED (bypass cert — exceptional use only).
+     */
+    verify:          (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/verify`,     { method: 'PATCH' }),
+
+    /**
+     * Suspend a VERIFIED or PROVISIONAL vendor.
+     */
+    suspend:         (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/suspend`,    { method: 'PATCH' }),
+
+    /**
+     * Reinstate a SUSPENDED vendor back to VERIFIED.
+     */
+    reinstate:       (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/reinstate`,  { method: 'PATCH' }),
+
+    /**
+     * Reject a PENDING_REVIEW or PROVISIONAL vendor.
+     */
+    reject:          (id, reason) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
     }),
+
+    // ── Stripe ──
     linkStripeAccount: (id, stripeAccountId) => fetchWithCredentials(
         `${API_BASE_URL}/admin/vendors/${id}/stripe-account`,
         { method: 'PATCH', body: JSON.stringify({ stripeAccountId }) }
     ),
+
+    // ── Deprecated aliases (kept for backward compatibility) ──
+    /** @deprecated Use suspend() instead */
+    deactivate: (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/suspend`,   { method: 'PATCH' }),
+    /** @deprecated Use reinstate() instead */
+    activate:   (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/reinstate`, { method: 'PATCH' }),
 };
 
 // ── Admin Order Management ─────────────────────────────────────────────────

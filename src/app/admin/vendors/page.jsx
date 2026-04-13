@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
-    RefreshCw, ChevronDown, Eye, Calendar, X,
+    RefreshCw, ChevronDown, Eye, Calendar, X, Clock,
 } from 'lucide-react';
 
 // ── Date filter helpers ────────────────────────────────────────────────────
@@ -53,60 +53,92 @@ import VendorReviewModal from '@/components/admin/VendorReviewModal';
 
 const PAGE_SIZE = 15;
 
+// VendorStatus values from backend state machine
+const VENDOR_STATUS = {
+    PENDING_PROFILE: 'PENDING_PROFILE',
+    PENDING_REVIEW:  'PENDING_REVIEW',
+    PROVISIONAL:     'PROVISIONAL',
+    VERIFIED:        'VERIFIED',
+    SUSPENDED:       'SUSPENDED',
+    REJECTED:        'REJECTED',
+};
+
 const FILTERS = [
     { key: 'all',              label: 'All' },
-    { key: 'pending',          label: 'Pending' },
-    { key: 'verified',         label: 'Verified' },
-    { key: 'suspended',        label: 'Suspended' },
-    { key: 'revoked',          label: 'Revoked' },
+    { key: 'PENDING_REVIEW',   label: 'Pending Review' },
+    { key: 'PROVISIONAL',      label: 'Provisional' },
+    { key: 'VERIFIED',         label: 'Verified' },
+    { key: 'SUSPENDED',        label: 'Suspended' },
+    { key: 'REJECTED',         label: 'Rejected' },
     { key: 'stripe-incomplete', label: 'Stripe Incomplete' },
 ];
 
-const StatusBadge = ({ verified, active, isRevoked }) => {
-    // Suspended: verified vendor manually deactivated by admin
-    if (active === false && verified) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            Suspended
-        </span>
-    );
-    // Inactive + unverified — distinguish rejected (never verified) vs revoked (was verified)
-    if (active === false && !verified) return isRevoked ? (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-            Revoked
-        </span>
-    ) : (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-            Rejected
-        </span>
-    );
-    if (verified) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-900 text-white">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-            Verified
-        </span>
-    );
-    // Active + unverified — revoked (was once verified) vs truly pending (new applicant)
-    if (isRevoked) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-            Revoked
-        </span>
-    );
-    return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-            Pending
-        </span>
-    );
+/** Derive status from vendorStatus field (primary) with fallback to legacy booleans. */
+const resolveStatus = (v) => {
+    if (v.vendorStatus) return v.vendorStatus;
+    // Legacy fallback
+    if (v.isActive === false && v.isVerified) return VENDOR_STATUS.SUSPENDED;
+    if (v.isActive === false)                 return VENDOR_STATUS.REJECTED;
+    if (v.isVerified)                         return VENDOR_STATUS.VERIFIED;
+    return VENDOR_STATUS.PENDING_REVIEW;
+};
+
+const StatusBadge = ({ status }) => {
+    switch (status) {
+        case VENDOR_STATUS.VERIFIED:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-900 text-white">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    Verified
+                </span>
+            );
+        case VENDOR_STATUS.PROVISIONAL:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                    <Clock className="w-3 h-3" />
+                    Provisional
+                </span>
+            );
+        case VENDOR_STATUS.PENDING_REVIEW:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                    Pending Review
+                </span>
+            );
+        case VENDOR_STATUS.PENDING_PROFILE:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                    Incomplete Profile
+                </span>
+            );
+        case VENDOR_STATUS.SUSPENDED:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    Suspended
+                </span>
+            );
+        case VENDOR_STATUS.REJECTED:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                    Rejected
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+                    {status ?? 'Unknown'}
+                </span>
+            );
+    }
 };
 
 export default function AdminVendorsPage() {
     const router = useRouter();
     const [vendors, setVendors]       = useState([]);
-    const [revokedIds, setRevokedIds] = useState(new Set()); // track revoked in-session
     const [filter, setFilter]         = useState('all');
     const [search, setSearch]         = useState('');
     const [loading, setLoading]       = useState(true);
@@ -143,23 +175,18 @@ export default function AdminVendorsPage() {
     }, [router]);
 
     const VENDOR_ACTION_LABELS = {
-        deactivate: 'Vendor Suspended',
-        activate:   'Vendor Reinstated',
-        unverify:   'Verification Revoked',
-        verify:     'Vendor Re-verified',
+        suspend:           'Vendor Suspended',
+        reinstate:         'Vendor Reinstated',
+        approveProvisional: 'Vendor Provisionally Approved',
+        verifyCert:        'Certificate Verified — Vendor Fully Verified',
+        verify:            'Vendor Fully Verified',
+        reject:            'Vendor Rejected',
     };
 
     const doAction = async (id, fn, label) => {
         setActionLoading(p => ({ ...p, [id + label]: true }));
         try {
             await fn(id);
-            // Track revoke / re-verify in local state so the card count updates
-            // even if the API doesn't return verifiedAt on the vendor object.
-            if (label === 'unverify') {
-                setRevokedIds(prev => new Set([...prev, id]));
-            } else if (label === 'verify') {
-                setRevokedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
-            }
             await fetchVendors();
             toast.success(VENDOR_ACTION_LABELS[label] || 'Action completed');
         } catch (e) {
@@ -174,15 +201,10 @@ export default function AdminVendorsPage() {
         }
     };
 
-    // A vendor is "revoked" if it was explicitly unverified this session,
-    // OR if the API returns verifiedAt (backend may preserve it after unverify).
-    const isRevoked = (v) =>
-        revokedIds.has(v.publicVendorId) ||
-        (!v.isVerified && v.verifiedAt != null);
-
     const dateBounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
 
     const filtered = vendors.filter(v => {
+        const status = resolveStatus(v);
         // date registered filter
         if (!inDateRange(v.createdAt, dateBounds)) return false;
         // text search
@@ -190,10 +212,11 @@ export default function AdminVendorsPage() {
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
         // status tab filter
         switch (filter) {
-            case 'pending':          return !v.isVerified && v.isActive !== false && !isRevoked(v);
-            case 'verified':         return v.isVerified === true;
-            case 'suspended':        return v.isActive === false && v.isVerified === true;
-            case 'revoked':          return isRevoked(v);
+            case 'PENDING_REVIEW':   return status === VENDOR_STATUS.PENDING_REVIEW;
+            case 'PROVISIONAL':      return status === VENDOR_STATUS.PROVISIONAL;
+            case 'VERIFIED':         return status === VENDOR_STATUS.VERIFIED;
+            case 'SUSPENDED':        return status === VENDOR_STATUS.SUSPENDED;
+            case 'REJECTED':         return status === VENDOR_STATUS.REJECTED;
             case 'stripe-incomplete': return v.stripeOnboardingComplete === false;
             default:                 return true;
         }
@@ -251,11 +274,11 @@ export default function AdminVendorsPage() {
                     return true;
                 });
                 const statCards = [
-                    { key: 'all',       label: 'Total',     value: pool.length },
-                    { key: 'verified',  label: 'Verified',  value: pool.filter(v => v.isVerified === true).length },
-                    { key: 'pending',   label: 'Pending',   value: pool.filter(v => !v.isVerified && v.isActive !== false && !isRevoked(v)).length },
-                    { key: 'suspended', label: 'Suspended', value: pool.filter(v => v.isActive === false && v.isVerified === true).length },
-                    { key: 'revoked',   label: 'Revoked',   value: pool.filter(v => isRevoked(v)).length },
+                    { key: 'all',            label: 'Total',       value: pool.length },
+                    { key: 'VERIFIED',       label: 'Verified',    value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
+                    { key: 'PROVISIONAL',    label: 'Provisional', value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
+                    { key: 'PENDING_REVIEW', label: 'Pending',     value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
+                    { key: 'SUSPENDED',      label: 'Suspended',   value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
                 ];
                 return (
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -401,13 +424,25 @@ export default function AdminVendorsPage() {
                             { label: 'Joined',     className: 'w-32 shrink-0' },
                             { label: 'Actions',    className: 'w-44 shrink-0' },
                         ]} />
-                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(v => (
+                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(v => {
+                            const status = resolveStatus(v);
+                            // Status dot colour for avatar
+                            const dotColor = {
+                                [VENDOR_STATUS.VERIFIED]:        '#22c55e',
+                                [VENDOR_STATUS.PROVISIONAL]:     '#3b82f6',
+                                [VENDOR_STATUS.PENDING_REVIEW]:  '#f59e0b',
+                                [VENDOR_STATUS.PENDING_PROFILE]: '#9ca3af',
+                                [VENDOR_STATUS.SUSPENDED]:       '#ef4444',
+                                [VENDOR_STATUS.REJECTED]:        '#6b7280',
+                            }[status] ?? '#9ca3af';
+
+                            return (
                             <AdminTableRow key={v.publicVendorId}>
                                 {/* Restaurant */}
                                 <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                     <AdminAvatar
                                         initials={<Store className="w-4 h-4 text-gray-600" />}
-                                        statusColor={v.isActive === false ? '#ef4444' : v.isVerified ? '#22c55e' : '#f59e0b'}
+                                        statusColor={dotColor}
                                         size="md"
                                     />
                                     <div className="min-w-0 flex-1">
@@ -415,7 +450,7 @@ export default function AdminVendorsPage() {
                                         <p className="text-xs text-gray-400 truncate">{v.cuisineType || 'N/A'}</p>
                                         {/* Mobile-only: status + date */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
-                                            <StatusBadge verified={v.isVerified} active={v.isActive} verifiedAt={v.verifiedAt} isRevoked={isRevoked(v)} />
+                                            <StatusBadge status={status} />
                                             <span className="text-[11px] text-gray-400">{formatDate(v.createdAt)}</span>
                                         </div>
                                     </div>
@@ -423,7 +458,11 @@ export default function AdminVendorsPage() {
 
                                 {/* Status — desktop only */}
                                 <div className="hidden md:block w-32 shrink-0">
-                                    <StatusBadge verified={v.isVerified} active={v.isActive} verifiedAt={v.verifiedAt} isRevoked={isRevoked(v)} />
+                                    <StatusBadge status={status} />
+                                    {/* Food cert badge for provisional vendors */}
+                                    {status === VENDOR_STATUS.PROVISIONAL && v.hasFoodHandlingCert && (
+                                        <span className="block text-[10px] text-blue-600 font-semibold mt-1">Cert uploaded</span>
+                                    )}
                                 </div>
 
                                 {/* Joined — desktop only */}
@@ -434,14 +473,8 @@ export default function AdminVendorsPage() {
                                 {/* Actions — state-aware */}
                                 <div className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap">
                                     {(() => {
-                                        const isPending  = !v.isVerified && v.isActive !== false && !isRevoked(v);
-                                        const isVerifiedActive = v.isVerified && v.isActive !== false;
-                                        const isSuspended = v.isActive === false && v.isVerified;
-                                        const isRejected  = v.isActive === false && !v.isVerified && !v.verifiedAt;
-                                        const isRevokedV  = isRevoked(v); // unverified but was once verified
-
-                                        if (isPending) {
-                                            // Pending applicant — Review & Decide only
+                                        // PENDING_REVIEW — Review & Decide (approve provisional or reject)
+                                        if (status === VENDOR_STATUS.PENDING_REVIEW) {
                                             return (
                                                 <button
                                                     onClick={() => setReviewVendor(v)}
@@ -453,34 +486,50 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        if (isVerifiedActive) {
-                                            // Active verified vendor — can Suspend or Revoke
+                                        // PROVISIONAL — verify cert (if cert uploaded) or suspend
+                                        if (status === VENDOR_STATUS.PROVISIONAL) {
                                             return (<>
+                                                {v.hasFoodHandlingCert && (
+                                                    <button
+                                                        onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verifyCert, 'verifyCert')}
+                                                        disabled={!!actionLoading[v.publicVendorId + 'verifyCert']}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+                                                    >
+                                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                                        Verify Cert
+                                                    </button>
+                                                )}
                                                 <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
-                                                    disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'suspend']}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
                                                 >
                                                     <XCircle className="w-3.5 h-3.5" />
                                                     Suspend
                                                 </button>
-                                                <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.unverify, 'unverify')}
-                                                    disabled={!!actionLoading[v.publicVendorId + 'unverify']}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <ShieldOff className="w-3.5 h-3.5" />
-                                                    Revoke
-                                                </button>
                                             </>);
                                         }
 
-                                        if (isSuspended) {
-                                            // Suspended verified vendor — Activate only
+                                        // VERIFIED — can only Suspend
+                                        if (status === VENDOR_STATUS.VERIFIED) {
                                             return (
                                                 <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.activate, 'activate')}
-                                                    disabled={!!actionLoading[v.publicVendorId + 'activate']}
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'suspend']}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Suspend
+                                                </button>
+                                            );
+                                        }
+
+                                        // SUSPENDED — Reinstate only
+                                        if (status === VENDOR_STATUS.SUSPENDED) {
+                                            return (
+                                                <button
+                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.reinstate, 'reinstate')}
+                                                    disabled={!!actionLoading[v.publicVendorId + 'reinstate']}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
                                                 >
                                                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -489,8 +538,8 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        if (isRejected) {
-                                            // Rejected applicant — Review to re-approve or dismiss
+                                        // REJECTED — Review to re-submit pathway
+                                        if (status === VENDOR_STATUS.REJECTED) {
                                             return (
                                                 <button
                                                     onClick={() => setReviewVendor(v)}
@@ -502,33 +551,12 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        if (isRevokedV) {
-                                            // Revoked (was verified, now unverified) — Re-verify or Suspend
-                                            return (<>
-                                                <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.verify, 'verify')}
-                                                    disabled={!!actionLoading[v.publicVendorId + 'verify']}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <ShieldCheck className="w-3.5 h-3.5" />
-                                                    Re-verify
-                                                </button>
-                                                <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.deactivate, 'deactivate')}
-                                                    disabled={!!actionLoading[v.publicVendorId + 'deactivate']}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <XCircle className="w-3.5 h-3.5" />
-                                                    Suspend
-                                                </button>
-                                            </>);
-                                        }
-
                                         return null;
                                     })()}
                                 </div>
                             </AdminTableRow>
-                        ))}
+                            );
+                        })}
                     </AdminTableRoot>
                 )}
                 {!loading && !error && filtered.length > PAGE_SIZE && (

@@ -77,4 +77,35 @@ export const VendorProfileAPI = {
 
     return json;
   },
+
+  /**
+   * Upload a food handling certificate (PROVISIONAL vendors only).
+   * @param {File} certFile - PDF or image of the certificate
+   * @param {{ certNumber: string, issuingBody: string, certExpiry?: string }} metadata
+   *   certExpiry should be an ISO-8601 LocalDateTime string, e.g. "2028-06-01T00:00:00"
+   */
+  uploadFoodHandlingCert: async (certFile, metadata) => {
+    const formData = new FormData();
+    formData.append('file', certFile);
+    formData.append('certNumber', metadata.certNumber);
+    formData.append('issuingBody', metadata.issuingBody);
+    if (metadata.certExpiry) {
+      formData.append('certExpiry', metadata.certExpiry);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/vendor/profile/food-handling-cert`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+    const json = await response.json();
+
+    if (!response.ok || json.success === false) {
+      const errorMessage = extractErrorMessage(json, 'Certificate upload failed');
+      throw new Error(errorMessage);
+    }
+
+    return json;
+  },
 };
