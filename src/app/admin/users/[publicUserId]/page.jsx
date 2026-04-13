@@ -72,6 +72,8 @@ export default function AdminUserDetailPage() {
         try {
             const res = await AdminUsersAPI.getById(publicUserId);
             const data = res?.data ?? res;
+            console.log('[AdminUserDetail raw]', res);
+            console.log('[AdminUserDetail data]', data);
             setUser(data);
         } catch (e) {
             setError(e.message || 'Failed to load user');
@@ -125,10 +127,18 @@ export default function AdminUserDetailPage() {
     const isProtected = user?.role === 'SUPERADMIN';
     const isAdminRole = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
 
-    // ── Avatar ────────────────────────────────────────────────────────────────
+    // ── Derived display values ────────────────────────────────────────────────
+    const displayName = user
+        ? (user.fullName || [user.firstName, user.lastName].filter(Boolean).join(' ') || null)
+        : null;
+
     const initials = user
-        ? ((user.firstName ?? user.fullName ?? user.email ?? '?').charAt(0)).toUpperCase()
+        ? ((user.firstName ?? displayName ?? user.email ?? '?').charAt(0)).toUpperCase()
         : '?';
+
+    const totalOrders = user
+        ? (user.totalOrders ?? user.orderCount ?? user.totalOrdersCompleted ?? user.ordersCount ?? null)
+        : null;
 
     return (
         <div className="space-y-6">
@@ -145,7 +155,7 @@ export default function AdminUserDetailPage() {
                 </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
                 <span className="font-semibold text-gray-900 truncate max-w-[200px]">
-                    {loading ? 'Loading…' : (user?.fullName || user?.email || publicUserId)}
+                    {loading ? 'Loading…' : (displayName || user?.email || publicUserId)}
                 </span>
             </nav>
 
@@ -188,7 +198,7 @@ export default function AdminUserDetailPage() {
                                 {user.profileImageUrl ? (
                                     <img
                                         src={user.profileImageUrl}
-                                        alt={user.fullName || 'User'}
+                                        alt={displayName || 'User'}
                                         className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-sm"
                                         referrerPolicy="no-referrer"
                                     />
@@ -198,8 +208,8 @@ export default function AdminUserDetailPage() {
                                     </div>
                                 )}
                                 <div>
-                                    <h2 className="text-xl font-black text-gray-900">{user.fullName || 'No name'}</h2>
-                                    <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>
+                                    <h2 className="text-xl font-black text-gray-900">{displayName || user.email}</h2>
+                                    {displayName && <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>}
                                 </div>
                                 <div className="flex flex-wrap items-center justify-center gap-2">
                                     <RoleBadge role={user.role} />
@@ -350,18 +360,31 @@ export default function AdminUserDetailPage() {
                         {/* Stats / summary */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                             <h3 className="text-sm font-bold text-gray-900 mb-4">Account Summary</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-3 gap-3">
                                 {[
-                                    { label: 'Total Orders',    value: user.totalOrders ?? user.orderCount ?? '—', icon: Package },
-                                    { label: 'Profile Complete', value: user.isProfileComplete ? 'Yes' : 'No', icon: user.isProfileComplete ? CheckCircle2 : XCircle },
-                                    { label: 'Auth Provider',   value: user.authProvider ?? (user.isGoogleUser ? 'Google' : 'Email'), icon: Shield },
-                                ].map(({ label, value, icon: Icon }) => (
-                                    <div key={label} className="p-4 bg-gray-50 rounded-xl">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Icon className="w-4 h-4 text-gray-400" />
-                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
+                                    {
+                                        label: 'Total Orders',
+                                        value: totalOrders !== null ? totalOrders : '—',
+                                        icon: Package,
+                                    },
+                                    {
+                                        label: 'Profile',
+                                        value: user.isProfileComplete ? 'Complete' : 'Incomplete',
+                                        icon: user.isProfileComplete ? CheckCircle2 : XCircle,
+                                        color: user.isProfileComplete ? 'text-green-600' : 'text-red-500',
+                                    },
+                                    {
+                                        label: 'Auth',
+                                        value: user.authProvider ?? (user.isGoogleUser ? 'Google' : 'Email'),
+                                        icon: Shield,
+                                    },
+                                ].map(({ label, value, icon: Icon, color }) => (
+                                    <div key={label} className="p-3 bg-gray-50 rounded-xl">
+                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                            <Icon className={`w-3.5 h-3.5 ${color ?? 'text-gray-400'}`} />
+                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide leading-none">{label}</p>
                                         </div>
-                                        <p className="text-lg font-black text-gray-900">{String(value)}</p>
+                                        <p className={`text-sm font-bold ${color ?? 'text-gray-900'} break-words`}>{String(value)}</p>
                                     </div>
                                 ))}
                             </div>
