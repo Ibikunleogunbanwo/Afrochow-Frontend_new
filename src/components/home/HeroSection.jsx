@@ -290,8 +290,8 @@ const HeroSection = () => {
                                         onFocus={() => { setLocFocused(true); if (suggestions.length > 0) setShowSuggestions(true); }}
                                         onBlur={() => setLocFocused(false)}
                                         onKeyDown={handleLocationKeyDown}
-                                        placeholder="Calgary, Toronto, Vancouver..."
-                                        className="w-full pl-12 pr-16 py-3.5 text-gray-800 placeholder-gray-400 bg-transparent border-0 focus:outline-none text-base font-medium"
+                                        placeholder="City or postal code..."
+                                        className="w-full pl-12 pr-28 py-3.5 text-gray-800 placeholder-gray-400 bg-transparent border-0 focus:outline-none text-base font-medium"
                                         aria-label="Enter location"
                                         autoComplete="off"
                                     />
