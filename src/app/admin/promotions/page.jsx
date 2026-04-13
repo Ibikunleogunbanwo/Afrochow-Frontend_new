@@ -61,8 +61,8 @@ const formFromPromotion = (p) => ({
     maxDiscountAmount:  p.maxDiscountAmount  != null ? String(p.maxDiscountAmount)  : '',
     usageLimit:         p.usageLimit         != null ? String(p.usageLimit)         : '',
     perUserLimit:       p.perUserLimit       != null ? String(p.perUserLimit)       : '',
-    startDate:          p.startDate          ? p.startDate.slice(0, 10) : '',
-    endDate:            p.endDate            ? p.endDate.slice(0, 10)   : '',
+    startDate:          p.startDate ? new Date(p.startDate).toLocaleDateString('en-CA') : '',
+    endDate:            p.endDate   ? new Date(p.endDate).toLocaleDateString('en-CA')   : '',
     isActive:           p.isActive           ?? p.isCurrentlyActive ?? true,
     vendorPublicId:     p.vendorPublicId     ?? '',
 });
