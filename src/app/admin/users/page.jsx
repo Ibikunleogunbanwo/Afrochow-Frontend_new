@@ -396,14 +396,14 @@ export default function AdminUsersPage() {
                         ]} />
                         {displayedUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(u => (
                             <AdminTableRow key={u.publicUserId}>
-                                {/* Name col */}
-                                <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
+                                {/* Name col — clicking navigates to user detail */}
+                                <Link href={`/admin/users/${u.publicUserId}`} className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden group">
                                     <AdminAvatar
                                         initials={(u.fullName || u.email || '?').charAt(0).toUpperCase()}
                                         statusColor={u.isActive ? '#22c55e' : '#ef4444'}
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-gray-900 truncate">{u.fullName || 'No name'}</p>
+                                        <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.fullName || 'No name'}</p>
                                         <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                         {/* Mobile-only: role + status + date inline */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
@@ -413,7 +413,7 @@ export default function AdminUsersPage() {
                                             <span className="text-[11px] text-gray-400">{formatDate(u.createdAt)}</span>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
 
                                 {/* Role col — desktop only */}
                                 <div className="hidden md:block w-32 shrink-0">

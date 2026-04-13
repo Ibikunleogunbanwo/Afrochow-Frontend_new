@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 import { useAuth } from "@/hooks/useAuth";
+import { setAuth } from "@/redux-store/authSlice";
+import { AuthAPI } from "@/lib/api/auth.api";
 import { toast } from "@/components/ui/toast";
 import Logo from "@/components/Logo";
 import {
@@ -68,16 +71,34 @@ function FieldError({ message }) {
 }
 
 export default function OnboardingPage() {
-    const router  = useRouter();
+    const router   = useRouter();
+    const dispatch = useDispatch();
     const { user, completeOnboarding } = useAuth();
+
+    // Re-fetch from server on mount so profileImageUrl and firstName/lastName
+    // (recently added to GET /auth/me) are available even if the user's Redux
+    // state predates the fix.
+    useEffect(() => {
+        AuthAPI.checkAuth().then(({ isAuthenticated, user: freshUser }) => {
+            if (isAuthenticated && freshUser) dispatch(setAuth({ user: freshUser }));
+        }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const [step,    setStep]    = useState(0); // 0 = details, 1 = address
     const [saving,  setSaving]  = useState(false);
     const [errors,  setErrors]  = useState({});
 
-    // Step 0 fields — pre-fill name from Google but allow override
+    // Step 0 fields — pre-fill from Google/DB; update when Redux refreshes after mount re-fetch
     const [firstName, setFirstName] = useState(user?.firstName ?? "");
     const [lastName,  setLastName]  = useState(user?.lastName  ?? "");
+
+    // Sync fields when user object updates (e.g. after the mount re-fetch populates
+    // firstName/lastName that weren't in the initial login response).
+    useEffect(() => {
+        if (user?.firstName) setFirstName(prev => prev || user.firstName);
+        if (user?.lastName)  setLastName (prev => prev || user.lastName);
+    }, [user?.firstName, user?.lastName]);
     const [phone,    setPhone]    = useState("");
 
     // Step 1 fields
@@ -138,12 +159,11 @@ export default function OnboardingPage() {
                 ...(instructions.trim() && { defaultDeliveryInstructions: instructions.trim() }),
                 ...(!skipAddress && addressLine.trim() && {
                     address: {
-                        addressLine:    addressLine.trim(),
-                        city:           city.trim(),
-                        province:       province,
-                        postalCode:     postalCode.trim().toUpperCase().replace(/\s/g, ""),
-                        country:        "Canada",
-                        defaultAddress: true,
+                        addressLine: addressLine.trim(),
+                        city:        city.trim(),
+                        province:    province,
+                        postalCode:  postalCode.trim().toUpperCase().replace(/\s/g, ""),
+                        country:     "Canada",
                     },
                 }),
             };
