@@ -18,29 +18,28 @@ import {
     Clock,
     ShieldOff,
     XCircle,
-    ShieldAlert,
 } from 'lucide-react';
 import AvatarDisplay from '@/components/VendorDashboardLayout/AvatarDisplay';
 
 /**
- * Derive a store status descriptor from isActive + isVerified + verifiedAt.
- * Returns { label, color, Icon, dot } for rendering a status pill.
+ * Derive a store status descriptor from the vendorStatus enum value.
+ * Falls back to legacy boolean logic when vendorStatus is not yet populated.
  */
-function getStoreStatus(isActive, isVerified, verifiedAt) {
-    if (isActive && isVerified) {
-        return { label: 'Active', color: 'green', Icon: CheckCircle2 };
+function getStoreStatus(vendorStatus, isActive, isVerified) {
+    switch (vendorStatus) {
+        case 'VERIFIED':        return { label: 'Active',       color: 'green',  Icon: CheckCircle2 };
+        case 'PROVISIONAL':     return { label: 'Provisional',  color: 'blue',   Icon: Clock        };
+        case 'PENDING_REVIEW':  return { label: 'Under Review', color: 'orange', Icon: Clock        };
+        case 'PENDING_PROFILE': return { label: 'Incomplete',   color: 'orange', Icon: Clock        };
+        case 'SUSPENDED':       return { label: 'Suspended',    color: 'red',    Icon: ShieldOff    };
+        case 'REJECTED':        return { label: 'Rejected',     color: 'red',    Icon: XCircle      };
+        default: break;
     }
-    if (!isActive && isVerified) {
-        return { label: 'Suspended', color: 'red', Icon: ShieldOff };
-    }
-    if (!isActive && !isVerified && verifiedAt) {
-        return { label: 'Revoked', color: 'red', Icon: ShieldAlert };
-    }
-    if (!isActive && !isVerified) {
-        return { label: 'Rejected', color: 'red', Icon: XCircle };
-    }
-    // isActive=true, isVerified=false — pending
-    return { label: 'Pending', color: 'orange', Icon: Clock };
+    // Legacy boolean fallback (pre-state-machine responses)
+    if (isActive && isVerified)  return { label: 'Active',       color: 'green',  Icon: CheckCircle2 };
+    if (!isActive && isVerified) return { label: 'Suspended',    color: 'red',    Icon: ShieldOff    };
+    if (!isActive)               return { label: 'Rejected',     color: 'red',    Icon: XCircle      };
+    return                              { label: 'Under Review', color: 'orange', Icon: Clock        };
 }
 
 const navItems = [
@@ -63,14 +62,16 @@ const Sidebar = ({
     badgeCounts = {},
     collapsed = false,
     onCollapsedChange,
+    vendorStatus,
     vendorIsActive,
     vendorIsVerified,
     vendorVerifiedAt,
 }) => {
-    const status = getStoreStatus(vendorIsActive, vendorIsVerified, vendorVerifiedAt);
+    const status = getStoreStatus(vendorStatus, vendorIsActive, vendorIsVerified);
 
     const statusColors = {
         green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200',  dot: 'bg-green-500'  },
+        blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   ring: 'ring-blue-200',   dot: 'bg-blue-500'   },
         orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200', dot: 'bg-orange-500' },
         red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200',    dot: 'bg-red-500'    },
     };
@@ -99,7 +100,7 @@ const Sidebar = ({
                 </div>
 
                 {/* Store status badge */}
-                {vendorIsActive !== undefined && vendorIsVerified !== undefined && (
+                {(vendorStatus !== undefined && vendorStatus !== null) && (
                     <div className={`mx-3 mt-2 mb-1 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 ring-1 ${sc.bg} ${sc.ring} ${collapsed ? 'justify-center px-0' : ''}`}
                          title={collapsed ? `Store: ${status.label}` : undefined}>
                         <StatusIcon className={`w-3.5 h-3.5 shrink-0 ${sc.text}`} />

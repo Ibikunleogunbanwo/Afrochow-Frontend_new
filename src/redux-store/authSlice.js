@@ -9,6 +9,7 @@ const initialState = {
     // Vendor-only: null for non-vendor users, populated from LoginResponse
     vendorIsActive: null,
     vendorIsVerified: null,
+    vendorStatus: null,     // primary source-of-truth; mirrors backend VendorStatus enum
     // Set to false for new Google sign-in users who haven't completed onboarding
     isProfileComplete: true,
 };
@@ -32,6 +33,7 @@ const authSlice = createSlice({
             // don't carry vendor flags, so we must not overwrite a good value with null.
             state.vendorIsActive   = userData?.vendorIsActive   ?? state.vendorIsActive;
             state.vendorIsVerified = userData?.vendorIsVerified ?? state.vendorIsVerified;
+            state.vendorStatus     = userData?.vendorStatus     ?? state.vendorStatus;
 
             // Default to true so existing login flows are unaffected.
             // Explicitly set to false only when the backend says so (new Google users).
@@ -46,6 +48,7 @@ const authSlice = createSlice({
             state.error = null;
             state.vendorIsActive = null;
             state.vendorIsVerified = null;
+            state.vendorStatus = null;
             state.isProfileComplete = true;
         },
 
@@ -82,6 +85,9 @@ const authSlice = createSlice({
             if (action.payload.isVerified !== undefined) {
                 state.vendorIsVerified = action.payload.isVerified;
             }
+            if (action.payload.vendorStatus !== undefined) {
+                state.vendorStatus = action.payload.vendorStatus;
+            }
         },
     },
 });
@@ -99,6 +105,7 @@ export const selectUsername = (state) => state.auth.user?.username;
 export const selectEmail = (state) => state.auth.user?.email;
 export const selectVendorIsActive = (state) => state.auth.vendorIsActive;
 export const selectVendorIsVerified = (state) => state.auth.vendorIsVerified;
+export const selectVendorStatus = (state) => state.auth.vendorStatus;
 export const selectIsProfileComplete = (state) => state.auth.isProfileComplete;
 
 export default authSlice.reducer;

@@ -112,8 +112,13 @@ const AdminDashboardLayout = ({ children }) => {
                     ? (pendingVendorsRes.value?.data ?? pendingVendorsRes.value ?? [])
                     : [];
                 const vendorList = vendorRaw?.content ?? (Array.isArray(vendorRaw) ? vendorRaw : []);
-                // Only count stores that are active (not suspended) and unverified
-                const vendorCount = vendorList.filter(v => v.isActive !== false && !v.isVerified).length;
+                // Count stores awaiting admin action: PENDING_REVIEW (need approval) + PROVISIONAL with cert uploaded (need cert verification)
+                // Falls back to legacy boolean logic for older API responses.
+                const vendorCount = vendorList.filter(v => {
+                    const s = v.vendorStatus;
+                    if (s) return s === 'PENDING_REVIEW' || (s === 'PROVISIONAL' && v.hasFoodHandlingCert);
+                    return v.isActive !== false && !v.isVerified; // legacy fallback
+                }).length;
 
                 setBadges({ orders: ordersCount, reviews: reviewCount, vendors: vendorCount });
             } catch (_) {}

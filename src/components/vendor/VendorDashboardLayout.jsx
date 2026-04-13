@@ -20,7 +20,7 @@ const VendorDashboardLayout = ({ children }) => {
     const pathname = usePathname();
     const dispatch = useDispatch();
 
-    const { user, isAuthenticated, logout, vendorIsActive, vendorIsVerified } = useAuth();
+    const { user, isAuthenticated, logout, vendorIsActive, vendorIsVerified, vendorStatus } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -82,8 +82,9 @@ const VendorDashboardLayout = ({ children }) => {
                 // and status banners always reflect the current DB state, not the
                 // stale snapshot from login time.
                 dispatch(updateVendorStatus({
-                    isActive:   profileData.isActive,
-                    isVerified: profileData.isVerified,
+                    isActive:     profileData.isActive,
+                    isVerified:   profileData.isVerified,
+                    vendorStatus: profileData.vendorStatus,
                 }));
             } else {
                 throw new Error("Failed to fetch profile");
@@ -195,6 +196,7 @@ const VendorDashboardLayout = ({ children }) => {
                 badgeCounts={badgeCounts}
                 collapsed={sidebarCollapsed}
                 onCollapsedChange={setSidebarCollapsed}
+                vendorStatus={vendorStatus}
                 vendorIsActive={vendorIsActive}
                 vendorIsVerified={vendorIsVerified}
                 vendorVerifiedAt={profile?.verifiedAt ?? null}
@@ -207,6 +209,7 @@ const VendorDashboardLayout = ({ children }) => {
                 pathname={pathname}
                 onLogout={handleLogout}
                 badgeCounts={badgeCounts}
+                vendorStatus={vendorStatus}
                 vendorIsActive={vendorIsActive}
                 vendorIsVerified={vendorIsVerified}
                 vendorVerifiedAt={profile?.verifiedAt ?? null}
@@ -282,10 +285,10 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 </header>
 
-                {/* Vendor status banners */}
+                {/* Vendor status banners — driven by vendorStatus state machine */}
 
-                {/* ── Rejected: isActive=false AND isVerified=false ── */}
-                {vendorIsActive === false && vendorIsVerified === false && !resubmitDone && (
+                {/* ── Rejected ── */}
+                {vendorStatus === 'REJECTED' && !resubmitDone && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
                         <div className="flex items-start gap-3">
                             <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
@@ -332,8 +335,8 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 )}
 
-                {/* ── Suspended: isActive=false AND isVerified=true ── */}
-                {vendorIsActive === false && vendorIsVerified === true && (
+                {/* ── Suspended ── */}
+                {vendorStatus === 'SUSPENDED' && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
                         <ShieldOff className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
@@ -345,8 +348,8 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 )}
 
-                {/* ── Pending: isActive=true AND isVerified=false ── */}
-                {vendorIsActive !== false && vendorIsVerified === false && (
+                {/* ── Pending review ── */}
+                {vendorStatus === 'PENDING_REVIEW' && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
                         <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
                         <div>
@@ -358,8 +361,28 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 )}
 
-                {/* ── Stripe Connect: verified but payout account not connected ── */}
-                {vendorIsVerified === true && profile && !profile.stripeOnboardingComplete && (
+                {/* ── Pending profile completion ── */}
+                {vendorStatus === 'PENDING_PROFILE' && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                        <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-orange-800 text-sm">Complete your store profile</p>
+                            <p className="text-orange-700 text-sm mt-0.5">
+                                Finish setting up your store profile to submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
+                            </p>
+                            <Link
+                                href="/vendor/profile"
+                                className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors"
+                            >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Complete Profile
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Stripe Connect: live vendor (PROVISIONAL or VERIFIED) but payout account not connected ── */}
+                {(vendorStatus === 'VERIFIED' || vendorStatus === 'PROVISIONAL') && profile && !profile.stripeOnboardingComplete && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-purple-200 bg-purple-50 p-4">
                         <div className="flex items-start gap-3">
                             <CreditCard className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />

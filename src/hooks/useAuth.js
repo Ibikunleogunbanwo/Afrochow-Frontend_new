@@ -13,6 +13,7 @@ import {
     selectEmail,
     selectVendorIsActive,
     selectVendorIsVerified,
+    selectVendorStatus,
     selectIsProfileComplete,
     setAuth,
     clearAuth,
@@ -63,6 +64,7 @@ export const useAuth = () => {
     const email = useSelector(selectEmail);
     const vendorIsActive = useSelector(selectVendorIsActive);
     const vendorIsVerified = useSelector(selectVendorIsVerified);
+    const vendorStatus = useSelector(selectVendorStatus);
     const isProfileComplete = useSelector(selectIsProfileComplete);
 
     const { clearCart } = useCart();
@@ -331,6 +333,7 @@ export const useAuth = () => {
         role,
         vendorIsActive,
         vendorIsVerified,
+        vendorStatus,
         isProfileComplete,
 
         // State

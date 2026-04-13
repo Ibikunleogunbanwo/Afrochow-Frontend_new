@@ -17,7 +17,8 @@ import {
     Calendar, Truck, X, ImageIcon,
     LayoutDashboard, Home, Phone, Navigation, Timer, Info,
     AlertCircle, Bell, CheckCheck, Trash2, RefreshCw,
-    CreditCard, ExternalLink, CheckCircle,
+    CreditCard, ExternalLink, CheckCircle, Award, Upload,
+    FileText, ShieldCheck, Clock,
 } from 'lucide-react';
 import { useVendorNotifications } from '@/hooks/useVendorNotifications';
 import { SearchAPI } from '@/lib/api/search.api';
@@ -44,6 +45,7 @@ const TABS = [
     { id: 'hours',         label: 'Hours',           short: 'Hours',   icon: Calendar   },
     { id: 'branding',      label: 'Branding',        short: 'Brand',   icon: ImageIcon  },
     { id: 'payout',        label: 'Payout',          short: 'Payout',  icon: CreditCard },
+    { id: 'certification', label: 'Certification',   short: 'Cert',    icon: Award      },
     { id: 'notifications', label: 'Notifications',   short: 'Alerts',  icon: Bell       },
 ];
 
@@ -376,6 +378,14 @@ export default function VendorProfilePage() {
     const [logoUrl,   setLogoUrl]   = useState('');
     const [bannerUrl, setBannerUrl] = useState('');
 
+    // ── Certification ─────────────────────────────────────────────────────────
+    const [certFile,       setCertFile]       = useState(null);
+    const [certNumber,     setCertNumber]     = useState('');
+    const [certIssuingBody, setCertIssuingBody] = useState('');
+    const [certExpiry,     setCertExpiry]     = useState('');   // YYYY-MM-DD string
+    const [certErrors,     setCertErrors]     = useState({});
+    const [uploadingCert,  setUploadingCert]  = useState(false);
+
     // ── Load ─────────────────────────────────────────────────────────────────
     useEffect(() => {
         (async () => {
@@ -568,6 +578,40 @@ export default function VendorProfilePage() {
         return url;
     };
 
+    // ── Cert upload ───────────────────────────────────────────────────────────
+    const handleCertUpload = async () => {
+        const e = {};
+        if (!certFile)             e.certFile       = 'Please select a certificate file';
+        if (!certNumber.trim())    e.certNumber     = 'Certificate number is required';
+        if (!certIssuingBody.trim()) e.certIssuingBody = 'Issuing body is required';
+        if (Object.keys(e).length) { setCertErrors(e); return; }
+        setCertErrors({});
+        setUploadingCert(true);
+        try {
+            // Convert YYYY-MM-DD → LocalDateTime string expected by backend
+            const expiryIso = certExpiry ? `${certExpiry}T00:00:00` : undefined;
+            const res = await VendorProfileAPI.uploadFoodHandlingCert(certFile, {
+                certNumber:   certNumber.trim(),
+                issuingBody:  certIssuingBody.trim(),
+                certExpiry:   expiryIso,
+            });
+            if (res?.success) {
+                setProfile(prev => ({ ...prev, ...res.data }));
+                setCertFile(null);
+                setCertNumber('');
+                setCertIssuingBody('');
+                setCertExpiry('');
+                toast.success('Certificate uploaded — pending admin review');
+            } else {
+                throw new Error(res?.message || 'Upload failed');
+            }
+        } catch (err) {
+            toast.error(err.message || 'Certificate upload failed');
+        } finally {
+            setUploadingCert(false);
+        }
+    };
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     const fi = (field) => ({
         value:    infoForm[field],
@@ -750,7 +794,30 @@ export default function VendorProfilePage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
                     {/* Tab bar — icon-only on mobile, icon+label on sm+ */}
-                    <div className="flex border-b border-gray-100">
+                    {/* Provisional banner — shown when cert is not yet uploaded */}
+                    {profile?.vendorStatus === 'PROVISIONAL' && !profile?.foodHandlingCertUrl && (
+                        <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border-b border-blue-100">
+                            <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-blue-800">
+                                    Action required — upload your food handling certificate
+                                </p>
+                                <p className="text-xs text-blue-600 mt-0.5">
+                                    Your store is live with a temporary order cap. Upload your certificate in the{' '}
+                                    <button onClick={() => setActiveTab('certification')} className="font-bold underline">
+                                        Certification tab
+                                    </button>{' '}
+                                    to get fully verified and remove the cap.
+                                </p>
+                            </div>
+                            <button onClick={() => setActiveTab('certification')}
+                                className="shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                                Upload Now
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex border-b border-gray-100 overflow-x-auto">
                         {TABS.map(({ id, label, icon: Icon }) => (
                             <button key={id} onClick={() => setActiveTab(id)}
                                 title={label}
@@ -760,6 +827,10 @@ export default function VendorProfilePage() {
                                         : 'border-transparent text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}>
                                 <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" />
                                 <span className="hidden sm:inline whitespace-nowrap">{label}</span>
+                                {/* Cert action dot */}
+                                {id === 'certification' && profile?.vendorStatus === 'PROVISIONAL' && !profile?.foodHandlingCertUrl && (
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
+                                )}
                                 {id === 'notifications' && notifUnread > 0 && (
                                     <span className="absolute top-1.5 right-1.5 sm:static sm:min-w-[18px] sm:h-[18px] sm:px-1 w-2 h-2 sm:w-auto sm:h-auto text-[10px] font-black bg-orange-500 text-white rounded-full flex items-center justify-center leading-none">
                                         <span className="hidden sm:inline">{notifUnread > 9 ? '9+' : notifUnread}</span>
@@ -1231,6 +1302,210 @@ export default function VendorProfilePage() {
                     )}
 
                     {/* ── Tab: Branding ─────────────────────────────── */}
+                    {activeTab === 'certification' && (
+                        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+
+                            {/* ── Status card ── */}
+                            {(() => {
+                                const status  = profile?.vendorStatus;
+                                const certUrl = profile?.foodHandlingCertUrl;
+                                const verified = profile?.certVerifiedAt;
+                                const expired  = profile?.certExpired;
+
+                                if (status === 'VERIFIED' && certUrl && verified) {
+                                    return (
+                                        <div className="flex items-center gap-3 px-4 py-3.5 bg-green-50 border border-green-200 rounded-xl">
+                                            <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-green-800">Certificate verified — fully approved</p>
+                                                <p className="text-xs text-green-600 mt-0.5">
+                                                    Verified on {new Date(verified).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (certUrl && !verified) {
+                                    return (
+                                        <div className="flex items-center gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl">
+                                            <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-amber-800">Certificate uploaded — pending admin review</p>
+                                                <p className="text-xs text-amber-600 mt-0.5">
+                                                    You can replace the file below if there was an error with your submission.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (status === 'PROVISIONAL') {
+                                    return (
+                                        <div className="flex items-start gap-3 px-4 py-3.5 bg-blue-50 border border-blue-200 rounded-xl">
+                                            <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-blue-800">Certificate required for full verification</p>
+                                                <p className="text-xs text-blue-600 mt-0.5">
+                                                    Your store is currently live with a daily order cap. Upload your Canadian food handling certificate below to get fully verified and lift the cap.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="flex items-start gap-3 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl">
+                                        <Info className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+                                        <p className="text-sm text-gray-500">
+                                            Once your store is provisionally approved, you can upload your food handling certificate here to get fully verified.
+                                        </p>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* ── Existing cert summary ── */}
+                            {profile?.foodHandlingCertUrl && (
+                                <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
+                                    <div className="px-4 py-3 flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                                            <span className="text-sm font-medium text-gray-700 truncate">Current certificate</span>
+                                        </div>
+                                        <a href={profile.foodHandlingCertUrl} target="_blank" rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:underline shrink-0">
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                            View
+                                        </a>
+                                    </div>
+                                    {profile.foodHandlingCertNumber && (
+                                        <div className="px-4 py-2 flex justify-between text-xs">
+                                            <span className="text-gray-500">Cert number</span>
+                                            <span className="font-mono text-gray-800">{profile.foodHandlingCertNumber}</span>
+                                        </div>
+                                    )}
+                                    {profile.foodHandlingCertIssuingBody && (
+                                        <div className="px-4 py-2 flex justify-between text-xs">
+                                            <span className="text-gray-500">Issued by</span>
+                                            <span className="font-medium text-gray-800">{profile.foodHandlingCertIssuingBody}</span>
+                                        </div>
+                                    )}
+                                    {profile.foodHandlingCertExpiry && (
+                                        <div className="px-4 py-2 flex justify-between text-xs">
+                                            <span className="text-gray-500">Expiry</span>
+                                            <span className={`font-medium ${profile.certExpired ? 'text-red-600' : 'text-gray-800'}`}>
+                                                {new Date(profile.foodHandlingCertExpiry).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                {profile.certExpired && <span className="ml-1 text-xs font-bold">(EXPIRED)</span>}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ── Upload form ── only shown for PROVISIONAL vendors (or to replace an expired cert) ── */}
+                            {(profile?.vendorStatus === 'PROVISIONAL' || profile?.certExpired) && (
+                                <div className="space-y-4 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        {profile?.foodHandlingCertUrl ? 'Replace certificate' : 'Upload certificate'}
+                                    </p>
+
+                                    {/* File picker */}
+                                    <div>
+                                        <Label required>Certificate file</Label>
+                                        <label className="flex flex-col items-center justify-center gap-2 w-full h-28 border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                                className="sr-only"
+                                                onChange={e => {
+                                                    setCertFile(e.target.files?.[0] ?? null);
+                                                    if (certErrors.certFile) setCertErrors(p => { const n = {...p}; delete n.certFile; return n; });
+                                                }}
+                                            />
+                                            {certFile ? (
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 px-4 text-center">
+                                                    <FileText className="w-4 h-4 text-gray-500 shrink-0" />
+                                                    <span className="truncate max-w-[220px]">{certFile.name}</span>
+                                                    <button type="button" onClick={e => { e.preventDefault(); setCertFile(null); }}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors shrink-0">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Upload className="w-6 h-6 text-gray-400" />
+                                                    <span className="text-xs text-gray-500 text-center px-4">
+                                                        Click to select · PDF, JPG, PNG · max 10 MB
+                                                    </span>
+                                                </>
+                                            )}
+                                        </label>
+                                        {certErrors.certFile && <FieldError msg={certErrors.certFile} />}
+                                    </div>
+
+                                    {/* Cert number */}
+                                    <div>
+                                        <Label required>Certificate number</Label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. FS-2024-00123"
+                                            value={certNumber}
+                                            onChange={e => {
+                                                setCertNumber(e.target.value);
+                                                if (certErrors.certNumber) setCertErrors(p => { const n = {...p}; delete n.certNumber; return n; });
+                                            }}
+                                            className={certErrors.certNumber ? INPUT_ERR_CLS : `${INPUT_CLS} border-gray-200`}
+                                        />
+                                        {certErrors.certNumber && <FieldError msg={certErrors.certNumber} />}
+                                    </div>
+
+                                    {/* Issuing body */}
+                                    <div>
+                                        <Label required>Issuing body</Label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. FoodSafe BC, Manitoba Food Handler, CFIA"
+                                            value={certIssuingBody}
+                                            onChange={e => {
+                                                setCertIssuingBody(e.target.value);
+                                                if (certErrors.certIssuingBody) setCertErrors(p => { const n = {...p}; delete n.certIssuingBody; return n; });
+                                            }}
+                                            className={certErrors.certIssuingBody ? INPUT_ERR_CLS : `${INPUT_CLS} border-gray-200`}
+                                        />
+                                        {certErrors.certIssuingBody && <FieldError msg={certErrors.certIssuingBody} />}
+                                    </div>
+
+                                    {/* Expiry date */}
+                                    <div>
+                                        <Label>Certificate expiry date</Label>
+                                        <input
+                                            type="date"
+                                            value={certExpiry}
+                                            onChange={e => setCertExpiry(e.target.value)}
+                                            className={`${INPUT_CLS} border-gray-200`}
+                                            style={{ colorScheme: 'light' }}
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">Most Canadian food handler certs expire after 5 years.</p>
+                                    </div>
+
+                                    {/* Submit */}
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <button
+                                            onClick={handleCertUpload}
+                                            disabled={uploadingCert}
+                                            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60 w-full sm:w-auto"
+                                        >
+                                            {uploadingCert
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+                                                : <><Upload className="w-4 h-4" /> Submit Certificate</>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {activeTab === 'branding' && (
                         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 

@@ -169,6 +169,13 @@ const DisplayStores = () => {
 
             let rawVendors = [];
 
+            // Only show vendors that can receive orders (VERIFIED or PROVISIONAL).
+            // We omit `isVerified: true` from the backend call so PROVISIONAL vendors
+            // are included, and instead filter by canReceiveOrders from the DTO.
+            const isLive = (v) => v.canReceiveOrders === true
+                || v.vendorStatus === 'VERIFIED'
+                || v.vendorStatus === 'PROVISIONAL';
+
             if (urlQuery && effectiveCity) {
                 // Both query and city — run vendor name search and product name
                 // search in parallel, then filter both by city and merge
@@ -176,14 +183,13 @@ const DisplayStores = () => {
                     SearchAPI.searchVendorsAdvanced({
                         query: urlQuery,
                         city: effectiveCity,
-                        isVerified: true,
                     }),
                     SearchAPI.getVendorsByProductName(urlQuery),
                 ]);
 
-                const byName    = unwrap(byNameRes);
+                const byName    = unwrap(byNameRes).filter(isLive);
                 const byProduct = unwrap(byProductRes)
-                    .filter(v => v.address?.city?.toLowerCase() === effectiveCity.toLowerCase());
+                    .filter(v => isLive(v) && v.address?.city?.toLowerCase() === effectiveCity.toLowerCase());
 
                 // Merge and deduplicate by publicUserId
                 const seen = new Set();
@@ -198,13 +204,12 @@ const DisplayStores = () => {
                 const [byNameRes, byProductRes] = await Promise.all([
                     SearchAPI.searchVendorsAdvanced({
                         query: urlQuery,
-                        isVerified: true,
                     }),
                     SearchAPI.getVendorsByProductName(urlQuery),
                 ]);
 
-                const byName    = unwrap(byNameRes);
-                const byProduct = unwrap(byProductRes);
+                const byName    = unwrap(byNameRes).filter(isLive);
+                const byProduct = unwrap(byProductRes).filter(isLive);
 
                 const seen = new Set();
                 rawVendors = [...byName, ...byProduct].filter(v => {

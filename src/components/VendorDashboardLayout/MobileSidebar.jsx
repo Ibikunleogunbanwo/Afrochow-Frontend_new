@@ -12,15 +12,24 @@ import {
     Store,
     Bell,
     X, UserCircle, LogOut,
-    CheckCircle2, Clock, ShieldOff, XCircle, ShieldAlert,
+    CheckCircle2, Clock, ShieldOff, XCircle,
 } from 'lucide-react';
 
-function getStoreStatus(isActive, isVerified, verifiedAt) {
-    if (isActive && isVerified)            return { label: 'Active',    color: 'green',  Icon: CheckCircle2 };
-    if (!isActive && isVerified)           return { label: 'Suspended', color: 'red',    Icon: ShieldOff    };
-    if (!isActive && !isVerified && verifiedAt) return { label: 'Revoked', color: 'red', Icon: ShieldAlert  };
-    if (!isActive && !isVerified)          return { label: 'Rejected',  color: 'red',    Icon: XCircle      };
-    return                                        { label: 'Pending',   color: 'orange', Icon: Clock        };
+function getStoreStatus(vendorStatus, isActive, isVerified) {
+    switch (vendorStatus) {
+        case 'VERIFIED':        return { label: 'Active',       color: 'green',  Icon: CheckCircle2 };
+        case 'PROVISIONAL':     return { label: 'Provisional',  color: 'blue',   Icon: Clock        };
+        case 'PENDING_REVIEW':  return { label: 'Under Review', color: 'orange', Icon: Clock        };
+        case 'PENDING_PROFILE': return { label: 'Incomplete',   color: 'orange', Icon: Clock        };
+        case 'SUSPENDED':       return { label: 'Suspended',    color: 'red',    Icon: ShieldOff    };
+        case 'REJECTED':        return { label: 'Rejected',     color: 'red',    Icon: XCircle      };
+        default: break;
+    }
+    // Legacy boolean fallback
+    if (isActive && isVerified)  return { label: 'Active',       color: 'green',  Icon: CheckCircle2 };
+    if (!isActive && isVerified) return { label: 'Suspended',    color: 'red',    Icon: ShieldOff    };
+    if (!isActive)               return { label: 'Rejected',     color: 'red',    Icon: XCircle      };
+    return                              { label: 'Under Review', color: 'orange', Icon: Clock        };
 }
 
 const navItems = [
@@ -37,12 +46,13 @@ const navItems = [
 ];
 
 
-const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, vendorIsActive, vendorIsVerified, vendorVerifiedAt }) => {
+const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, vendorStatus, vendorIsActive, vendorIsVerified, vendorVerifiedAt }) => {
     if (!isOpen) return null;
 
-    const status = getStoreStatus(vendorIsActive, vendorIsVerified, vendorVerifiedAt);
+    const status = getStoreStatus(vendorStatus, vendorIsActive, vendorIsVerified);
     const statusColors = {
         green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200'  },
+        blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   ring: 'ring-blue-200'   },
         orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200' },
         red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200'    },
     };
@@ -79,7 +89,7 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, 
                 </div>
 
                 {/* Store status badge */}
-                {vendorIsActive !== undefined && vendorIsVerified !== undefined && (
+                {(vendorStatus !== undefined && vendorStatus !== null) && (
                     <div className={`mx-4 mt-3 mb-1 flex items-center gap-2 rounded-lg px-3 py-2 ring-1 ${sc.bg} ${sc.ring}`}>
                         <StatusIcon className={`w-4 h-4 shrink-0 ${sc.text}`} />
                         <span className={`text-sm font-semibold ${sc.text}`}>
