@@ -36,7 +36,7 @@ const setCacheEntry = (key, products, promoMap, isFallback = false) => {
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
-const FeaturedRestaurants = ({ locationInput }) => {
+const FeaturedRestaurants = () => {
     const { isAuthenticated } = useAuth();
     const { openSignIn }      = useAuthModal();
     const { city, isDetecting } = useLocation();
@@ -150,9 +150,6 @@ const FeaturedRestaurants = ({ locationInput }) => {
                             ? `Popular African dishes available near you in ${city}`
                             : "Discover the most popular African dishes loved by our community"}
                     </p>
-                    {locationInput && (
-                        <div className="max-w-md mx-auto">{locationInput}</div>
-                    )}
                 </div>
 
                 {/* Fallback banner */}

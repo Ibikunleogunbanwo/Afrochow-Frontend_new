@@ -17,6 +17,7 @@ import { SearchAPI } from "@/lib/api/search.api";
 import { useSearchParams, useRouter as useNextRouter, usePathname } from "next/navigation";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import CustomerNotificationDropdown from "@/components/customer/CustomerNotificationDropdown";
+import LocationSearchInput from "@/components/LocationSearchInput";
 
 // ─── Sign-in param watcher ───────────────────────────────────────────────────
 // Strips any stale ?signin=true from the URL without triggering the modal.
@@ -151,48 +152,31 @@ const Header = () => {
                         <Logo />
                     </div>
 
-                    {/* Desktop Nav — lg and above */}
-                    <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-                        {navCategories.map(({ href, label }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
-                            >
-                                {label}
-                            </Link>
-                        ))}
+                    {/* Location search — desktop (lg+) */}
+                    <div className="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-sm mx-4">
+                        <LocationSearchInput
+                            placeholder="City, address or postal code…"
+                            compact
+                            className="w-full"
+                        />
                         {!isAuthenticated && (
                             <button
                                 onClick={handleSellClick}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap shrink-0"
                             >
                                 <Store className="w-3.5 h-3.5" />
-                                Join Afrochow
+                                Join
                             </button>
                         )}
                     </div>
 
-                    {/* Tablet Nav — md only */}
-                    <div className="hidden md:flex lg:hidden items-center gap-1 flex-1 justify-center">
-                        {navCategories.slice(0, 2).map(({ href, label }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
-                            >
-                                {label}
-                            </Link>
-                        ))}
-                        {!isAuthenticated && (
-                            <button
-                                onClick={handleSellClick}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
-                            >
-                                <Store className="w-3.5 h-3.5" />
-                                Sell
-                            </button>
-                        )}
+                    {/* Location search — tablet (md only) */}
+                    <div className="hidden md:flex lg:hidden items-center gap-2 flex-1 justify-center max-w-xs mx-3">
+                        <LocationSearchInput
+                            placeholder="City or address…"
+                            compact
+                            className="w-full"
+                        />
                     </div>
 
                     {/* Right side */}
@@ -351,6 +335,14 @@ const Header = () => {
                         />
                     <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden z-20">
                         <div className="divide-y divide-gray-100">
+
+                            {/* Location search — always visible at top of mobile menu */}
+                            <div className="px-3 py-3">
+                                <LocationSearchInput
+                                    placeholder="City, address or postal code…"
+                                    className="w-full"
+                                />
+                            </div>
 
                             {isAuthenticated && user ? (
                                 <>

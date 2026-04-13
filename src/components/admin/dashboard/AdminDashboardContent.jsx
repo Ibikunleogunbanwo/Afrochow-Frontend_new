@@ -519,12 +519,15 @@ setPlatform(platformData);
                                     tickFormatter={n => `$${n >= 1000 ? `${(n / 1000).toFixed(0)}k` : n}`}
                                     tick={{ fontSize: 11, fill: '#9ca3af' }}
                                     axisLine={false} tickLine={false} width={52}
+                                    domain={[0, dataMax => dataMax > 0 ? Math.ceil(dataMax * 1.15) : 10]}
+                                    allowDataOverflow={false}
                                 />
                                 <Tooltip content={<ChartTooltip isCurrency />} />
                                 <Area
                                     type="monotone" dataKey="revenue" name="Revenue"
                                     stroke="#f97316" strokeWidth={2}
                                     fill="url(#revenueGrad)" dot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
+                                    isAnimationActive={false}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -550,9 +553,14 @@ setPlatform(platformData);
                             <BarChart data={ordersData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36} />
+                                <YAxis
+                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                    axisLine={false} tickLine={false} width={36}
+                                    domain={[0, dataMax => dataMax > 0 ? Math.ceil(dataMax * 1.15) : 10]}
+                                    allowDataOverflow={false}
+                                />
                                 <Tooltip content={<ChartTooltip />} />
-                                <Bar dataKey="orders" name="Orders" fill="#f97316" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="orders" name="Orders" fill="#f97316" radius={[4, 4, 0, 0]} isAnimationActive={false} />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (

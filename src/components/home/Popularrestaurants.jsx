@@ -115,7 +115,7 @@ const transformVendor = (vendor) => ({
 });
 
 // ── Main component ────────────────────────────────────────────────────────────
-const PopularStores = ({ locationInput }) => {
+const PopularStores = () => {
     const { isAuthenticated }                        = useAuth();
     const { openSignIn }                             = useAuthModal();
     const { city, locationSource, coordinates }      = useLocation();
@@ -298,9 +298,6 @@ const PopularStores = ({ locationInput }) => {
                         </span>
                     </h2>
 
-                    {locationInput && (
-                        <div className="max-w-md mx-auto">{locationInput}</div>
-                    )}
                 </div>
 
                 {/* Fallback banner */}

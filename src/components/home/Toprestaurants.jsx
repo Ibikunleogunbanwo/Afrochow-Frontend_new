@@ -100,7 +100,7 @@ const transformVendor = (vendor) => ({
 
 const SKELETON_COUNT = 6;
 
-const TopStores = ({ locationInput }) => {
+const TopStores = () => {
     const { city, coordinates, isDetecting } = useLocation();
     const { isAuthenticated }                = useAuth();
     const { openSignIn }                     = useAuthModal();
@@ -210,9 +210,6 @@ const TopStores = ({ locationInput }) => {
                         </p>
                     </div>
 
-                    {locationInput && (
-                        <div className="w-full md:w-80">{locationInput}</div>
-                    )}
                 </div>
 
                 {/* Fallback banner */}

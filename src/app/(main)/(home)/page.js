@@ -7,15 +7,10 @@ import VendorCTASimple from '@/components/home/vendorcta';
 import FeaturedRestaurants from '@/components/home/FeaturedRestaurants';
 import TopRestaurants from '@/components/home/Toprestaurants';
 import PopularRestaurants from '@/components/home/Popularrestaurants';
-import LocationSearchInput from '@/components/LocationSearchInput';
 import { AuthModalProvider } from '@/contexts/AuthModalContext';
 
-// Single shared location input instance — passed as a prop slot into each
-// section that needs it so behaviour (city + coordinates update) is uniform
-// across all three components from one source of truth.
-const sharedLocationInput = (
-    <LocationSearchInput placeholder="Enter city, address or postal code…" />
-);
+// Location search is now in the navbar (Header.jsx) and writes to LocationContext.
+// All three section components read city + coordinates from LocationContext directly.
 
 const Home = () => {
     return (
@@ -23,9 +18,9 @@ const Home = () => {
             <div>
                 <HeroSection />
                 <CategoriesAndBanner />
-                <FeaturedRestaurants locationInput={sharedLocationInput} />
-                <TopRestaurants     locationInput={sharedLocationInput} />
-                <PopularRestaurants locationInput={sharedLocationInput} />
+                <FeaturedRestaurants />
+                <TopRestaurants />
+                <PopularRestaurants />
                 <VendorCTASimple />
             </div>
         </AuthModalProvider>

@@ -390,6 +390,40 @@ const VendorProfilePage = () => {
         if (showReviewsModal && reviewType === 'product') fetchProductReviews(writeReviewProduct?.publicProductId);
     }, [showReviewsModal, reviewType, fetchVendorReviews, fetchProductReviews, ratingFilter, writeReviewProduct]);
 
+    // ── share / like handlers (must be before early returns — Rules of Hooks) ──
+
+    const handleToggleFavorite = useCallback(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('afrochow_favorites') || '[]');
+            const updated = isFavorited
+                ? saved.filter(id => id !== publicVendorId)
+                : [...saved, publicVendorId];
+            localStorage.setItem('afrochow_favorites', JSON.stringify(updated));
+            setIsFavorited(prev => !prev);
+        } catch { /* ignore */ }
+    }, [isFavorited, publicVendorId]);
+
+    const handleCopyLink = useCallback(() => {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            setCopied(true);
+            setShowShareMenu(false);
+            setTimeout(() => setCopied(false), 2000);
+        }).catch(() => {});
+    }, []);
+
+    const handleShare = useCallback(() => {
+        const name = vendor?.restaurantName ?? '';
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            navigator.share({
+                title: name,
+                text: `Check out ${name} on Afrochow!`,
+                url: window.location.href,
+            }).catch(() => {});
+        } else {
+            setShowShareMenu(prev => !prev);
+        }
+    }, [vendor?.restaurantName]);
+
     // ── render states ─────────────────────────────────────────────────────────
 
     if (loading) {
@@ -440,39 +474,6 @@ const VendorProfilePage = () => {
         minimumOrderAmount,
         address,
     } = vendor;
-
-    // ── share / like handlers ─────────────────────────────────────────────────
-
-    const handleToggleFavorite = useCallback(() => {
-        try {
-            const saved = JSON.parse(localStorage.getItem('afrochow_favorites') || '[]');
-            const updated = isFavorited
-                ? saved.filter(id => id !== publicVendorId)
-                : [...saved, publicVendorId];
-            localStorage.setItem('afrochow_favorites', JSON.stringify(updated));
-            setIsFavorited(prev => !prev);
-        } catch { /* ignore */ }
-    }, [isFavorited, publicVendorId]);
-
-    const handleCopyLink = useCallback(() => {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            setCopied(true);
-            setShowShareMenu(false);
-            setTimeout(() => setCopied(false), 2000);
-        }).catch(() => {});
-    }, []);
-
-    const handleShare = useCallback(() => {
-        if (typeof navigator !== 'undefined' && navigator.share) {
-            navigator.share({
-                title: restaurantName,
-                text: `Check out ${restaurantName} on Afrochow!`,
-                url: window.location.href,
-            }).catch(() => {});
-        } else {
-            setShowShareMenu(prev => !prev);
-        }
-    }, [restaurantName]);
 
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out ${restaurantName} on Afrochow! ${shareUrl}`)}`;

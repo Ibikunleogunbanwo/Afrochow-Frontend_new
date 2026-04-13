@@ -35,7 +35,7 @@ const buildLabel = (result) => {
     return parts.length > 0 ? parts.join(", ") : result.display_name;
 };
 
-export default function LocationSearchInput({ placeholder = "Search city or address…", className = "" }) {
+export default function LocationSearchInput({ placeholder = "Search city or address…", className = "", compact = false }) {
     const { city, isDetecting, locationSource, requestPreciseLocation, updateCityWithCoordinates } = useLocation();
 
     const [query,       setQuery]       = useState("");
@@ -113,7 +113,8 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
     return (
         <div ref={containerRef} className={`relative ${className}`}>
             {/* Input */}
-            <div className={`flex items-center gap-2 bg-white border-2 rounded-2xl px-4 py-3 shadow-sm transition-colors
+            <div className={`flex items-center gap-2 bg-white border-2 rounded-2xl px-4 shadow-sm transition-colors
+                ${compact ? "py-1.5" : "py-3"}
                 ${focused ? "border-orange-400" : "border-gray-200 hover:border-gray-300"}`}>
                 {searching ? (
                     <Loader2 className="w-4 h-4 text-orange-500 animate-spin shrink-0" />
@@ -147,8 +148,8 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
                 </button>
             </div>
 
-            {/* Current city pill */}
-            {city && !query && (
+            {/* Current city pill — hidden in compact (navbar) mode */}
+            {!compact && city && !query && (
                 <div className="mt-2 flex items-center gap-1.5">
                     <MapPin className="w-3 h-3 text-orange-500" />
                     <span className="text-xs text-gray-500">
