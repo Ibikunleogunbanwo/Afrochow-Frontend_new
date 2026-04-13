@@ -1,26 +1,120 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, MapPin, ArrowRight, Loader2, Flame } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Loader2, Flame, Navigation, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SearchAPI } from '@/lib/api/search.api';
 import { DotGlobeHero } from '@/components/ui/globe-hero';
+import { useLocation } from '@/contexts/LocationContext';
+
+// ── Nominatim forward geocode (Canadian results only) ────────────────────────
+const searchNominatim = async (query) => {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=ca&addressdetails=1&limit=5`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    return res.json();
+};
+
+const extractCity = (addr) =>
+    addr?.city || addr?.town || addr?.village || addr?.municipality || addr?.county || null;
+
+const buildLabel = (result) => {
+    const addr = result.address || {};
+    const city = extractCity(addr);
+    const parts = [addr.neighbourhood || addr.suburb || addr.road, city, addr.state, addr.postcode].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : result.display_name;
+};
 
 const HeroSection = () => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [location, setLocation] = useState('');
+    const [searchQuery, setSearchQuery]   = useState('');
     const [popularCuisines, setPopularCuisines] = useState([
         "Jollof Rice", "Suya", "Egusi Soup", "Pounded Yam", "Fufu"
     ]);
     const [loadingPopular, setLoadingPopular] = useState(false);
-    const [stats, setStats] = useState(null);
-    const [activeTag, setActiveTag] = useState(null);
+    const [stats, setStats]               = useState(null);
+    const [activeTag, setActiveTag]       = useState(null);
+
+    // ── location state ──────────────────────────────────────────────────────
+    const { city: contextCity, isDetecting, locationSource, requestPreciseLocation, updateCityWithCoordinates } = useLocation();
+    const [locationInput, setLocationInput]     = useState('');
+    const [suggestions, setSuggestions]         = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [locSearching, setLocSearching]       = useState(false);
+    const [locFocused, setLocFocused]           = useState(false);
+    const debounceRef   = useRef(null);
+    const suggestionsRef = useRef(null);
+
     const router = useRouter();
+
+    // Sync input with LocationContext city (GPS / IP detect / navbar search)
+    useEffect(() => {
+        if (contextCity && !locFocused) setLocationInput(contextCity);
+    }, [contextCity, locFocused]);
+
+    // Close suggestions dropdown on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     useEffect(() => {
         void fetchPopularProducts();
         void fetchStats();
     }, []);
+
+    // ── Nominatim search with 350 ms debounce ────────────────────────────────
+    const searchLocation = useCallback(async (q) => {
+        if (!q || q.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+        setLocSearching(true);
+        try {
+            const results = await searchNominatim(q);
+            setSuggestions(Array.isArray(results) ? results : []);
+            setShowSuggestions(true);
+        } catch { setSuggestions([]); }
+        finally { setLocSearching(false); }
+    }, []);
+
+    const handleLocationChange = (e) => {
+        const val = e.target.value;
+        setLocationInput(val);
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => searchLocation(val), 350);
+    };
+
+    const handleSelectSuggestion = (result) => {
+        const addr     = result.address || {};
+        const city     = extractCity(addr) || addr.postcode || result.display_name;
+        const lat      = parseFloat(result.lat);
+        const lng      = parseFloat(result.lon);
+        const details  = {
+            neighbourhood: addr.neighbourhood || addr.suburb || null,
+            city, province: addr.state || null,
+            postalCode: addr.postcode || null,
+            country: addr.country || null,
+            displayName: result.display_name,
+        };
+        updateCityWithCoordinates(city, lat, lng, details);
+        setLocationInput(buildLabel(result));
+        setSuggestions([]);
+        setShowSuggestions(false);
+    };
+
+    const handleLocateMe = () => {
+        requestPreciseLocation();
+        setLocationInput('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+    };
+
+    const handleClearLocation = () => {
+        setLocationInput('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+    };
 
     const fetchPopularProducts = async () => {
         try {
@@ -46,21 +140,43 @@ const HeroSection = () => {
         }
     };
 
+    const effectiveCity = locationInput.trim() || contextCity || '';
+
     const handleSearch = (e) => {
         e.preventDefault();
-        if (!searchQuery?.trim() && !location?.trim()) return;
+        setShowSuggestions(false);
+        if (!searchQuery?.trim() && !effectiveCity) return;
         const params = new URLSearchParams();
         if (searchQuery?.trim()) params.append('search', searchQuery.trim());
-        if (location?.trim()) params.append('city', location.trim());
+        if (effectiveCity)       params.append('city',   effectiveCity);
         router.push(`/restaurants?${params.toString()}`);
     };
 
     const handlePopularClick = (cuisine) => {
         setActiveTag(cuisine);
+        setShowSuggestions(false);
         const params = new URLSearchParams();
         params.append('search', cuisine);
-        if (location?.trim()) params.append('city', location.trim());
+        if (effectiveCity) params.append('city', effectiveCity);
         router.push(`/restaurants?${params.toString()}`);
+    };
+
+    // Enter on the location input: close dropdown + submit
+    const handleLocationKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            setShowSuggestions(false);
+            setSuggestions([]);
+            if (searchQuery?.trim() || locationInput.trim()) {
+                const params = new URLSearchParams();
+                if (searchQuery?.trim())  params.append('search', searchQuery.trim());
+                if (locationInput.trim()) params.append('city',   locationInput.trim());
+                router.push(`/restaurants?${params.toString()}`);
+            }
+        }
+        if (e.key === 'Escape') {
+            setShowSuggestions(false);
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -158,24 +274,83 @@ const HeroSection = () => {
                             {/* Divider */}
                             <div className="hidden sm:block w-px bg-gray-200 my-2" />
 
-                            {/* Location */}
-                            <div className="relative flex-1">
-                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Calgary, Toronto, Vancouver..."
-                                    className="w-full pl-12 pr-4 py-3.5 text-gray-800 placeholder-gray-400 bg-transparent border-0 focus:outline-none text-base font-medium"
-                                    aria-label="Enter location"
-                                />
+                            {/* Location — with Nominatim autocomplete + Locate Me */}
+                            <div className="relative flex-1" ref={suggestionsRef}>
+                                {/* Input row */}
+                                <div className="flex items-center">
+                                    {locSearching ? (
+                                        <Loader2 className="absolute left-4 w-5 h-5 text-orange-400 animate-spin pointer-events-none" />
+                                    ) : (
+                                        <MapPin className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={locFocused ? locationInput : (locationInput || contextCity || '')}
+                                        onChange={handleLocationChange}
+                                        onFocus={() => { setLocFocused(true); if (suggestions.length > 0) setShowSuggestions(true); }}
+                                        onBlur={() => setLocFocused(false)}
+                                        onKeyDown={handleLocationKeyDown}
+                                        placeholder="Calgary, Toronto, Vancouver..."
+                                        className="w-full pl-12 pr-16 py-3.5 text-gray-800 placeholder-gray-400 bg-transparent border-0 focus:outline-none text-base font-medium"
+                                        aria-label="Enter location"
+                                        autoComplete="off"
+                                    />
+                                    {/* Right-side actions */}
+                                    <div className="absolute right-3 flex items-center gap-1">
+                                        {locationInput && (
+                                            <button
+                                                type="button"
+                                                onClick={handleClearLocation}
+                                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                                title="Clear location"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                        {/* Locate Me button */}
+                                        <button
+                                            type="button"
+                                            onClick={handleLocateMe}
+                                            disabled={isDetecting}
+                                            title="Use my current location"
+                                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-50 text-xs font-semibold whitespace-nowrap"
+                                        >
+                                            {isDetecting
+                                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                : <Navigation className="w-3.5 h-3.5" />
+                                            }
+                                            <span className="hidden sm:inline">{isDetecting ? 'Locating…' : 'Locate me'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Autocomplete dropdown */}
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                                        {suggestions.map((result, i) => (
+                                            <li key={result.place_id || i}>
+                                                <button
+                                                    type="button"
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => handleSelectSuggestion(result)}
+                                                    className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b border-gray-50 last:border-0"
+                                                >
+                                                    <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-gray-800 truncate">{buildLabel(result)}</p>
+                                                        <p className="text-xs text-gray-400 truncate">{result.address?.state || 'Canada'}</p>
+                                                    </div>
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
 
                             {/* Search Button */}
                             <button
                                 type="submit"
-                                disabled={!searchQuery?.trim() && !location?.trim()}
+                                disabled={!searchQuery?.trim() && !effectiveCity}
                                 className="flex items-center justify-center gap-2 px-7 py-3.5 font-bold text-white bg-linear-to-r from-orange-600 to-orange-500 rounded-xl hover:from-orange-700 hover:to-orange-600 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 group shrink-0"
                             >
                                 <span>Search</span>
