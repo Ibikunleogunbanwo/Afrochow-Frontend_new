@@ -297,28 +297,28 @@ const DisplayStores = () => {
     const getPageTitle = () => {
         if (urlQuery && effectiveCity) return `"${urlQuery}" in ${effectiveCity}`;
         if (urlQuery)                  return `Results for "${urlQuery}"`;
-        if (effectiveCity)             return `Stores in ${effectiveCity}`;
-        return 'All Stores';
+        if (effectiveCity)             return `Vendors in ${effectiveCity}`;
+        return 'All Vendors';
     };
 
     const getPageSubtitle = () => {
         if (urlQuery && effectiveCity)
-            return `Verified African stores and dishes matching "${urlQuery}" in ${effectiveCity}`;
+            return `Verified African vendors and dishes matching "${urlQuery}" in ${effectiveCity}`;
         if (urlQuery)
-            return `Stores and dishes matching "${urlQuery}" across Canada`;
+            return `Vendors and dishes matching "${urlQuery}" across Canada`;
         if (effectiveCity)
-            return `Discover authentic African stores in ${effectiveCity}`;
-        return 'Browse all verified African stores across Canada';
+            return `Discover authentic African vendors in ${effectiveCity}`;
+        return 'Browse all verified African vendors across Canada';
     };
 
     const getEmptyMessage = () => {
         if (urlQuery && effectiveCity)
-            return `No stores or dishes matching "${urlQuery}" found in ${effectiveCity}. Try clearing some filters.`;
+            return `No vendors or dishes matching "${urlQuery}" found in ${effectiveCity}. Try clearing some filters.`;
         if (urlQuery)
-            return `No stores or dishes matching "${urlQuery}" found. Try a different search term.`;
+            return `No vendors or dishes matching "${urlQuery}" found. Try a different search term.`;
         if (effectiveCity)
-            return `No stores found in ${effectiveCity}. Try a different city.`;
-        return 'No stores available at the moment. Check back soon.';
+            return `No vendors found in ${effectiveCity}. Try a different city.`;
+        return 'No vendors available at the moment. Check back soon.';
     };
 
     const getPageNumbers = () => {
@@ -363,7 +363,7 @@ const DisplayStores = () => {
                             href="/allstore"
                             className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
                         >
-                            All Stores
+                            All Vendors
                         </Link>
 
                         {effectiveCity && (
@@ -389,7 +389,7 @@ const DisplayStores = () => {
                             {getPageTitle()}
                             {!isLoading && totalCount > 0 && (
                                 <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
-                                    {totalCount} {totalCount === 1 ? 'store' : 'stores'} found
+                                    {totalCount} {totalCount === 1 ? 'vendor' : 'vendors'} found
                                 </span>
                             )}
                         </h1>
@@ -409,7 +409,7 @@ const DisplayStores = () => {
                                 value={queryInput}
                                 onChange={(e) => setQueryInput(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                placeholder="Search stores, cuisine, or dishes — e.g. Jollof Rice, Nigerian, Mama's Kitchen..."
+                                placeholder="Search vendors, cuisine, or dishes — e.g. Jollof Rice, Nigerian, Mama's Kitchen..."
                                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
@@ -439,7 +439,7 @@ const DisplayStores = () => {
                     {!isLoading && totalCount > 0 && (
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
                             <span className="font-semibold text-orange-600">
-                                {totalCount} {totalCount === 1 ? 'store' : 'stores'}
+                                {totalCount} {totalCount === 1 ? 'vendor' : 'vendors'}
                                 {effectiveCity ? ` in ${effectiveCity}` : ''}
                             </span>
                             {totalPages > 1 && (
@@ -549,7 +549,7 @@ const DisplayStores = () => {
                                 </div>
 
                                 <p className="text-center text-gray-400 text-sm">
-                                    Showing {stores.length} of {totalCount} stores — page {currentPage + 1} of {totalPages}
+                                    Showing {stores.length} of {totalCount} vendors — page {currentPage + 1} of {totalPages}
                                 </p>
                             </div>
                         )}
@@ -561,7 +561,7 @@ const DisplayStores = () => {
                                 <HiSearch className="w-12 h-12 text-orange-500" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                No stores found
+                                No vendors found
                             </h3>
                             <p className="text-gray-500 mb-6">
                                 {getEmptyMessage()}
@@ -570,7 +570,7 @@ const DisplayStores = () => {
                                 onClick={handleClearAll}
                                 className="inline-block px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors"
                             >
-                                Browse All Stores
+                                Browse All Vendors
                             </button>
                         </div>
                     </div>

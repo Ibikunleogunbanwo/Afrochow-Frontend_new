@@ -319,7 +319,7 @@ const HeroSection = () => {
                                                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                                 : <Navigation className="w-3.5 h-3.5" />
                                             }
-                                            <span className="hidden sm:inline">{isDetecting ? 'Locating…' : 'Locate me'}</span>
+                                            <span>{isDetecting ? 'Locating…' : 'Locate me'}</span>
                                         </button>
                                     </div>
                                 </div>
