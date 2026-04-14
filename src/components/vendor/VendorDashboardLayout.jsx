@@ -368,15 +368,19 @@ const VendorDashboardLayout = ({ children }) => {
                         <div>
                             <p className="font-semibold text-orange-800 text-sm">Complete your store profile</p>
                             <p className="text-orange-700 text-sm mt-0.5">
-                                Finish setting up your store profile to submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
+                                Finish setting up your store details to submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
                             </p>
-                            <Link
-                                href="/vendor/profile"
-                                className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors"
-                            >
-                                <Pencil className="w-3.5 h-3.5" />
-                                Complete Profile
-                            </Link>
+                            {/* Only show the button when NOT already on the profile/info tab —
+                                avoids a pointless click that just reloads the same page. */}
+                            {pathname !== '/vendor/profile' && (
+                                <Link
+                                    href="/vendor/profile?tab=info"
+                                    className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                    Complete Profile
+                                </Link>
+                            )}
                         </div>
                     </div>
                 )}

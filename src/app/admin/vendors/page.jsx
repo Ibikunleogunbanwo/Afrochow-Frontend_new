@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { selectUserRole } from '@/redux-store/authSlice';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
-    RefreshCw, ChevronDown, Eye, Calendar, X, Clock,
+    RefreshCw, ChevronDown, Eye, Calendar, X, Clock, Database,
 } from 'lucide-react';
 
 // ── Date filter helpers ────────────────────────────────────────────────────
@@ -138,6 +140,9 @@ const StatusBadge = ({ status }) => {
 
 export default function AdminVendorsPage() {
     const router = useRouter();
+    const currentRole = useSelector(selectUserRole);
+    const isSuperAdmin = currentRole === 'SUPERADMIN';
+
     const [vendors, setVendors]       = useState([]);
     const [filter, setFilter]         = useState('all');
     const [search, setSearch]         = useState('');
@@ -145,11 +150,12 @@ export default function AdminVendorsPage() {
     const [error, setError]           = useState(null);
     const [actionLoading, setActionLoading] = useState({});
     const [page, setPage]             = useState(1);
-    const [reviewVendor, setReviewVendor] = useState(null); // vendor open in detail modal
+    const [reviewVendor, setReviewVendor] = useState(null);
     const [dateFilter, setDateFilter] = useState('');
     const [showDateMenu, setShowDateMenu] = useState(false);
     const [customStart, setCustomStart] = useState('');
     const [customEnd, setCustomEnd]   = useState('');
+    const [backfilling, setBackfilling] = useState(false);
 
     const fetchVendors = useCallback(async () => {
         setLoading(true);
@@ -198,6 +204,25 @@ export default function AdminVendorsPage() {
             toast.error('Action Failed', { description: e.message || `Failed to ${label} vendor` });
         } finally {
             setActionLoading(p => ({ ...p, [id + label]: false }));
+        }
+    };
+
+    const handleBackfill = async () => {
+        if (!window.confirm(
+            'This will set vendorStatus for all legacy stores (where it is currently null) based on their isVerified/isActive flags.\n\nSafe to run multiple times. Continue?'
+        )) return;
+        setBackfilling(true);
+        try {
+            const res = await AdminVendorsAPI.backfillStatus();
+            const d = res?.data ?? {};
+            toast.success(`Backfill complete — ${d.totalMigrated ?? 0} store(s) updated`, {
+                description: `Verified: ${d.VERIFIED ?? 0} · Provisional queue: ${d.PENDING_REVIEW ?? 0} · Suspended: ${d.SUSPENDED ?? 0} · Rejected: ${d.REJECTED ?? 0}`,
+            });
+            await fetchVendors();
+        } catch (e) {
+            toast.error('Backfill failed', { description: e.message });
+        } finally {
+            setBackfilling(false);
         }
     };
 
@@ -256,10 +281,23 @@ export default function AdminVendorsPage() {
                     <h1 className="text-3xl font-black text-gray-900">Vendor Management</h1>
                     <p className="text-gray-500 mt-1">Verify, activate and manage vendors</p>
                 </div>
-                <button onClick={fetchVendors} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                    {isSuperAdmin && (
+                        <button
+                            onClick={handleBackfill}
+                            disabled={backfilling}
+                            title="Migrate legacy stores (null vendorStatus) into the new state machine. SUPERADMIN only."
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-semibold rounded-xl hover:bg-amber-50 transition-colors disabled:opacity-60"
+                        >
+                            <Database className="h-4 w-4" />
+                            {backfilling ? 'Running…' : 'Backfill Legacy Stores'}
+                        </button>
+                    )}
+                    <button onClick={fetchVendors} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Stats cards — clickable filters.

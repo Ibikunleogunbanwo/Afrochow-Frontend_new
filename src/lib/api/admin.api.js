@@ -73,6 +73,14 @@ export const AdminVendorsAPI = {
         { method: 'PATCH', body: JSON.stringify({ stripeAccountId }) }
     ),
 
+    // ── Migration ──
+    /**
+     * One-time backfill: sets vendorStatus from legacy isVerified/isActive for stores
+     * created before the state machine. Only touches rows where vendorStatus IS NULL.
+     * Safe to call multiple times. SUPERADMIN only.
+     */
+    backfillStatus: () => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/backfill-status`, { method: 'POST' }),
+
     // ── Deprecated aliases (kept for backward compatibility) ──
     /** @deprecated Use suspend() instead */
     deactivate: (id) => fetchWithCredentials(`${API_BASE_URL}/admin/vendors/${id}/suspend`,   { method: 'PATCH' }),

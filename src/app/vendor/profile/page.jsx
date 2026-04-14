@@ -289,11 +289,14 @@ function SaveBar({ saving, onSave, onCancel, disabled }) {
 export default function VendorProfilePage() {
     const searchParams = useSearchParams();
     const stripeParam  = searchParams.get('stripe'); // 'return' | 'refresh' | null
+    const tabParam     = searchParams.get('tab');    // any tab id, e.g. 'info'
 
     const [profile,      setProfile]      = useState(null);
     const [analytics,    setAnalytics]    = useState(null);
     const [loading,      setLoading]      = useState(true);
-    const [activeTab,    setActiveTab]    = useState(stripeParam ? 'payout' : 'info');
+    const [activeTab,    setActiveTab]    = useState(
+        stripeParam ? 'payout' : (tabParam ?? 'info')
+    );
     const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
 
     // Stripe payout state
