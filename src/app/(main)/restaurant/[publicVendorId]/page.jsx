@@ -461,6 +461,7 @@ const VendorProfilePage = () => {
         logoUrl,
         bannerUrl,
         isVerified,
+        vendorStatus,
         isOpenNow,
         description,
         averageRating,
@@ -565,7 +566,7 @@ const VendorProfilePage = () => {
                                 <div>
                                     <h1 className="text-2xl md:text-4xl font-black text-gray-900 mb-2">
                                         {restaurantName}
-                                        {isVerified && (
+                                        {(vendorStatus === 'VERIFIED' || isVerified) && (
                                             <BadgeCheck className="inline-block ml-2 w-6 h-6 text-blue-500 shrink-0" title="Verified vendor" />
                                         )}
                                     </h1>
