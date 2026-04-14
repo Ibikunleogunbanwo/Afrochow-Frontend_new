@@ -831,7 +831,8 @@ export default function VendorProfilePage() {
                                 <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" />
                                 <span className="hidden sm:inline whitespace-nowrap">{label}</span>
                                 {/* Cert action dot */}
-                                {id === 'certification' && profile?.vendorStatus === 'PROVISIONAL' && !profile?.foodHandlingCertUrl && (
+                                {id === 'certification' && !profile?.foodHandlingCertUrl &&
+                                 (profile?.vendorStatus === 'PROVISIONAL' || profile?.vendorStatus === 'VERIFIED') && (
                                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
                                 )}
                                 {id === 'notifications' && notifUnread > 0 && (
@@ -1310,11 +1311,12 @@ export default function VendorProfilePage() {
 
                             {/* ── Status card ── */}
                             {(() => {
-                                const status  = profile?.vendorStatus;
-                                const certUrl = profile?.foodHandlingCertUrl;
+                                const status   = profile?.vendorStatus;
+                                const certUrl  = profile?.foodHandlingCertUrl;
                                 const verified = profile?.certVerifiedAt;
                                 const expired  = profile?.certExpired;
 
+                                // Fully verified with cert confirmed by admin
                                 if (status === 'VERIFIED' && certUrl && verified) {
                                     return (
                                         <div className="flex items-center gap-3 px-4 py-3.5 bg-green-50 border border-green-200 rounded-xl">
@@ -1329,6 +1331,22 @@ export default function VendorProfilePage() {
                                     );
                                 }
 
+                                // Verified store but no cert on file (grandfathered / old store)
+                                if (status === 'VERIFIED' && !certUrl) {
+                                    return (
+                                        <div className="flex items-start gap-3 px-4 py-3.5 bg-green-50 border border-green-200 rounded-xl">
+                                            <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-green-800">Store verified</p>
+                                                <p className="text-xs text-green-600 mt-0.5">
+                                                    Your store is fully approved. You can optionally upload your food handling certificate below to keep your records up to date.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                // Cert uploaded, awaiting admin review
                                 if (certUrl && !verified) {
                                     return (
                                         <div className="flex items-center gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl">
@@ -1343,6 +1361,7 @@ export default function VendorProfilePage() {
                                     );
                                 }
 
+                                // Provisional — cert required
                                 if (status === 'PROVISIONAL') {
                                     return (
                                         <div className="flex items-start gap-3 px-4 py-3.5 bg-blue-50 border border-blue-200 rounded-xl">
@@ -1350,13 +1369,14 @@ export default function VendorProfilePage() {
                                             <div>
                                                 <p className="text-sm font-semibold text-blue-800">Certificate required for full verification</p>
                                                 <p className="text-xs text-blue-600 mt-0.5">
-                                                    Your store is currently live with a daily order cap. Upload your Canadian food handling certificate below to get fully verified and lift the cap.
+                                                    Your store is currently live. Upload your Canadian food handling certificate below to get fully verified.
                                                 </p>
                                             </div>
                                         </div>
                                     );
                                 }
 
+                                // Pending review / pending profile / rejected — not yet live
                                 return (
                                     <div className="flex items-start gap-3 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl">
                                         <Info className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
@@ -1405,8 +1425,10 @@ export default function VendorProfilePage() {
                                 </div>
                             )}
 
-                            {/* ── Upload form ── only shown for PROVISIONAL vendors (or to replace an expired cert) ── */}
-                            {(profile?.vendorStatus === 'PROVISIONAL' || profile?.certExpired) && (
+                            {/* ── Upload form ── shown for PROVISIONAL, VERIFIED without cert, or expired cert ── */}
+                            {(profile?.vendorStatus === 'PROVISIONAL' ||
+                              (profile?.vendorStatus === 'VERIFIED' && !profile?.foodHandlingCertUrl) ||
+                              profile?.certExpired) && (
                                 <div className="space-y-4 pt-2">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                         {profile?.foodHandlingCertUrl ? 'Replace certificate' : 'Upload certificate'}
