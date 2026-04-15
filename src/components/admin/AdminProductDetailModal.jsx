@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
     X, Package, Store, Tag, DollarSign, Eye, EyeOff,
     Trash2, Star, Loader2, ExternalLink, CheckCircle2,
@@ -251,20 +252,21 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
                                 </div>
                             </button>
 
-                            {/* View on vendor store */}
+                            {/* View vendor detail page */}
                             {localProduct.publicVendorId && (
-                                <a
-                                    href={`/admin/vendors?highlight=${localProduct.publicVendorId}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <Link
+                                    href={`/admin/users/${localProduct.publicVendorId}`}
+                                    onClick={onClose}
                                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                                 >
                                     <ExternalLink className="w-4 h-4 text-gray-400 shrink-0" />
                                     <div>
                                         <p className="text-sm font-semibold text-gray-900">View Vendor</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">Open the vendor&apos;s profile in admin</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            Open {localProduct.vendorName ?? "this vendor"}&apos;s profile in admin
+                                        </p>
                                     </div>
-                                </a>
+                                </Link>
                             )}
                         </div>
                     </div>
