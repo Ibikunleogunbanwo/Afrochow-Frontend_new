@@ -17,7 +17,7 @@ const ProductReviewsModal = ({ isOpen, onClose, product }) => {
         if (isOpen && product?.publicProductId) {
             refetch();
         }
-    }, [isOpen, product?.publicProductId]);
+    }, [isOpen, product?.publicProductId, refetch]);
 
     if (!isOpen) return null;
 

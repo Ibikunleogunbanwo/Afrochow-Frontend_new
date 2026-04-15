@@ -18,7 +18,7 @@ const VendorReviewsModal = ({ isOpen, onClose, vendorPublicId, restaurantName })
         if (isOpen && vendorPublicId) {
             refetch();
         }
-    }, [isOpen, vendorPublicId]);
+    }, [isOpen, vendorPublicId, refetch]);
 
     if (!isOpen) return null;
 

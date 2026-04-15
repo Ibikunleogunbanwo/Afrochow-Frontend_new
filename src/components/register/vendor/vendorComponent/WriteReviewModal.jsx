@@ -19,7 +19,11 @@ const WriteReviewModal = ({
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
 
-    // Reset form state each time the modal opens
+    // Reset form state each time the modal opens.
+    // These setState calls are intentional: they reset fields to a clean
+    // state before the modal becomes visible. Block-disable required because
+    // the lint error is reported on each individual setState line, not the hook.
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (isOpen) {
             setRating(0);
@@ -30,6 +34,7 @@ const WriteReviewModal = ({
             setError(null);
         }
     }, [isOpen]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     // ESC key handler
     useEffect(() => {
@@ -88,7 +93,7 @@ const WriteReviewModal = ({
             setError(err?.message || 'Something went wrong. Please try again.');
             setSubmitting(false);
         }
-    }, [rating, comment, vendorPublicId, product, onSuccess, onClose]);
+    }, [rating, comment, vendorPublicId, product, eligibleOrderId, onSuccess, onClose]);
 
     if (!isOpen) return null;
 

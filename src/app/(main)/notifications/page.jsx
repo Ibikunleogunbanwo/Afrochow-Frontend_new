@@ -77,16 +77,17 @@ const PAGE_SIZE = 20;
 // ─── Notification detail modal ────────────────────────────────────────────────
 
 function NotificationModal({ notification, onClose, onDelete }) {
+    useEffect(() => {
+        if (!notification) return;
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [notification, onClose]);
+
     if (!notification) return null;
     const meta = getMeta(notification);
     const { Icon, bg, accent, icon, href, label } = meta;
     const isUnread = !notification.isRead;
-
-    useEffect(() => {
-        const handler = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, [onClose]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">

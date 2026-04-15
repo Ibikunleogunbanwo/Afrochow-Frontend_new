@@ -11,6 +11,7 @@ import {
     ArrowRight,
     ShieldCheck,
     Clock,
+    CheckCircle2,
 } from "lucide-react"
 import { SuccessIcon } from "@/components/ui/animated-state-icons"
 import { RegistrationAPI } from "@/lib/api/registration.api"

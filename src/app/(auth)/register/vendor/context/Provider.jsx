@@ -117,8 +117,10 @@ export function FormProvider({ children }) {
       // Save form data to localStorage
       localStorage.setItem(FORM_STATE_KEY, JSON.stringify(formData));
 
-      // Clear any previous error
-      setStorageError(null);
+      // Clear any previous storage error only when one was set; functional
+      // update returns prev unchanged when already null so React bails out.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStorageError(prev => (prev !== null ? null : prev));
     } catch (error) {
       logger.error('FormProvider: Error saving to localStorage:', error);
 

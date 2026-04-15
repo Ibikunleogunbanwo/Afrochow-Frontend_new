@@ -50,7 +50,8 @@ const Header = () => {
     const [showSignIn, setShowSignIn] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
-    const [navCategories, setNavCategories] = useState([]);
+    // Initialise from module-level cache to avoid a setState call in the effect.
+    const [navCategories, setNavCategories] = useState(() => _navCategoryCache || []);
     const [notifOpen, setNotifOpen] = useState(false);
 
     const { cartCount, cartTotal } = useCart();
@@ -59,10 +60,8 @@ const Header = () => {
         useCustomerNotifications();
 
     useEffect(() => {
-        if (_navCategoryCache) {
-            setNavCategories(_navCategoryCache);
-            return;
-        }
+        // Cache already populated (either this session or a previous mount).
+        if (_navCategoryCache) return;
         SearchAPI.getAllCategories()
             .then(response => {
                 if (response?.success && response?.data) {

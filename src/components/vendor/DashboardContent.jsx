@@ -100,7 +100,6 @@ const DashboardContent = () => {
     ];
 
     // Fetch all orders once on mount; filtering is done client-side.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchOrders(); fetchStats(); }, []);
 
     // Reset pagination whenever the date filter changes.

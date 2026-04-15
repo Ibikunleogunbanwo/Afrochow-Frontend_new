@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const LocationContext = createContext(undefined);
 
@@ -52,6 +52,22 @@ export const LocationProvider = ({ children }) => {
     const [coordinates,     setCoordinates]     = useState(null);
     const [locationSource,  setLocationSource]  = useState(null);
 
+    const autoDetectCity = useCallback(async () => {
+        setIsDetecting(true);
+        try {
+            if (navigator.geolocation) {
+                await requestPreciseLocation();
+            } else {
+                await fallbackToIP();
+            }
+        } catch {
+            await fallbackToIP();
+        } finally {
+            setIsDetecting(false);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     useEffect(() => {
         const cachedCity    = localStorage.getItem('userCity');
         const cachedDetails = localStorage.getItem('userLocationDetails');
@@ -67,22 +83,7 @@ export const LocationProvider = ({ children }) => {
         } else {
             void autoDetectCity();
         }
-    }, []);
-
-    const autoDetectCity = async () => {
-        setIsDetecting(true);
-        try {
-            if (navigator.geolocation) {
-                await requestPreciseLocation();
-            } else {
-                await fallbackToIP();
-            }
-        } catch {
-            await fallbackToIP();
-        } finally {
-            setIsDetecting(false);
-        }
-    };
+    }, [autoDetectCity]);
 
     const requestPreciseLocation = async () => {
         setIsDetecting(true);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { VendorReviewsAPI } from '@/lib/api/vendor/reviews.api';
 import { VendorProfileAPI } from '@/lib/api/vendor/profile.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
@@ -22,7 +22,7 @@ export const useVendorReviews = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -103,15 +103,13 @@ export const useVendorReviews = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [authenticated, vendorPublicId]);
 
     useEffect(() => {
-        if (autoFetch) {
-            if (authenticated || vendorPublicId) {
-                fetchReviews();
-            }
+        if (autoFetch && (authenticated || vendorPublicId)) {
+            fetchReviews();
         }
-    }, [authenticated, vendorPublicId, autoFetch]);
+    }, [authenticated, vendorPublicId, autoFetch, fetchReviews]);
 
     return {
         reviews,

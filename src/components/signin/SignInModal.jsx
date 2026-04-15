@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/useAuth"
 import { useGoogleLogin } from "@react-oauth/google"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address." }),
@@ -36,6 +37,7 @@ const formSchema = z.object({
 
 export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick }) {
     const { login, loginWithGoogle, isLoading } = useAuth()
+    const router = useRouter()
     const [showPassword, setShowPassword] = useState(false)
 
     const form = useForm({
@@ -114,8 +116,9 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
 
             if (errorMessage.includes("verify") || errorMessage.includes("not verified")) {
                 toast.error("Email Not Verified", {
-                    description: "Please check your inbox and verify your email to continue.",
+                    description: "Redirecting you to verify your email…",
                 })
+                router.push(`/verify-email?email=${encodeURIComponent(values.email)}`)
             } else if (
                 errorMessage.includes("credentials") ||
                 errorMessage.includes("invalid") ||

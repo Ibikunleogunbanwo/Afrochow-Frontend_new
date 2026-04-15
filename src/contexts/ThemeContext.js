@@ -16,21 +16,23 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-    const [isDarkMode, setIsDarkMode] = useState(false);
-
-    // Load theme preference from localStorage on mount
-    useEffect(() => {
+    // Initialise from localStorage on the client; SSR defaults to false to
+    // avoid a hydration mismatch (the class is applied synchronously below).
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window === 'undefined') return false;
         const savedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return savedTheme === 'dark' || (!savedTheme && prefersDark);
+    });
 
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            setIsDarkMode(true);
+    // Keep the <html> class in sync — never calls setState, no cascading renders.
+    useEffect(() => {
+        if (isDarkMode) {
             document.documentElement.classList.add('dark');
         } else {
-            setIsDarkMode(false);
             document.documentElement.classList.remove('dark');
         }
-    }, []);
+    }, [isDarkMode]);
 
     const toggleDarkMode = () => {
         setIsDarkMode(prev => {
