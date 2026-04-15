@@ -15,6 +15,7 @@ import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 /* ─── status config ─────────────────────────────────────────────────────── */
 // Values must match the backend OrderStatus enum exactly (8 values):
@@ -303,7 +304,16 @@ export default function AdminOrdersPage() {
     const [search, setSearch]               = useState('');
     const [loading, setLoading]             = useState(true);
     const [error, setError]                 = useState(null);
-    const [page, setPage]                   = useState(1);
+    const router       = useRouter();
+    const searchParams = useSearchParams();
+    // Initialise from URL so Back button restores the right page
+    const [page, setPage] = useState(() => Math.max(1, Number(searchParams.get('page') ?? 1)));
+    const goToPage = (p) => {
+        setPage(p);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', String(p));
+        router.replace('?' + params.toString(), { scroll: false });
+    };
 
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [modalLoading, setModalLoading]   = useState(false);
@@ -328,7 +338,7 @@ export default function AdminOrdersPage() {
         }
     }, [statusFilter]);
 
-    useEffect(() => { fetchOrders(); setPage(1); }, [fetchOrders]);
+    useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
     /* ── cancel order (admin) ── */
     const handleCancelOrder = async () => {
@@ -444,7 +454,7 @@ export default function AdminOrdersPage() {
                             type="text"
                             placeholder="Search by order ID, customer, vendor…"
                             value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
+                            onChange={e => { setSearch(e.target.value); goToPage(1); }}
                             style={{ color: 'black', backgroundColor: 'white' }}
                             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                         />
@@ -462,7 +472,7 @@ export default function AdminOrdersPage() {
                             return (
                                 <motion.button
                                     key={s}
-                                    onClick={() => { setStatusFilter(s); setPage(1); }}
+                                    onClick={() => { setStatusFilter(s); goToPage(1); }}
                                     whileHover={{ scale: 1.04 }}
                                     whileTap={{ scale: 0.96 }}
                                     animate={{
@@ -634,7 +644,7 @@ export default function AdminOrdersPage() {
                     totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
                     totalItems={filtered.length}
                     pageSize={PAGE_SIZE}
-                    onPageChange={setPage}
+                    onPageChange={goToPage}
                 />
             </div>
 

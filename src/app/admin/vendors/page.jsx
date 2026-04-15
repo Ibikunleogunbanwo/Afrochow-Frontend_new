@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
@@ -138,14 +138,22 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function AdminVendorsPage() {
-    const router = useRouter();
+    const router       = useRouter();
+    const searchParams = useSearchParams();
     const [vendors, setVendors]       = useState([]);
     const [filter, setFilter]         = useState('all');
     const [search, setSearch]         = useState('');
     const [loading, setLoading]       = useState(true);
     const [error, setError]           = useState(null);
     const [actionLoading, setActionLoading] = useState({});
-    const [page, setPage]             = useState(1);
+    // Initialise from URL so Back button restores the right page
+    const [page, setPage] = useState(() => Math.max(1, Number(searchParams.get('page') ?? 1)));
+    const goToPage = (p) => {
+        setPage(p);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', String(p));
+        router.replace('?' + params.toString(), { scroll: false });
+    };
     const [reviewVendor, setReviewVendor] = useState(null);
     const [dateFilter, setDateFilter] = useState('');
     const [showDateMenu, setShowDateMenu] = useState(false);
@@ -286,7 +294,7 @@ export default function AdminVendorsPage() {
                 {statCards.map(s => (
                     <button
                         key={s.key}
-                        onClick={() => { setFilter(s.key); setPage(1); }}
+                        onClick={() => { setFilter(s.key); goToPage(1); }}
                         className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
                             filter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                         }`}
@@ -310,7 +318,7 @@ export default function AdminVendorsPage() {
                                 type="text"
                                 placeholder="Search by name or product type…"
                                 value={search}
-                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                onChange={e => { setSearch(e.target.value); goToPage(1); }}
                                 style={{ color: 'black', backgroundColor: 'white' }}
                                 className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                             />
@@ -328,7 +336,7 @@ export default function AdminVendorsPage() {
                                 <Calendar className="w-4 h-4" />
                                 <span>{dateLabel ?? 'Date Joined'}</span>
                                 {dateFilter
-                                    ? <X className="w-3.5 h-3.5 ml-1 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} />
+                                    ? <X className="w-3.5 h-3.5 ml-1 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); setDateFilter(''); setCustomStart(''); setCustomEnd(''); goToPage(1); }} />
                                     : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                                 }
                             </button>
@@ -341,7 +349,7 @@ export default function AdminVendorsPage() {
                                                 key={o.value}
                                                 onClick={() => {
                                                     setDateFilter(o.value);
-                                                    setPage(1);
+                                                    goToPage(1);
                                                     if (o.value !== 'custom') { setShowDateMenu(false); setCustomStart(''); setCustomEnd(''); }
                                                 }}
                                                 style={{ color: '#374151', backgroundColor: dateFilter === o.value ? '#f3f4f6' : 'white' }}
@@ -355,13 +363,13 @@ export default function AdminVendorsPage() {
                                         <div className="p-4 border-t border-gray-200 space-y-3">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-700 mb-1">From</label>
-                                                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPage(1); }}
+                                                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); goToPage(1); }}
                                                     style={{ color: 'black', backgroundColor: 'white' }}
                                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-700 mb-1">To</label>
-                                                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPage(1); }}
+                                                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); goToPage(1); }}
                                                     style={{ color: 'black', backgroundColor: 'white' }}
                                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
                                             </div>
@@ -382,7 +390,7 @@ export default function AdminVendorsPage() {
                         {FILTERS.map(f => (
                             <button
                                 key={f.key}
-                                onClick={() => { setFilter(f.key); setPage(1); }}
+                                onClick={() => { setFilter(f.key); goToPage(1); }}
                                 className={`px-4 py-2 text-sm font-semibold rounded-xl capitalize transition-colors ${
                                     filter === f.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
@@ -397,7 +405,7 @@ export default function AdminVendorsPage() {
                             <span>Joined: <span className="font-semibold text-gray-900">{dateLabel}</span></span>
                             <span className="text-gray-400">·</span>
                             <span className="font-semibold text-gray-700">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
-                            <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
+                            <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); goToPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
                                 <X className="w-3 h-3" />
                             </button>
                         </div>
@@ -576,7 +584,7 @@ export default function AdminVendorsPage() {
                         totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
                         totalItems={filtered.length}
                         pageSize={PAGE_SIZE}
-                        onPageChange={setPage}
+                        onPageChange={goToPage}
                     />
                 )}
             </div>

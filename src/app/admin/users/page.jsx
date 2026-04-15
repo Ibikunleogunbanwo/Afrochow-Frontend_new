@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import {
     Users, UserCheck, UserX, Trash2, ChevronDown,
@@ -136,6 +137,8 @@ const VendorStatusBadge = ({ vendorStatus }) => {
 export default function AdminUsersPage() {
     const currentRole = useSelector(selectUserRole); // 'ADMIN' or 'SUPERADMIN'
     const isSuperAdmin = currentRole === 'SUPERADMIN';
+    const router       = useRouter();
+    const searchParams = useSearchParams();
 
     const [users, setUsers]               = useState([]);
     const [totalPages, setTotalPages]     = useState(1);
@@ -151,13 +154,22 @@ export default function AdminUsersPage() {
     const [vendorStatusFilter, setVendorStatusFilter]   = useState('ALL');
     const [actionLoading, setActionLoading] = useState({});
     const [roleMenu, setRoleMenu]         = useState(null);
-    const [page, setPage]                 = useState(1);   // 1-based for display
+    // Initialise page from URL (?page=8) so Back button restores the right page
+    const [page, setPage]                 = useState(() => Math.max(1, Number(searchParams.get('page') ?? 1)));
     const [dateFilter, setDateFilter]     = useState('');
     const [showDateMenu, setShowDateMenu] = useState(false);
     const [customStart, setCustomStart]   = useState('');
     const [customEnd, setCustomEnd]       = useState('');
     const dateMenuRef  = useRef(null);
     const searchTimer  = useRef(null);
+
+    // Keep URL in sync with current page so Back restores it
+    const goToPage = useCallback((p) => {
+        setPage(p);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', String(p));
+        router.replace(`?${params.toString()}`, { scroll: false });
+    }, [router]);
 
     // Build server-side filter params from UI state
     const buildParams = useCallback(() => {
@@ -212,9 +224,11 @@ export default function AdminUsersPage() {
 
     const handleSearchInput = (val) => {
         setSearchInput(val);
-        setPage(1);
         clearTimeout(searchTimer.current);
-        searchTimer.current = setTimeout(() => setSearch(val), 400);
+        searchTimer.current = setTimeout(() => {
+            setSearch(val);
+            goToPage(1);  // reset to page 1 only after debounce fires
+        }, 400);
     };
 
     const USER_ACTION_LABELS = {
@@ -323,7 +337,7 @@ export default function AdminUsersPage() {
                     {statsCards.map(s => (
                         <button
                             key={s.key}
-                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); setAccountStatusFilter('ALL'); setVendorStatusFilter('ALL'); setPage(1); }}
+                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); setAccountStatusFilter('ALL'); setVendorStatusFilter('ALL'); goToPage(1); }}
                             className={`bg-white border rounded-2xl p-4 shadow-sm text-center transition-all hover:shadow-md ${
                                 statusFilter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                             }`}
@@ -364,7 +378,7 @@ export default function AdminUsersPage() {
                                 <Calendar className="w-4 h-4" />
                                 <span>{dateLabel ?? 'Date Joined'}</span>
                                 {dateFilter
-                                    ? <X className="w-3.5 h-3.5 ml-1 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} />
+                                    ? <X className="w-3.5 h-3.5 ml-1 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); setDateFilter(''); setCustomStart(''); setCustomEnd(''); goToPage(1); }} />
                                     : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                                 }
                             </button>
@@ -377,7 +391,7 @@ export default function AdminUsersPage() {
                                                 key={o.value}
                                                 onClick={() => {
                                                     setDateFilter(o.value);
-                                                    setPage(1);
+                                                    goToPage(1);
                                                     if (o.value !== 'custom') { setShowDateMenu(false); setCustomStart(''); setCustomEnd(''); }
                                                 }}
                                                 style={{ color: '#374151', backgroundColor: dateFilter === o.value ? '#f3f4f6' : 'white' }}
@@ -391,13 +405,13 @@ export default function AdminUsersPage() {
                                         <div className="p-4 border-t border-gray-200 space-y-3">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-700 mb-1">From</label>
-                                                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPage(1); }}
+                                                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); goToPage(1); }}
                                                     style={{ color: 'black', backgroundColor: 'white' }}
                                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-700 mb-1">To</label>
-                                                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPage(1); }}
+                                                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); goToPage(1); }}
                                                     style={{ color: 'black', backgroundColor: 'white' }}
                                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
                                             </div>
@@ -423,7 +437,7 @@ export default function AdminUsersPage() {
                                     setSearch(''); setSearchInput('');
                                     setAccountStatusFilter('ALL');
                                     setVendorStatusFilter('ALL');
-                                    setPage(1);
+                                    goToPage(1);
                                 }}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-xl capitalize transition-colors whitespace-nowrap shrink-0 ${
                                     roleFilter === r && !search ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -447,7 +461,7 @@ export default function AdminUsersPage() {
                             return (
                                 <button
                                     key={key}
-                                    onClick={() => { setAccountStatusFilter(key); setPage(1); }}
+                                    onClick={() => { setAccountStatusFilter(key); goToPage(1); }}
                                     className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors whitespace-nowrap shrink-0 border ${
                                         isActive
                                             ? 'bg-gray-900 text-white border-gray-900'
@@ -481,7 +495,7 @@ export default function AdminUsersPage() {
                                 return (
                                     <button
                                         key={key}
-                                        onClick={() => { setVendorStatusFilter(key); setPage(1); }}
+                                        onClick={() => { setVendorStatusFilter(key); goToPage(1); }}
                                         className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors whitespace-nowrap shrink-0 border ${
                                             isActive
                                                 ? 'bg-gray-900 text-white border-gray-900'
@@ -505,7 +519,7 @@ export default function AdminUsersPage() {
                             <span>Joined: <span className="font-semibold text-gray-900">{dateLabel}</span></span>
                             <span className="text-gray-400">·</span>
                             <span className="font-semibold text-gray-700">{displayedUsers.length} result{displayedUsers.length !== 1 ? 's' : ''}</span>
-                            <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); setPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
+                            <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); goToPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
                                 <X className="w-3 h-3" />
                             </button>
                         </div>
@@ -688,7 +702,7 @@ export default function AdminUsersPage() {
                         totalPages={totalPages}
                         totalItems={totalElements}
                         pageSize={PAGE_SIZE}
-                        onPageChange={(p) => { setPage(p); }}
+                        onPageChange={(p) => { goToPage(p); }}
                     />
                 )}
             </div>

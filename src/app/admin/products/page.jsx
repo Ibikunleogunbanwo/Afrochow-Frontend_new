@@ -11,6 +11,7 @@ import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import Pagination from '@/components/admin/Pagination';
 import AdminProductDetailModal from '@/components/admin/AdminProductDetailModal';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const PAGE_SIZE = 20;
 
@@ -151,7 +152,16 @@ export default function AdminProductsPage() {
     const [statsLoading, setStatsLoading] = useState(true);
     const [error,        setError]       = useState(null);
     const [toggling,       setToggling]     = useState({});
-    const [page,           setPage]         = useState(1);
+    const router       = useRouter();
+    const searchParams = useSearchParams();
+    // Initialise from URL so Back button restores the right page
+    const [page, setPage] = useState(() => Math.max(1, Number(searchParams.get('page') ?? 1)));
+    const goToPage = (p) => {
+        setPage(p);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', String(p));
+        router.replace('?' + params.toString(), { scroll: false });
+    };
     const [search,         setSearch]       = useState('');
     const [debouncedQ,     setDebouncedQ]   = useState('');
     const [filterTab,      setFilterTab]    = useState('all');
@@ -183,7 +193,7 @@ export default function AdminProductsPage() {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             setDebouncedQ(value);
-            setPage(1);
+            goToPage(1);
         }, 400);
     };
 
@@ -216,7 +226,7 @@ export default function AdminProductsPage() {
 
     const handleTabChange = (tab) => {
         setFilterTab(tab);
-        setPage(1);
+        goToPage(1);
         setSearch('');
         setDebouncedQ('');
     };
@@ -393,7 +403,7 @@ export default function AdminProductsPage() {
                 />
                 {search && (
                     <button
-                        onClick={() => { setSearch(''); setDebouncedQ(''); setPage(1); }}
+                        onClick={() => { setSearch(''); setDebouncedQ(''); goToPage(1); }}
                         className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                         <X className="w-4 h-4" />
@@ -465,7 +475,7 @@ export default function AdminProductsPage() {
                             totalPages={meta.totalPages}
                             totalItems={meta.totalElements}
                             pageSize={PAGE_SIZE}
-                            onPageChange={p => setPage(p)}
+                            onPageChange={goToPage}
                         />
                     )}
                 </>
