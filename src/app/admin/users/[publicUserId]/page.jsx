@@ -418,7 +418,7 @@ export default function AdminUserDetailPage() {
                             <div className="grid grid-cols-3 gap-3">
                                 {[
                                     {
-                                        label: 'Total Orders',
+                                        label: user.orderLabel ?? 'Orders',
                                         value: totalOrders !== null ? totalOrders : '—',
                                         icon: Package,
                                     },
