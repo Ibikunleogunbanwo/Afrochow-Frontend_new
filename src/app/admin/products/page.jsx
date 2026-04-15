@@ -10,6 +10,7 @@ import { AdminProductsAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import Pagination from '@/components/admin/Pagination';
+import AdminProductDetailModal from '@/components/admin/AdminProductDetailModal';
 
 const PAGE_SIZE = 20;
 
@@ -87,7 +88,7 @@ function ProductRow({ product, onToggle, toggling }) {
                     </div>
                 </div>
 
-                <div className="shrink-0 flex flex-col items-center gap-1 pt-1">
+                <div className="shrink-0 flex flex-col items-center gap-1 pt-1" onClick={e => e.stopPropagation()}>
                     <FeatureToggle featured={featured} onToggle={() => onToggle(product)} loading={toggling} />
                     <span className={`text-[10px] font-semibold ${featured ? 'text-amber-500' : 'text-gray-400'}`}>
                         {featured ? 'Featured' : 'Feature'}
@@ -132,7 +133,9 @@ function ProductRow({ product, onToggle, toggling }) {
                     {product.available ? 'Available' : 'Unavailable'}
                 </span>
 
-                <FeatureToggle featured={featured} onToggle={() => onToggle(product)} loading={toggling} />
+                <div onClick={e => e.stopPropagation()}>
+                    <FeatureToggle featured={featured} onToggle={() => onToggle(product)} loading={toggling} />
+                </div>
             </div>
         </div>
     );
@@ -147,13 +150,14 @@ export default function AdminProductsPage() {
     const [loading,      setLoading]     = useState(true);
     const [statsLoading, setStatsLoading] = useState(true);
     const [error,        setError]       = useState(null);
-    const [toggling,     setToggling]    = useState({});
-    const [page,         setPage]        = useState(1);
-    const [search,       setSearch]      = useState('');
-    const [debouncedQ,   setDebouncedQ]  = useState('');
-    const [filterTab,    setFilterTab]   = useState('all');
-    const [clearing,     setClearing]    = useState(false);
-    const [confirmClear, setConfirmClear] = useState(false);
+    const [toggling,       setToggling]     = useState({});
+    const [page,           setPage]         = useState(1);
+    const [search,         setSearch]       = useState('');
+    const [debouncedQ,     setDebouncedQ]   = useState('');
+    const [filterTab,      setFilterTab]    = useState('all');
+    const [clearing,       setClearing]     = useState(false);
+    const [confirmClear,   setConfirmClear] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null); // product detail modal
     const debounceRef = useRef(null);
 
     // Fetch global totals (size=1 — only needs totalElements)
@@ -298,6 +302,21 @@ export default function AdminProductsPage() {
 
     return (
         <div className="space-y-5">
+            {/* Product detail modal */}
+            {selectedProduct && (
+                <AdminProductDetailModal
+                    product={selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                    onMutated={() => {
+                        // Refresh the list after any mutation (hide/feature/delete)
+                        fetchProducts(page, debouncedQ, filterTab);
+                        fetchStats();
+                        // Update the selected product's local state from the refreshed list
+                        // (modal handles its own optimistic updates for immediate feedback)
+                    }}
+                />
+            )}
+
             <Breadcrumb />
 
             {/* Header */}
@@ -423,12 +442,20 @@ export default function AdminProductsPage() {
 
                     <div className="space-y-2 md:space-y-0 md:border md:border-gray-100 md:rounded-2xl md:overflow-hidden">
                         {products.map(product => (
-                            <ProductRow
+                            <div
                                 key={product.publicProductId}
-                                product={product}
-                                onToggle={handleToggle}
-                                toggling={!!toggling[product.publicProductId]}
-                            />
+                                onClick={() => setSelectedProduct(product)}
+                                className="cursor-pointer"
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => e.key === 'Enter' && setSelectedProduct(product)}
+                            >
+                                <ProductRow
+                                    product={product}
+                                    onToggle={(p) => { handleToggle(p); }}
+                                    toggling={!!toggling[product.publicProductId]}
+                                />
+                            </div>
                         ))}
                     </div>
 

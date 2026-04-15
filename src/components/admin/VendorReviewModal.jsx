@@ -9,19 +9,13 @@ import {
     ExternalLink, CreditCard, Award, ShieldCheck,
 } from "lucide-react";
 import { AdminVendorsAPI } from "@/lib/api/admin.api";
+import { formatDate } from "@/lib/utils/dateUtils";
 import { toast } from "@/components/ui/toast";
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
 const val = (v, fallback = "—") => (v != null && v !== "" ? v : fallback);
 const fmt$ = (n) => (n != null ? `$${Number(n).toFixed(2)}` : "—");
-const fmtDate = (d) =>
-    d
-        ? new Date(d).toLocaleDateString("en-CA", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-          })
-        : "—";
+const fmtDate = (d) => formatDate(d);
 
 const DAYS = [
     { key: "monday",    label: "Monday"    },

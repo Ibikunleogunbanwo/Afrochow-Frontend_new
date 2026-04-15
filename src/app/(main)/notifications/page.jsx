@@ -8,6 +8,7 @@ import {
     ArrowRight, Package, Info,
 } from 'lucide-react';
 import { NotificationsAPI } from '@/lib/api/notifications.api';
+import { relativeTime, formatDateTime } from '@/lib/utils/dateUtils';
 
 // Keep in sync with useCustomerNotifications.js channel name + message types
 const NOTIF_CHANNEL = 'afrochow_customer_notifications';
@@ -15,25 +16,7 @@ const BC = { MARK_READ: 'MARK_READ', MARK_ALL_READ: 'MARK_ALL_READ', DELETE: 'DE
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-const relativeTime = (dateVal) => {
-    if (!dateVal) return '';
-    const diff  = Date.now() - new Date(dateVal).getTime();
-    const mins  = Math.floor(diff / 60_000);
-    const hours = Math.floor(diff / 3_600_000);
-    const days  = Math.floor(diff / 86_400_000);
-    if (mins  <  1) return 'just now';
-    if (mins  < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-};
-
-const fullDate = (dateVal) => {
-    if (!dateVal) return '';
-    return new Date(dateVal).toLocaleString('en-CA', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-    });
-};
+const fullDate = (dateVal) => formatDateTime(dateVal);
 
 const TYPE_META = {
     ORDER_UPDATE:    { Icon: ShoppingBag, bg: 'bg-orange-50',  accent: 'bg-orange-400',  icon: 'text-orange-500', label: 'Order',    baseHref: '/orders'      },

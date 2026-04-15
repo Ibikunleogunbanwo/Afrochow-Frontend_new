@@ -13,6 +13,7 @@ import Link from "next/link";
 import { toast } from '@/components/ui/toast';
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import WriteReviewModal from "@/components/register/vendor/vendorComponent/WriteReviewModal";
+import { formatDateTime } from '@/lib/utils/dateUtils';
 
 // ── Status config — matches backend OrderStatus enum ─────────────────────────
 
@@ -98,10 +99,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
     const shortId   = order.publicOrderId?.slice(-8).toUpperCase();
 
     const dateTimeStr = order.orderTime
-        ? new Date(order.orderTime).toLocaleString("en-CA", {
-            month: "short", day: "numeric", year: "numeric",
-            hour: "2-digit", minute: "2-digit",
-          })
+        ? formatDateTime(order.orderTime)
         : "—";
 
     const accent = STATUS_ACCENT[order.status] ?? "border-l-gray-200";

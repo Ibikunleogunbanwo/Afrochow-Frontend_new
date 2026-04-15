@@ -10,6 +10,7 @@ import { AdminPromotionsAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
+import { formatDate, parseServerDate } from '@/lib/utils/dateUtils';
 
 const DISCOUNT_TYPES = {
     PERCENTAGE:   'Percentage Off',
@@ -61,15 +62,12 @@ const formFromPromotion = (p) => ({
     maxDiscountAmount:  p.maxDiscountAmount  != null ? String(p.maxDiscountAmount)  : '',
     usageLimit:         p.usageLimit         != null ? String(p.usageLimit)         : '',
     perUserLimit:       p.perUserLimit       != null ? String(p.perUserLimit)       : '',
-    startDate:          p.startDate ? new Date(p.startDate).toLocaleDateString('en-CA') : '',
-    endDate:            p.endDate   ? new Date(p.endDate).toLocaleDateString('en-CA')   : '',
+    startDate:          p.startDate ? (parseServerDate(p.startDate)?.toISOString().slice(0,10) ?? '') : '',
+    endDate:            p.endDate   ? (parseServerDate(p.endDate)?.toISOString().slice(0,10)   ?? '') : '',
     isActive:           p.isActive           ?? p.isCurrentlyActive ?? true,
     vendorPublicId:     p.vendorPublicId     ?? '',
 });
 
-const formatDate = (d) => d
-    ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-    : '—';
 
 export default function AdminPromotionsPage() {
     const [promotions,    setPromotions]    = useState([]);

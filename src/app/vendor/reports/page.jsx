@@ -21,6 +21,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
+import { formatDateTime, formatDate } from "@/lib/utils/dateUtils";
 
 const VendorReportsPage = () => {
     const [loading, setLoading] = useState(true);
@@ -316,14 +317,7 @@ const VendorReportsPage = () => {
         return `CA$${parseFloat(amount || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-CA', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    };
+    const formatDate = (dateString) => formatDateTime(dateString);
 
     const calculateGrowth = (current, previous) => {
         if (!previous) return 0;

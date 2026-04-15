@@ -49,6 +49,7 @@ const inDateRange = (dateStr, bounds) => {
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
 import { selectUserRole } from '@/redux-store/authSlice';
+import { formatDate as fmtLocal } from '@/lib/utils/dateUtils';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
 
@@ -136,46 +137,68 @@ export default function AdminUsersPage() {
     const currentRole = useSelector(selectUserRole); // 'ADMIN' or 'SUPERADMIN'
     const isSuperAdmin = currentRole === 'SUPERADMIN';
 
-    const [users, setUsers]             = useState([]);
-    const [stats, setStats]             = useState(null);
-    const [roleFilter, setRoleFilter]   = useState('ALL');
-    const [search, setSearch]           = useState('');
-    const [searchInput, setSearchInput] = useState('');
-    const [loading, setLoading]         = useState(true);
-    const [error, setError]             = useState(null);
+    const [users, setUsers]               = useState([]);
+    const [totalPages, setTotalPages]     = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
+    const [stats, setStats]               = useState(null);
+    const [roleFilter, setRoleFilter]     = useState('ALL');
+    const [search, setSearch]             = useState('');
+    const [searchInput, setSearchInput]   = useState('');
+    const [loading, setLoading]           = useState(true);
+    const [error, setError]               = useState(null);
     const [statusFilter, setStatusFilter] = useState('all'); // 'all'|'active'|'inactive'|role string
-    const [accountStatusFilter, setAccountStatusFilter] = useState('ALL'); // UserStatus enum
-    const [vendorStatusFilter, setVendorStatusFilter]   = useState('ALL'); // VendorStatus enum
+    const [accountStatusFilter, setAccountStatusFilter] = useState('ALL');
+    const [vendorStatusFilter, setVendorStatusFilter]   = useState('ALL');
     const [actionLoading, setActionLoading] = useState({});
-    const [roleMenu, setRoleMenu]       = useState(null);
-    const [page, setPage]               = useState(1);
-    const [dateFilter, setDateFilter]   = useState('');        // '' = no filter
+    const [roleMenu, setRoleMenu]         = useState(null);
+    const [page, setPage]                 = useState(1);   // 1-based for display
+    const [dateFilter, setDateFilter]     = useState('');
     const [showDateMenu, setShowDateMenu] = useState(false);
-    const [customStart, setCustomStart] = useState('');
-    const [customEnd, setCustomEnd]     = useState('');
-    const dateMenuRef = useRef(null);
-    const searchTimer = useRef(null);
+    const [customStart, setCustomStart]   = useState('');
+    const [customEnd, setCustomEnd]       = useState('');
+    const dateMenuRef  = useRef(null);
+    const searchTimer  = useRef(null);
+
+    // Build server-side filter params from UI state
+    const buildParams = useCallback(() => {
+        const params = { page: page - 1, size: PAGE_SIZE };
+        // role
+        const roleFromStatus = ['CUSTOMER','VENDOR','ADMIN','SUPERADMIN'].includes(statusFilter)
+            ? statusFilter : null;
+        const activeRole = roleFromStatus ?? (roleFilter !== 'ALL' ? roleFilter : null);
+        if (activeRole) params.role = activeRole;
+        // active flag
+        if (statusFilter === 'active')   params.active = true;
+        if (statusFilter === 'inactive') params.active = false;
+        // search
+        if (search.trim()) params.q = search.trim();
+        return params;
+    }, [page, roleFilter, search, statusFilter]);
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            let res;
-            if (search)                                           res = await AdminUsersAPI.search(search);
-            else if (statusFilter === 'active')                  res = await AdminUsersAPI.getActive();
-            else if (statusFilter === 'inactive')                res = await AdminUsersAPI.getInactive();
-            else if (['CUSTOMER','VENDOR','ADMIN','SUPERADMIN'].includes(statusFilter))
-                                                                  res = await AdminUsersAPI.getByRole(statusFilter);
-            else if (roleFilter !== 'ALL')                       res = await AdminUsersAPI.getByRole(roleFilter);
-            else                                                 res = await AdminUsersAPI.getAll();
-            const data = res?.data ?? res ?? [];
-            setUsers(Array.isArray(data) ? data : []);
+            const res = await AdminUsersAPI.getAll(buildParams());
+            const data = res?.data ?? res ?? {};
+            // New paginated response shape: { content, totalElements, totalPages, page, size }
+            if (data.content) {
+                setUsers(data.content);
+                setTotalPages(data.totalPages ?? 1);
+                setTotalElements(data.totalElements ?? data.content.length);
+            } else {
+                // Legacy flat array fallback (search endpoints still return arrays)
+                const arr = Array.isArray(data) ? data : [];
+                setUsers(arr);
+                setTotalPages(1);
+                setTotalElements(arr.length);
+            }
         } catch (e) {
             setError(e.message || 'Failed to load users');
         } finally {
             setLoading(false);
         }
-    }, [roleFilter, search, statusFilter]);
+    }, [buildParams]);
 
     const fetchStats = useCallback(async () => {
         try {
@@ -184,7 +207,8 @@ export default function AdminUsersPage() {
         } catch (_) {}
     }, []);
 
-    useEffect(() => { fetchUsers(); fetchStats(); }, [fetchUsers, fetchStats, statusFilter]);
+    useEffect(() => { fetchUsers(); }, [fetchUsers]);
+    useEffect(() => { fetchStats(); }, [fetchStats]);
 
     const handleSearchInput = (val) => {
         setSearchInput(val);
@@ -234,9 +258,7 @@ export default function AdminUsersPage() {
         await doAction(id, AdminUsersAPI.deleteUser, 'delete');
     };
 
-    const formatDate = (d) => d
-        ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-        : 'N/A';
+    const formatDate = (d) => fmtLocal(d);
 
     const statsCards = stats ? [
         { key: 'all',        label: 'Total Users',  value: stats.totalUsers      ?? 0 },
@@ -256,7 +278,9 @@ export default function AdminUsersPage() {
     // Determine whether we're currently viewing vendors
     const isVendorView = statusFilter === 'VENDOR' || roleFilter === 'VENDOR';
 
-    // Client-side filtering: date + account status + vendor workflow status
+    // Role/active/search filtering is now SERVER-SIDE via buildParams().
+    // Only client-side filters that can't be pushed to the server stay here:
+    // date range (not supported by the API) and vendor workflow status.
     const dateBounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
     const displayedUsers = users
         .filter(u => !dateBounds || inDateRange(u.createdAt, dateBounds))
@@ -514,7 +538,7 @@ export default function AdminUsersPage() {
                             { label: 'Joined',  className: 'w-32 shrink-0' },
                             { label: 'Actions', className: 'w-52 shrink-0' },
                         ]} />
-                        {displayedUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(u => (
+                        {displayedUsers.map(u => (
                             <AdminTableRow key={u.publicUserId}>
                                 {/* Name col — clicking navigates to user detail */}
                                 <Link href={`/admin/users/${u.publicUserId}`} className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden group">
@@ -658,13 +682,13 @@ export default function AdminUsersPage() {
                         ))}
                     </AdminTableRoot>
                 )}
-                {!loading && !error && displayedUsers.length > PAGE_SIZE && (
+                {!loading && !error && totalPages > 1 && (
                     <Pagination
                         page={page}
-                        totalPages={Math.ceil(displayedUsers.length / PAGE_SIZE)}
-                        totalItems={displayedUsers.length}
+                        totalPages={totalPages}
+                        totalItems={totalElements}
                         pageSize={PAGE_SIZE}
-                        onPageChange={setPage}
+                        onPageChange={(p) => { setPage(p); }}
                     />
                 )}
             </div>

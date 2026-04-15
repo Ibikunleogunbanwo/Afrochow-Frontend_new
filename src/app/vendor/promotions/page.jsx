@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PromotionsAPI } from '@/lib/api/promotions.api';
 import { toast } from '@/components/ui/toast';
+import { formatDate as fmtDate } from "@/lib/utils/dateUtils";
 
 const DISCOUNT_TYPES = {
     PERCENTAGE: 'Percentage Off',
@@ -242,12 +243,7 @@ const VendorPromotionsPage = () => {
         return { label: 'Active', color: 'bg-green-500' };
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-CA', {
-            month: 'short', day: 'numeric', year: 'numeric',
-        });
-    };
+    const formatDate = (dateString) => fmtDate(dateString);
 
     const formatCurrency = (amount) =>
         `CA$${parseFloat(amount || 0).toLocaleString('en-CA', {

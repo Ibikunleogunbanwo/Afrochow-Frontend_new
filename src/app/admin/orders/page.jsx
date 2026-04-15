@@ -10,6 +10,7 @@ import {
     Receipt, AlertCircle, Loader2, Tag,
 } from 'lucide-react';
 import { AdminOrdersAPI } from '@/lib/api/admin.api';
+import { formatDateTime } from '@/lib/utils/dateUtils';
 import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow } from '@/components/admin/AdminTable';
@@ -68,13 +69,7 @@ const StatusBadge = ({ status, statusLabel }) => {
 const fmt$ = (n) =>
     n != null ? `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
 
-const fmtDate = (d, opts) => {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-CA', opts ?? {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-    });
-};
+const fmtDate = (d) => formatDateTime(d);
 
 const fmtAddress = (addr) => {
     if (!addr) return null;

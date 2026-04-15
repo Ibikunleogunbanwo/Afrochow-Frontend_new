@@ -49,6 +49,7 @@ import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
+import { formatDate } from '@/lib/utils/dateUtils';
 import VendorReviewModal from '@/components/admin/VendorReviewModal';
 
 const PAGE_SIZE = 15;
@@ -228,7 +229,7 @@ export default function AdminVendorsPage() {
         return DATE_OPTIONS.find(o => o.value === dateFilter)?.label ?? null;
     })();
 
-    const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+    
 
     return (
         <div className="space-y-6">

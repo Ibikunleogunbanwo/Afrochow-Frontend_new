@@ -9,6 +9,7 @@ import {
     Users, User, Store, History, Clock, ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { AdminNotificationsAPI } from '@/lib/api/admin.api';
+import { formatDateTime } from '@/lib/utils/dateUtils';
 
 // ── Audience config ────────────────────────────────────────────────────────────
 const AUDIENCES = [
@@ -43,13 +44,7 @@ const relativeTime = (dateVal) => {
     return `${days}d ago`;
 };
 
-const fullDate = (dateVal) => {
-    if (!dateVal) return '—';
-    return new Date(dateVal).toLocaleString('en-CA', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-    });
-};
+const fullDate = (dateVal) => formatDateTime(dateVal);
 
 const PAGE_SIZE = 20;
 

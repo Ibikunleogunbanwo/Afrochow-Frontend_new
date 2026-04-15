@@ -14,6 +14,7 @@ import {
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
 import { selectUserRole } from '@/redux-store/authSlice';
+import { formatTimestamp } from '@/lib/utils/dateUtils';
 
 const RoleBadge = ({ role }) => {
     const map = {
@@ -89,9 +90,7 @@ const InfoRow = ({ icon: Icon, label, value }) => (
     </div>
 );
 
-const formatDate = (d) => d
-    ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : null;
+const formatDate = (d) => formatTimestamp(d) === '—' ? null : formatTimestamp(d);
 
 export default function AdminUserDetailPage() {
     const { publicUserId } = useParams();

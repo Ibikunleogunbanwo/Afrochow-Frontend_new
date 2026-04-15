@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
+import { formatDateTime } from '@/lib/utils/dateUtils';
 
 // ── Per-status hero config ────────────────────────────────────────────────────
 
@@ -409,10 +410,7 @@ export default function OrderConfirmationPage() {
                                 <h2 className="text-sm font-bold text-red-800 flex-1">Order Cancelled</h2>
                                 {order.cancelledAt && (
                                     <span className="text-xs text-red-400 font-mono">
-                                        {new Date(order.cancelledAt).toLocaleString('en-CA', {
-                                            month: 'short', day: 'numeric', year: 'numeric',
-                                            hour: '2-digit', minute: '2-digit',
-                                        })}
+                                        {formatDateTime(order.cancelledAt)}
                                     </span>
                                 )}
                             </div>
@@ -475,10 +473,7 @@ export default function OrderConfirmationPage() {
                         <div>
                             <p className="text-xs font-semibold text-blue-700 mb-0.5">Requested Fulfilment Time</p>
                             <p className="text-sm text-blue-800 font-medium">
-                                {new Date(order.requestedFulfillmentTime).toLocaleString(undefined, {
-                                    weekday: 'long', year: 'numeric', month: 'long',
-                                    day: 'numeric', hour: '2-digit', minute: '2-digit',
-                                })}
+                                {formatDateTime(order.requestedFulfillmentTime)}
                             </p>
                             <p className="text-xs text-blue-600 mt-0.5">
                                 The vendor will aim to have your order ready by this time.

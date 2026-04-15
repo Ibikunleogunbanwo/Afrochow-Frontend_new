@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useVendorNotifications } from '@/hooks/useVendorNotifications';
 import { SearchAPI } from '@/lib/api/search.api';
+import { formatDateLong } from "@/lib/utils/dateUtils";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -1324,7 +1325,7 @@ export default function VendorProfilePage() {
                                             <div>
                                                 <p className="text-sm font-semibold text-green-800">Certificate verified — fully approved</p>
                                                 <p className="text-xs text-green-600 mt-0.5">
-                                                    Verified on {new Date(verified).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                    Verified on {formatDateLong(verified)}
                                                 </p>
                                             </div>
                                         </div>
@@ -1417,7 +1418,7 @@ export default function VendorProfilePage() {
                                         <div className="px-4 py-2 flex justify-between text-xs">
                                             <span className="text-gray-500">Expiry</span>
                                             <span className={`font-medium ${profile.certExpired ? 'text-red-600' : 'text-gray-800'}`}>
-                                                {new Date(profile.foodHandlingCertExpiry).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                {formatDateLong(profile.foodHandlingCertExpiry)}
                                                 {profile.certExpired && <span className="ml-1 text-xs font-bold">(EXPIRED)</span>}
                                             </span>
                                         </div>

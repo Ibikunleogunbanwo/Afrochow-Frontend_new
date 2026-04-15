@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, Users, Star, Calenda
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { VendorAnalyticsAPI } from '@/lib/api/vendor/analytics.api';
 import {
+import { formatDateTime } from '@/lib/utils/dateUtils';
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend,
 } from 'recharts';
@@ -161,7 +162,7 @@ const DashboardContent = () => {
 
     const formatDate = (d) => {
         if (!d) return '—';
-        return new Date(d).toLocaleString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return formatDateTime(d);
     };
 
     const formatAddress = (addr) => {

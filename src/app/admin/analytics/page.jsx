@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AdminAnalyticsAPI } from '@/lib/api/admin.api';
 import AdminPageError from '@/components/admin/AdminPageError';
+import { formatDateShort } from '@/lib/utils/dateUtils';
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 // Abbreviated currency — always fits in a narrow card regardless of magnitude.
@@ -373,7 +374,7 @@ export default function AdminAnalyticsPage() {
                                     {trends.revenueInDateRange != null && (
                                         <TrendRow
                                             label={trends.filterStartDate
-                                                ? `${new Date(trends.filterStartDate).toLocaleDateString('en-CA',{month:'short',day:'numeric'})} – ${new Date(trends.filterEndDate).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}`
+                                                ? `${formatDateShort(trends.filterStartDate)} – ${formatDateShort(trends.filterEndDate)}`
                                                 : 'Custom range'}
                                             revenue={trends.revenueInDateRange}
                                             orders={trends.ordersInDateRange}

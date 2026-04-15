@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/toast';
 import AdminPageError from '@/components/admin/AdminPageError';
 import { AdminTableRoot, AdminTableHeader, AdminTableRow, AdminAvatar } from '@/components/admin/AdminTable';
 import Pagination from '@/components/admin/Pagination';
+import { formatDate } from '@/lib/utils/dateUtils';
 
 const PAGE_SIZE = 15;
 
@@ -136,9 +137,7 @@ export default function AdminReviewsPage() {
         return true;
     });
 
-    const formatDate = (d) => d
-        ? new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-        : 'N/A';
+
 
     const dateFilterActive = !!(dateFrom || dateTo);
 

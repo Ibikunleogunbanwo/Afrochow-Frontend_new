@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Star, MessageSquare, Filter, X } from 'lucide-react';
+import { formatDate } from '@/lib/utils/dateUtils';
 
 const ReviewCard = ({ review, onMarkHelpful }) => {
     const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount ?? 0);
@@ -19,11 +20,7 @@ const ReviewCard = ({ review, onMarkHelpful }) => {
                 <div>
                     <h4 className="font-bold text-gray-900">{review.userName}</h4>
                     <p className="text-xs text-gray-500">
-                        {new Date(review.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                        })}
+                        {formatDate(review.createdAt)}
                     </p>
                 </div>
                 <div className="flex items-center space-x-1">

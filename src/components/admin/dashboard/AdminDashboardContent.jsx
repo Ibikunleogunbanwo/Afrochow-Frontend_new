@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { AdminVendorsAPI, AdminAnalyticsAPI, AdminUsersAPI } from '@/lib/api/admin.api';
 import VendorReviewModal from '@/components/admin/VendorReviewModal';
+import { formatDate } from '@/lib/utils/dateUtils';
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
 // Abbreviated currency — always fits in a narrow card regardless of magnitude.
@@ -90,7 +91,7 @@ const toISORange = (dateRange, customStart, customEnd) => {
 
 const fmtDateRange = (iso) => {
     if (!iso) return '';
-    return new Date(iso).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+    return formatDate(iso);
 };
 
 /* ─── custom tooltip ────────────────────────────────────────────────────── */
@@ -640,7 +641,7 @@ setPlatform(platformData);
                                                 <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
                                                     <Clock className="w-3 h-3" />
                                                     <span>Applied {vendor.createdAt
-                                                        ? new Date(vendor.createdAt).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                        ? formatDate(vendor.createdAt)
                                                         : '—'}</span>
                                                 </div>
                                             </div>

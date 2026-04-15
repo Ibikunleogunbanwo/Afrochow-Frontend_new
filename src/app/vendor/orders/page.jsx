@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import { toast } from '@/components/ui/toast';
 import {
+import { formatDateTime } from "@/lib/utils/dateUtils";
     Clock, Package, CheckCircle, XCircle, Truck, Search,
     Filter, ChevronDown, ChevronLeft, Eye, DollarSign, User, MapPin,
     Calendar, Loader2, Store, RefreshCw, LayoutDashboard, ChevronRight, CalendarClock,
@@ -852,10 +853,7 @@ const VendorOrdersPage = () => {
                                             <span className="text-sm font-bold text-red-800 flex-1">Cancellation details</span>
                                             {selectedOrder.cancelledAt && (
                                                 <span className="text-xs text-red-400 font-mono">
-                                                    {new Date(selectedOrder.cancelledAt).toLocaleString('en-CA', {
-                                                        month: 'short', day: 'numeric', year: 'numeric',
-                                                        hour: '2-digit', minute: '2-digit',
-                                                    })}
+                                                    {formatDateTime(selectedOrder.cancelledAt)}
                                                 </span>
                                             )}
                                         </div>

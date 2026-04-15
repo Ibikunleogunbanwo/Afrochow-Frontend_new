@@ -21,6 +21,7 @@ import PropTypes from 'prop-types';
 import VendorReviewsModal from '@/components/vendor/VendorReviewsModal';
 import { VendorStripeAPI } from '@/lib/api/vendor/profile.api';
 import { toast } from '@/components/ui/toast';
+import { formatDateLong } from '@/lib/utils/dateUtils';
 
 const AccountTab = ({ profile }) => {
     const [showReviewsModal, setShowReviewsModal] = useState(false);
@@ -157,11 +158,7 @@ const AccountTab = ({ profile }) => {
                         label="Member Since"
                         value={
                             profile.createdAt
-                                ? new Date(profile.createdAt).toLocaleDateString('en-US', {
-                                    month: 'long',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                })
+                                ? formatDateLong(profile.createdAt)
                                 : 'N/A'
                         }
                         color="gray"

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useVendorReviews } from '@/hooks/useVendorReviews';
 import { useProductReviews } from '@/hooks/useProductReviews';
+import { formatDate } from "@/lib/utils/dateUtils";
 
 const ReviewsPage = () => {
     const [activeTab, setActiveTab] = useState('vendor');
@@ -30,9 +31,7 @@ const ReviewsPage = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-CA', {
-            year: 'numeric', month: 'short', day: 'numeric',
-        });
+        return formatDate(dateString);
     };
 
     const renderStars = (rating, size = 'sm') => {

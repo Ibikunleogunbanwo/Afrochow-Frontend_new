@@ -8,8 +8,19 @@ export const AdminProfileAPI = {
 
 // ── Admin User Management ──────────────────────────────────────────────────
 export const AdminUsersAPI = {
-    getAll:      ()           => fetchWithCredentials(`${API_BASE_URL}/admin/users`),
+    /**
+     * Paginated user list with optional server-side filters.
+     * @param {Object} opts - { page=0, size=25, role, active, q }
+     */
+    getAll: ({ page = 0, size = 25, role, active, q } = {}) => {
+        const params = new URLSearchParams({ page, size });
+        if (role   != null) params.set('role',   role);
+        if (active != null) params.set('active', active);
+        if (q      != null && q.trim()) params.set('q', q.trim());
+        return fetchWithCredentials(`${API_BASE_URL}/admin/users?${params}`);
+    },
     getById:     (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}`),
+    // Legacy single-filter endpoints kept for backward compat
     getByRole:   (role)       => fetchWithCredentials(`${API_BASE_URL}/admin/users/role/${role}`),
     getActive:   ()           => fetchWithCredentials(`${API_BASE_URL}/admin/users/active`),
     getInactive: ()           => fetchWithCredentials(`${API_BASE_URL}/admin/users/inactive`),
@@ -149,9 +160,13 @@ export const AdminProductsAPI = {
     getAll:           (page = 0, size = 20, search = '', featured = null) => fetchWithCredentials(
         `${API_BASE_URL}/admin/products?page=${page}&size=${size}${search ? `&search=${encodeURIComponent(search)}` : ''}${featured !== null ? `&featured=${featured}` : ''}`
     ),
-    getFeatured:      ()    => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured`),
-    toggleFeature:    (id)  => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}/toggle-feature`, { method: 'PUT' }),
-    clearAllFeatured: ()    => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured/clear`, { method: 'DELETE' }),
+    getFeatured:       ()   => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured`),
+    toggleFeature:     (id) => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}/toggle-feature`, { method: 'PUT' }),
+    clearAllFeatured:  ()   => fetchWithCredentials(`${API_BASE_URL}/admin/products/featured/clear`,       { method: 'DELETE' }),
+    /** Toggle a product's visibility (available ↔ hidden). */
+    toggleVisibility:  (id) => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}/visibility`,     { method: 'PATCH' }),
+    /** Permanently delete a product — SUPERADMIN only. */
+    deleteProduct:     (id) => fetchWithCredentials(`${API_BASE_URL}/admin/products/${id}`,                { method: 'DELETE' }),
 };
 
 // ── Legacy default export ──────────────────────────────────────────────────

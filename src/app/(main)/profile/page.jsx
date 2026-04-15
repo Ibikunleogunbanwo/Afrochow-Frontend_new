@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
+import { formatDate as fmtDateUtil } from '@/lib/utils/dateUtils';
     Pencil, Check, CheckCircle2, XCircle, Plus, Trash2, Star,
     Upload, Loader2, MapPin, Phone, Mail, Truck,
     CalendarDays, ShoppingBag, Coins, Home,
@@ -427,12 +428,7 @@ export default function ProfilePage() {
         }
     };
 
-    const formatDate = (d) => {
-        if (!d) return "—";
-        return new Date(d).toLocaleDateString("en-CA", {
-            year: "numeric", month: "long", day: "numeric",
-        });
-    };
+    const formatDate = (d) => fmtDateUtil(d);
 
     // ── loading / empty states ───────────────────────────────────────────
 
