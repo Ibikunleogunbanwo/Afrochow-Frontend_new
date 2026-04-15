@@ -145,13 +145,16 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
             toast.success('Vendor Approved Provisionally', {
                 description: `${d.restaurantName || 'Vendor'} is now live with an order cap. Full verification requires food handling cert upload.`,
             });
+            // Clear the confirm step first so there's no flicker back to the
+            // action buttons before the parent unmounts this modal.
+            setConfirmAction(null);
             onApprove?.(vendor);
         } catch (e) {
             setActionError(e.message || "Failed to approve vendor");
             toast.error('Approval Failed', { description: e.message || 'Failed to approve vendor' });
+            setConfirmAction(null);
         } finally {
             setApproving(false);
-            setConfirmAction(null);
         }
     };
 
@@ -161,13 +164,14 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         try {
             await AdminVendorsAPI.reject(vendor.publicVendorId, rejectionReason.trim() || null);
             toast.success('Vendor Rejected', { description: `${d.restaurantName || 'Vendor'} has been notified by email.` });
+            setConfirmAction(null);
             onReject?.(vendor);
         } catch (e) {
             setActionError(e.message || "Failed to reject vendor");
             toast.error('Rejection Failed', { description: e.message || 'Failed to reject vendor' });
+            setConfirmAction(null);
         } finally {
             setRejecting(false);
-            setConfirmAction(null);
         }
     };
 

@@ -129,12 +129,22 @@ export default function AuthInitializer({ children }) {
         } else {
             // Redirect unauthenticated users from protected routes
             const isProtectedRoute = !isPublicRoute(pathname) &&
-                (pathname.startsWith('/admin') || pathname.startsWith('/vendor') || pathname.startsWith('/profile') || pathname.startsWith('/orders'));
+                (pathname.startsWith('/admin') ||
+                 pathname.startsWith('/vendor') ||
+                 pathname.startsWith('/profile') ||
+                 pathname.startsWith('/orders') ||
+                 pathname.startsWith('/order-confirmation') ||  // email order links
+                 pathname.startsWith('/checkout') ||
+                 pathname.startsWith('/notifications') ||
+                 pathname.startsWith('/settings'));
 
             if (isProtectedRoute) {
-                // Remember where the user was trying to go so we can
-                // send them there after a successful login.
-                sessionStorage.setItem('returnTo', pathname);
+                // Preserve the full path AND query string so email deep-links
+                // like /vendor/profile?tab=certification land correctly after login.
+                const fullPath = typeof window !== 'undefined'
+                    ? window.location.pathname + window.location.search
+                    : pathname;
+                sessionStorage.setItem('returnTo', fullPath);
                 router.push('/?signin=true');
             }
         }
