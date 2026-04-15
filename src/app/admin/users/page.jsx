@@ -74,21 +74,63 @@ const RoleBadge = ({ role }) => {
     );
 };
 
-const StatusDot = ({ active }) => (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-        active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-    }`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-green-500' : 'bg-red-500'}`} />
-        {active ? 'Active' : 'Inactive'}
-    </span>
-);
+// ── Account-level status (all roles) ─────────────────────────────────────────
+const USER_STATUS_META = {
+    ACTIVE:               { label: 'Active',               dot: 'bg-green-500',  pill: 'bg-green-50 text-green-700 border-green-200'   },
+    PENDING_VERIFICATION: { label: 'Pending Verification',  dot: 'bg-yellow-400', pill: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    SUSPENDED:            { label: 'Suspended',             dot: 'bg-red-500',    pill: 'bg-red-50 text-red-700 border-red-200'          },
+    LOCKED:               { label: 'Locked',                dot: 'bg-amber-400',  pill: 'bg-amber-50 text-amber-700 border-amber-200'    },
+};
 
-const LockedBadge = () => (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-        <Lock className="w-3 h-3" />
-        Locked
-    </span>
-);
+/** Resolves UserStatus — uses the field from the backend, falls back to booleans. */
+const resolveUserStatus = (u) => {
+    if (u.userStatus) return u.userStatus;
+    if (u.isActive === false)        return 'SUSPENDED';
+    if (u.isLocked)                  return 'LOCKED';
+    if (u.emailVerified === false)   return 'PENDING_VERIFICATION';
+    return 'ACTIVE';
+};
+
+// ── Vendor workflow status (VENDOR role only) ─────────────────────────────────
+const VENDOR_STATUS_META = {
+    PENDING_PROFILE: { label: 'Pending Profile', dot: 'bg-gray-400',   pill: 'bg-gray-100 text-gray-600 border-gray-300'   },
+    PENDING_REVIEW:  { label: 'Pending Review',  dot: 'bg-amber-400',  pill: 'bg-amber-50 text-amber-700 border-amber-200' },
+    PROVISIONAL:     { label: 'Provisional',     dot: 'bg-blue-400',   pill: 'bg-blue-50 text-blue-700 border-blue-200'    },
+    VERIFIED:        { label: 'Verified',         dot: 'bg-green-500',  pill: 'bg-green-50 text-green-700 border-green-200' },
+    SUSPENDED:       { label: 'Suspended',        dot: 'bg-red-500',    pill: 'bg-red-50 text-red-700 border-red-200'       },
+    REJECTED:        { label: 'Rejected',         dot: 'bg-red-700',    pill: 'bg-red-100 text-red-800 border-red-300'      },
+};
+
+/** Avatar ring colour: vendor workflow state takes priority for vendors. */
+const statusColor = (u) => {
+    if (u.role === 'VENDOR' && u.vendorStatus) {
+        return { VERIFIED: '#22c55e', PROVISIONAL: '#3b82f6', PENDING_REVIEW: '#f59e0b',
+                 PENDING_PROFILE: '#9ca3af', SUSPENDED: '#ef4444', REJECTED: '#b91c1c' }[u.vendorStatus] ?? '#9ca3af';
+    }
+    return { ACTIVE: '#22c55e', PENDING_VERIFICATION: '#facc15', SUSPENDED: '#ef4444', LOCKED: '#f59e0b' }[resolveUserStatus(u)] ?? '#9ca3af';
+};
+
+const UserStatusBadge = ({ user }) => {
+    const status = resolveUserStatus(user);
+    const meta = USER_STATUS_META[status] ?? USER_STATUS_META.ACTIVE;
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${meta.pill}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+            {meta.label}
+        </span>
+    );
+};
+
+const VendorStatusBadge = ({ vendorStatus }) => {
+    if (!vendorStatus) return null;
+    const meta = VENDOR_STATUS_META[vendorStatus] ?? { label: vendorStatus, dot: 'bg-gray-400', pill: 'bg-gray-100 text-gray-600 border-gray-300' };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${meta.pill}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+            {meta.label}
+        </span>
+    );
+};
 
 export default function AdminUsersPage() {
     const currentRole = useSelector(selectUserRole); // 'ADMIN' or 'SUPERADMIN'
@@ -102,6 +144,8 @@ export default function AdminUsersPage() {
     const [loading, setLoading]         = useState(true);
     const [error, setError]             = useState(null);
     const [statusFilter, setStatusFilter] = useState('all'); // 'all'|'active'|'inactive'|role string
+    const [accountStatusFilter, setAccountStatusFilter] = useState('ALL'); // UserStatus enum
+    const [vendorStatusFilter, setVendorStatusFilter]   = useState('ALL'); // VendorStatus enum
     const [actionLoading, setActionLoading] = useState({});
     const [roleMenu, setRoleMenu]       = useState(null);
     const [page, setPage]               = useState(1);
@@ -209,11 +253,15 @@ export default function AdminUsersPage() {
     const isProtected   = (u) => u.role === 'SUPERADMIN';
     const isAdminRole   = (u) => u.role === 'ADMIN' || u.role === 'SUPERADMIN';
 
-    // Client-side date filtering on top of whatever API filter is active
+    // Determine whether we're currently viewing vendors
+    const isVendorView = statusFilter === 'VENDOR' || roleFilter === 'VENDOR';
+
+    // Client-side filtering: date + account status + vendor workflow status
     const dateBounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
-    const displayedUsers = dateBounds
-        ? users.filter(u => inDateRange(u.createdAt, dateBounds))
-        : users;
+    const displayedUsers = users
+        .filter(u => !dateBounds || inDateRange(u.createdAt, dateBounds))
+        .filter(u => accountStatusFilter === 'ALL' || resolveUserStatus(u) === accountStatusFilter)
+        .filter(u => !isVendorView || vendorStatusFilter === 'ALL' || u.vendorStatus === vendorStatusFilter);
 
     const dateLabel = (() => {
         if (!dateFilter) return null;
@@ -251,7 +299,7 @@ export default function AdminUsersPage() {
                     {statsCards.map(s => (
                         <button
                             key={s.key}
-                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); setPage(1); }}
+                            onClick={() => { setStatusFilter(s.key); setRoleFilter('ALL'); setSearch(''); setSearchInput(''); setAccountStatusFilter('ALL'); setVendorStatusFilter('ALL'); setPage(1); }}
                             className={`bg-white border rounded-2xl p-4 shadow-sm text-center transition-all hover:shadow-md ${
                                 statusFilter === s.key ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                             }`}
@@ -346,13 +394,85 @@ export default function AdminUsersPage() {
                         {ROLES.map(r => (
                             <button
                                 key={r}
-                                onClick={() => { setRoleFilter(r); setSearch(''); setSearchInput(''); setPage(1); }}
+                                onClick={() => {
+                                    setRoleFilter(r);
+                                    setSearch(''); setSearchInput('');
+                                    setAccountStatusFilter('ALL');
+                                    setVendorStatusFilter('ALL');
+                                    setPage(1);
+                                }}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-xl capitalize transition-colors whitespace-nowrap shrink-0 ${
                                     roleFilter === r && !search ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                             >{r === 'ALL' ? 'All Roles' : r}</button>
                         ))}
                     </div>
+
+                    {/* Account status filter pills */}
+                    <div className="flex gap-2 flex-wrap overflow-x-auto pb-0.5 items-center">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide shrink-0">Account</span>
+                        {[
+                            { key: 'ALL',               label: 'All'                  },
+                            { key: 'ACTIVE',             label: 'Active'               },
+                            { key: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                            { key: 'LOCKED',             label: 'Locked'               },
+                            { key: 'SUSPENDED',          label: 'Suspended'            },
+                        ].map(({ key, label }) => {
+                            const meta = USER_STATUS_META[key];
+                            const isActive = accountStatusFilter === key;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => { setAccountStatusFilter(key); setPage(1); }}
+                                    className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors whitespace-nowrap shrink-0 border ${
+                                        isActive
+                                            ? 'bg-gray-900 text-white border-gray-900'
+                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {meta && !isActive && (
+                                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                                    )}
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Vendor workflow status filter pills — only shown when viewing vendors */}
+                    {isVendorView && (
+                        <div className="flex gap-2 flex-wrap overflow-x-auto pb-0.5 items-center">
+                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide shrink-0">Vendor</span>
+                            {[
+                                { key: 'ALL',             label: 'All'             },
+                                { key: 'PENDING_PROFILE', label: 'Pending Profile' },
+                                { key: 'PENDING_REVIEW',  label: 'Pending Review'  },
+                                { key: 'PROVISIONAL',     label: 'Provisional'     },
+                                { key: 'VERIFIED',        label: 'Verified'        },
+                                { key: 'SUSPENDED',       label: 'Suspended'       },
+                                { key: 'REJECTED',        label: 'Rejected'        },
+                            ].map(({ key, label }) => {
+                                const meta = VENDOR_STATUS_META[key];
+                                const isActive = vendorStatusFilter === key;
+                                return (
+                                    <button
+                                        key={key}
+                                        onClick={() => { setVendorStatusFilter(key); setPage(1); }}
+                                        className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors whitespace-nowrap shrink-0 border ${
+                                            isActive
+                                                ? 'bg-gray-900 text-white border-gray-900'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {meta && !isActive && (
+                                            <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                                        )}
+                                        {label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Active date filter badge */}
                     {dateLabel && (
@@ -400,7 +520,7 @@ export default function AdminUsersPage() {
                                 <Link href={`/admin/users/${u.publicUserId}`} className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden group">
                                     <AdminAvatar
                                         initials={(u.fullName || u.email || '?').charAt(0).toUpperCase()}
-                                        statusColor={u.isActive ? '#22c55e' : '#ef4444'}
+                                        statusColor={statusColor(u)}
                                     />
                                     <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.fullName || 'No name'}</p>
@@ -408,8 +528,8 @@ export default function AdminUsersPage() {
                                         {/* Mobile-only: role + status + date inline */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <RoleBadge role={u.role} />
-                                            <StatusDot active={u.isActive} />
-                                            {u.isLocked && <LockedBadge />}
+                                            <UserStatusBadge user={u} />
+                                            {u.role === 'VENDOR' && <VendorStatusBadge vendorStatus={u.vendorStatus} />}
                                             <span className="text-[11px] text-gray-400">{formatDate(u.createdAt)}</span>
                                         </div>
                                     </div>
@@ -422,8 +542,8 @@ export default function AdminUsersPage() {
 
                                 {/* Status col — desktop only */}
                                 <div className="hidden md:flex md:flex-col w-28 shrink-0 gap-1">
-                                    <StatusDot active={u.isActive} />
-                                    {u.isLocked && <LockedBadge />}
+                                    <UserStatusBadge user={u} />
+                                    {u.role === 'VENDOR' && <VendorStatusBadge vendorStatus={u.vendorStatus} />}
                                 </div>
 
                                 {/* Joined col — desktop only */}

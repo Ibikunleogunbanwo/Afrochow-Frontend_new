@@ -29,14 +29,53 @@ const RoleBadge = ({ role }) => {
     );
 };
 
-const StatusBadge = ({ active }) => (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${
-        active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-    }`}>
-        <span className={`w-2 h-2 rounded-full ${active ? 'bg-green-500' : 'bg-red-500'}`} />
-        {active ? 'Active' : 'Suspended'}
-    </span>
-);
+// ── Account-level status (all roles) ─────────────────────────────────────────
+const USER_STATUS_META = {
+    ACTIVE:               { label: 'Active',               dot: 'bg-green-500',  pill: 'bg-green-50 text-green-700 border-green-200'   },
+    PENDING_VERIFICATION: { label: 'Pending Verification',  dot: 'bg-yellow-400', pill: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    SUSPENDED:            { label: 'Suspended',             dot: 'bg-red-500',    pill: 'bg-red-50 text-red-700 border-red-200'          },
+    LOCKED:               { label: 'Locked',                dot: 'bg-amber-400',  pill: 'bg-amber-50 text-amber-700 border-amber-200'    },
+};
+
+const resolveUserStatus = (user) => {
+    if (user.userStatus) return user.userStatus;
+    if (user.isActive === false)      return 'SUSPENDED';
+    if (user.isLocked)                return 'LOCKED';
+    if (user.emailVerified === false) return 'PENDING_VERIFICATION';
+    return 'ACTIVE';
+};
+
+const StatusBadge = ({ user }) => {
+    const status = resolveUserStatus(user);
+    const meta = USER_STATUS_META[status] ?? USER_STATUS_META.ACTIVE;
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border ${meta.pill}`}>
+            <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
+            {meta.label}
+        </span>
+    );
+};
+
+// ── Vendor workflow status (VENDOR role only) ─────────────────────────────────
+const VENDOR_STATUS_META = {
+    PENDING_PROFILE: { label: 'Pending Profile', dot: 'bg-gray-400',  pill: 'bg-gray-100 text-gray-600 border-gray-300'   },
+    PENDING_REVIEW:  { label: 'Pending Review',  dot: 'bg-amber-400', pill: 'bg-amber-50 text-amber-700 border-amber-200' },
+    PROVISIONAL:     { label: 'Provisional',     dot: 'bg-blue-400',  pill: 'bg-blue-50 text-blue-700 border-blue-200'    },
+    VERIFIED:        { label: 'Verified',         dot: 'bg-green-500', pill: 'bg-green-50 text-green-700 border-green-200' },
+    SUSPENDED:       { label: 'Suspended',        dot: 'bg-red-500',   pill: 'bg-red-50 text-red-700 border-red-200'       },
+    REJECTED:        { label: 'Rejected',         dot: 'bg-red-700',   pill: 'bg-red-100 text-red-800 border-red-300'      },
+};
+
+const VendorStatusBadge = ({ vendorStatus }) => {
+    if (!vendorStatus) return null;
+    const meta = VENDOR_STATUS_META[vendorStatus] ?? { label: vendorStatus, dot: 'bg-gray-400', pill: 'bg-gray-100 text-gray-600 border-gray-300' };
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border ${meta.pill}`}>
+            <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
+            {meta.label}
+        </span>
+    );
+};
 
 const InfoRow = ({ icon: Icon, label, value }) => (
     <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
@@ -213,11 +252,9 @@ export default function AdminUserDetailPage() {
                                 </div>
                                 <div className="flex flex-wrap items-center justify-center gap-2">
                                     <RoleBadge role={user.role} />
-                                    <StatusBadge active={user.isActive} />
-                                    {user.isLocked && (
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                            <Lock className="w-3.5 h-3.5" /> Locked
-                                        </span>
+                                    <StatusBadge user={user} />
+                                    {user.role === 'VENDOR' && (
+                                        <VendorStatusBadge vendorStatus={user.vendorStatus} />
                                     )}
                                 </div>
                             </div>
