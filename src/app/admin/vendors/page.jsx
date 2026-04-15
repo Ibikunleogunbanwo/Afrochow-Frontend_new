@@ -438,7 +438,11 @@ export default function AdminVendorsPage() {
                             }[status] ?? '#9ca3af';
 
                             return (
-                            <AdminTableRow key={v.publicVendorId}>
+                            <AdminTableRow
+                                key={v.publicVendorId}
+                                onClick={() => setReviewVendor(v)}
+                                className="group"
+                            >
                                 {/* Restaurant */}
                                 <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                     <AdminAvatar
@@ -466,15 +470,21 @@ export default function AdminVendorsPage() {
                                     )}
                                 </div>
 
-                                {/* Joined — desktop only */}
-                                <div className="hidden md:block w-32 shrink-0 text-xs text-gray-500">
-                                    {formatDate(v.createdAt)}
+                                {/* Joined + click hint — desktop only */}
+                                <div className="hidden md:block w-32 shrink-0">
+                                    <p className="text-xs text-gray-500">{formatDate(v.createdAt)}</p>
+                                    <p className="text-[10px] text-gray-300 mt-0.5 group-hover:text-orange-400 transition-colors">
+                                        Click to view details
+                                    </p>
                                 </div>
 
-                                {/* Actions — state-aware */}
-                                <div className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap">
+                                {/* Actions — state-aware. stopPropagation so row click doesn't also open modal. */}
+                                <div
+                                    className="md:w-44 md:shrink-0 flex items-center gap-1.5 flex-wrap"
+                                    onClick={e => e.stopPropagation()}
+                                >
                                     {(() => {
-                                        // PENDING_REVIEW — Review & Decide (approve provisional or reject)
+                                        // PENDING_REVIEW — primary action is to review
                                         if (status === VENDOR_STATUS.PENDING_REVIEW) {
                                             return (
                                                 <button
@@ -487,7 +497,7 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        // PROVISIONAL — verify cert (if cert uploaded) or suspend
+                                        // PROVISIONAL — verify cert shortcut or suspend
                                         if (status === VENDOR_STATUS.PROVISIONAL) {
                                             return (<>
                                                 {v.hasFoodHandlingCert && (
@@ -511,7 +521,7 @@ export default function AdminVendorsPage() {
                                             </>);
                                         }
 
-                                        // VERIFIED — can only Suspend
+                                        // VERIFIED — Suspend shortcut
                                         if (status === VENDOR_STATUS.VERIFIED) {
                                             return (
                                                 <button
@@ -525,7 +535,7 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        // SUSPENDED — Reinstate only
+                                        // SUSPENDED — Reinstate shortcut
                                         if (status === VENDOR_STATUS.SUSPENDED) {
                                             return (
                                                 <button
@@ -539,7 +549,7 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        // REJECTED — Review to re-submit pathway
+                                        // REJECTED / PENDING_PROFILE — open modal for details
                                         if (status === VENDOR_STATUS.REJECTED) {
                                             return (
                                                 <button
