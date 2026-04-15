@@ -651,10 +651,10 @@ setPlatform(platformData);
                                         </span>
                                     </div>
 
-                                    {vendor.cuisineType && (
+                                    {vendor.storeCategory && (
                                         <div className="bg-gray-50 rounded-xl px-3 py-2 mb-4 flex items-center justify-between text-xs">
                                             <span className="text-gray-500">Product Type</span>
-                                            <span className="font-semibold text-gray-900">{vendor.cuisineType}</span>
+                                            <span className="font-semibold text-gray-900">{vendor.storeCategory}</span>
                                         </div>
                                     )}
 

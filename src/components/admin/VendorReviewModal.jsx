@@ -293,7 +293,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                             <Section icon={Store} title="Store Information">
                                 <Grid2>
                                     <Field label="Store Name"    value={d.restaurantName} />
-                                    <Field label="Product Type"  value={d.cuisineType} />
+                                    <Field label="Store Category"  value={d.storeCategory} />
                                 </Grid2>
                                 {d.description && (
                                     <Field label="Description">

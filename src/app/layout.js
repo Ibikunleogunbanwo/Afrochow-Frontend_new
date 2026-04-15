@@ -15,7 +15,16 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
     title: "Afrochow - African Food Delivery",
-    description: "Order authentic African cuisine from the best restaurants",
+    description: "Order authentic African food, groceries and farm produce from the best stores",
+    icons: {
+        icon: [
+            { url: "/favicon.ico",  sizes: "any" },
+            { url: "/icon.png",     type: "image/png", sizes: "512x512" },
+        ],
+        apple: [
+            { url: "/apple-touch-icon.png", sizes: "192x192", type: "image/png" },
+        ],
+    },
 };
 
 export default function RootLayout({ children }) {

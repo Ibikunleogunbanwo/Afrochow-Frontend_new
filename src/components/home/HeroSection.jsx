@@ -152,11 +152,11 @@ const HeroSection = () => {
         router.push(`/restaurants?${params.toString()}`);
     };
 
-    const handlePopularClick = (cuisine) => {
-        setActiveTag(cuisine);
+    const handlePopularClick = (category) => {
+        setActiveTag(category);
         setShowSuggestions(false);
         const params = new URLSearchParams();
-        params.append('search', cuisine);
+        params.append('search', category);
         if (effectiveCity) params.append('city', effectiveCity);
         router.push(`/restaurants?${params.toString()}`);
     };
@@ -368,18 +368,18 @@ const HeroSection = () => {
                                 <span>Loading...</span>
                             </div>
                         ) : (
-                            popularCuisines.map((cuisine, index) => (
+                            popularCuisines.map((category, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => handlePopularClick(cuisine)}
-                                    aria-label={`Search for ${cuisine}`}
+                                    onClick={() => handlePopularClick(category)}
+                                    aria-label={`Search for ${category}`}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200 hover:scale-105 ${
-                                        activeTag === cuisine
+                                        activeTag === category
                                             ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/30'
                                             : 'bg-white/10 border-white/25 text-white hover:bg-white/20 hover:border-white/40'
                                     }`}
                                 >
-                                    {cuisine}
+                                    {category}
                                 </button>
                             ))
                         )}

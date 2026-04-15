@@ -208,7 +208,7 @@ export default function AdminVendorsPage() {
         // date registered filter
         if (!inDateRange(v.createdAt, dateBounds)) return false;
         // text search
-        if (search && ![ v.restaurantName, v.cuisineType ]
+        if (search && ![ v.restaurantName, v.storeCategory ]
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
         // status tab filter
         switch (filter) {
@@ -269,7 +269,7 @@ export default function AdminVendorsPage() {
                 // base pool: apply search + date, but no status filter
                 const pool = vendors.filter(v => {
                     if (!inDateRange(v.createdAt, dateBounds)) return false;
-                    if (search && ![ v.restaurantName, v.cuisineType ]
+                    if (search && ![ v.restaurantName, v.storeCategory ]
                         .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
                     return true;
                 });
@@ -447,7 +447,7 @@ export default function AdminVendorsPage() {
                                     />
                                     <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
-                                        <p className="text-xs text-gray-400 truncate">{v.cuisineType || 'N/A'}</p>
+                                        <p className="text-xs text-gray-400 truncate">{v.storeCategory || 'N/A'}</p>
                                         {/* Mobile-only: status + date */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <StatusBadge status={status} />

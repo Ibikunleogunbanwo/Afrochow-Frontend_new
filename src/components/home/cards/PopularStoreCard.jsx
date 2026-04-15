@@ -82,11 +82,11 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                     {/* Subtle gradient for badge legibility */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-                    {/* Top-left: cuisine type */}
-                    {product.cuisineType && (
+                    {/* Top-left: store category */}
+                    {product.storeCategory && (
                         <div className="absolute top-3 left-3">
                             <span className="px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-sm">
-                                {product.cuisineType}
+                                {product.storeCategory}
                             </span>
                         </div>
                     )}

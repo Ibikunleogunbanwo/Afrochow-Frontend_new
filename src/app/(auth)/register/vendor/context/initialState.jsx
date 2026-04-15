@@ -18,7 +18,7 @@ const initialState = {
   profileImageFile: null,
   restaurantName: "",
   description: "",
-  cuisineType: "",
+  storeCategory: "",
 
   // Step 3: Branding & Location
   taxId: "",

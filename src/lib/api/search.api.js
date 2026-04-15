@@ -115,9 +115,9 @@ export const SearchAPI = {
     );
   },
 
-  getVendorsByCuisine: async (cuisineType) => {
+  getVendorsByCategory: async (storeCategory) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/advanced?cuisineType=${encodeURIComponent(cuisineType)}&isVerified=true`,
+        `${API_BASE_URL}/search/vendors/advanced?storeCategory=${encodeURIComponent(storeCategory)}&isVerified=true`,
         { method: 'GET' }
     );
   },
@@ -169,9 +169,9 @@ export const SearchAPI = {
   },
 
   /** Returns the authoritative list of vendor product/cuisine type labels from the backend enum. */
-  getCuisineTypes: async () => {
+  getStoreCategories: async () => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/categories/cuisine-types`,
+        `${API_BASE_URL}/categories/store-categories`,
         { method: 'GET' }
     );
   },

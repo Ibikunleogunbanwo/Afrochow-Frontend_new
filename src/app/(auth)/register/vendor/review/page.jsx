@@ -96,7 +96,7 @@ const getValidationErrors = (state) => {
   if (!state.phone?.trim())         errors.push({ step: 2, field: "Phone number",   message: "Required for order notifications." });
   if (!state.restaurantName?.trim()) errors.push({ step: 2, field: "Store name",    message: "Customers search for your store by name." });
   if (!state.description?.trim())   errors.push({ step: 2, field: "Store description", message: "Tell customers what you sell." });
-  if (!state.cuisineType?.trim())   errors.push({ step: 2, field: "Product type",   message: "Select a category for your store." });
+  if (!state.storeCategory?.trim())   errors.push({ step: 2, field: "Product type",   message: "Select a category for your store." });
 
   // Step 3 — Branding + Address
   if (!state.logoUrl)   errors.push({ step: 3, field: "Store logo",   message: "A logo is required before submitting." });
@@ -331,7 +331,7 @@ export default function Review() {
               </div>
               <div>
                 <Label icon={UtensilsCrossed} text="Product Type" />
-                <Value>{state.cuisineType}</Value>
+                <Value>{state.storeCategory}</Value>
               </div>
             </div>
           </Card>

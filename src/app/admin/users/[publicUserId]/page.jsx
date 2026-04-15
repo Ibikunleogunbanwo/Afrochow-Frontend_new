@@ -151,7 +151,10 @@ export default function AdminUserDetailPage() {
     };
 
     const handleDelete = async () => {
-        if (!confirm(`Permanently delete "${user?.fullName || user?.email}"? This cannot be undone.`)) return;
+        const deleteName = (user?.role === 'VENDOR' && user?.restaurantName)
+            ? user.restaurantName
+            : (user?.fullName || user?.email);
+        if (!confirm(`Permanently delete "${deleteName}"? This cannot be undone.`)) return;
         setAction(p => ({ ...p, delete: true }));
         try {
             await AdminUsersAPI.deleteUser(publicUserId);
@@ -194,7 +197,11 @@ export default function AdminUserDetailPage() {
                 </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
                 <span className="font-semibold text-gray-900 truncate max-w-[200px]">
-                    {loading ? 'Loading…' : (displayName || user?.email || publicUserId)}
+                    {loading ? 'Loading…' : (
+                        (user?.role === 'VENDOR' && user?.restaurantName)
+                            ? user.restaurantName
+                            : (displayName || user?.email || publicUserId)
+                    )}
                 </span>
             </nav>
 
@@ -247,8 +254,19 @@ export default function AdminUserDetailPage() {
                                     </div>
                                 )}
                                 <div>
-                                    <h2 className="text-xl font-black text-gray-900">{displayName || user.email}</h2>
-                                    {displayName && <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>}
+                                    {/* For vendors show store name as heading, owner name below */}
+                                    {user.role === 'VENDOR' && user.restaurantName ? (
+                                        <>
+                                            <h2 className="text-xl font-black text-gray-900">{user.restaurantName}</h2>
+                                            <p className="text-sm text-gray-600 mt-0.5">{displayName}</p>
+                                            <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h2 className="text-xl font-black text-gray-900">{displayName || user.email}</h2>
+                                            {displayName && <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>}
+                                        </>
+                                    )}
                                 </div>
                                 <div className="flex flex-wrap items-center justify-center gap-2">
                                     <RoleBadge role={user.role} />

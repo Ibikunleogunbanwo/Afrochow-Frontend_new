@@ -23,7 +23,7 @@ import {
 const step2Schema = profileSchema.merge(restaurantSchema);
 
 /** Fallback list used while the backend request is in-flight or if it fails. */
-const CUISINE_TYPES_FALLBACK = [
+const STORE_CATEGORY_FALLBACK = [
     "African Home Kitchen",
     "African Restaurant",
     "African Soups & Stews",
@@ -50,7 +50,7 @@ export default function Step2() {
   } = useStepForm();
 
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
+  const [storeCategorys, setStoreCategories] = useState(STORE_CATEGORY_FALLBACK);
 
   const {
     register,
@@ -69,7 +69,7 @@ export default function Step2() {
       profileImageUrl: state.profileImageUrl || "",
       restaurantName: state.restaurantName,
       description: state.description,
-      cuisineType: state.cuisineType,
+      storeCategory: state.storeCategory,
     },
   });
 
@@ -81,13 +81,13 @@ export default function Step2() {
             const list = Array.isArray(res) ? res : res?.data;
             if (Array.isArray(list) && list.length > 0) {
                 const names = list.map(c => c.name ?? c);
-                setCuisineTypes(names);
+                setStoreCategories(names);
                 // If a previously saved value (e.g. from localStorage) is no longer
                 // a valid admin category, clear it so the placeholder shows and
                 // the Zod min(1) validation correctly blocks the user from continuing.
-                const current = getValues("cuisineType");
+                const current = getValues("storeCategory");
                 if (current && !names.includes(current)) {
-                    setValue("cuisineType", "");
+                    setValue("storeCategory", "");
                 }
             }
         })
@@ -244,19 +244,19 @@ export default function Step2() {
               />
 
               <Controller
-                  name="cuisineType"
+                  name="storeCategory"
                   control={control}
                   render={({ field }) => (
                       <FormField
                           label="Product Type"
-                          id="cuisineType"
+                          id="storeCategory"
                           type="select"
                           icon={UtensilsCrossed}
-                          error={errors.cuisineType?.message}
+                          error={errors.storeCategory?.message}
                           value={field.value}
                           helpText="Helps customers find your store when searching by product type"
                           placeholder="Select product type…"
-                          options={cuisineTypes}
+                          options={storeCategorys}
                           selectProps={{
                               ...field,
                               onChange: (e) => field.onChange(e.target.value),

@@ -126,7 +126,7 @@ export const registerVendor = async (vendorData) => {
     profileImageUrl: vendorData.profileImageUrl,
     restaurantName: vendorData.restaurantName,
     description: vendorData.description,
-    cuisineType: vendorData.cuisineType,
+    storeCategory: vendorData.storeCategory,
     taxId: vendorData.taxId || null,        // treat empty string as absent
     businessLicenseUrl: vendorData.businessLicenseUrl,
 

@@ -519,12 +519,25 @@ export default function AdminUsersPage() {
                                 {/* Name col — clicking navigates to user detail */}
                                 <Link href={`/admin/users/${u.publicUserId}`} className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden group">
                                     <AdminAvatar
-                                        initials={(u.fullName || u.email || '?').charAt(0).toUpperCase()}
+                                        initials={(u.role === 'VENDOR' && u.restaurantName
+                                            ? u.restaurantName
+                                            : u.fullName || u.email || '?').charAt(0).toUpperCase()}
                                         statusColor={statusColor(u)}
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.fullName || 'No name'}</p>
-                                        <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                                        {/* Vendors: show store name as primary, owner name as subtitle */}
+                                        {u.role === 'VENDOR' && u.restaurantName ? (
+                                            <>
+                                                <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.restaurantName}</p>
+                                                <p className="text-xs text-gray-500 truncate">{u.fullName || 'No name'}</p>
+                                                <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.fullName || 'No name'}</p>
+                                                <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                                            </>
+                                        )}
                                         {/* Mobile-only: role + status + date inline */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <RoleBadge role={u.role} />
@@ -630,7 +643,7 @@ export default function AdminUsersPage() {
                                             )}
                                             {isSuperAdmin && !isAdminRole(u) && (
                                                 <button
-                                                    onClick={() => handleDelete(u.publicUserId, u.fullName || u.email)}
+                                                    onClick={() => handleDelete(u.publicUserId, (u.role === 'VENDOR' && u.restaurantName) ? u.restaurantName : (u.fullName || u.email))}
                                                     disabled={!!actionLoading[u.publicUserId + 'delete']}
                                                     className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                                                     title="Delete user"

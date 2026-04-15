@@ -93,7 +93,7 @@ const transformVendor = (vendor) => ({
     // Prefer banner (wider, more visual) over logo for the card hero image
     imageUrl:               vendor.bannerUrl || vendor.logoUrl || null,
     restaurantName:         vendor.restaurantName || "Store",
-    cuisineType:            vendor.cuisineType    || null,
+    storeCategory:            vendor.storeCategory    || null,
     location:               vendor.address?.city && vendor.address?.province
                                 ? `${vendor.address.city}, ${vendor.address.province}`
                                 : vendor.address?.city || "",

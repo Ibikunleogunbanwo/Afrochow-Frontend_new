@@ -26,7 +26,7 @@ import { SearchAPI } from '@/lib/api/search.api';
 // ── Constants ────────────────────────────────────────────────────────────────
 
 /** Fallback used while backend request is in-flight or if it fails. */
-const CUISINE_TYPES_FALLBACK = [
+const STORE_CATEGORY_FALLBACK = [
     "African Home Kitchen",
     "African Restaurant",
     "African Soups & Stews",
@@ -123,7 +123,7 @@ const computeIsOpenFromHours = (hoursForm) => {
  * Returns { field: errorMessage } for the Restaurant Info + Address tab.
  * Empty object = valid.
  */
-function validateInfo(infoForm, addrForm, cuisineTypes) {
+function validateInfo(infoForm, addrForm, storeCategorys) {
     const e = {};
 
     // --- Basic details ---
@@ -133,8 +133,8 @@ function validateInfo(infoForm, addrForm, cuisineTypes) {
         e.restaurantName = 'Must be under 100 characters';
     }
 
-    if (infoForm.cuisineType && !cuisineTypes.includes(infoForm.cuisineType)) {
-        e.cuisineType = 'Please select a valid product type';
+    if (infoForm.storeCategory && !storeCategorys.includes(infoForm.storeCategory)) {
+        e.storeCategory = 'Please select a valid store category';
     }
 
     if (infoForm.description) {
@@ -297,7 +297,7 @@ export default function VendorProfilePage() {
     const [activeTab,    setActiveTab]    = useState(
         stripeParam ? 'payout' : (tabParam ?? 'info')
     );
-    const [cuisineTypes, setCuisineTypes] = useState(CUISINE_TYPES_FALLBACK);
+    const [storeCategorys, setStoreCategories] = useState(STORE_CATEGORY_FALLBACK);
 
     // Stripe payout state
     const [stripeConnecting,       setStripeConnecting]       = useState(false);
@@ -342,7 +342,7 @@ export default function VendorProfilePage() {
             .then(res => {
                 const list = Array.isArray(res) ? res : res?.data;
                 if (Array.isArray(list) && list.length > 0) {
-                    setCuisineTypes(list.map(c => c.name ?? c));
+                    setStoreCategories(list.map(c => c.name ?? c));
                 }
             })
             .catch(() => { /* keep fallback */ });
@@ -360,7 +360,7 @@ export default function VendorProfilePage() {
 
     // ── Info form ────────────────────────────────────────────────────────────
     const [infoForm, setInfoForm] = useState({
-        restaurantName: '', cuisineType: '', description: '', phone: '',
+        restaurantName: '', storeCategory: '', description: '', phone: '',
         offersDelivery: false, offersPickup: false,
         preparationTime: '', deliveryFee: '', minimumOrderAmount: '',
         estimatedDeliveryMinutes: '', maxDeliveryDistanceKm: '',
@@ -426,7 +426,7 @@ export default function VendorProfilePage() {
 
         setInfoForm({
             restaurantName:           d.restaurantName           ?? '',
-            cuisineType:              d.cuisineType              ?? '',
+            storeCategory:              d.storeCategory              ?? '',
             description:              d.description              ?? '',
             phone,
             offersDelivery:           d.offersDelivery           ?? false,
@@ -458,7 +458,7 @@ export default function VendorProfilePage() {
 
     // ── Info save ────────────────────────────────────────────────────────────
     const handleSaveInfo = async () => {
-        const errors = validateInfo(infoForm, addrForm, cuisineTypes);
+        const errors = validateInfo(infoForm, addrForm, storeCategorys);
         if (Object.keys(errors).length) {
             setInfoErrors(errors);
             toast.error('Please fix the errors below before saving');
@@ -469,7 +469,7 @@ export default function VendorProfilePage() {
         try {
             const profilePayload = {
                 restaurantName:           infoForm.restaurantName           || undefined,
-                cuisineType:              infoForm.cuisineType              || undefined,
+                storeCategory:              infoForm.storeCategory              || undefined,
                 description:              infoForm.description              || undefined,
                 offersDelivery:           infoForm.offersDelivery,
                 offersPickup:             infoForm.offersPickup,
@@ -741,7 +741,7 @@ export default function VendorProfilePage() {
                                 })()}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs sm:text-sm text-gray-500">
-                                {profile?.cuisineType && <span className="font-medium">{profile.cuisineType}</span>}
+                                {profile?.storeCategory && <span className="font-medium">{profile.storeCategory}</span>}
                                 {avgRating > 0 && (
                                     <span className="flex items-center gap-0.5">
                                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
@@ -860,14 +860,14 @@ export default function VendorProfilePage() {
                                         <FieldError msg={infoErrors.restaurantName} />
                                     </div>
                                     <div>
-                                        <Label>Product type</Label>
-                                        <select {...fi('cuisineType')}>
+                                        <Label>Store Category</Label>
+                                        <select {...fi('storeCategory')}>
                                             <option value="">Select product type…</option>
-                                            {cuisineTypes.map(type => (
+                                            {storeCategorys.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
                                         </select>
-                                        <FieldError msg={infoErrors.cuisineType} />
+                                        <FieldError msg={infoErrors.storeCategory} />
                                     </div>
                                     <div>
                                         <Label>Phone number</Label>

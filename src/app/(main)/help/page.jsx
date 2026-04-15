@@ -223,7 +223,7 @@ export default function HelpPage() {
                     <h2 className="text-xl font-black text-slate-900 mb-5">How Afrochow Works</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { step: "1", icon: Search,      title: "Find your craving",      desc: "Search by dish, cuisine, or city. Filter by dietary preferences like Vegan, Gluten-Free, or Spicy." },
+                            { step: "1", icon: Search,      title: "Find your craving",      desc: "Search by dish, store category, or city. Filter by dietary preferences like Vegan, Gluten-Free, or Spicy." },
                             { step: "2", icon: ShoppingBag, title: "Add to cart & checkout", desc: "Select your items, choose delivery or pickup, confirm your address, and pay securely." },
                             { step: "3", icon: Utensils,    title: "Enjoy authentic flavour", desc: "Track your order in real time and enjoy restaurant-quality African food at home." },
                         ].map(({ step, icon: Icon, title, desc }) => (

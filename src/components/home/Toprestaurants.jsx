@@ -78,7 +78,7 @@ const transformVendor = (vendor) => ({
     vendorPublicId:         vendor.publicUserId,
     imageUrl:               vendor.bannerUrl || vendor.logoUrl || null,
     restaurantName:         vendor.restaurantName || "Store",
-    cuisineType:            vendor.cuisineType    || null,
+    storeCategory:            vendor.storeCategory    || null,
     location:               vendor.address?.city && vendor.address?.province
                                 ? `${vendor.address.city}, ${vendor.address.province}`
                                 : vendor.address?.city || "",

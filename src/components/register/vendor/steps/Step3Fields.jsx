@@ -10,7 +10,7 @@ import FormField from "@/components/register/vendor/vendorComponent/Formfield";
 export default function Step3Fields({ register, watch, errors }) {
   const restaurantName = watch("restaurantName");
   const description = watch("description");
-  const cuisineType = watch("cuisineType");
+  const storeCategory = watch("storeCategory");
 
   const descriptionLength = description?.length || 0;
   const maxDescriptionLength = 500;
@@ -82,15 +82,15 @@ export default function Step3Fields({ register, watch, errors }) {
       {/* Product Type */}
       <FormField
         label="Product Type"
-        id="cuisineType"
+        id="storeCategory"
         icon={UtensilsCrossed}
-        error={errors.cuisineType?.message}
-        value={cuisineType}
+        error={errors.storeCategory?.message}
+        value={storeCategory}
         helpText="Helps customers find your store when searching by product type"
         inputProps={{
           type: "text",
           placeholder: "African Food, Groceries, Pastries, etc.",
-          ...register("cuisineType"),
+          ...register("storeCategory"),
         }}
       />
     </>

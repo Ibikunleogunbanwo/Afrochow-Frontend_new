@@ -91,8 +91,8 @@ const VendorProfilePage = () => {
 
     // ── data fetching ─────────────────────────────────────────────────────────
 
-    const fetchRelatedContent = useCallback(async (cuisineType, currentVendorId) => {
-        if (!cuisineType) return;
+    const fetchRelatedContent = useCallback(async (storeCategory, currentVendorId) => {
+        if (!storeCategory) return;
 
         // Cache hit — already have related content for this vendor
         if (vendorCache[currentVendorId]?.relatedVendors) return;
@@ -101,8 +101,8 @@ const VendorProfilePage = () => {
             setRelatedLoading(true);
 
             const [vendorsRes, productsRes] = await Promise.all([
-                SearchAPI.getVendorsByCuisine(cuisineType),
-                SearchAPI.searchProductsAdvanced({ query: cuisineType, size: 10 }),
+                SearchAPI.getVendorsByCategory(storeCategory),
+                SearchAPI.searchProductsAdvanced({ query: storeCategory, size: 10 }),
             ]);
 
             const vendors = Array.isArray(vendorsRes) ? vendorsRes : [];
@@ -116,7 +116,7 @@ const VendorProfilePage = () => {
                     name: v.restaurantName,
                     restaurantName: v.restaurantName,
                     rating: v.averageRating || 0,
-                    categories: v.cuisineType ? [v.cuisineType] : [],
+                    categories: v.storeCategory ? [v.storeCategory] : [],
                     deliveryTime: v.estimatedDeliveryMinutes || 30,
                     deliveryFee: v.deliveryFee || 0,
                     location: v.address?.city && v.address?.province
@@ -192,7 +192,7 @@ const VendorProfilePage = () => {
                     })
                     .catch(() => { /* promos are optional */ });
 
-                await fetchRelatedContent(vendorData.cuisineType, publicVendorId);
+                await fetchRelatedContent(vendorData.storeCategory, publicVendorId);
             }
         } catch (error) {
             console.error('Error fetching vendor details:', error);
@@ -457,7 +457,7 @@ const VendorProfilePage = () => {
 
     const {
         restaurantName,
-        cuisineType,
+        storeCategory,
         logoUrl,
         bannerUrl,
         isVerified,
@@ -570,7 +570,7 @@ const VendorProfilePage = () => {
                                             <BadgeCheck className="inline-block ml-2 w-6 h-6 text-blue-500 shrink-0" title="Verified vendor" />
                                         )}
                                     </h1>
-                                    <p className="text-lg text-gray-600 mb-3">{cuisineType}</p>
+                                    <p className="text-lg text-gray-600 mb-3">{storeCategory}</p>
 
                                     <div className="flex items-center gap-3 flex-wrap">
                                         <button
@@ -797,7 +797,7 @@ const VendorProfilePage = () => {
                     <div className="mb-12">
                         <div className="mb-6">
                             <h2 className="text-2xl font-black text-gray-900">
-                                More {cuisineType} Stores
+                                More {storeCategory} Stores
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">Other stores you might like</p>
                         </div>
@@ -819,7 +819,7 @@ const VendorProfilePage = () => {
                     <div className="mb-12">
                         <div className="mb-6">
                             <h2 className="text-2xl font-black text-gray-900">
-                                Popular {cuisineType} Dishes
+                                Popular {storeCategory} Dishes
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">Loved by customers near you</p>
                         </div>
