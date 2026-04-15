@@ -404,12 +404,26 @@ export default function AdminUserDetailPage() {
                                         value: totalOrders !== null ? totalOrders : '—',
                                         icon: Package,
                                     },
-                                    {
-                                        label: 'Profile',
-                                        value: user.isProfileComplete ? 'Complete' : 'Incomplete',
-                                        icon: user.isProfileComplete ? CheckCircle2 : XCircle,
-                                        color: user.isProfileComplete ? 'text-green-600' : 'text-red-500',
-                                    },
+                                    (() => {
+                                        // For vendors, show their workflow status label instead of a
+                                        // generic Complete/Incomplete — the two were contradicting each
+                                        // other when a vendor had a phone but hadn't finished their profile.
+                                        if (user.role === 'VENDOR' && user.vendorStatus) {
+                                            const meta = VENDOR_STATUS_META[user.vendorStatus];
+                                            return {
+                                                label: 'Vendor Status',
+                                                value: meta?.label ?? user.vendorStatus,
+                                                icon: user.isProfileComplete ? CheckCircle2 : XCircle,
+                                                color: user.isProfileComplete ? 'text-green-600' : 'text-amber-500',
+                                            };
+                                        }
+                                        return {
+                                            label: 'Profile',
+                                            value: user.isProfileComplete ? 'Complete' : 'Incomplete',
+                                            icon: user.isProfileComplete ? CheckCircle2 : XCircle,
+                                            color: user.isProfileComplete ? 'text-green-600' : 'text-red-500',
+                                        };
+                                    })(),
                                     {
                                         label: 'Auth',
                                         value: user.authProvider ?? (user.isGoogleUser ? 'Google' : 'Email'),

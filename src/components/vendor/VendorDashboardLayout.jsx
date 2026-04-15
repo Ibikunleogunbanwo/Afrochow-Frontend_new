@@ -134,10 +134,13 @@ const VendorDashboardLayout = ({ children }) => {
         setResubmitting(true);
         try {
             await VendorProfileAPI.resubmitForReview();
+            // Refresh profile so vendorStatus updates to PENDING_REVIEW and the
+            // correct banner (pending review) replaces the current one immediately.
+            await fetchProfile();
             setResubmitDone(true);
-            toast.success("Application resubmitted! Our team will review it shortly.");
+            toast.success("Application submitted! Our team will review it shortly.");
         } catch (e) {
-            toast.error(e.message || "Could not resubmit. Please try again.");
+            toast.error(e.message || "Could not submit. Please try again.");
         } finally {
             setResubmitting(false);
         }
@@ -365,22 +368,35 @@ const VendorDashboardLayout = ({ children }) => {
                 {vendorStatus === 'PENDING_PROFILE' && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
                         <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <p className="font-semibold text-orange-800 text-sm">Complete your store profile</p>
                             <p className="text-orange-700 text-sm mt-0.5">
-                                Finish setting up your store details to submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
+                                Finish setting up your store details, then submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
                             </p>
-                            {/* Only show the button when NOT already on the profile/info tab —
-                                avoids a pointless click that just reloads the same page. */}
-                            {pathname !== '/vendor/profile' && (
-                                <Link
-                                    href="/vendor/profile?tab=info"
-                                    className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors"
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {/* Always offer the profile link so incomplete vendors can fill in missing fields */}
+                                {pathname !== '/vendor/profile' && (
+                                    <Link
+                                        href="/vendor/profile?tab=info"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors"
+                                    >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                        Edit Profile
+                                    </Link>
+                                )}
+                                {/* Submit for review — backend validates completeness and rejects
+                                    with a clear error message if required fields are still missing */}
+                                <button
+                                    onClick={handleResubmit}
+                                    disabled={resubmitting}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors disabled:opacity-60"
                                 >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                    Complete Profile
-                                </Link>
-                            )}
+                                    {resubmitting
+                                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting…</>
+                                        : <><RefreshCw className="w-3.5 h-3.5" /> Submit for Review</>
+                                    }
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
