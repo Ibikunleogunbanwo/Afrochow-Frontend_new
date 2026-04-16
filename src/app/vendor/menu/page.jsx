@@ -196,13 +196,14 @@ const VendorMenuPage = () => {
 
     const handleToggleAvailability = async (product) => {
         try {
+            // live = available !== false; toggling live→hidden sends false, hidden→live sends true
             const response = await toggleProductAvailability(
                 product.publicProductId,
-                !product.available
+                product.available === false
             );
             if (response?.success) {
                 await fetchProducts();
-                toast.success(product.available ? 'Product marked unavailable' : 'Product marked available');
+                toast.success(product.available !== false ? 'Product marked unavailable' : 'Product marked available');
             }
         } catch (error) {
             toast.error('Failed to update availability', { description: error?.message });
@@ -537,7 +538,7 @@ const VendorMenuPage = () => {
                         {filteredProducts.map((product) => (
                             <div key={product.publicProductId}
                                 className={`flex items-start gap-3 p-4 border-l-4 transition-colors ${
-                                    product.available ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50/60'
+                                    product.available !== false ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50/60'
                                 }`}>
                                 {/* Thumbnail */}
                                 {product.imageUrl ? (
@@ -571,13 +572,13 @@ const VendorMenuPage = () => {
                                         <button
                                             onClick={() => handleToggleAvailability(product)}
                                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all ${
-                                                product.available
+                                                product.available !== false
                                                     ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
                                                     : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
                                             }`}
                                         >
-                                            <span className={`w-1.5 h-1.5 rounded-full ${product.available ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                            {product.available ? 'Live' : 'Hidden'}
+                                            <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                            {product.available !== false ? 'Live' : 'Hidden'}
                                         </button>
                                         {/* Rating */}
                                         <button
@@ -734,13 +735,13 @@ const VendorMenuPage = () => {
                                             <button
                                                 onClick={() => handleToggleAvailability(product)}
                                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
-                                                    product.available
+                                                    product.available !== false
                                                         ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
                                                         : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
                                                 }`}
                                             >
-                                                <span className={`w-1.5 h-1.5 rounded-full ${product.available ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                                {product.available ? 'Live' : 'Hidden'}
+                                                <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                                {product.available !== false ? 'Live' : 'Hidden'}
                                             </button>
                                         </td>
 
