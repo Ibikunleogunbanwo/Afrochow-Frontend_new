@@ -351,35 +351,67 @@ const VendorMenuPage = () => {
                 </button>
             </div>
 
-            {/* Stats summary */}
+            {/* Stats summary — clickable filter cards */}
             <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                        <Package className="w-4 h-4 text-gray-600" />
+                {/* All */}
+                <button
+                    onClick={() => setAvailabilityFilter('all')}
+                    className={`text-left rounded-2xl border shadow-sm px-4 py-3 flex items-center gap-3 transition-all ${
+                        availabilityFilter === 'all'
+                            ? 'bg-gray-900 border-gray-900'
+                            : 'bg-white border-gray-200 hover:border-gray-400'
+                    }`}
+                >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        availabilityFilter === 'all' ? 'bg-white/20' : 'bg-gray-100'
+                    }`}>
+                        <Package className={`w-4 h-4 ${availabilityFilter === 'all' ? 'text-white' : 'text-gray-600'}`} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] text-gray-500 leading-none mb-0.5">Total</p>
-                        <p className="text-xl font-black text-gray-900 leading-none">{products.length}</p>
+                        <p className={`text-[11px] leading-none mb-0.5 ${availabilityFilter === 'all' ? 'text-gray-300' : 'text-gray-500'}`}>All</p>
+                        <p className={`text-xl font-black leading-none ${availabilityFilter === 'all' ? 'text-white' : 'text-gray-900'}`}>{products.length}</p>
                     </div>
-                </div>
-                <div className="bg-white rounded-2xl border border-green-200 shadow-sm px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
-                        <Eye className="w-4 h-4 text-green-600" />
+                </button>
+
+                {/* Live */}
+                <button
+                    onClick={() => setAvailabilityFilter(availabilityFilter === 'live' ? 'all' : 'live')}
+                    className={`text-left rounded-2xl border shadow-sm px-4 py-3 flex items-center gap-3 transition-all ${
+                        availabilityFilter === 'live'
+                            ? 'bg-green-600 border-green-600'
+                            : 'bg-white border-green-200 hover:border-green-400'
+                    }`}
+                >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        availabilityFilter === 'live' ? 'bg-white/20' : 'bg-green-50'
+                    }`}>
+                        <Eye className={`w-4 h-4 ${availabilityFilter === 'live' ? 'text-white' : 'text-green-600'}`} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] text-green-600 leading-none mb-0.5">Live</p>
-                        <p className="text-xl font-black text-green-700 leading-none">{liveCount}</p>
+                        <p className={`text-[11px] leading-none mb-0.5 ${availabilityFilter === 'live' ? 'text-green-100' : 'text-green-600'}`}>Live</p>
+                        <p className={`text-xl font-black leading-none ${availabilityFilter === 'live' ? 'text-white' : 'text-green-700'}`}>{liveCount}</p>
                     </div>
-                </div>
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                        <EyeOff className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {/* Hidden */}
+                <button
+                    onClick={() => setAvailabilityFilter(availabilityFilter === 'hidden' ? 'all' : 'hidden')}
+                    className={`text-left rounded-2xl border shadow-sm px-4 py-3 flex items-center gap-3 transition-all ${
+                        availabilityFilter === 'hidden'
+                            ? 'bg-gray-700 border-gray-700'
+                            : 'bg-white border-gray-200 hover:border-gray-400'
+                    }`}
+                >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        availabilityFilter === 'hidden' ? 'bg-white/20' : 'bg-gray-100'
+                    }`}>
+                        <EyeOff className={`w-4 h-4 ${availabilityFilter === 'hidden' ? 'text-white' : 'text-gray-400'}`} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] text-gray-500 leading-none mb-0.5">Hidden</p>
-                        <p className="text-xl font-black text-gray-500 leading-none">{hiddenCount}</p>
+                        <p className={`text-[11px] leading-none mb-0.5 ${availabilityFilter === 'hidden' ? 'text-gray-300' : 'text-gray-500'}`}>Hidden</p>
+                        <p className={`text-xl font-black leading-none ${availabilityFilter === 'hidden' ? 'text-white' : 'text-gray-500'}`}>{hiddenCount}</p>
                     </div>
-                </div>
+                </button>
             </div>
 
             {/* Search, filters, and sort */}
@@ -477,17 +509,25 @@ const VendorMenuPage = () => {
             {/* Products — Mobile cards + Desktop table */}
             {loading ? (
                 <div className="flex items-center justify-center py-16">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-400" />
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-gray-600" />
                 </div>
             ) : filteredProducts.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 text-center">
                     <ImageIcon className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                     <h3 className="text-base font-bold text-gray-900 mb-1">No products found</h3>
                     <p className="text-sm text-gray-500">
-                        {searchQuery || filterCategory !== 'all'
+                        {searchQuery || filterCategory !== 'all' || availabilityFilter !== 'all'
                             ? 'Try adjusting your search or filters'
                             : 'Get started by adding your first product'}
                     </p>
+                    {(searchQuery || filterCategory !== 'all' || availabilityFilter !== 'all') && (
+                        <button
+                            onClick={() => { setSearchQuery(''); setFilterCategory('all'); setAvailabilityFilter('all'); }}
+                            className="mt-4 text-sm font-semibold text-gray-700 underline underline-offset-2 hover:text-gray-900"
+                        >
+                            Clear all filters
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -496,50 +536,65 @@ const VendorMenuPage = () => {
                     <div className="sm:hidden divide-y divide-gray-100">
                         {filteredProducts.map((product) => (
                             <div key={product.publicProductId}
-                                className={`flex items-start gap-3 p-3 border-l-4 transition-colors ${
-                                    product.available ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50'
+                                className={`flex items-start gap-3 p-4 border-l-4 transition-colors ${
+                                    product.available ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50/60'
                                 }`}>
                                 {/* Thumbnail */}
                                 {product.imageUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={product.imageUrl} alt={product.name}
-                                        className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0" />
+                                        className="w-16 h-16 object-cover rounded-xl border border-gray-200 shrink-0" />
                                 ) : (
-                                    <div className="w-14 h-14 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center shrink-0">
-                                        <ImageIcon className="w-5 h-5 text-gray-300" />
+                                    <div className="w-16 h-16 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center shrink-0">
+                                        <ImageIcon className="w-6 h-6 text-gray-300" />
                                     </div>
                                 )}
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <p className="text-sm font-bold text-gray-900 leading-tight truncate">{product.name}</p>
-                                        <span className="text-sm font-bold text-gray-900 shrink-0">CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}</span>
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                        <p className="text-sm font-bold text-gray-900 leading-tight">{product.name}</p>
+                                        <span className="text-sm font-black text-gray-900 shrink-0">
+                                            CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+
+                                    {product.description && (
+                                        <p className="text-xs text-gray-400 line-clamp-1 mb-1.5">{product.description}</p>
+                                    )}
+
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         {product.categoryName && (
-                                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded">{product.categoryName}</span>
+                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">{product.categoryName}</span>
                                         )}
+                                        {/* Availability toggle pill */}
                                         <button
                                             onClick={() => handleToggleAvailability(product)}
-                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all ${
                                                 product.available
-                                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                                                    ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                    : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
                                             }`}
                                         >
                                             <span className={`w-1.5 h-1.5 rounded-full ${product.available ? 'bg-green-500' : 'bg-gray-400'}`} />
                                             {product.available ? 'Live' : 'Hidden'}
                                         </button>
+                                        {/* Rating */}
                                         <button
                                             onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
-                                            className="inline-flex items-center gap-0.5 text-[10px] text-gray-500"
+                                            className="inline-flex items-center gap-0.5 text-[10px] text-gray-500 hover:text-yellow-600 transition-colors"
                                         >
                                             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                            {typeof product.averageRating === 'number' && product.averageRating > 0
-                                                ? product.averageRating.toFixed(1) : '—'}
+                                            <span className="font-semibold">
+                                                {typeof product.averageRating === 'number' && product.averageRating > 0
+                                                    ? product.averageRating.toFixed(1) : '—'}
+                                            </span>
+                                            {product.reviewCount > 0 && (
+                                                <span className="text-gray-400">({product.reviewCount})</span>
+                                            )}
                                         </button>
                                     </div>
+
                                     {/* Dietary badges */}
                                     {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
                                         <div className="flex flex-wrap gap-1 mt-1.5">
@@ -573,102 +628,101 @@ const VendorMenuPage = () => {
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-gray-900 text-white text-[11px] uppercase tracking-wider">
-                                    <th className="w-14 px-3 py-2.5 text-left">Item</th>
-                                    <th className="px-3 py-2.5 text-left">Name &amp; Details</th>
-                                    <th className="w-28 px-3 py-2.5 text-left">Category</th>
-                                    <th className="w-20 px-3 py-2.5 text-right">Price</th>
-                                    <th className="w-36 px-3 py-2.5 text-center">Order Type</th>
-                                    <th className="w-20 px-3 py-2.5 text-center">Rating</th>
-                                    <th className="w-24 px-3 py-2.5 text-center">Status</th>
-                                    <th className="w-16 px-3 py-2.5 text-center">Edit</th>
+                                    <th className="w-14 px-3 py-3 text-left">Item</th>
+                                    <th className="px-3 py-3 text-left">Name &amp; Details</th>
+                                    <th className="w-28 px-3 py-3 text-left">Category</th>
+                                    <th className="w-20 px-3 py-3 text-right">Price</th>
+                                    <th className="w-36 px-3 py-3 text-center">Order Type</th>
+                                    <th className="w-20 px-3 py-3 text-center">Rating</th>
+                                    <th className="w-24 px-3 py-3 text-center">Status</th>
+                                    <th className="w-20 px-3 py-3 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {filteredProducts.map((product, index) => (
                                     <tr
                                         key={product.publicProductId}
-                                        className={`hover:bg-amber-50/40 transition-colors ${index % 2 !== 0 ? 'bg-gray-50/60' : 'bg-white'}`}
+                                        className={`hover:bg-gray-50 transition-colors ${index % 2 !== 0 ? 'bg-gray-50/50' : 'bg-white'}`}
                                     >
                                         {/* Thumbnail */}
-                                        <td className="px-3 py-2.5">
+                                        <td className="px-3 py-3">
                                             {product.imageUrl ? (
                                                 // eslint-disable-next-line @next/next/no-img-element
                                                 <img
                                                     src={product.imageUrl}
                                                     alt={product.name}
-                                                    className="w-10 h-10 object-cover rounded-lg border border-gray-200"
+                                                    className="w-11 h-11 object-cover rounded-xl border border-gray-200"
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                                                <div className="w-11 h-11 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center">
                                                     <ImageIcon className="w-4 h-4 text-gray-300" />
                                                 </div>
                                             )}
                                         </td>
 
                                         {/* Name + meta */}
-                                        <td className="px-3 py-2.5 min-w-0">
-                                            <p className="text-[13px] font-semibold text-gray-900 leading-tight truncate">{product.name}</p>
+                                        <td className="px-3 py-3 min-w-0">
+                                            <p className="text-[13px] font-semibold text-gray-900 leading-tight">{product.name}</p>
                                             {product.description && (
                                                 <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{product.description}</p>
                                             )}
-                                            <div className="flex flex-wrap gap-x-2.5 mt-1 text-[11px] text-gray-400">
-                                                {product.preparationTimeMinutes && (<span>⏱ {product.preparationTimeMinutes} min prep</span>)}
-                                                {product.calories && (<span>{product.calories} kcal</span>)}
-                                                {product.totalOrders > 0 && (<span>{product.totalOrders} orders</span>)}
+                                            <div className="flex flex-wrap gap-x-3 mt-1 text-[11px] text-gray-400">
+                                                {product.preparationTimeMinutes && <span>⏱ {product.preparationTimeMinutes} min</span>}
+                                                {product.calories && <span>{product.calories} kcal</span>}
+                                                {product.totalOrders > 0 && <span>{product.totalOrders} orders</span>}
                                             </div>
                                             {(product.isVegan || product.isVegetarian || product.isGlutenFree || product.isSpicy) && (
                                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                                     {product.isVegan && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">🌱 Vegan</span>}
                                                     {product.isVegetarian && !product.isVegan && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-medium">🥬 Vegetarian</span>}
-                                                    {product.isGlutenFree && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">🌾 Gluten-Free</span>}
+                                                    {product.isGlutenFree && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-medium">🌾 GF</span>}
                                                     {product.isSpicy && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">🌶 Spicy</span>}
                                                 </div>
                                             )}
                                         </td>
 
                                         {/* Category */}
-                                        <td className="px-3 py-2.5">
+                                        <td className="px-3 py-3">
                                             {product.categoryName ? (
-                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded">{product.categoryName}</span>
+                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-full">{product.categoryName}</span>
                                             ) : (
                                                 <span className="text-gray-300 text-[11px]">—</span>
                                             )}
                                         </td>
 
                                         {/* Price */}
-                                        <td className="px-3 py-2.5 text-right">
+                                        <td className="px-3 py-3 text-right">
                                             <span className="text-[13px] font-bold text-gray-900 whitespace-nowrap">
                                                 CA${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
                                             </span>
                                         </td>
 
                                         {/* Order Type */}
-                                        <td className="px-3 py-2.5 text-center">
+                                        <td className="px-3 py-3 text-center">
                                             {product.scheduleType === 'ADVANCE_ORDER' ? (
                                                 <div className="inline-flex flex-col items-center gap-0.5">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold whitespace-nowrap">📅 Advance Order</span>
-                                                    <span className="text-[10px] text-blue-500">{product.advanceNoticeHours}h notice required</span>
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-[10px] font-semibold whitespace-nowrap">📅 Advance</span>
+                                                    {product.advanceNoticeHours && (
+                                                        <span className="text-[10px] text-blue-500">{product.advanceNoticeHours}h notice</span>
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <div className="inline-flex flex-col items-center gap-0.5">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-semibold">⚡ Ready to Order</span>
-                                                    <span className="text-[10px] text-green-500">no advance notice needed</span>
-                                                </div>
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded-full text-[10px] font-semibold">⚡ Same Day</span>
                                             )}
                                         </td>
 
                                         {/* Rating */}
-                                        <td className="px-3 py-2.5 text-center">
+                                        <td className="px-3 py-3 text-center">
                                             <button
                                                 onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
-                                                className="inline-flex flex-col items-center gap-0.5 hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors"
+                                                className="inline-flex flex-col items-center gap-0.5 hover:bg-gray-100 px-2 py-1.5 rounded-xl transition-colors"
                                                 title="View reviews"
                                             >
                                                 <span className="inline-flex items-center gap-0.5">
                                                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                                                     <span className="text-[12px] font-bold text-gray-900">
                                                         {typeof product.averageRating === 'number' && product.averageRating > 0
-                                                            ? product.averageRating.toFixed(1) : '0.0'}
+                                                            ? product.averageRating.toFixed(1) : '—'}
                                                     </span>
                                                 </span>
                                                 <span className="text-[10px] text-gray-400">{product.reviewCount || 0} reviews</span>
@@ -676,10 +730,10 @@ const VendorMenuPage = () => {
                                         </td>
 
                                         {/* Status toggle */}
-                                        <td className="px-3 py-2.5 text-center">
+                                        <td className="px-3 py-3 text-center">
                                             <button
                                                 onClick={() => handleToggleAvailability(product)}
-                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
                                                     product.available
                                                         ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
                                                         : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
@@ -691,8 +745,8 @@ const VendorMenuPage = () => {
                                         </td>
 
                                         {/* Actions */}
-                                        <td className="px-3 py-2.5 text-center">
-                                            <div className="flex items-center justify-center gap-0.5">
+                                        <td className="px-3 py-3 text-center">
+                                            <div className="flex items-center justify-center gap-1">
                                                 <button onClick={() => openEditModal(product)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Edit product">
                                                     <Edit className="w-3.5 h-3.5 text-gray-500" />
                                                 </button>
@@ -886,85 +940,83 @@ const VendorMenuPage = () => {
                                 )}
                             </div>
 
-                            {/* Calories */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Calories (optional)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={formData.calories}
-                                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
-                                    placeholder="0"
-                                    style={{ color: 'black', backgroundColor: 'white' }}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all"
-                                />
-                            </div>
+                            {/* ── Additional Details ── */}
+                            <div className="border-t border-gray-100 pt-4 space-y-4">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Additional Details</p>
 
-                            {/* Dietary Options */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                    Dietary Information
-                                </label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <label className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isVegetarian}
-                                            onChange={(e) => setFormData({ ...formData, isVegetarian: e.target.checked })}
-                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Vegetarian</span>
-                                    </label>
-                                    <label className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isVegan}
-                                            onChange={(e) => setFormData({ ...formData, isVegan: e.target.checked })}
-                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Vegan</span>
-                                    </label>
-                                    <label className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isGlutenFree}
-                                            onChange={(e) => setFormData({ ...formData, isGlutenFree: e.target.checked })}
-                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Gluten Free</span>
-                                    </label>
-                                    <label className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isSpicy}
-                                            onChange={(e) => setFormData({ ...formData, isSpicy: e.target.checked })}
-                                            className="w-5 h-5 text-gray-700 border-gray-300 rounded focus:ring-gray-400"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Spicy</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* Availability Toggle */}
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                {/* Calories */}
                                 <div>
-                                    <p className="font-semibold text-gray-900">Available</p>
-                                    <p className="text-sm text-gray-600">Make this product available for orders</p>
-                                </div>
-                                <button
-                                    onClick={() => setFormData({ ...formData, available: !formData.available })}
-                                    className={`relative w-14 h-7 rounded-full transition-colors ${
-                                        formData.available ? 'bg-green-500' : 'bg-gray-300'
-                                    }`}
-                                >
-                                    <span
-                                        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                                            formData.available ? 'translate-x-7' : ''
-                                        }`}
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                                        Calories <span className="font-normal text-gray-400">(optional)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.calories}
+                                        onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                                        placeholder="e.g. 450"
+                                        style={{ color: 'black', backgroundColor: 'white' }}
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                                     />
-                                </button>
+                                </div>
+
+                                {/* Dietary Options */}
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                                        Dietary Tags
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            { key: 'isVegetarian', label: 'Vegetarian', emoji: '🥬' },
+                                            { key: 'isVegan',      label: 'Vegan',       emoji: '🌱' },
+                                            { key: 'isGlutenFree', label: 'Gluten-Free', emoji: '🌾' },
+                                            { key: 'isSpicy',      label: 'Spicy',       emoji: '🌶' },
+                                        ].map(({ key, label, emoji }) => (
+                                            <label
+                                                key={key}
+                                                className={`flex items-center gap-2.5 p-2.5 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                                                    formData[key]
+                                                        ? 'border-gray-900 bg-gray-900 text-white'
+                                                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-400'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData[key]}
+                                                    onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
+                                                    className="sr-only"
+                                                />
+                                                <span className="text-base leading-none">{emoji}</span>
+                                                <span className="text-sm font-semibold">{label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Availability Toggle */}
+                                <div className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-900">Visible to customers</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            {formData.available ? 'Currently live — customers can order this' : 'Hidden — not visible in your menu'}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, available: !formData.available })}
+                                        className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
+                                            formData.available ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}
+                                        aria-checked={formData.available}
+                                        role="switch"
+                                    >
+                                        <span
+                                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                                formData.available ? 'translate-x-6' : ''
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

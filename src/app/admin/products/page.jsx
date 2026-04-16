@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
     LayoutDashboard, ChevronRight, RefreshCw,
-    Package, Loader2, Store, Search, X, Trash2,
+    Package, Loader2, Store, Search, X, Trash2, Eye, EyeOff,
 } from 'lucide-react';
 import { AdminProductsAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
@@ -49,9 +49,13 @@ function ProductRow({ product, onToggle, toggling }) {
     const id       = product.publicProductId;
     const featured = !!product.isFeatured;
 
+    const isHidden = product.available === false;
+
     return (
         <div className={`bg-white border rounded-2xl md:rounded-none md:border-0 md:border-b border-gray-100
-            transition-colors hover:bg-gray-50 ${featured ? 'border-amber-200 md:border-gray-100' : ''}`}>
+            transition-colors hover:bg-gray-50
+            ${featured  ? 'border-amber-200 md:border-gray-100' : ''}
+            ${isHidden  ? 'opacity-60'                          : ''}`}>
 
             {/* Mobile card */}
             <div className="flex items-start gap-3 p-4 md:hidden">
@@ -147,7 +151,7 @@ export default function AdminProductsPage() {
     const [products,     setProducts]    = useState([]);
     const [meta,         setMeta]        = useState({ totalElements: 0, totalPages: 0, pageNumber: 0 });
     // Persistent global counts — never change per page, only per mutation
-    const [stats,        setStats]       = useState({ total: null, featured: null });
+    const [stats,        setStats]       = useState({ total: null, featured: null, hidden: null, visible: null });
     const [loading,      setLoading]     = useState(true);
     const [statsLoading, setStatsLoading] = useState(true);
     const [error,        setError]       = useState(null);
@@ -174,13 +178,15 @@ export default function AdminProductsPage() {
     const fetchStats = useCallback(async () => {
         setStatsLoading(true);
         try {
-            const [allRes, featuredRes] = await Promise.all([
+            const [allRes, featuredRes, hiddenRes] = await Promise.all([
                 AdminProductsAPI.getAll(0, 1),
                 AdminProductsAPI.getAll(0, 1, '', true),
+                AdminProductsAPI.getAll(0, 1, '', null, false), // available=false → hidden
             ]);
-            const total    = (allRes?.data    ?? allRes)?.totalElements    ?? 0;
+            const total    = (allRes?.data      ?? allRes)?.totalElements     ?? 0;
             const featured = (featuredRes?.data ?? featuredRes)?.totalElements ?? 0;
-            setStats({ total, featured });
+            const hidden   = (hiddenRes?.data   ?? hiddenRes)?.totalElements   ?? 0;
+            setStats({ total, featured, hidden, visible: total - hidden });
         } catch {
             // non-critical — stats are cosmetic
         } finally {
@@ -197,15 +203,23 @@ export default function AdminProductsPage() {
         }, 400);
     };
 
-    const tabToFeatured = (tab) =>
-        tab === 'featured' ? true : tab === 'not_featured' ? false : null;
+    // Decode a filter tab into { featured, available } API params
+    const tabToParams = (tab) => {
+        switch (tab) {
+            case 'featured':     return { featured: true,  available: null  };
+            case 'not_featured': return { featured: false, available: null  };
+            case 'hidden':       return { featured: null,  available: false };
+            case 'visible':      return { featured: null,  available: true  };
+            default:             return { featured: null,  available: null  };
+        }
+    };
 
     const fetchProducts = useCallback(async (p = 1, q = '', tab = 'all') => {
         setLoading(true);
         setError(null);
         try {
-            const featured = tabToFeatured(tab);
-            const res  = await AdminProductsAPI.getAll(p - 1, PAGE_SIZE, q, featured);
+            const { featured, available } = tabToParams(tab);
+            const res  = await AdminProductsAPI.getAll(p - 1, PAGE_SIZE, q, featured, available);
             const data = res?.data ?? res ?? {};
             setProducts(Array.isArray(data.content) ? data.content : []);
             setMeta({
@@ -276,28 +290,49 @@ export default function AdminProductsPage() {
 
     const STAT_CARDS = [
         {
-            key:     'all',
-            label:   'Total Products',
-            value:   stats.total,
-            active:  'ring-2 ring-gray-400 border-gray-400',
-            idle:    'border-gray-200 hover:border-gray-300',
-            numCls:  'text-gray-900',
+            key:    'all',
+            label:  'Total Products',
+            value:  stats.total,
+            icon:   Package,
+            active: 'ring-2 ring-gray-400 border-gray-400',
+            idle:   'border-gray-200 hover:border-gray-300',
+            numCls: 'text-gray-900',
         },
         {
-            key:     'featured',
-            label:   'Featured',
-            value:   stats.featured,
-            active:  'ring-2 ring-amber-400 border-amber-400 bg-amber-50',
-            idle:    'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50',
-            numCls:  'text-amber-600',
+            key:    'featured',
+            label:  'Featured',
+            value:  stats.featured,
+            icon:   null,
+            active: 'ring-2 ring-amber-400 border-amber-400 bg-amber-50',
+            idle:   'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50',
+            numCls: 'text-amber-600',
         },
         {
-            key:     'not_featured',
-            label:   'Not Featured',
-            value:   notFeatured,
-            active:  'ring-2 ring-blue-400 border-blue-400 bg-blue-50',
-            idle:    'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50',
-            numCls:  'text-blue-600',
+            key:    'not_featured',
+            label:  'Not Featured',
+            value:  notFeatured,
+            icon:   null,
+            active: 'ring-2 ring-blue-400 border-blue-400 bg-blue-50',
+            idle:   'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50',
+            numCls: 'text-blue-600',
+        },
+        {
+            key:    'visible',
+            label:  'Visible',
+            value:  stats.visible,
+            icon:   Eye,
+            active: 'ring-2 ring-green-400 border-green-400 bg-green-50',
+            idle:   'border-gray-200 hover:border-green-300 hover:bg-green-50/50',
+            numCls: 'text-green-600',
+        },
+        {
+            key:    'hidden',
+            label:  'Hidden',
+            value:  stats.hidden,
+            icon:   EyeOff,
+            active: 'ring-2 ring-red-400 border-red-400 bg-red-50',
+            idle:   'border-gray-200 hover:border-red-300 hover:bg-red-50/50',
+            numCls: 'text-red-500',
         },
     ];
 
@@ -370,25 +405,31 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Stat cards — also act as filter buttons */}
-            <div className="grid grid-cols-3 gap-3">
-                {STAT_CARDS.map(card => (
-                    <button
-                        key={card.key}
-                        onClick={() => handleTabChange(card.key)}
-                        className={`bg-white border rounded-2xl p-4 shadow-sm text-center transition-all cursor-pointer
-                            ${filterTab === card.key ? card.active : card.idle}`}
-                    >
-                        <p className={`text-xl sm:text-2xl font-black ${card.numCls}`}>
-                            {statsLoading ? (
-                                <span className="inline-block w-8 h-7 bg-gray-100 rounded animate-pulse" />
-                            ) : (card.value ?? '—')}
-                        </p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">{card.label}</p>
-                        {filterTab === card.key && (
-                            <span className="inline-block mt-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60" />
-                        )}
-                    </button>
-                ))}
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                {STAT_CARDS.map(card => {
+                    const Icon = card.icon;
+                    return (
+                        <button
+                            key={card.key}
+                            onClick={() => handleTabChange(card.key)}
+                            className={`bg-white border rounded-2xl p-3 sm:p-4 shadow-sm text-center transition-all cursor-pointer
+                                ${filterTab === card.key ? card.active : card.idle}`}
+                        >
+                            {Icon && (
+                                <Icon className={`w-4 h-4 mx-auto mb-1.5 ${card.numCls} opacity-70`} />
+                            )}
+                            <p className={`text-xl sm:text-2xl font-black ${card.numCls}`}>
+                                {statsLoading ? (
+                                    <span className="inline-block w-8 h-7 bg-gray-100 rounded animate-pulse" />
+                                ) : (card.value ?? '—')}
+                            </p>
+                            <p className="text-[11px] text-gray-500 mt-0.5">{card.label}</p>
+                            {filterTab === card.key && (
+                                <span className="inline-block mt-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+                            )}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Search */}
@@ -415,7 +456,11 @@ export default function AdminProductsPage() {
             {!loading && (
                 <p className="text-xs text-gray-400 -mt-1">
                     Showing <span className="font-semibold text-gray-600">{meta.totalElements}</span> product{meta.totalElements !== 1 ? 's' : ''}
-                    {filterTab !== 'all' && <span> · <span className="capitalize">{filterTab.replace('_', ' ')}</span> filter active</span>}
+                    {filterTab !== 'all' && (
+                        <span> · <span className={`capitalize font-semibold ${filterTab === 'hidden' ? 'text-red-500' : filterTab === 'visible' ? 'text-green-600' : ''}`}>
+                            {filterTab === 'not_featured' ? 'not featured' : filterTab}
+                        </span> filter active</span>
+                    )}
                     {debouncedQ && <span> matching "<span className="font-semibold text-gray-600">{debouncedQ}</span>"</span>}
                 </p>
             )}
@@ -429,13 +474,12 @@ export default function AdminProductsPage() {
                 <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="font-semibold text-gray-700">
-                        {filterTab === 'featured'
-                            ? 'No featured products yet'
-                            : filterTab === 'not_featured'
-                                ? 'No unfeatured products found'
-                                : debouncedQ
-                                    ? `No products match "${debouncedQ}"`
-                                    : 'No products found'}
+                        {filterTab === 'featured'     ? 'No featured products yet' :
+                         filterTab === 'not_featured' ? 'No unfeatured products found' :
+                         filterTab === 'hidden'       ? 'No hidden products — all products are visible' :
+                         filterTab === 'visible'      ? 'No visible products found' :
+                         debouncedQ                   ? `No products match "${debouncedQ}"` :
+                                                        'No products found'}
                     </p>
                 </div>
             ) : (
