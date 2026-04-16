@@ -29,11 +29,6 @@ const ReviewsPage = () => {
     const currentReviews = activeTab === 'vendor' ? vendorReviews  : productReviews;
     const currentRating  = activeTab === 'vendor' ? vendorRating   : productRating;
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return formatDate(dateString);
-    };
-
     const renderStars = (rating, size = 'sm') => {
         const cls = size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5';
         return (
