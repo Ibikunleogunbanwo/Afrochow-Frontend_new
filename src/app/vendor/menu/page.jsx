@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star, LayoutDashboard, ChevronRight, ArrowUpDown, Eye, EyeOff, Package } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star, LayoutDashboard, ChevronRight, ArrowUpDown, Eye, EyeOff, Package, ShieldOff } from 'lucide-react';
 import { getVendorProducts, createProduct, updateProduct, deleteProduct, toggleProductAvailability, uploadProductImage } from '@/lib/api/vendorProducts';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { SearchAPI } from '@/lib/api/search.api';
@@ -285,8 +285,9 @@ const VendorMenuPage = () => {
 
 
     // ── derived stats ──────────────────────────────────────────────────────
-    const liveCount   = useMemo(() => products.filter(p => p.available !== false).length, [products]);
-    const hiddenCount = useMemo(() => products.filter(p => p.available === false).length, [products]);
+    const suspendedCount = useMemo(() => products.filter(p => p.adminVisible === false).length, [products]);
+    const liveCount      = useMemo(() => products.filter(p => p.available !== false && p.adminVisible !== false).length, [products]);
+    const hiddenCount    = useMemo(() => products.filter(p => p.available === false && p.adminVisible !== false).length, [products]);
 
     const filteredProducts = useMemo(() => {
         let list = products.filter(product => {
@@ -295,9 +296,10 @@ const VendorMenuPage = () => {
                 String(product.categoryId) === String(filterCategory);
 
             const matchesAvailability =
-                availabilityFilter === 'all' ||
-                (availabilityFilter === 'live'   && product.available !== false) ||
-                (availabilityFilter === 'hidden' && product.available === false);
+                availabilityFilter === 'all'       ||
+                (availabilityFilter === 'live'      && product.available !== false && product.adminVisible !== false) ||
+                (availabilityFilter === 'hidden'    && product.available === false && product.adminVisible !== false) ||
+                (availabilityFilter === 'suspended' && product.adminVisible === false);
 
             const query = searchQuery.trim().toLowerCase();
             const matchesSearch = !query ||
@@ -353,7 +355,7 @@ const VendorMenuPage = () => {
             </div>
 
             {/* Stats summary — clickable filter cards */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {/* All */}
                 <button
                     onClick={() => setAvailabilityFilter('all')}
@@ -411,6 +413,34 @@ const VendorMenuPage = () => {
                     <div className="min-w-0">
                         <p className={`text-[11px] leading-none mb-0.5 ${availabilityFilter === 'hidden' ? 'text-gray-300' : 'text-gray-500'}`}>Hidden</p>
                         <p className={`text-xl font-black leading-none ${availabilityFilter === 'hidden' ? 'text-white' : 'text-gray-500'}`}>{hiddenCount}</p>
+                    </div>
+                </button>
+
+                {/* Suspended */}
+                <button
+                    onClick={() => setAvailabilityFilter(availabilityFilter === 'suspended' ? 'all' : 'suspended')}
+                    className={`text-left rounded-2xl border shadow-sm px-4 py-3 flex items-center gap-3 transition-all ${
+                        availabilityFilter === 'suspended'
+                            ? 'bg-red-600 border-red-600'
+                            : suspendedCount > 0
+                                ? 'bg-white border-red-300 hover:border-red-400'
+                                : 'bg-white border-gray-200 hover:border-gray-400'
+                    }`}
+                >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        availabilityFilter === 'suspended' ? 'bg-white/20' : suspendedCount > 0 ? 'bg-red-50' : 'bg-gray-100'
+                    }`}>
+                        <ShieldOff className={`w-4 h-4 ${
+                            availabilityFilter === 'suspended' ? 'text-white' : suspendedCount > 0 ? 'text-red-500' : 'text-gray-400'
+                        }`} />
+                    </div>
+                    <div className="min-w-0">
+                        <p className={`text-[11px] leading-none mb-0.5 ${
+                            availabilityFilter === 'suspended' ? 'text-red-100' : suspendedCount > 0 ? 'text-red-500' : 'text-gray-500'
+                        }`}>Suspended</p>
+                        <p className={`text-xl font-black leading-none ${
+                            availabilityFilter === 'suspended' ? 'text-white' : suspendedCount > 0 ? 'text-red-600' : 'text-gray-400'
+                        }`}>{suspendedCount}</p>
                     </div>
                 </button>
             </div>
@@ -480,19 +510,24 @@ const VendorMenuPage = () => {
 
                 {/* Row 2: availability pills + result count */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                         {[
-                            { value: 'all',    label: 'All' },
-                            { value: 'live',   label: `Live (${liveCount})` },
-                            { value: 'hidden', label: `Hidden (${hiddenCount})` },
+                            { value: 'all',       label: 'All' },
+                            { value: 'live',      label: `Live (${liveCount})` },
+                            { value: 'hidden',    label: `Hidden (${hiddenCount})` },
+                            { value: 'suspended', label: `Suspended (${suspendedCount})` },
                         ].map(({ value, label }) => (
                             <button
                                 key={value}
                                 onClick={() => setAvailabilityFilter(value)}
                                 className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                                     availabilityFilter === value
-                                        ? 'bg-gray-900 text-white border-gray-900'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                                        ? value === 'suspended'
+                                            ? 'bg-red-600 text-white border-red-600'
+                                            : 'bg-gray-900 text-white border-gray-900'
+                                        : value === 'suspended' && suspendedCount > 0
+                                            ? 'bg-white text-red-600 border-red-300 hover:border-red-400'
+                                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                                 }`}
                             >
                                 {label}
@@ -538,7 +573,11 @@ const VendorMenuPage = () => {
                         {filteredProducts.map((product) => (
                             <div key={product.publicProductId}
                                 className={`flex items-start gap-3 p-4 border-l-4 transition-colors ${
-                                    product.available !== false ? 'border-l-green-400 bg-white' : 'border-l-gray-200 bg-gray-50/60'
+                                    product.adminVisible === false
+                                        ? 'border-l-red-400 bg-red-50/40'
+                                        : product.available !== false
+                                            ? 'border-l-green-400 bg-white'
+                                            : 'border-l-gray-200 bg-gray-50/60'
                                 }`}>
                                 {/* Thumbnail */}
                                 {product.imageUrl ? (
@@ -568,18 +607,25 @@ const VendorMenuPage = () => {
                                         {product.categoryName && (
                                             <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">{product.categoryName}</span>
                                         )}
-                                        {/* Availability toggle pill */}
-                                        <button
-                                            onClick={() => handleToggleAvailability(product)}
-                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all ${
-                                                product.available !== false
-                                                    ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                                    : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                                            }`}
-                                        >
-                                            <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                            {product.available !== false ? 'Live' : 'Hidden'}
-                                        </button>
+                                        {/* Availability toggle pill / suspended badge */}
+                                        {product.adminVisible === false ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-red-50 text-red-600 border-red-200 cursor-default">
+                                                <ShieldOff className="w-2.5 h-2.5" />
+                                                Suspended
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleToggleAvailability(product)}
+                                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all ${
+                                                    product.available !== false
+                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                                {product.available !== false ? 'Live' : 'Hidden'}
+                                            </button>
+                                        )}
                                         {/* Rating */}
                                         <button
                                             onClick={() => { setSelectedProduct(product); setShowReviewsModal(true); }}
@@ -732,17 +778,27 @@ const VendorMenuPage = () => {
 
                                         {/* Status toggle */}
                                         <td className="px-3 py-3 text-center">
-                                            <button
-                                                onClick={() => handleToggleAvailability(product)}
-                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
-                                                    product.available !== false
-                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                                                }`}
-                                            >
-                                                <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                                {product.available !== false ? 'Live' : 'Hidden'}
-                                            </button>
+                                            {product.adminVisible === false ? (
+                                                <span
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border bg-red-50 text-red-600 border-red-200 cursor-default"
+                                                    title="Suspended by platform admin — contact support to resolve"
+                                                >
+                                                    <ShieldOff className="w-3 h-3" />
+                                                    Suspended
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleToggleAvailability(product)}
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                                                        product.available !== false
+                                                            ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                            : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${product.available !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                                    {product.available !== false ? 'Live' : 'Hidden'}
+                                                </button>
+                                            )}
                                         </td>
 
                                         {/* Actions */}

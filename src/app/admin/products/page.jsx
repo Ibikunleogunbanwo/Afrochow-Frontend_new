@@ -49,13 +49,13 @@ function ProductRow({ product, onToggle, toggling }) {
     const id       = product.publicProductId;
     const featured = !!product.isFeatured;
 
-    const isHidden = product.available === false;
+    const isSuspended = product.adminVisible === false;
 
     return (
         <div className={`bg-white border rounded-2xl md:rounded-none md:border-0 md:border-b border-gray-100
             transition-colors hover:bg-gray-50
-            ${featured  ? 'border-amber-200 md:border-gray-100' : ''}
-            ${isHidden  ? 'opacity-60'                          : ''}`}>
+            ${featured    ? 'border-amber-200 md:border-gray-100' : ''}
+            ${isSuspended ? 'opacity-60'                         : ''}`}>
 
             {/* Mobile card */}
             <div className="flex items-start gap-3 p-4 md:hidden">
@@ -84,12 +84,18 @@ function ProductRow({ product, onToggle, toggling }) {
                                 CA${Number(product.price).toFixed(2)}
                             </span>
                         )}
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
-                            ${product.available !== false
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
-                            {product.available !== false ? 'Available' : 'Unavailable'}
-                        </span>
+                        {isSuspended ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600 border border-red-200">
+                                Suspended
+                            </span>
+                        ) : (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                                ${product.available !== false
+                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                    : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
+                                {product.available !== false ? 'Available' : 'Unavailable'}
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -131,12 +137,18 @@ function ProductRow({ product, onToggle, toggling }) {
 
                 <span className="text-sm text-gray-500 truncate">{product.categoryName ?? '—'}</span>
 
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit
-                    ${product.available !== false
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
-                    {product.available !== false ? 'Available' : 'Unavailable'}
-                </span>
+                {isSuspended ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit bg-red-50 text-red-600 border border-red-200">
+                        Suspended
+                    </span>
+                ) : (
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit
+                        ${product.available !== false
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
+                        {product.available !== false ? 'Available' : 'Unavailable'}
+                    </span>
+                )}
 
                 <div onClick={e => e.stopPropagation()}>
                     <FeatureToggle featured={featured} onToggle={() => onToggle(product)} loading={toggling} />
