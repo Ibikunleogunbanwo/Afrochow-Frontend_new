@@ -85,10 +85,10 @@ function ProductRow({ product, onToggle, toggling }) {
                             </span>
                         )}
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
-                            ${product.available
+                            ${product.available !== false
                                 ? 'bg-green-50 text-green-700 border border-green-200'
                                 : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
-                            {product.available ? 'Available' : 'Unavailable'}
+                            {product.available !== false ? 'Available' : 'Unavailable'}
                         </span>
                     </div>
                 </div>
@@ -132,10 +132,10 @@ function ProductRow({ product, onToggle, toggling }) {
                 <span className="text-sm text-gray-500 truncate">{product.categoryName ?? '—'}</span>
 
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold w-fit
-                    ${product.available
+                    ${product.available !== false
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
-                    {product.available ? 'Available' : 'Unavailable'}
+                    {product.available !== false ? 'Available' : 'Unavailable'}
                 </span>
 
                 <div onClick={e => e.stopPropagation()}>
@@ -181,7 +181,7 @@ export default function AdminProductsPage() {
             const [allRes, featuredRes, hiddenRes] = await Promise.all([
                 AdminProductsAPI.getAll(0, 1),
                 AdminProductsAPI.getAll(0, 1, '', true),
-                AdminProductsAPI.getAll(0, 1, '', null, false), // available=false → hidden
+                AdminProductsAPI.getAll(0, 1, '', null, false), // adminVisible=false → suspended
             ]);
             const total    = (allRes?.data      ?? allRes)?.totalElements     ?? 0;
             const featured = (featuredRes?.data ?? featuredRes)?.totalElements ?? 0;
@@ -203,14 +203,14 @@ export default function AdminProductsPage() {
         }, 400);
     };
 
-    // Decode a filter tab into { featured, available } API params
+    // Decode a filter tab into { featured, adminVisible } API params
     const tabToParams = (tab) => {
         switch (tab) {
-            case 'featured':     return { featured: true,  available: null  };
-            case 'not_featured': return { featured: false, available: null  };
-            case 'hidden':       return { featured: null,  available: false };
-            case 'visible':      return { featured: null,  available: true  };
-            default:             return { featured: null,  available: null  };
+            case 'featured':     return { featured: true,  adminVisible: null  };
+            case 'not_featured': return { featured: false, adminVisible: null  };
+            case 'hidden':       return { featured: null,  adminVisible: false };
+            case 'visible':      return { featured: null,  adminVisible: true  };
+            default:             return { featured: null,  adminVisible: null  };
         }
     };
 
@@ -218,8 +218,8 @@ export default function AdminProductsPage() {
         setLoading(true);
         setError(null);
         try {
-            const { featured, available } = tabToParams(tab);
-            const res  = await AdminProductsAPI.getAll(p - 1, PAGE_SIZE, q, featured, available);
+            const { featured, adminVisible } = tabToParams(tab);
+            const res  = await AdminProductsAPI.getAll(p - 1, PAGE_SIZE, q, featured, adminVisible);
             const data = res?.data ?? res ?? {};
             setProducts(Array.isArray(data.content) ? data.content : []);
             setMeta({

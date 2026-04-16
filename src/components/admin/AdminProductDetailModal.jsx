@@ -89,9 +89,9 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
     const handleToggleVisibility = () => withBusy("hide", async () => {
         const res = await AdminProductsAPI.toggleVisibility(id);
         const updated = res?.data ?? res;
-        const nowAvailable = updated?.available ?? !localProduct.available;
-        setLocal(prev => ({ ...prev, available: nowAvailable }));
-        toast.success(nowAvailable ? "Product is now visible to customers" : "Product is now hidden from customers");
+        const nowVisible = updated?.adminVisible ?? (localProduct.adminVisible === false);
+        setLocal(prev => ({ ...prev, adminVisible: nowVisible }));
+        toast.success(nowVisible ? "Product reinstated — visible to customers" : "Product suspended — hidden from customers");
         onMutated?.();
     });
 
@@ -136,8 +136,11 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
                                 {id?.slice(-12).toUpperCase()}
                             </p>
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                                <Tag_ colour={localProduct.available ? "green" : "gray"}>
-                                    {localProduct.available ? "Visible" : "Hidden"}
+                                <Tag_ colour={localProduct.adminVisible !== false ? "green" : "red"}>
+                                    {localProduct.adminVisible !== false ? "Platform Visible" : "Suspended"}
+                                </Tag_>
+                                <Tag_ colour={localProduct.available !== false ? "green" : "gray"}>
+                                    {localProduct.available !== false ? "Vendor Active" : "Vendor Paused"}
                                 </Tag_>
                                 {localProduct.isFeatured && (
                                     <Tag_ colour="amber">⭐ Featured</Tag_>
@@ -228,26 +231,26 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
                                 onClick={handleToggleVisibility}
                                 disabled={anythingBusy}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors disabled:opacity-50 ${
-                                    localProduct.available
+                                    localProduct.adminVisible !== false
                                         ? "border-gray-200 bg-white hover:bg-red-50 hover:border-red-200"
                                         : "border-green-200 bg-green-50 hover:bg-green-100"
                                 }`}
                             >
                                 {busy.hide ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-gray-400 shrink-0" />
-                                ) : localProduct.available ? (
+                                ) : localProduct.adminVisible !== false ? (
                                     <EyeOff className="w-4 h-4 text-gray-500 shrink-0" />
                                 ) : (
                                     <Eye className="w-4 h-4 text-green-600 shrink-0" />
                                 )}
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-semibold text-gray-900">
-                                        {localProduct.available ? "Hide from Customers" : "Make Visible to Customers"}
+                                        {localProduct.adminVisible !== false ? "Suspend Product" : "Reinstate Product"}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-0.5">
-                                        {localProduct.available
-                                            ? "Product won't appear in search or store listings until re-enabled"
-                                            : "Product will appear in the vendor's store and search results"}
+                                        {localProduct.adminVisible !== false
+                                            ? "Platform suspension — vendor cannot override this"
+                                            : "Restore product visibility across the platform"}
                                     </p>
                                 </div>
                             </button>
