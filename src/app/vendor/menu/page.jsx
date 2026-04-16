@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Image as ImageIcon, X, Star, LayoutDashboard, ChevronRight, ArrowUpDown, Eye, EyeOff, Package } from 'lucide-react';
 import { getVendorProducts, createProduct, updateProduct, deleteProduct, toggleProductAvailability, uploadProductImage } from '@/lib/api/vendorProducts';
 import ImageUploader from '@/components/image-uploader/ImageUploader';
 import { SearchAPI } from '@/lib/api/search.api';
@@ -14,6 +14,8 @@ const VendorMenuPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
+    const [availabilityFilter, setAvailabilityFilter] = useState('all'); // 'all' | 'live' | 'hidden'
+    const [sortBy, setSortBy] = useState('name_asc'); // 'name_asc'|'name_desc'|'price_asc'|'price_desc'|'rating_desc'
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -281,11 +283,20 @@ const VendorMenuPage = () => {
     };
 
 
+    // ── derived stats ──────────────────────────────────────────────────────
+    const liveCount   = useMemo(() => products.filter(p => p.available !== false).length, [products]);
+    const hiddenCount = useMemo(() => products.filter(p => p.available === false).length, [products]);
+
     const filteredProducts = useMemo(() => {
-        return products.filter(product => {
+        let list = products.filter(product => {
             const matchesCategory = filterCategory === 'all' ||
                 product.categoryName === filterCategory ||
                 String(product.categoryId) === String(filterCategory);
+
+            const matchesAvailability =
+                availabilityFilter === 'all' ||
+                (availabilityFilter === 'live'   && product.available !== false) ||
+                (availabilityFilter === 'hidden' && product.available === false);
 
             const query = searchQuery.trim().toLowerCase();
             const matchesSearch = !query ||
@@ -293,9 +304,23 @@ const VendorMenuPage = () => {
                 product.description?.toLowerCase().includes(query) ||
                 product.categoryName?.toLowerCase().includes(query);
 
-            return matchesCategory && matchesSearch;
+            return matchesCategory && matchesAvailability && matchesSearch;
         });
-    }, [products, filterCategory, searchQuery]);
+
+        // Sort
+        list = [...list].sort((a, b) => {
+            switch (sortBy) {
+                case 'name_asc':   return (a.name || '').localeCompare(b.name || '');
+                case 'name_desc':  return (b.name || '').localeCompare(a.name || '');
+                case 'price_asc':  return (a.price || 0) - (b.price || 0);
+                case 'price_desc': return (b.price || 0) - (a.price || 0);
+                case 'rating_desc': return (b.averageRating || 0) - (a.averageRating || 0);
+                default: return 0;
+            }
+        });
+
+        return list;
+    }, [products, filterCategory, availabilityFilter, searchQuery, sortBy]);
 
 
     return (
@@ -326,21 +351,61 @@ const VendorMenuPage = () => {
                 </button>
             </div>
 
-            {/* Search and Filter */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+            {/* Stats summary */}
+            <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                        <Package className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] text-gray-500 leading-none mb-0.5">Total</p>
+                        <p className="text-xl font-black text-gray-900 leading-none">{products.length}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl border border-green-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+                        <Eye className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] text-green-600 leading-none mb-0.5">Live</p>
+                        <p className="text-xl font-black text-green-700 leading-none">{liveCount}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                        <EyeOff className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] text-gray-500 leading-none mb-0.5">Hidden</p>
+                        <p className="text-xl font-black text-gray-500 leading-none">{hiddenCount}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Search, filters, and sort */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 space-y-3">
+                {/* Row 1: search + category + sort */}
                 <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
                     {/* Search */}
                     <div className="flex-1">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
                             <input
                                 type="text"
                                 placeholder="Search products…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{ color: 'black', backgroundColor: 'white' }}
-                                className="w-full pl-9 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
+                                className="w-full pl-9 pr-8 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all text-sm"
                             />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-gray-100 transition-colors"
+                                >
+                                    <X className="w-3.5 h-3.5 text-gray-400" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -361,6 +426,51 @@ const VendorMenuPage = () => {
                             ))}
                         </select>
                     </div>
+
+                    {/* Sort */}
+                    <div className="flex items-center gap-2">
+                        <ArrowUpDown className="text-gray-400 w-4 h-4 shrink-0" />
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            style={{ color: 'black', backgroundColor: 'white' }}
+                            className="flex-1 xs:flex-none px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all font-medium text-sm"
+                        >
+                            <option value="name_asc">Name A → Z</option>
+                            <option value="name_desc">Name Z → A</option>
+                            <option value="price_asc">Price: Low → High</option>
+                            <option value="price_desc">Price: High → Low</option>
+                            <option value="rating_desc">Best Rated</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Row 2: availability pills + result count */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                        {[
+                            { value: 'all',    label: 'All' },
+                            { value: 'live',   label: `Live (${liveCount})` },
+                            { value: 'hidden', label: `Hidden (${hiddenCount})` },
+                        ].map(({ value, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => setAvailabilityFilter(value)}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                    availabilityFilter === value
+                                        ? 'bg-gray-900 text-white border-gray-900'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-400">
+                        {filteredProducts.length === products.length
+                            ? `${products.length} product${products.length !== 1 ? 's' : ''}`
+                            : `${filteredProducts.length} of ${products.length} products`}
+                    </p>
                 </div>
             </div>
 
