@@ -481,10 +481,57 @@ const VendorProfilePage = () => {
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
     const twitterUrl  = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${restaurantName} on Afrochow!`)}&url=${encodeURIComponent(shareUrl)}`;
 
+    // ── share-link auth CTA (anonymous visitors only) ────────────────────────
+    // Landing via a shared link shouldn't force auth — virality demands
+    // frictionless preview — but it should make the upgrade path obvious.
+    // See VENDOR_SHARE_FLOW.md for the full design rationale.
+    const openAuthModal = useCallback((mode) => {
+        if (typeof window === 'undefined') return;
+        const returnTo = window.location.pathname + window.location.search;
+        try {
+            sessionStorage.setItem(
+                'afrochow:auth-return-to',
+                JSON.stringify({ returnTo, capturedAt: Date.now() }),
+            );
+        } catch {
+            // sessionStorage can be disabled (incognito / locked down browsers);
+            // the banner still works, we just lose the return-to.
+        }
+        window.dispatchEvent(
+            new CustomEvent('afrochow:open-auth-modal', { detail: { mode, returnTo } }),
+        );
+    }, []);
+
     // ── render ────────────────────────────────────────────────────────────────
 
     return (
         <div className="min-h-screen bg-gray-50">
+
+            {/* Anonymous-visitor CTA — only renders when not signed in.
+                Non-blocking: the page still scrolls freely behind it. */}
+            {!isAuthenticated && (
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2.5">
+                    <div className="container mx-auto max-w-7xl flex items-center justify-between gap-3 flex-wrap">
+                        <p className="text-sm font-semibold">
+                            Loving {restaurantName}? Sign in to order, save it, or write a review.
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={() => openAuthModal('signin')}
+                                className="px-3 py-1.5 text-xs font-bold rounded-full bg-white/15 hover:bg-white/25 border border-white/40 transition-colors"
+                            >
+                                Sign in
+                            </button>
+                            <button
+                                onClick={() => openAuthModal('signup')}
+                                className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
+                            >
+                                Create account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Breadcrumb */}
             <div className="bg-white border-b border-gray-100 px-4 py-3">

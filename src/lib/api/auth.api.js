@@ -25,9 +25,16 @@ export const AuthAPI = {
     });
   },
 
-  logoutAllDevices: async () => {
+  /**
+   * Sign the user out of every active session (revoke all refresh tokens).
+   * Requires password re-entry as a defence against a leaked access token
+   * being used to self-lock the legitimate user out of their account.
+   */
+  logoutAllDevices: async (password) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/logout-all`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
     });
   },
 

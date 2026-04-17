@@ -136,6 +136,25 @@ const Header = () => {
 
     const handleOpenSignIn = useCallback(() => setShowSignIn(true), []);
 
+    // Global auth-modal bus: any page can dispatch `afrochow:open-auth-modal`
+    // with detail.mode = 'signin' | 'signup' and the Header will pop the right
+    // modal. Used by the anonymous-visitor banner on the restaurant page, and
+    // any future "requireAuth(intent)" helper.
+    useEffect(() => {
+        const handler = (e) => {
+            const mode = e?.detail?.mode;
+            if (mode === 'signup') {
+                setShowSignIn(false);
+                setShowSignUp(true);
+            } else {
+                setShowSignUp(false);
+                setShowSignIn(true);
+            }
+        };
+        window.addEventListener('afrochow:open-auth-modal', handler);
+        return () => window.removeEventListener('afrochow:open-auth-modal', handler);
+    }, []);
+
     return (
         <>
             <Suspense fallback={null}>

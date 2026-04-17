@@ -36,6 +36,7 @@ function PasswordField({ label, name, value, onChange, showPw, onToggle, disable
                 />
                 <button
                     type="button"
+                    aria-label={showPw ? "Hide password" : "Show password"}
                     onClick={onToggle}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
                 >
@@ -76,6 +77,8 @@ export default function SettingsPage() {
     const [notifLoading, setNotifLoading]         = useState(false);
     const [notifInitialised, setNotifInitialised] = useState(false);
 
+    const [notifFetchError, setNotifFetchError] = useState(false);
+
     useEffect(() => {
         if (!isAuthenticated) return;
         CustomerAPI.getCustomerProfile()
@@ -83,8 +86,14 @@ export default function SettingsPage() {
                 if (res?.data?.notificationsEnabled != null) {
                     setNotifEnabled(res.data.notificationsEnabled);
                 }
+                setNotifFetchError(false);
             })
-            .catch(() => {/* keep default true */})
+            .catch(err => {
+                // Surface instead of swallowing: user needs to know the toggle
+                // may not reflect the true server state.
+                console.warn("[settings] failed to load notification preference", err);
+                setNotifFetchError(true);
+            })
             .finally(() => setNotifInitialised(true));
     }, [isAuthenticated]);
 
@@ -99,6 +108,7 @@ export default function SettingsPage() {
             }
             toast.success(next ? 'Notifications enabled' : 'Notifications disabled');
         } catch (err) {
+            console.warn("[settings] notification toggle failed", err);
             setNotifEnabled(!next);     // rollback
             toast.error(err.message || "Could not update notification preference");
         } finally {
@@ -143,11 +153,14 @@ export default function SettingsPage() {
             if (res?.success) {
                 setPwSaved(true);
                 toast.success('Password changed', { description: 'Your password has been updated successfully.' });
-                setTimeout(() => { setShowPwModal(false); setPwSaved(false); }, 1500);
+                // 2500ms lets screen-reader users catch the success toast and
+                // the "Changed!" button state before the modal closes.
+                setTimeout(() => { setShowPwModal(false); setPwSaved(false); }, 2500);
             } else {
                 throw new Error(res?.message || "Failed to change password");
             }
         } catch (err) {
+            console.warn("[settings] changePassword failed", err);
             toast.error(err.message || "Failed to change password");
         } finally {
             setPwLoading(false);
@@ -183,6 +196,7 @@ export default function SettingsPage() {
                 throw new Error(res?.message || "Failed to delete account");
             }
         } catch (err) {
+            console.warn("[settings] deleteAccount failed", err);
             toast.error(err.message || "Could not delete account. Check your password and try again.");
         } finally {
             setDeleteLoading(false);
@@ -190,16 +204,32 @@ export default function SettingsPage() {
     };
 
     // ── Logout all devices ─────────────────────────────────────────────────────
+    // Revoking every refresh token is destructive, so we gate it behind password
+    // re-entry. That way a stolen access token alone can't lock the owner out.
     const [logoutAllLoading, setLogoutAllLoading] = useState(false);
     const [showLogoutAllConfirm, setShowLogoutAllConfirm] = useState(false);
+    const [logoutAllPassword, setLogoutAllPassword] = useState("");
+    const [showLogoutAllPw, setShowLogoutAllPw] = useState(false);
 
-    const handleLogoutAll = async () => {
+    const openLogoutAllConfirm = () => {
+        setLogoutAllPassword("");
+        setShowLogoutAllPw(false);
+        setShowLogoutAllConfirm(true);
+    };
+
+    const handleLogoutAll = async (e) => {
+        if (e?.preventDefault) e.preventDefault();
+        if (!logoutAllPassword) {
+            toast.error("Enter your password to continue");
+            return;
+        }
         setLogoutAllLoading(true);
         try {
-            await AuthAPI.logoutAllDevices();
+            await AuthAPI.logoutAllDevices(logoutAllPassword);
             toast.success("Signed out of all devices");
             await logout();
         } catch (err) {
+            console.warn("[settings] logoutAllDevices failed", err);
             toast.error(err.message || "Failed to sign out all devices");
         } finally {
             setLogoutAllLoading(false);
@@ -253,6 +283,14 @@ export default function SettingsPage() {
         setShowAddrModal(true);
     };
 
+    // Canadian postal code: A1A 1A1 (optional space). Lives client-side to
+    // short-circuit obvious typos; the backend re-validates authoritatively.
+    const CA_POSTAL_RE = /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ][ -]?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i;
+
+    // Locked country list — we only ship Canada today. Switch to a real
+    // country picker when cross-border launches.
+    const ALLOWED_COUNTRIES = ["Canada"];
+
     const handleAddrSave = async (e) => {
         e.preventDefault();
         const { addressLine, city, province, postalCode, country } = addrForm;
@@ -260,47 +298,83 @@ export default function SettingsPage() {
             toast.error("Please fill in all address fields");
             return;
         }
+        if (!CA_POSTAL_RE.test(postalCode.trim())) {
+            toast.error("Postal code must look like M5V 2T6");
+            return;
+        }
+        if (!ALLOWED_COUNTRIES.includes(country)) {
+            toast.error("We currently only deliver in Canada");
+            return;
+        }
         setAddrSaving(true);
         try {
+            // Patch local state from the API response so we don't pay for a
+            // second round-trip (listAddresses) on every edit/add. If the
+            // response shape is unexpected we fall back to a full reload.
             if (editingAddr) {
-                await CustomerAPI.updateAddress(editingAddr.publicAddressId, addrForm);
+                const res = await CustomerAPI.updateAddress(editingAddr.publicAddressId, addrForm);
+                const updated = res?.data;
+                if (updated?.publicAddressId) {
+                    setAddresses(prev => prev.map(a => a.publicAddressId === updated.publicAddressId ? updated : a));
+                } else {
+                    await loadAddresses();
+                }
                 toast.success("Address updated");
             } else {
-                await CustomerAPI.addAddress(addrForm);
+                const res = await CustomerAPI.addAddress(addrForm);
+                const created = res?.data;
+                if (created?.publicAddressId) {
+                    setAddresses(prev => created.defaultAddress
+                        ? [created, ...prev.map(a => ({ ...a, defaultAddress: false }))]
+                        : [...prev, created]);
+                } else {
+                    await loadAddresses();
+                }
                 toast.success("Address added");
             }
             setShowAddrModal(false);
-            await loadAddresses();
         } catch (err) {
+            console.warn("[settings] saveAddress failed", err);
             toast.error(err.message || "Could not save address");
         } finally {
             setAddrSaving(false);
         }
     };
 
-    const handleDeleteAddr = async (id) => {
+    // H6: Two-step confirm before deleting or changing the default, so one
+    // accidental tap can't destroy history or re-route deliveries.
+    const [confirmDeleteAddr, setConfirmDeleteAddr] = useState(null); // address obj
+    const [confirmDefaultAddr, setConfirmDefaultAddr] = useState(null);
+
+    const handleDeleteAddr = async (addr) => {
+        const id = addr.publicAddressId;
         setDeletingId(id);
         try {
             await CustomerAPI.deleteAddress(id);
             setAddresses(prev => prev.filter(a => a.publicAddressId !== id));
             toast.success("Address removed");
         } catch (err) {
+            console.warn("[settings] deleteAddress failed", err);
             toast.error(err.message || "Could not delete address");
         } finally {
             setDeletingId(null);
+            setConfirmDeleteAddr(null);
         }
     };
 
-    const handleSetDefault = async (id) => {
+    const handleSetDefault = async (addr) => {
+        const id = addr.publicAddressId;
         setSettingDefaultId(id);
         try {
             await CustomerAPI.setDefaultAddress(id);
             setAddresses(prev => prev.map(a => ({ ...a, defaultAddress: a.publicAddressId === id })));
             toast.success('Default address updated');
         } catch (err) {
+            console.warn("[settings] setDefaultAddress failed", err);
             toast.error(err.message || "Could not set default address");
         } finally {
             setSettingDefaultId(null);
+            setConfirmDefaultAddr(null);
         }
     };
 
@@ -336,6 +410,11 @@ export default function SettingsPage() {
                         title="Notifications"
                         subtitle="Control whether you receive order and payment alerts"
                     />
+                    {notifFetchError && (
+                        <div className="px-5 py-2 text-[11px] text-amber-800 bg-amber-50 border-b border-amber-200">
+                            We couldn't load your current setting. The toggle below may not reflect the server state until you refresh.
+                        </div>
+                    )}
                     <div className="px-5 py-4 flex items-center justify-between gap-4">
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-gray-900">
@@ -395,7 +474,7 @@ export default function SettingsPage() {
 
                         {/* Logout all devices */}
                         <button
-                            onClick={() => setShowLogoutAllConfirm(true)}
+                            onClick={openLogoutAllConfirm}
                             className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors group"
                         >
                             <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
@@ -493,9 +572,10 @@ export default function SettingsPage() {
                                             <div className="flex items-center gap-1 shrink-0">
                                                 {!addr.defaultAddress && (
                                                     <button
-                                                        onClick={() => handleSetDefault(addr.publicAddressId)}
+                                                        onClick={() => setConfirmDefaultAddr(addr)}
                                                         disabled={!!settingDefaultId}
                                                         title="Set as default"
+                                                        aria-label="Set as default address"
                                                         className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors disabled:opacity-40"
                                                     >
                                                         {settingDefaultId === addr.publicAddressId
@@ -507,14 +587,16 @@ export default function SettingsPage() {
                                                 <button
                                                     onClick={() => openEditAddr(addr)}
                                                     title="Edit"
+                                                    aria-label="Edit address"
                                                     className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteAddr(addr.publicAddressId)}
+                                                    onClick={() => setConfirmDeleteAddr(addr)}
                                                     disabled={deletingId === addr.publicAddressId}
                                                     title="Delete"
+                                                    aria-label="Delete address"
                                                     className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                                                 >
                                                     {deletingId === addr.publicAddressId
@@ -652,7 +734,10 @@ export default function SettingsPage() {
             {/* ── Logout All Devices Confirm ─────────────────────────────────── */}
             {showLogoutAllConfirm && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                    <form
+                        onSubmit={handleLogoutAll}
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
                                 <LogOut className="w-5 h-5 text-red-500" />
@@ -662,8 +747,36 @@ export default function SettingsPage() {
                                 <p className="text-xs text-gray-500 mt-0.5">You'll be signed out of all active sessions on all devices.</p>
                             </div>
                         </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                                Enter your password to continue
+                            </label>
+                            <div className="relative">
+                                <input
+                                    style={{ color: "black", backgroundColor: "white" }}
+                                    type={showLogoutAllPw ? "text" : "password"}
+                                    value={logoutAllPassword}
+                                    onChange={e => setLogoutAllPassword(e.target.value)}
+                                    disabled={logoutAllLoading}
+                                    placeholder="Your current password"
+                                    autoFocus
+                                    className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-60"
+                                />
+                                <button
+                                    type="button"
+                                    aria-label={showLogoutAllPw ? "Hide password" : "Show password"}
+                                    onClick={() => setShowLogoutAllPw(v => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                                >
+                                    {showLogoutAllPw ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="flex gap-3">
                             <button
+                                type="button"
                                 onClick={() => setShowLogoutAllConfirm(false)}
                                 disabled={logoutAllLoading}
                                 className="flex-1 py-2.5 border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
@@ -671,9 +784,9 @@ export default function SettingsPage() {
                                 Cancel
                             </button>
                             <button
-                                onClick={handleLogoutAll}
-                                disabled={logoutAllLoading}
-                                className="flex-1 py-2.5 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                                type="submit"
+                                disabled={logoutAllLoading || !logoutAllPassword}
+                                className="flex-1 py-2.5 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {logoutAllLoading
                                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing out…</>
@@ -681,7 +794,7 @@ export default function SettingsPage() {
                                 }
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
 
@@ -745,6 +858,7 @@ export default function SettingsPage() {
                                     />
                                     <button
                                         type="button"
+                                        aria-label={showDeletePw ? "Hide password" : "Show password"}
                                         onClick={() => setShowDeletePw(v => !v)}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
                                     >
@@ -803,8 +917,6 @@ export default function SettingsPage() {
                                 { key: "addressLine", label: "Street Address",  placeholder: "123 Main St, Apt 4B" },
                                 { key: "city",        label: "City",            placeholder: "Toronto" },
                                 { key: "province",    label: "Province / State",placeholder: "Ontario" },
-                                { key: "postalCode",  label: "Postal Code",     placeholder: "M5V 2T6" },
-                                { key: "country",     label: "Country",         placeholder: "Canada" },
                             ].map(({ key, label, placeholder }) => (
                                 <div key={key}>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
@@ -819,6 +931,40 @@ export default function SettingsPage() {
                                     />
                                 </div>
                             ))}
+
+                            {/* Postal code — tight client-side format + uppercase nudge */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">Postal Code</label>
+                                <input
+                                    style={{ color: "black", backgroundColor: "white" }}
+                                    type="text"
+                                    value={addrForm.postalCode}
+                                    onChange={e => setAddrForm(p => ({ ...p, postalCode: e.target.value.toUpperCase() }))}
+                                    placeholder="M5V 2T6"
+                                    inputMode="text"
+                                    autoComplete="postal-code"
+                                    maxLength={7}
+                                    disabled={addrSaving}
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-60"
+                                />
+                                <p className="text-[11px] text-gray-400 mt-1">Canadian format: A1A 1A1</p>
+                            </div>
+
+                            {/* Country — locked until we support other markets */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                                <select
+                                    style={{ color: "black", backgroundColor: "white" }}
+                                    value={addrForm.country}
+                                    onChange={e => setAddrForm(p => ({ ...p, country: e.target.value }))}
+                                    disabled={addrSaving}
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-60"
+                                >
+                                    {ALLOWED_COUNTRIES.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <div className="flex gap-3 pt-2">
                                 <button
@@ -841,6 +987,87 @@ export default function SettingsPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Confirm: Delete address ─────────────────────────────────────── */}
+            {confirmDeleteAddr && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                                <Trash2 className="w-5 h-5 text-red-500" />
+                            </div>
+                            <div>
+                                <p className="font-black text-gray-900">Remove this address?</p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {confirmDeleteAddr.addressLine}, {confirmDeleteAddr.city}
+                                </p>
+                            </div>
+                        </div>
+                        {confirmDeleteAddr.defaultAddress && (
+                            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                This is your default delivery address. We'll pick a new default automatically.
+                            </p>
+                        )}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDeleteAddr(null)}
+                                disabled={!!deletingId}
+                                className="flex-1 py-2.5 border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleDeleteAddr(confirmDeleteAddr)}
+                                disabled={!!deletingId}
+                                className="flex-1 py-2.5 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                            >
+                                {deletingId
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Removing…</>
+                                    : "Remove"
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Confirm: Change default address ─────────────────────────────── */}
+            {confirmDefaultAddr && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                                <Star className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <p className="font-black text-gray-900">Set as default?</p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Future orders will ship to {confirmDefaultAddr.addressLine}, {confirmDefaultAddr.city}.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDefaultAddr(null)}
+                                disabled={!!settingDefaultId}
+                                className="flex-1 py-2.5 border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleSetDefault(confirmDefaultAddr)}
+                                disabled={!!settingDefaultId}
+                                className="flex-1 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                            >
+                                {settingDefaultId
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                                    : "Set as default"
+                                }
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
