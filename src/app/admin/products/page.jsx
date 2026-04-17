@@ -190,15 +190,20 @@ export default function AdminProductsPage() {
     const fetchStats = useCallback(async () => {
         setStatsLoading(true);
         try {
-            const [allRes, featuredRes, hiddenRes] = await Promise.all([
+            const [allRes, featuredRes, hiddenRes, visibleRes] = await Promise.all([
                 AdminProductsAPI.getAll(0, 1),
                 AdminProductsAPI.getAll(0, 1, '', true),
                 AdminProductsAPI.getAll(0, 1, '', null, false), // adminVisible=false → suspended
+                AdminProductsAPI.getAll(0, 1, '', null, true),  // adminVisible=true  → visible
             ]);
             const total    = (allRes?.data      ?? allRes)?.totalElements     ?? 0;
             const featured = (featuredRes?.data ?? featuredRes)?.totalElements ?? 0;
             const hidden   = (hiddenRes?.data   ?? hiddenRes)?.totalElements   ?? 0;
-            setStats({ total, featured, hidden, visible: total - hidden });
+            const visible  = (visibleRes?.data  ?? visibleRes)?.totalElements  ?? 0;
+            // Store visible and hidden independently — each matches what the filter card shows.
+            // Products with adminVisible=null (default, never suspended) are not explicitly
+            // visible or hidden; they're counted in total but not in either bucket.
+            setStats({ total, featured, hidden, visible });
         } catch {
             // non-critical — stats are cosmetic
         } finally {
