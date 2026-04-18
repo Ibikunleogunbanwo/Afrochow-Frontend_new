@@ -438,16 +438,18 @@ const VendorProfilePage = () => {
         if (typeof window === 'undefined') return;
         const returnTo = window.location.pathname + window.location.search;
         try {
-            sessionStorage.setItem(
-                'afrochow:auth-return-to',
-                JSON.stringify({ returnTo, capturedAt: Date.now() }),
-            );
+            // Key MUST be the flat string 'returnTo' — that's what useAuth.login
+            // reads after a successful sign-in. An earlier version of this
+            // helper wrote a JSON blob to 'afrochow:auth-return-to' which
+            // nothing consumed, so users who signed in from the share banner
+            // silently landed on '/' instead of the vendor page they started on.
+            sessionStorage.setItem('returnTo', returnTo);
         } catch {
             // sessionStorage can be disabled (incognito / locked down browsers);
             // the banner still works, we just lose the return-to.
         }
         window.dispatchEvent(
-            new CustomEvent('afrochow:open-auth-modal', { detail: { mode, returnTo } }),
+            new CustomEvent('afrochow:open-auth-modal', { detail: { mode } }),
         );
     }, []);
 

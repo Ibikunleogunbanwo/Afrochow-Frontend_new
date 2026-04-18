@@ -142,7 +142,30 @@ export default function CheckoutPage() {
     // ── Auth + cart guard ─────────────────────────────────────────────────────
     useEffect(() => {
         if (authLoading) return;
-        if (!isAuthenticated) { router.push("/"); return; }
+
+        if (!isAuthenticated) {
+            // Don't silently yeet the user back to the homepage — that used to
+            // vaporise carts built up anonymously on shared-link vendor pages.
+            // Instead:
+            //   1. Persist `/checkout` as the returnTo (useAuth.login reads this
+            //      flat key after a successful login and router.push()es there).
+            //   2. Bounce them back to /cart so they can still *see* what they
+            //      were about to buy — keeps the psychological commitment intact.
+            //   3. Fire the global sign-in modal event bus so the Header pops
+            //      the sign-in modal automatically on top of /cart.
+            //   4. Show a toast that explains what just happened, so the
+            //      redirect doesn't feel like a glitch.
+            sessionStorage.setItem("returnTo", "/checkout");
+            toast.info("Sign in to complete your order", {
+                description: "Your cart is saved — sign in and we'll bring you right back to checkout.",
+            });
+            router.replace("/cart");
+            window.dispatchEvent(
+                new CustomEvent("afrochow:open-auth-modal", { detail: { mode: "signin" } }),
+            );
+            return;
+        }
+
         if (cartItems.length === 0) { router.push("/cart"); return; }
         void loadData();
     }, [isAuthenticated, authLoading, cartItems.length, loadData, router]);
