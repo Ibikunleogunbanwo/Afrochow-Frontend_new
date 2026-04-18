@@ -10,13 +10,16 @@ export const AdminProfileAPI = {
 export const AdminUsersAPI = {
     /**
      * Paginated user list with optional server-side filters.
-     * @param {Object} opts - { page=0, size=25, role, active, q }
+     * @param {Object} opts - { page=0, size=25, role, active, q, createdAfter, createdBefore }
+     *   createdAfter / createdBefore must be ISO-8601 date-time strings (e.g. "2026-04-10T00:00:00").
      */
-    getAll: ({ page = 0, size = 25, role, active, q } = {}) => {
+    getAll: ({ page = 0, size = 25, role, active, q, createdAfter, createdBefore } = {}) => {
         const params = new URLSearchParams({ page, size });
-        if (role   != null) params.set('role',   role);
-        if (active != null) params.set('active', active);
-        if (q      != null && q.trim()) params.set('q', q.trim());
+        if (role          != null)              params.set('role',          role);
+        if (active        != null)              params.set('active',        active);
+        if (q             != null && q.trim())  params.set('q',             q.trim());
+        if (createdAfter  != null)              params.set('createdAfter',  createdAfter);
+        if (createdBefore != null)              params.set('createdBefore', createdBefore);
         return fetchWithCredentials(`${API_BASE_URL}/admin/users?${params}`);
     },
     getById:     (id)         => fetchWithCredentials(`${API_BASE_URL}/admin/users/${id}`),

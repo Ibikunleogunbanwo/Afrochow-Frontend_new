@@ -38,14 +38,15 @@ const getDateBounds = (preset, customStart, customEnd) => {
     }
 };
 
-const inDateRange = (dateStr, bounds) => {
-    if (!bounds) return true;
-    if (!dateStr) return false; // exclude records with no date when a filter is active
-    // Java LocalDateTime may include nano/microseconds; strip to milliseconds so Date can parse it
-    const normalized = typeof dateStr === 'string' ? dateStr.replace(/(\.\d{3})\d+/, '$1') : dateStr;
-    const d = new Date(normalized);
-    if (isNaN(d.getTime())) return false;
-    return d >= bounds.start && d <= bounds.end;
+/**
+ * Spring's @DateTimeFormat(iso = ISO.DATE_TIME) accepts an ISO local date-time
+ * (no timezone). We strip the trailing "Z" from {@code toISOString()} so the
+ * controller binding succeeds. Time component is preserved so the filter is
+ * inclusive at both ends of the day.
+ */
+const toBackendDateTime = (date) => {
+    if (!date) return null;
+    return new Date(date).toISOString().slice(0, 19); // "YYYY-MM-DDTHH:mm:ss"
 };
 import { AdminUsersAPI, AdminSuperAPI } from '@/lib/api/admin.api';
 import { toast } from '@/components/ui/toast';
@@ -184,8 +185,16 @@ export default function AdminUsersPage() {
         if (statusFilter === 'inactive') params.active = false;
         // search
         if (search.trim()) params.q = search.trim();
+        // date-joined range — pushed to the server so the count and
+        // pagination reflect the entire matching set, not just the page
+        // that happened to be loaded in the browser.
+        const bounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
+        if (bounds) {
+            params.createdAfter  = toBackendDateTime(bounds.start);
+            params.createdBefore = toBackendDateTime(bounds.end);
+        }
         return params;
-    }, [page, roleFilter, search, statusFilter]);
+    }, [page, roleFilter, search, statusFilter, dateFilter, customStart, customEnd]);
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -292,12 +301,10 @@ export default function AdminUsersPage() {
     // Determine whether we're currently viewing vendors
     const isVendorView = statusFilter === 'VENDOR' || roleFilter === 'VENDOR';
 
-    // Role/active/search filtering is now SERVER-SIDE via buildParams().
-    // Only client-side filters that can't be pushed to the server stay here:
-    // date range (not supported by the API) and vendor workflow status.
-    const dateBounds = dateFilter ? getDateBounds(dateFilter, customStart, customEnd) : null;
+    // Role/active/search/date filtering is now SERVER-SIDE via buildParams().
+    // Only client-side filters that can't (yet) be pushed to the server remain:
+    // account-level status (derived field, not a column) and vendor workflow status.
     const displayedUsers = users
-        .filter(u => !dateBounds || inDateRange(u.createdAt, dateBounds))
         .filter(u => accountStatusFilter === 'ALL' || resolveUserStatus(u) === accountStatusFilter)
         .filter(u => !isVendorView || vendorStatusFilter === 'ALL' || u.vendorStatus === vendorStatusFilter);
 
@@ -518,7 +525,7 @@ export default function AdminUsersPage() {
                             <Filter className="w-3 h-3 text-gray-500" />
                             <span>Joined: <span className="font-semibold text-gray-900">{dateLabel}</span></span>
                             <span className="text-gray-400">·</span>
-                            <span className="font-semibold text-gray-700">{displayedUsers.length} result{displayedUsers.length !== 1 ? 's' : ''}</span>
+                            <span className="font-semibold text-gray-700">{totalElements} result{totalElements !== 1 ? 's' : ''}</span>
                             <button onClick={() => { setDateFilter(''); setCustomStart(''); setCustomEnd(''); goToPage(1); }} className="ml-1 text-gray-400 hover:text-gray-700">
                                 <X className="w-3 h-3" />
                             </button>

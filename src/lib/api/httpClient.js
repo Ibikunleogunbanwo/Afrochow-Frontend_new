@@ -142,12 +142,21 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
   //   - /auth/me      → passive check, 401 means no session, just clear auth
   //   - /auth/refresh → already refreshing, avoid infinite loop
   //   - /auth/login   → credentials wrong, refresh won't help
-  //   - /auth/logout  → session already gone
+  //   - /auth/logout  → session already gone (current device)
+  // IMPORTANT: matching is exact-suffix (e.g. ends with '/auth/logout'),
+  // NOT a substring includes(), so '/auth/logout-all' is NOT shadowed —
+  // logout-all is an authenticated endpoint and SHOULD trigger a refresh
+  // attempt if the access token has expired.
+  const endsWithPath = (suffix) => {
+      const idx = url.indexOf('?');
+      const cleanUrl = idx === -1 ? url : url.slice(0, idx);
+      return cleanUrl.endsWith(suffix);
+  };
   const skipRefresh =
-      url.includes('/auth/me') ||
-      url.includes('/auth/refresh') ||
-      url.includes('/auth/login') ||
-      url.includes('/auth/logout');
+      endsWithPath('/auth/me') ||
+      endsWithPath('/auth/refresh') ||
+      endsWithPath('/auth/login') ||
+      endsWithPath('/auth/logout');
 
   if (response.status === 401 && !skipRefresh) {
     const refreshed = await tryRefreshToken();

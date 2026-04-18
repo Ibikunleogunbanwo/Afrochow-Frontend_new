@@ -17,7 +17,7 @@ import Link from "next/link";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
-const EMPTY_ADDR = { addressLine: "", city: "", province: "", postalCode: "", country: "Canada" };
+const EMPTY_ADDR = { addressLine: "", city: "", province: "", postalCode: "", country: "Canada", defaultAddress: false };
 
 function PasswordField({ label, name, value, onChange, showPw, onToggle, disabled, placeholder }) {
     return (
@@ -291,6 +291,24 @@ export default function SettingsPage() {
     // country picker when cross-border launches.
     const ALLOWED_COUNTRIES = ["Canada"];
 
+    // Duplicate-detection helpers. Normalise so "123 Main St." and " 123 main st "
+    // collide; postal code ignores the internal space ("M5V 2T6" == "m5v2t6").
+    const normalizeAddr = (a) => ({
+        addressLine: (a.addressLine || "").trim().toLowerCase(),
+        city:        (a.city        || "").trim().toLowerCase(),
+        province:    (a.province    || "").trim().toLowerCase(),
+        postalCode:  (a.postalCode  || "").replace(/\s+/g, "").toLowerCase(),
+        country:     (a.country     || "").trim().toLowerCase(),
+    });
+    const isSameAddress = (a, b) => {
+        const x = normalizeAddr(a), y = normalizeAddr(b);
+        return x.addressLine === y.addressLine
+            && x.city        === y.city
+            && x.province    === y.province
+            && x.postalCode  === y.postalCode
+            && x.country     === y.country;
+    };
+
     const handleAddrSave = async (e) => {
         e.preventDefault();
         const { addressLine, city, province, postalCode, country } = addrForm;
@@ -304,6 +322,20 @@ export default function SettingsPage() {
         }
         if (!ALLOWED_COUNTRIES.includes(country)) {
             toast.error("We currently only deliver in Canada");
+            return;
+        }
+        // Block duplicate saves — compare against every other address, excluding
+        // the one currently being edited so renaming/fixing typos still works.
+        const duplicate = addresses.find(a =>
+            a.publicAddressId !== editingAddr?.publicAddressId &&
+            isSameAddress(a, addrForm)
+        );
+        if (duplicate) {
+            toast.error(
+                duplicate.defaultAddress
+                    ? "You already have this address saved as your default"
+                    : "You already have this address saved"
+            );
             return;
         }
         setAddrSaving(true);
@@ -965,6 +997,20 @@ export default function SettingsPage() {
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Make this my default — shown on Add only. Edit uses the star icon on the list card. */}
+                            {!editingAddr && (
+                                <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!addrForm.defaultAddress}
+                                        onChange={e => setAddrForm(p => ({ ...p, defaultAddress: e.target.checked }))}
+                                        disabled={addrSaving}
+                                        className="w-4 h-4 accent-purple-600 rounded border-gray-300 focus:ring-purple-400 disabled:opacity-60"
+                                    />
+                                    <span className="text-xs font-semibold text-gray-700">Make this my default address</span>
+                                </label>
+                            )}
 
                             <div className="flex gap-3 pt-2">
                                 <button

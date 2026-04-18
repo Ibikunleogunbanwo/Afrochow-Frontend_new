@@ -119,8 +119,10 @@ const AdminDashboardContent = () => {
     const [platform, setPlatform]             = useState(null);
     const [trendObj, setTrendObj]             = useState(null);  // raw trends object from backend
     const [userStats, setUserStats]           = useState(null);
-    const [allUsers, setAllUsers]             = useState([]);
-    const [allVendors, setAllVendors]         = useState([]);
+    // Server-side date-filtered counts. Null means "no filter active" — the
+    // cards then fall back to the all-time total from /admin/users/stats.
+    const [periodUserCount,   setPeriodUserCount]   = useState(null);
+    const [periodVendorCount, setPeriodVendorCount] = useState(null);
     const [pendingVendors, setPendingVendors] = useState([]);
 
     const [loadingAnalytics, setLoadingAnalytics] = useState(true);
@@ -138,24 +140,55 @@ const AdminDashboardContent = () => {
         setLoadingAnalytics(true);
         setAnalyticsError(null);
         const dateParams = toISORange(dateRange, customStart, customEnd);
+
+        // When a date range is active, ask the server for COUNT only (size=1)
+        // for users and vendors registered in that window. Reading
+        // `totalElements` gives us an accurate count across the whole table
+        // — no more "15 results" cap just because that's the page size.
+        const wantPeriodCounts = !!dateParams;
+        const usersInPeriodReq = wantPeriodCounts
+            ? AdminUsersAPI.getAll({
+                  size: 1,
+                  createdAfter:  dateParams.startDate,
+                  createdBefore: dateParams.endDate,
+              })
+            : Promise.resolve(null);
+        const vendorsInPeriodReq = wantPeriodCounts
+            ? AdminUsersAPI.getAll({
+                  size: 1,
+                  role: 'VENDOR',
+                  createdAfter:  dateParams.startDate,
+                  createdBefore: dateParams.endDate,
+              })
+            : Promise.resolve(null);
+
         try {
-            const [platformRes, trendsRes, statsRes, usersRes, vendorsRes] = await Promise.all([
+            const [platformRes, trendsRes, statsRes, usersPeriodRes, vendorsPeriodRes] = await Promise.all([
                 AdminAnalyticsAPI.getPlatform(dateParams),
                 AdminAnalyticsAPI.getTrends(dateParams),
                 AdminUsersAPI.getStats(),
-                AdminUsersAPI.getAll(),
-                AdminVendorsAPI.getAll(),
+                usersInPeriodReq,
+                vendorsInPeriodReq,
             ]);
             const platformData = platformRes?.data ?? platformRes ?? null;
             const raw          = trendsRes?.data  ?? trendsRes  ?? {};
             const statsData    = statsRes?.data    ?? statsRes   ?? null;
-            const usersRaw     = usersRes?.data    ?? usersRes   ?? [];
-            const vendorsRaw   = vendorsRes?.data  ?? vendorsRes ?? [];
-setPlatform(platformData);
+
+            setPlatform(platformData);
             setTrendObj(typeof raw === 'object' && !Array.isArray(raw) ? raw : {});
             setUserStats(statsData);
-            setAllUsers(Array.isArray(usersRaw) ? usersRaw : (usersRaw?.content ?? []));
-            setAllVendors(Array.isArray(vendorsRaw) ? vendorsRaw : (vendorsRaw?.content ?? []));
+
+            // Extract totalElements from the paginated response. The API
+            // layer returns { data: { content: [...], totalElements: N } }
+            // wrapped in an ApiResponse envelope.
+            const extractTotal = (res) => {
+                if (!res) return null;
+                const body = res?.data ?? res;
+                if (typeof body?.totalElements === 'number') return body.totalElements;
+                return null;
+            };
+            setPeriodUserCount(extractTotal(usersPeriodRes));
+            setPeriodVendorCount(extractTotal(vendorsPeriodRes));
         } catch (e) {
             setAnalyticsError(e.message || 'Failed to load analytics');
         } finally {
@@ -189,23 +222,17 @@ setPlatform(platformData);
     }, [fetchVendors]);
 
     /* ── derived state ───────────────────────────────────────────────── */
-    const isFiltered = !!(platform?.filterStartDate);
+    // Treat the dashboard as "filtered" whenever the user has a date range
+    // selected, even if the analytics endpoint hasn't echoed it back yet.
+    // This keeps the New Users / New Vendors cards consistent with the
+    // selected window the moment it changes.
+    const isFiltered = !!(platform?.filterStartDate)
+        || !!toISORange(dateRange, customStart, customEnd);
 
-    // Count items whose createdAt falls within the given ISO date params
-    const countInRange = (arr, params) => {
-        if (!params || !arr?.length) return null;
-        const s = new Date(params.startDate);
-        const e = new Date(params.endDate);
-        return arr.filter(item => {
-            if (!item.createdAt) return false;
-            const d = new Date(item.createdAt);
-            return d >= s && d <= e;
-        }).length;
-    };
-
-    const currentDateParams = toISORange(dateRange, customStart, customEnd);
-    const usersInPeriod     = isFiltered ? countInRange(allUsers,   currentDateParams) : null;
-    const vendorsInPeriod   = isFiltered ? countInRange(allVendors, currentDateParams) : null;
+    // Server-side counts (totalElements from paginated endpoint). These are
+    // accurate across the whole users/vendors table — no client-side capping.
+    const usersInPeriod   = periodUserCount;
+    const vendorsInPeriod = periodVendorCount;
 
     // Date picker label
     const dateLabel = (() => {
