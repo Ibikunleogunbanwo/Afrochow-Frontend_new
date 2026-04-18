@@ -13,7 +13,11 @@ async function fetchVendorForMetadata(publicVendorId) {
     try {
         // Public endpoint — no auth needed. Short revalidate so a freshly
         // renamed restaurant propagates to share cards within the hour.
-        const res = await fetch(`${API_BASE_URL}/vendors/${publicVendorId}`, {
+        // NOTE: the real route is /api/search/vendors/{id} (SearchController
+        // has a class-level @RequestMapping("/search")). Calling /api/vendors/{id}
+        // directly falls through every mapping and Spring returns a
+        // "No static resource" 404, which flooded production logs.
+        const res = await fetch(`${API_BASE_URL}/search/vendors/${publicVendorId}`, {
             next: { revalidate: 600 },
         });
         if (!res.ok) return null;
