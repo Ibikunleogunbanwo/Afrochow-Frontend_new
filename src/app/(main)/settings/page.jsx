@@ -227,7 +227,8 @@ export default function SettingsPage() {
         try {
             await AuthAPI.logoutAllDevices(logoutAllPassword);
             toast.success("Signed out of all devices");
-            await logout();
+            // Pass silent to avoid the generic "Signed out" toast duplicating ours above.
+            await logout({ silent: true });
         } catch (err) {
             console.warn("[settings] logoutAllDevices failed", err);
             toast.error(err.message || "Failed to sign out all devices");
@@ -248,8 +249,10 @@ export default function SettingsPage() {
     const [deletingId, setDeletingId]           = useState(null);
     const [settingDefaultId, setSettingDefaultId] = useState(null);
 
-    const loadAddresses = useCallback(async () => {
-        setAddrLoading(true);
+    // `silent: true` skips the loading-spinner flash, for background refreshes
+    // triggered by in-list actions (e.g. delete-default → refetch to show new default).
+    const loadAddresses = useCallback(async ({ silent = false } = {}) => {
+        if (!silent) setAddrLoading(true);
         setAddrError(null);
         try {
             const res = await CustomerAPI.savedAddress();
@@ -257,7 +260,7 @@ export default function SettingsPage() {
         } catch (err) {
             setAddrError("Could not load addresses");
         } finally {
-            setAddrLoading(false);
+            if (!silent) setAddrLoading(false);
         }
     }, []);
 
@@ -380,11 +383,23 @@ export default function SettingsPage() {
 
     const handleDeleteAddr = async (addr) => {
         const id = addr.publicAddressId;
+        const wasDefault = !!addr.defaultAddress;
         setDeletingId(id);
         try {
             await CustomerAPI.deleteAddress(id);
-            setAddresses(prev => prev.filter(a => a.publicAddressId !== id));
-            toast.success("Address removed");
+            // Deleting the default triggers backend auto-promotion of another address to
+            // default (AddressService.setFirstAddressAsDefault). Refetch so the UI reflects
+            // the new default — the DELETE response doesn't tell us which address was promoted.
+            if (wasDefault) {
+                await loadAddresses();
+            } else {
+                setAddresses(prev => prev.filter(a => a.publicAddressId !== id));
+            }
+            toast.success(
+                wasDefault
+                    ? "Address removed — another address is now your default"
+                    : "Address removed"
+            );
         } catch (err) {
             console.warn("[settings] deleteAddress failed", err);
             toast.error(err.message || "Could not delete address");

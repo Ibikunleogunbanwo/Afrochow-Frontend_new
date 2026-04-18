@@ -183,7 +183,9 @@ export const useAuth = () => {
         }
     };
 
-    const logout = async () => {
+    // `silent: true` lets callers (e.g. the "sign out of all devices" flow)
+    // show their own more-specific toast without the generic one duplicating it.
+    const logout = async ({ silent = false } = {}) => {
         try {
             await AuthAPI.logout();
         } catch (err) {
@@ -192,7 +194,9 @@ export const useAuth = () => {
         } finally {
             dispatch(clearAuth());
             clearCart();
-            toast.success("Signed out", { description: "You have been successfully signed out." });
+            if (!silent) {
+                toast.success("Signed out", { description: "You have been successfully signed out." });
+            }
             // replace() removes the current entry from history so pressing
             // Back after logout cannot navigate back into authenticated pages.
             router.replace("/");
