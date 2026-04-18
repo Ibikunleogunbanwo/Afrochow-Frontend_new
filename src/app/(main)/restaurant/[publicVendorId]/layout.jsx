@@ -26,7 +26,10 @@ async function fetchVendorForMetadata(publicVendorId) {
 }
 
 export async function generateMetadata({ params }) {
-    const { publicVendorId } = params;
+    // Next.js 15 made `params` an async Promise in server components — destructuring
+    // it directly (as we used to) yielded `undefined`, which was then interpolated
+    // into `/vendors/undefined` and flooded prod logs with 404 warnings.
+    const { publicVendorId } = await params;
     const vendor = await fetchVendorForMetadata(publicVendorId);
 
     const fallback = {
