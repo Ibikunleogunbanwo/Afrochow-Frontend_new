@@ -424,6 +424,33 @@ const VendorProfilePage = () => {
         }
     }, [vendor?.restaurantName]);
 
+    // ── share-link auth CTA (anonymous visitors only) ────────────────────────
+    // Landing via a shared link shouldn't force auth — virality demands
+    // frictionless preview — but it should make the upgrade path obvious.
+    // See VENDOR_SHARE_FLOW.md for the full design rationale.
+    //
+    // MUST be declared before the early returns below. When this hook lived
+    // after `if (loading) return ...`, React hit a "Rendered more hooks than
+    // during the previous render" error the moment the fetch resolved — the
+    // hook count jumped from N (loading branch) to N+1 (loaded branch) and
+    // the page blanked out. That's the "some stores won't open" bug.
+    const openAuthModal = useCallback((mode) => {
+        if (typeof window === 'undefined') return;
+        const returnTo = window.location.pathname + window.location.search;
+        try {
+            sessionStorage.setItem(
+                'afrochow:auth-return-to',
+                JSON.stringify({ returnTo, capturedAt: Date.now() }),
+            );
+        } catch {
+            // sessionStorage can be disabled (incognito / locked down browsers);
+            // the banner still works, we just lose the return-to.
+        }
+        window.dispatchEvent(
+            new CustomEvent('afrochow:open-auth-modal', { detail: { mode, returnTo } }),
+        );
+    }, []);
+
     // ── render states ─────────────────────────────────────────────────────────
 
     if (loading) {
@@ -480,27 +507,6 @@ const VendorProfilePage = () => {
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out ${restaurantName} on Afrochow! ${shareUrl}`)}`;
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
     const twitterUrl  = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${restaurantName} on Afrochow!`)}&url=${encodeURIComponent(shareUrl)}`;
-
-    // ── share-link auth CTA (anonymous visitors only) ────────────────────────
-    // Landing via a shared link shouldn't force auth — virality demands
-    // frictionless preview — but it should make the upgrade path obvious.
-    // See VENDOR_SHARE_FLOW.md for the full design rationale.
-    const openAuthModal = useCallback((mode) => {
-        if (typeof window === 'undefined') return;
-        const returnTo = window.location.pathname + window.location.search;
-        try {
-            sessionStorage.setItem(
-                'afrochow:auth-return-to',
-                JSON.stringify({ returnTo, capturedAt: Date.now() }),
-            );
-        } catch {
-            // sessionStorage can be disabled (incognito / locked down browsers);
-            // the banner still works, we just lose the return-to.
-        }
-        window.dispatchEvent(
-            new CustomEvent('afrochow:open-auth-modal', { detail: { mode, returnTo } }),
-        );
-    }, []);
 
     // ── render ────────────────────────────────────────────────────────────────
 
