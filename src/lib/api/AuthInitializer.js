@@ -40,6 +40,13 @@ const isPublicRoute = (pathname) => {
     return PUBLIC_ROUTES.some(route => pathname.startsWith(route));
 };
 
+// /register/vendor/* is deliberately reachable by already-authenticated users
+// (customers, vendors, admins) — that flow shows its own "you're signed in,
+// vendor accounts need their own email" banner instead of bouncing them away.
+// Every other /register/* and /login route still redirects authenticated
+// users to their dashboard, so this is carved out on its own.
+const isVendorRegisterRoute = (pathname) => pathname.startsWith('/register/vendor');
+
 const isCustomerWaitlistRoute = (pathname) =>
     CUSTOMER_WAITLIST_ROUTES.some(route => pathname.startsWith(route));
 
@@ -106,18 +113,18 @@ export default function AuthInitializer({ children }) {
             }
 
             // Redirect vendors/admins to their dashboard when on public routes
-            if (isAdminRole && isPublicRoute(pathname)) {
+            if (isAdminRole && isPublicRoute(pathname) && !isVendorRegisterRoute(pathname)) {
                 router.replace('/admin/dashboard');
                 return;
             }
 
-            if (userRole === 'VENDOR' && isPublicRoute(pathname)) {
+            if (userRole === 'VENDOR' && isPublicRoute(pathname) && !isVendorRegisterRoute(pathname)) {
                 router.replace('/vendor/dashboard');
                 return;
             }
 
             // Redirect authenticated users away from public auth routes
-            if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
+            if ((pathname.startsWith('/login') || pathname.startsWith('/register')) && !isVendorRegisterRoute(pathname)) {
                 const dashboardRoute = isAdminRole
                     ? '/admin/dashboard'
                     : userRole === 'VENDOR'
@@ -286,7 +293,7 @@ export default function AuthInitializer({ children }) {
     // is being redirected to their dashboard. Keep showing the spinner until the
     // route-protection effect fires and navigation completes.
     const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
-    if (isAuth && (userRole === 'VENDOR' || isAdminRole) && isPublicRoute(pathname)) {
+    if (isAuth && (userRole === 'VENDOR' || isAdminRole) && isPublicRoute(pathname) && !isVendorRegisterRoute(pathname)) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
