@@ -5,7 +5,7 @@
  * Problem: Product/vendor images hosted on the Afrochow backend are stored in
  * the database as the URL that existed at upload time.  That URL may point to:
  *   - localhost:8080         (uploaded during local dev)
- *   - *.up.railway.app       (uploaded against the Railway staging server)
+ *   - a previous hosting provider's domain (uploaded before a backend migration)
  *   - a relative path        (/api/images/products/…)
  *   - the correct production URL (https://api.afrochow.ca/api/images/…)
  *
@@ -32,7 +32,6 @@ const API_ORIGIN = (() => {
 // Matches the Afrochow image path regardless of what host precedes it.
 // e.g. captures "/api/images/products/abc-123.jpg" from any of:
 //   http://localhost:8080/api/images/products/abc-123.jpg
-//   https://afrochow-backendnew-production.up.railway.app/api/images/products/abc-123.jpg
 //   https://api.afrochow.ca/api/images/products/abc-123.jpg
 //   /api/images/products/abc-123.jpg
 const AFROCHOW_IMAGE_PATH_RE = /(\/api\/images\/.+)/;

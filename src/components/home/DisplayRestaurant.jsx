@@ -13,69 +13,6 @@ import { useLocation } from '@/contexts/LocationContext';
 import { SignInModal } from '@/components/signin/SignInModal';
 import { SignUpModal } from '@/components/register/SignUpModal';
 
-// ── Shared time-range check ──────────────────────────────────────────────────
-// Returns true if current local time falls within [openMins, closeMins).
-// Handles overnight ranges (e.g. 22:00 – 02:00).
-const isTimeInRange = (openMins, closeMins) => {
-    const now = new Date();
-    const cur = now.getHours() * 60 + now.getMinutes();
-    return closeMins > openMins
-        ? cur >= openMins && cur < closeMins
-        : cur >= openMins || cur < closeMins;
-};
-
-// Parses a "HH:MM" or "HH:MM AM/PM" token to minutes-since-midnight.
-const parseTimeMins = (token) => {
-    const t = token.trim();
-    const ampm = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (ampm) {
-        let h = parseInt(ampm[1]); const m = parseInt(ampm[2]);
-        if (ampm[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-        if (ampm[3].toUpperCase() === 'AM' && h === 12) h = 0;
-        return h * 60 + m;
-    }
-    const plain = t.match(/^(\d{1,2}):(\d{2})$/);
-    if (plain) return parseInt(plain[1]) * 60 + parseInt(plain[2]);
-    return null;
-};
-
-// Single entry-point for "is this vendor open right now?".
-// Accepts the raw weeklySchedule object (preferred) and an optional
-// pre-formatted fallback string like "09:00 - 22:00" or "06:00 AM - 10:00 PM".
-const computeIsOpenFromSchedule = (weeklySchedule, todayHoursFormatted) => {
-    // ── Try raw schedule object first ──
-    if (weeklySchedule && typeof weeklySchedule === 'object' && !Array.isArray(weeklySchedule)) {
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const today = days[new Date().getDay()];
-        const cap   = today.charAt(0).toUpperCase() + today.slice(1);
-        const day   = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
-        if (day) {
-            if (!(day.isOpen ?? day.open ?? false)) return false;
-            const ot = day.openTime  ?? day.open_time  ?? day.startTime;
-            const ct = day.closeTime ?? day.close_time ?? day.endTime;
-            if (ot && ct) {
-                const o = parseTimeMins(ot);
-                const c = parseTimeMins(ct);
-                if (o !== null && c !== null) return isTimeInRange(o, c);
-            }
-        }
-    }
-    // ── Fallback: formatted string ──
-    if (todayHoursFormatted) {
-        const sep = /[-–]/;
-        const parts = todayHoursFormatted
-            .replace(/^open\s+/i, '')
-            .split(sep)
-            .map(s => s.trim());
-        if (parts.length === 2) {
-            const o = parseTimeMins(parts[0]);
-            const c = parseTimeMins(parts[1]);
-            if (o !== null && c !== null) return isTimeInRange(o, c);
-        }
-    }
-    return null;
-};
-
 // ── Pagination sentinel ──────────────────────────────────────────────────────
 const ELLIPSIS = '…';
 
@@ -183,10 +120,10 @@ const DisplayRestaurant = () => {
 
                     const transformedResults = productList.map(product => {
                         const vendor    = vendorMap[product.vendorPublicId] || {};
-                        const isOpenNow = computeIsOpenFromSchedule(
-                            vendor.weeklySchedule ?? vendor.operatingHours,
-                            vendor.todayHoursFormatted
-                        ) ?? vendor.isOpenNow ?? null;
+                        // Trust the backend's vendor-timezone-aware isOpenNow directly —
+                        // recomputing it client-side against the customer's browser
+                        // timezone caused this page to disagree with the vendor detail page.
+                        const isOpenNow = vendor.isOpenNow ?? null;
 
                         return {
                             publicProductId:        product.publicProductId,

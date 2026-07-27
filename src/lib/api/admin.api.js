@@ -95,12 +95,27 @@ export const AdminVendorsAPI = {
 };
 
 // ── Admin Order Management ─────────────────────────────────────────────────
+// getAll/getByStatus are server-paginated — the orders table grows without
+// bound in production, unlike the small admin-curated tables (vendors,
+// categories, promotions) that still fetch-all-and-slice client-side.
 export const AdminOrdersAPI = {
-    getAll:     ()       => fetchWithCredentials(`${API_BASE_URL}/admin/orders`),
+    getAll:     (page = 0, size = 25) => fetchWithCredentials(`${API_BASE_URL}/admin/orders?page=${page}&size=${size}`),
+    getStats:   ()       => fetchWithCredentials(`${API_BASE_URL}/admin/orders/stats`),
     getActive:  ()       => fetchWithCredentials(`${API_BASE_URL}/admin/orders/active`),
-    getByStatus:(status) => fetchWithCredentials(`${API_BASE_URL}/admin/orders/status/${status}`),
+    getByStatus:(status, page = 0, size = 25) => fetchWithCredentials(`${API_BASE_URL}/admin/orders/status/${status}?page=${page}&size=${size}`),
     getById:    (id)     => fetchWithCredentials(`${API_BASE_URL}/admin/orders/${id}`),
     cancel:     (id)     => fetchWithCredentials(`${API_BASE_URL}/admin/orders/${id}/cancel`, { method: 'POST' }),
+};
+
+// ── Admin Payment Management ────────────────────────────────────────────────
+export const AdminPaymentsAPI = {
+    getAll:            ()               => fetchWithCredentials(`${API_BASE_URL}/admin/payments`),
+    getStats:          ()               => fetchWithCredentials(`${API_BASE_URL}/admin/payments/stats`),
+    getFailed:         ()               => fetchWithCredentials(`${API_BASE_URL}/admin/payments/failed`),
+    getByStatus:       (status)         => fetchWithCredentials(`${API_BASE_URL}/admin/payments/status/${status}`),
+    getByOrder:        (publicOrderId)  => fetchWithCredentials(`${API_BASE_URL}/admin/payments/order/${publicOrderId}`),
+    getByTransaction:  (transactionId)  => fetchWithCredentials(`${API_BASE_URL}/admin/payments/transaction/${transactionId}`),
+    refund:            (publicOrderId)  => fetchWithCredentials(`${API_BASE_URL}/admin/payments/order/${publicOrderId}/refund`, { method: 'POST' }),
 };
 
 // ── Analytics ──────────────────────────────────────────────────────────────

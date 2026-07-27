@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Star, Clock, Calendar, ShoppingBag, ChevronRight } from 'lucide-react';
+import { Star, Clock, Calendar, ShoppingBag, ChevronRight, Heart } from 'lucide-react';
+import { useFavorite } from '@/hooks/useFavorite';
 
 // ── Promo badge helper ────────────────────────────────────────────────────────
 const getPromoBadge = (promotions) => {
@@ -18,10 +19,15 @@ const getPromoBadge = (promotions) => {
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
-const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) => {
+const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, promotions = [] }) => {
     const [imgError, setImgError] = useState(false);
     const promo    = getPromoBadge(promotions);
     const isAdvance = product.scheduleType === 'ADVANCE_ORDER';
+
+    const { isFavorited, toggleFavorite } = useFavorite('PRODUCT', product.publicProductId, {
+        name: product.name,
+        onRequireAuth: onUnauthenticated,
+    });
 
     const dietaryTags = [
         product.isVegan                        && { label: '🌱 Vegan',      css: 'bg-green-50 text-green-700 border-green-100' },
@@ -63,6 +69,19 @@ const ProductCard = ({ product, onViewReviews, onCardClick, promotions = [] }) =
                         {promo.label}
                     </div>
                 )}
+
+                {/* Favorite Button — top right */}
+                <button
+                    onClick={toggleFavorite}
+                    className="absolute z-10 p-1.5 top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                    <Heart
+                        className={`w-3.5 h-3.5 transition-colors ${
+                            isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                        }`}
+                    />
+                </button>
 
                 {/* Unavailable overlay */}
                 {!product.available && (

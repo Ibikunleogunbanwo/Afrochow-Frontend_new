@@ -23,6 +23,7 @@ import { z } from "zod";
 import { passwordSchema } from "@/lib/schemas/accountSchema";
 import { CANADIAN_PROVINCES } from "@/lib/schemas/addressSchema";
 import PasswordStrengthIndicator from "@/components/register/vendor/vendorComponent/PasswordStrengthIndicator";
+import { customerWaitlistPath, isCustomerWaitlistMode } from "@/lib/mvp";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -427,6 +428,12 @@ export default function CustomerRegistration() {
     }
   }, [isAuthenticated, authLoading, router]);
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && isCustomerWaitlistMode) {
+      router.replace(customerWaitlistPath);
+    }
+  }, [isAuthenticated, authLoading, router]);
+
   // Cleanup resend timer on unmount
   useEffect(() => {
     return () => {
@@ -491,7 +498,7 @@ export default function CustomerRegistration() {
   // Show a spinner while auth resolves, or while the redirect is in flight.
   // Keeps the registration form from flashing to authenticated users.
 
-  if (authLoading || isAuthenticated) {
+  if (authLoading || isAuthenticated || isCustomerWaitlistMode) {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-orange-500" />

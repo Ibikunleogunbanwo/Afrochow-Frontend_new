@@ -1,8 +1,10 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Clock, Star, Pencil } from 'lucide-react';
+import { X, Loader2, Clock, Star, Pencil, Heart } from 'lucide-react';
 import { useCart } from "@/contexts/CartContext";
+import { useFavorite } from '@/hooks/useFavorite';
+import { customerWaitlistPath, isOrderingEnabled } from '@/lib/mvp';
 
 const Tag = ({ text }) => (
     <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
@@ -18,6 +20,7 @@ const ProductDetailModal = ({
                                 onClose,
                                 onViewReviews,
                                 onWriteReview,
+                                onUnauthenticated,
                             }) => {
     const [quantity, setQuantity] = useState(1);
     const [cartError, setCartError] = useState(null);
@@ -25,6 +28,13 @@ const ProductDetailModal = ({
     const timerRef = useRef(null);
 
     const { addToCart, clearCart } = useCart();
+
+    // Must stay above the `if (!product) return null;` guard below
+    // (Rules of Hooks) — the hook itself already tolerates an undefined id.
+    const { isFavorited, toggleFavorite } = useFavorite('PRODUCT', product?.publicProductId, {
+        name: product?.name,
+        onRequireAuth: onUnauthenticated,
+    });
 
     // Handle ESC close
     useEffect(() => {
@@ -70,6 +80,10 @@ const ProductDetailModal = ({
     const isDisabled = !available || !isStoreOpen;
 
     const handleAddToCart = () => {
+        if (!isOrderingEnabled) {
+            window.location.href = customerWaitlistPath;
+            return;
+        }
         if (isDisabled) return;
 
         const result = addToCart(product, quantity, isStoreOpen);
@@ -90,6 +104,7 @@ const ProductDetailModal = ({
 
     const getButtonText = () => {
         if (addedSuccess) return '✓ Added to Cart!';
+        if (!isOrderingEnabled) return 'Join Waitlist';
         if (!available) return 'Currently Unavailable';
         if (!isStoreOpen) return '🕐 Store is currently closed';
         return `Add to Order • CA$${totalPrice}`;
@@ -144,6 +159,21 @@ const ProductDetailModal = ({
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
                                 <span className="text-6xl">🍲</span>
                             </div>
+                        )}
+
+                        {/* Favorite Button */}
+                        {!isLoading && (
+                            <button
+                                onClick={toggleFavorite}
+                                className="absolute z-10 p-2 top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                                <Heart
+                                    className={`w-4 h-4 transition-colors ${
+                                        isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                                    }`}
+                                />
+                            </button>
                         )}
                     </div>
                 </div>

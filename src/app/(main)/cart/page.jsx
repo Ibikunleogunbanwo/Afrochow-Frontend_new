@@ -4,9 +4,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import CustomerWaitlistNotice from '@/components/mvp/CustomerWaitlistNotice';
+import { isOrderingEnabled } from '@/lib/mvp';
 
 const CartPage = () => {
     const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
+
+    if (!isOrderingEnabled) {
+        return (
+            <CustomerWaitlistNotice
+                title="Cart is paused for the MVP"
+                message="Customer ordering is not live yet. Afrochow is currently using the marketplace as a showroom while vendors onboard."
+            />
+        );
+    }
 
     if (cartItems.length === 0) {
         return (

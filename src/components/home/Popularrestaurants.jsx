@@ -14,59 +14,6 @@ import LocationFallbackBanner from "@/components/home/LocationFallbackBanner";
 const MAX_POPULAR = 8;
 const SKELETON_COUNT = MAX_POPULAR;
 
-// Parse "Open HH:MM - HH:MM" (24h) or "HH:MM AM - HH:MM PM" (12h) using browser local time.
-const computeIsOpenNow = (todayHoursFormatted) => {
-    if (!todayHoursFormatted) return null;
-    const m24 = todayHoursFormatted.match(/^(?:open\s+)?(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/i);
-    if (m24) {
-        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-        const o = parseInt(m24[1]) * 60 + parseInt(m24[2]);
-        const c = parseInt(m24[3]) * 60 + parseInt(m24[4]);
-        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
-    }
-    const m12 = todayHoursFormatted.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (m12) {
-        const to24 = (h, m, p) => { let hr = parseInt(h); const mn = parseInt(m); if (p.toUpperCase()==='PM'&&hr!==12) hr+=12; if (p.toUpperCase()==='AM'&&hr===12) hr=0; return hr*60+mn; };
-        const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-        const o = to24(m12[1], m12[2], m12[3]); const c = to24(m12[4], m12[5], m12[6]);
-        return c > o ? cur >= o && cur < c : cur >= o || cur < c;
-    }
-    return null;
-};
-
-// Extract today's formatted hours from weeklySchedule using browser local day.
-const computeTodayHoursFromSchedule = (weeklySchedule) => {
-    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    const today = days[new Date().getDay()];
-    const cap = today.charAt(0).toUpperCase() + today.slice(1);
-    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
-    if (!day) return null;
-    if (!(day.isOpen ?? day.open ?? false)) return 'Closed today';
-    const ot = day.openTime ?? day.open_time ?? day.startTime;
-    const ct = day.closeTime ?? day.close_time ?? day.endTime;
-    if (!ot || !ct) return null;
-    return `${ot} - ${ct}`;
-};
-
-// Compute from full weeklySchedule object using browser local day (most accurate).
-const computeIsOpenFromSchedule = (weeklySchedule) => {
-    if (!weeklySchedule || typeof weeklySchedule !== 'object' || Array.isArray(weeklySchedule)) return null;
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    const today = days[new Date().getDay()];
-    const cap = today.charAt(0).toUpperCase() + today.slice(1);
-    const day = weeklySchedule[today] ?? weeklySchedule[cap] ?? weeklySchedule[today.toUpperCase()];
-    if (!day) return null;
-    if (!(day.isOpen ?? day.open ?? false)) return false;
-    const ot = day.openTime ?? day.open_time ?? day.startTime;
-    const ct = day.closeTime ?? day.close_time ?? day.endTime;
-    if (!ot || !ct) return null;
-    const toMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-    const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-    const o = toMins(ot), c = toMins(ct);
-    return c > o ? cur >= o && cur < c : cur >= o || cur < c;
-};
-
 // ── Module-level cache ────────────────────────────────────────────────────────
 // Keyed by a composite of lat+lng+city so we re-fetch when location changes.
 // 3-minute TTL: short enough to catch nearby vendor changes, long enough to
@@ -97,13 +44,12 @@ const transformVendor = (vendor) => ({
     location:               vendor.address?.city && vendor.address?.province
                                 ? `${vendor.address.city}, ${vendor.address.province}`
                                 : vendor.address?.city || "",
-    isOpenNow:              computeIsOpenFromSchedule(vendor.weeklySchedule)
-                                ?? computeIsOpenNow(vendor.todayHoursFormatted)
-                                ?? vendor.isOpenNow
-                                ?? null,
-    todayHoursFormatted:    computeTodayHoursFromSchedule(vendor.weeklySchedule)
-                                ?? vendor.todayHoursFormatted
-                                ?? null,
+    // Trust the backend's vendor-timezone-aware isOpenNow (VendorProfile.isOpenNow())
+    // rather than recomputing client-side — the detail page does the same, and a
+    // client-side recompute using the customer's browser timezone against the
+    // vendor's local hours produced disagreements between the two pages.
+    isOpenNow:              vendor.isOpenNow ?? null,
+    todayHoursFormatted:    vendor.todayHoursFormatted ?? null,
     // Use ?? not || so that deliveryFee: 0 (free delivery) is preserved
     deliveryFee:            vendor.deliveryFee            ?? 2.99,
     offersPickup:           vendor.offersPickup           ?? false,

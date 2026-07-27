@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { customerWaitlistMessage, isOrderingEnabled } from '@/lib/mvp';
 
 const CartContext = createContext(null);
 
@@ -15,15 +16,23 @@ const loadCartFromStorage = () => {
 };
 
 export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState(loadCartFromStorage);
+    const [cartItems, setCartItems] = useState(() => isOrderingEnabled ? loadCartFromStorage() : []);
 
     const vendorId = cartItems.length > 0 ? cartItems[0].vendorPublicId : null;
 
     useEffect(() => {
+        if (!isOrderingEnabled) {
+            localStorage.removeItem(CART_STORAGE_KEY);
+            return;
+        }
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
     }, [cartItems]);
 
     const addToCart = (product, quantity = 1, isStoreOpen = true) => {
+        if (!isOrderingEnabled) {
+            return { success: false, waitlist: true, message: customerWaitlistMessage };
+        }
+
         if (!isStoreOpen) {
             return { success: false, message: 'This store is currently closed.' };
         }
@@ -51,10 +60,12 @@ export const CartProvider = ({ children }) => {
     };
 
     const removeFromCart = (publicProductId) => {
+        if (!isOrderingEnabled) return;
         setCartItems(prev => prev.filter(item => item.publicProductId !== publicProductId));
     };
 
     const updateQuantity = (publicProductId, quantity) => {
+        if (!isOrderingEnabled) return;
         if (quantity < 1) {
             removeFromCart(publicProductId);
             return;
@@ -81,6 +92,7 @@ export const CartProvider = ({ children }) => {
             removeFromCart,
             updateQuantity,
             clearCart,
+            isOrderingEnabled,
         }}>
             {children}
         </CartContext.Provider>

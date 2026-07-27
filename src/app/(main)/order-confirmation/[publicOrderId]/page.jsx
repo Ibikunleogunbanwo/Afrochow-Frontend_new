@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { toast } from '@/components/ui/toast';
 import { formatDateTime } from '@/lib/utils/dateUtils';
+import PaymentIssuePanel from '@/components/checkout/PaymentIssuePanel';
 
 // ── Per-status hero config ────────────────────────────────────────────────────
 
@@ -388,6 +389,11 @@ export default function OrderConfirmationPage() {
                     )}
                 </div>
 
+                {/* ── Payment issue — 3DS stuck or failed, resolve inline ─── */}
+                {!loading && order?.payment && (
+                    <PaymentIssuePanel order={order} onResolved={() => fetchOrder({ silent: true })} />
+                )}
+
                 {/* ── Order progress timeline ────────────────────────────── */}
                 {!loading && <OrderTimeline status={status} isDelivery={isDelivery} />}
 
@@ -446,19 +452,71 @@ export default function OrderConfirmationPage() {
                                     </div>
                                 )}
 
-                                {/* Refund notice */}
-                                {audit?.refund === true && (
-                                    <div className="flex items-start gap-3 pt-1 border-t border-red-100">
-                                        <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
-                                        <p className="text-xs text-red-700 leading-relaxed">
-                                            A full refund has been issued to your original payment method and will appear within <strong>3–5 business days</strong>.
-                                        </p>
-                                    </div>
-                                )}
-                                {audit?.refund === false && (
-                                    <div className="flex items-start gap-3 pt-1 border-t border-red-100">
-                                        <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
-                                        <p className="text-xs text-red-700">No refund applicable for customer-initiated cancellations at this stage.</p>
+                                {/* Refund notice — driven by the actual Payment record rather than
+                                    guessing from cancelledBy alone. A cancelled order's payment can
+                                    land in several different states depending on how far it got:
+                                    REFUNDED (money was captured, then returned), CANCELLED (an
+                                    authorization hold was released, or a payment stuck mid-3D-Secure
+                                    was abandoned — either way nothing was ever actually charged), or
+                                    FAILED (the charge attempt itself didn't succeed). Each needs
+                                    different copy so we don't tell someone "a refund is on its way"
+                                    when no money ever left their account. */}
+                                {(() => {
+                                    const payStatus = order.payment?.status;
+                                    if (payStatus === 'REFUNDED') {
+                                        return (
+                                            <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
+                                                <p className="text-xs text-red-700 leading-relaxed">
+                                                    A full refund has been issued to your original payment method and will appear within <strong>3–5 business days</strong>.
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                    if (payStatus === 'CANCELLED' || payStatus === 'FAILED' || payStatus === 'PENDING') {
+                                        return (
+                                            <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Charge</span>
+                                                <p className="text-xs text-red-700 leading-relaxed">
+                                                    No charge was made to your payment method — the order was cancelled before payment completed, so there&apos;s nothing to refund.
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                    // No payment info at all, or a status we don't have specific copy
+                                    // for — fall back to the old cancelledBy-based guess rather than
+                                    // showing nothing.
+                                    if (audit?.refund === true) {
+                                        return (
+                                            <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
+                                                <p className="text-xs text-red-700 leading-relaxed">
+                                                    A full refund has been issued to your original payment method and will appear within <strong>3–5 business days</strong>.
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                    if (audit?.refund === false) {
+                                        return (
+                                            <div className="flex items-start gap-3 pt-1 border-t border-red-100">
+                                                <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
+                                                <p className="text-xs text-red-700">No refund applicable for customer-initiated cancellations at this stage.</p>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+
+                                {/* Reorder CTA — the order itself is terminal, so if the customer
+                                    wants what they ordered they need to start a new one. */}
+                                {order.vendorPublicId && (
+                                    <div className="pt-1 border-t border-red-100">
+                                        <Link
+                                            href={`/restaurant/${order.vendorPublicId}`}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 hover:text-red-900 underline underline-offset-2"
+                                        >
+                                            Order from {order.vendorName ?? 'this restaurant'} again
+                                        </Link>
                                     </div>
                                 )}
                             </div>

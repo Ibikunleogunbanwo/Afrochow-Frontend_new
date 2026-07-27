@@ -6,7 +6,7 @@
  * backend only ever sees the permanent `https://res.cloudinary.com/…` URL
  * that is returned here, so it stores nothing locally.
  *
- * Required env vars (add to .env / Vercel / Railway):
+ * Required env vars (add to .env / Vercel):
  *   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME   – your Cloudinary cloud name
  *   NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET – an unsigned upload preset
  *

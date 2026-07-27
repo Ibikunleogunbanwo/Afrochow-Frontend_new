@@ -81,7 +81,7 @@ export default function AdminProfilePage() {
                     <div className="flex items-center gap-1.5 mt-1">
                         <Shield className="w-3.5 h-3.5 text-gray-500" />
                         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                            {profile?.accessLevel || profile?.role || 'Admin'}
+                            {profile?.isSuperAdmin ? 'Super Admin' : 'Admin'}
                         </span>
                     </div>
                 </div>

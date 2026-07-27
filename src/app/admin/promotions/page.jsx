@@ -117,6 +117,17 @@ export default function AdminPromotionsPage() {
             setFormError('A valid discount value is required');
             return;
         }
+        // Backend requires both dates (@NotBlank) and rejects the whole request with a
+        // 400 if either is missing. The <input type="date"> fields below aren't
+        // natively "required" and nothing else was checking this before submit, so an
+        // admin could fill in everything else, hit Create, and get a generic
+        // "Validation failed" error with no indication which field was the problem.
+        if (!form.startDate) { setFormError('Start date is required'); return; }
+        if (!form.endDate)   { setFormError('End date is required'); return; }
+        if (new Date(form.endDate) < new Date(form.startDate)) {
+            setFormError('End date must be on or after the start date');
+            return;
+        }
         setSaving(true);
         setFormError(null);
         try {
@@ -472,9 +483,10 @@ export default function AdminPromotionsPage() {
                             {/* Start + End Date */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date *</label>
                                     <input
                                         type="date"
+                                        required
                                         value={form.startDate}
                                         onChange={e => field('startDate', e.target.value)}
                                         style={{ color: 'black', backgroundColor: 'white' }}
@@ -482,9 +494,10 @@ export default function AdminPromotionsPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-1">End Date</label>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">End Date *</label>
                                     <input
                                         type="date"
+                                        required
                                         value={form.endDate}
                                         onChange={e => field('endDate', e.target.value)}
                                         style={{ color: 'black', backgroundColor: 'white' }}
