@@ -135,8 +135,14 @@ export default function FavoritesPage() {
     const loadFavorites = () => {
         setLoading(true);
         setError(null);
+        // Backend returns a paginated wrapper ({ content, pageNumber, ... }),
+        // not a raw array — the actual list is at data.content. This page does
+        // its own client-side filtering/pagination over the full list, so we
+        // request the backend's max page size (100) in one shot rather than
+        // its default of 20, which would otherwise silently hide anything
+        // past the first 20 favorites.
         return FavoritesAPI.getAllFavorites()
-            .then(res => setFavorites(res?.data ?? []))
+            .then(res => setFavorites(res?.data?.content ?? []))
             .catch(err => setError(err.message || "Could not load favorites."))
             .finally(() => setLoading(false));
     };
@@ -169,9 +175,9 @@ export default function FavoritesPage() {
             : favorite.product?.publicProductId;
         if (!targetId) return;
 
-        setRemovingId(favorite.favoriteId);
+        setRemovingId(favorite.publicFavoriteId);
         const previous = favorites;
-        setFavorites(prev => prev.filter(f => f.favoriteId !== favorite.favoriteId));
+        setFavorites(prev => prev.filter(f => f.publicFavoriteId !== favorite.publicFavoriteId));
 
         const noun = favorite.favoriteType === "VENDOR" ? "Restaurant" : "Dish";
         const name = favorite.favoriteType === "VENDOR"
@@ -299,17 +305,17 @@ export default function FavoritesPage() {
                             {paginated.map(favorite => (
                                 favorite.favoriteType === "VENDOR" ? (
                                     <VendorFavoriteCard
-                                        key={favorite.favoriteId}
+                                        key={favorite.publicFavoriteId}
                                         favorite={favorite}
                                         onRemove={() => handleRemove(favorite)}
-                                        removing={removingId === favorite.favoriteId}
+                                        removing={removingId === favorite.publicFavoriteId}
                                     />
                                 ) : (
                                     <ProductFavoriteCard
-                                        key={favorite.favoriteId}
+                                        key={favorite.publicFavoriteId}
                                         favorite={favorite}
                                         onRemove={() => handleRemove(favorite)}
-                                        removing={removingId === favorite.favoriteId}
+                                        removing={removingId === favorite.publicFavoriteId}
                                     />
                                 )
                             ))}

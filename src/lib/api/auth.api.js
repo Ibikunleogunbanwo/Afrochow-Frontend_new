@@ -103,10 +103,10 @@ export const AuthAPI = {
 
   // ─── Passwords ─────────────────────────────────────────────────────────────
 
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
-      body: JSON.stringify({ currentPassword, newPassword }),
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
     });
   },
 

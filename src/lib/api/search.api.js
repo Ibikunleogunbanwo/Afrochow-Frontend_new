@@ -64,10 +64,21 @@ export const SearchAPI = {
     );
   },
 
-  getFeaturedProducts: async (city = null) => {
-    const url = city
-        ? `${API_BASE_URL}/search/products/featured?city=${encodeURIComponent(city)}`
-        : `${API_BASE_URL}/search/products/featured`;
+  /**
+   * lat/lng are optional — when supplied, the backend resolves each product's
+   * distanceKm from that point via the Redis vendor geo index (see
+   * VendorGeoIndexService.getDistancesKm) and returns it precomputed, so the
+   * frontend never needs raw vendor coordinates or its own distance math.
+   */
+  getFeaturedProducts: async (city = null, lat = null, lng = null) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (lat != null && lng != null) {
+      params.set('lat', lat);
+      params.set('lng', lng);
+    }
+    const qs = params.toString();
+    const url = `${API_BASE_URL}/search/products/featured${qs ? `?${qs}` : ''}`;
     return fetchWithCredentials(url, { method: 'GET' });
   },
 

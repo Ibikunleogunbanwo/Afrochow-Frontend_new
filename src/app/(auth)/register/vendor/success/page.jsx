@@ -18,7 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useForm } from "../context/Provider";
-import { resendVerificationEmail } from "@/lib/api/vendor_register_api";
+import { RegistrationAPI } from "@/lib/api/registration.api";
 import { toast } from '@/components/ui/toast';
 
 const RESEND_COOLDOWN = 60;
@@ -39,7 +39,7 @@ export default function RegistrationSuccess() {
     if (resending || cooldown > 0) return;
     setResending(true);
     try {
-      await resendVerificationEmail(state.email);
+      await RegistrationAPI.resendVerificationEmail(state.email);
       toast.success("Verification email sent! Check your inbox.");
       setCooldown(RESEND_COOLDOWN);
     } catch (err) {

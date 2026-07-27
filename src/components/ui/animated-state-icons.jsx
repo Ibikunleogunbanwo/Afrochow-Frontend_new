@@ -55,7 +55,7 @@ export function MenuCloseIcon({ size = 40, color = "currentColor", className, st
   const open = useIconState(state, duration);
   return (
     <svg viewBox="0 0 40 40" fill="none" className={cn("", className)} style={{ width: size, height: size }}>
-      <motion.line x1="10" x2="30" stroke={color} strokeWidth={2.5} strokeLinecap="round"
+      <motion.line x1="10" y1="12" x2="30" y2="12" stroke={color} strokeWidth={2.5} strokeLinecap="round"
         animate={open ? { y1: 20, y2: 20, rotate: 45 } : { y1: 12, y2: 12, rotate: 0 }}
         transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
         style={{ transformOrigin: "20px 20px" }}
@@ -65,7 +65,7 @@ export function MenuCloseIcon({ size = 40, color = "currentColor", className, st
         transition={{ duration: 0.2 }}
         style={{ transformOrigin: "20px 20px" }}
       />
-      <motion.line x1="10" x2="30" stroke={color} strokeWidth={2.5} strokeLinecap="round"
+      <motion.line x1="10" y1="28" x2="30" y2="28" stroke={color} strokeWidth={2.5} strokeLinecap="round"
         animate={open ? { y1: 20, y2: 20, rotate: -45 } : { y1: 28, y2: 28, rotate: 0 }}
         transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
         style={{ transformOrigin: "20px 20px" }}
@@ -153,7 +153,7 @@ export function NotificationIcon({ size = 40, color = "currentColor", className,
       style={{ width: size, height: size, transformOrigin: "20px 6px" }}>
       <path d="M28 16a8 8 0 00-16 0c0 8-4 10-4 10h24s-4-2-4-10" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       <path d="M17.5 30a3 3 0 005 0" stroke={color} strokeWidth={2} strokeLinecap="round" />
-      <motion.circle cx="28" cy="10" r="4" fill="#EF4444"
+      <motion.circle cx="28" cy="10" r="4" fill="#EF4444" opacity={0}
         animate={notif ? { scale: [0, 1.3, 1], opacity: 1 } : { scale: 0, opacity: 0 }}
         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
       />

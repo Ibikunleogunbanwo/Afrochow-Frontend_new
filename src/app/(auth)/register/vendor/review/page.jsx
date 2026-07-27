@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "@/app/(auth)/register/vendor/context/Provider";
-import { registerVendor } from "@/lib/api/vendor_register_api";
+import { RegistrationAPI } from "@/lib/api/registration.api";
 import { Button } from "@/components/ui/button";
 import {
   User, Mail, Phone, Store, UtensilsCrossed, FileText, Clock, Truck,
@@ -22,6 +22,57 @@ const DAYS_OF_WEEK = [
   { key: "saturday",  label: "Sat", full: "Saturday"  },
   { key: "sunday",    label: "Sun", full: "Sunday"    },
 ];
+
+// ── payload building ─────────────────────────────────────────────────────────
+
+/**
+ * Capitalize the first letter of each day key.
+ * Frontend uses lowercase (monday), API expects capitalized (Monday).
+ */
+const normalizeOperatingHours = (hours = {}) =>
+    Object.keys(hours).reduce((acc, day) => {
+      acc[day.charAt(0).toUpperCase() + day.slice(1)] = hours[day];
+      return acc;
+    }, {});
+
+/**
+ * Build the vendor registration payload from wizard state.
+ * Only operatingHours needs a shape transform (day-key casing) — everything
+ * else is a straight field mapping. The backend derives its own business-rule
+ * validation (at-least-one-day-open, delivery settings, etc.) via @AssertTrue
+ * on the DTO, so we don't need to precompute/send those flags client-side.
+ */
+const buildVendorPayload = (vendorData) => ({
+  email: vendorData.email,
+  password: vendorData.password,
+  confirmPassword: vendorData.confirmPassword,
+  acceptTerms: vendorData.acceptTerms,
+  firstName: vendorData.firstName,
+  lastName: vendorData.lastName,
+  phone: vendorData.phone,
+
+  profileImageUrl: vendorData.profileImageUrl,
+  restaurantName: vendorData.restaurantName,
+  description: vendorData.description,
+  storeCategory: vendorData.storeCategory,
+  taxId: vendorData.taxId || null, // treat empty string as absent
+  businessLicenseUrl: vendorData.businessLicenseUrl,
+
+  logoUrl: vendorData.logoUrl,
+  bannerUrl: vendorData.bannerUrl,
+
+  operatingHours: normalizeOperatingHours(vendorData.operatingHours),
+  address: vendorData.address,
+
+  offersDelivery: vendorData.offersDelivery,
+  offersPickup: vendorData.offersPickup,
+  preparationTime: vendorData.preparationTime,
+
+  deliveryFee: vendorData.deliveryFee ?? null,
+  minimumOrderAmount: vendorData.minimumOrderAmount ?? null,
+  estimatedDeliveryMinutes: vendorData.estimatedDeliveryMinutes ?? null,
+  maxDeliveryDistanceKm: vendorData.maxDeliveryDistanceKm ?? null,
+});
 
 const fmt = (time) => {
   if (!time) return "";
@@ -150,7 +201,7 @@ export default function Review() {
       setError(null);
       setProgress("Creating your account...");
 
-      const response = await registerVendor(state);
+      const response = await RegistrationAPI.registerVendor(buildVendorPayload(state));
 
       if (!response?.data?.publicUserId) {
         const fallback = response?.data?.message || "Registration failed. Please try again.";

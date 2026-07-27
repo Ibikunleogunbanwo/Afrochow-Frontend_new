@@ -41,8 +41,12 @@ export const FavoritesAPI = {
 
   // ================= READS (CUSTOMER only) =================
 
+  // size=100 is the backend's hard cap (see FavoriteController) — requested
+  // explicitly because the Favorites page does its own client-side
+  // filtering/pagination and expects the full list, not the backend's
+  // default page size of 20.
   getAllFavorites: () =>
-    fetchWithCredentials(`${API_BASE_URL}/favorites`),
+    fetchWithCredentials(`${API_BASE_URL}/favorites?size=100`),
 
   getFavoritesByType: (favoriteType) =>
     fetchWithCredentials(`${API_BASE_URL}/favorites/type/${favoriteType}`),

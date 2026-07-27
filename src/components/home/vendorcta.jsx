@@ -70,12 +70,17 @@ const VendorCTA = () => (
 
         <div className="container relative z-10 px-4 mx-auto max-w-7xl">
 
-            {/* Section badge — consistent with other homepage sections */}
+            {/* Section badge — consistent with other homepage sections. Also acts as a
+                CTA shortcut to the same registration flow as "Start Selling Today"
+                below, since it's styled like a button and users expect it to be clickable. */}
             <div className="flex justify-center mb-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full">
+                <Link
+                    href="/register/vendor/step-1"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full hover:from-orange-200 hover:to-red-200 transition-colors duration-200"
+                >
                     <ChefHat className="w-4 h-4 text-orange-600" />
                     <span className="text-sm font-semibold text-orange-800">Become a Vendor</span>
-                </div>
+                </Link>
             </div>
 
             {/* Main Content Grid */}

@@ -19,6 +19,26 @@ import Link from "next/link";
 
 const EMPTY_ADDR = { addressLine: "", city: "", province: "", postalCode: "", country: "Canada", defaultAddress: false };
 
+// Backend Address.province is a strict Province enum (2-letter codes only, no
+// full-name deserialization) — see com.afrochow.common.enums.Province. A free-text
+// field here (e.g. typing "Ontario") fails with an opaque "Malformed JSON" error,
+// so this must stay a closed picker matching the enum exactly.
+const PROVINCES = [
+    { code: "AB", label: "Alberta" },
+    { code: "BC", label: "British Columbia" },
+    { code: "MB", label: "Manitoba" },
+    { code: "NB", label: "New Brunswick" },
+    { code: "NL", label: "Newfoundland and Labrador" },
+    { code: "NS", label: "Nova Scotia" },
+    { code: "NT", label: "Northwest Territories" },
+    { code: "NU", label: "Nunavut" },
+    { code: "ON", label: "Ontario" },
+    { code: "PE", label: "Prince Edward Island" },
+    { code: "QC", label: "Quebec" },
+    { code: "SK", label: "Saskatchewan" },
+    { code: "YT", label: "Yukon" },
+];
+
 function PasswordField({ label, name, value, onChange, showPw, onToggle, disabled, placeholder }) {
     return (
         <div>
@@ -149,7 +169,7 @@ export default function SettingsPage() {
         if (!validatePw()) return;
         setPwLoading(true);
         try {
-            const res = await AuthAPI.changePassword(pwForm.currentPassword, pwForm.newPassword);
+            const res = await AuthAPI.changePassword(pwForm.currentPassword, pwForm.newPassword, pwForm.confirmPassword);
             if (res?.success) {
                 setPwSaved(true);
                 toast.success('Password changed', { description: 'Your password has been updated successfully.' });
@@ -963,7 +983,6 @@ export default function SettingsPage() {
                             {[
                                 { key: "addressLine", label: "Street Address",  placeholder: "123 Main St, Apt 4B" },
                                 { key: "city",        label: "City",            placeholder: "Toronto" },
-                                { key: "province",    label: "Province / State",placeholder: "Ontario" },
                             ].map(({ key, label, placeholder }) => (
                                 <div key={key}>
                                     <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
@@ -978,6 +997,23 @@ export default function SettingsPage() {
                                     />
                                 </div>
                             ))}
+
+                            {/* Province — closed picker, must match the backend enum exactly */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">Province</label>
+                                <select
+                                    style={{ color: "black", backgroundColor: "white" }}
+                                    value={addrForm.province}
+                                    onChange={e => setAddrForm(p => ({ ...p, province: e.target.value }))}
+                                    disabled={addrSaving}
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-60"
+                                >
+                                    <option value="" disabled>Select province</option>
+                                    {PROVINCES.map(({ code, label }) => (
+                                        <option key={code} value={code}>{label}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             {/* Postal code — tight client-side format + uppercase nudge */}
                             <div>

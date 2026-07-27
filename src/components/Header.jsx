@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import {
     ShoppingCart, User, LogOut, Settings,
-    Package, ChevronDown, ChevronRight, Store, HelpCircle, Bell, Heart,
+    Package, ChevronDown, ChevronRight, Store, HelpCircle, Bell, Heart, MapPin,
 } from "lucide-react";
 import { MenuCloseIcon, NotificationIcon } from "@/components/ui/animated-state-icons";
 import Link from "next/link";
@@ -13,6 +13,8 @@ import { SignInModal } from "@/components/signin/SignInModal";
 import { SignUpModal } from "@/components/register/SignUpModal";
 import { ForgotPasswordModal } from "@/components/signin/ForgotPasswordModal";
 import { useCart } from "@/contexts/CartContext";
+import { useLocation } from "@/contexts/LocationContext";
+import LocationSearchInput from "@/components/LocationSearchInput";
 import { SearchAPI } from "@/lib/api/search.api";
 import { useSearchParams, useRouter as useNextRouter, usePathname } from "next/navigation";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
@@ -59,9 +61,17 @@ const Header = () => {
     // Initialise from module-level cache to avoid a setState call in the effect.
     const [navCategories, setNavCategories] = useState(() => _navCategoryCache || []);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [locationOpen, setLocationOpen] = useState(false);
+    const [categoriesOpen, setCategoriesOpen] = useState(false);
+
+    const locationDropdownRef = useRef(null);
+    const notifDropdownRef = useRef(null);
+    const accountDropdownRef = useRef(null);
+    const categoriesDropdownRef = useRef(null);
 
     const { cartCount, cartTotal } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
+    const { city, isDetecting } = useLocation();
     const { notifications, unreadCount, loading: notifLoading, markRead, markAllRead, deleteOne } =
         useCustomerNotifications();
 
@@ -129,6 +139,89 @@ const Header = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, [notifOpen]);
 
+    // Close the location dropdown when the user scrolls more than 10px
+    useEffect(() => {
+        if (!locationOpen) return;
+
+        let startY = window.scrollY;
+
+        const handleScroll = () => {
+            if (Math.abs(window.scrollY - startY) > 10) {
+                setLocationOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [locationOpen]);
+
+    // Close the categories dropdown when the user scrolls more than 10px
+    useEffect(() => {
+        if (!categoriesOpen) return;
+
+        let startY = window.scrollY;
+
+        const handleScroll = () => {
+            if (Math.abs(window.scrollY - startY) > 10) {
+                setCategoriesOpen(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [categoriesOpen]);
+
+    // Close-on-outside-click for the four nav dropdowns (location, categories,
+    // notifications, account). Deliberately NOT using a `fixed inset-0` backdrop div here — the
+    // <nav> has `backdrop-blur-xl` (backdrop-filter), which establishes a new
+    // containing block for `position: fixed` descendants. That silently shrinks a
+    // nested fixed-inset backdrop down to the nav's own thin strip instead of the
+    // full viewport, so clicks anywhere on the actual page never reach it. A
+    // document-level listener + ref containment check sidesteps that entirely.
+    useEffect(() => {
+        if (!locationOpen) return;
+        const handler = (e) => {
+            if (locationDropdownRef.current && !locationDropdownRef.current.contains(e.target)) {
+                setLocationOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [locationOpen]);
+
+    useEffect(() => {
+        if (!categoriesOpen) return;
+        const handler = (e) => {
+            if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(e.target)) {
+                setCategoriesOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [categoriesOpen]);
+
+    useEffect(() => {
+        if (!notifOpen) return;
+        const handler = (e) => {
+            if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
+                setNotifOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [notifOpen]);
+
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const handler = (e) => {
+            if (accountDropdownRef.current && !accountDropdownRef.current.contains(e.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [isMenuOpen]);
+
     const handleLogout = async () => {
         await logout();
         setIsMenuOpen(false);
@@ -178,75 +271,99 @@ const Header = () => {
             <div className="sticky top-0 z-50 w-full flex justify-center px-3 sm:px-4 py-3 bg-transparent pointer-events-none">
                 <nav className="pointer-events-auto w-full max-w-5xl bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-full shadow-lg shadow-black/8 px-3 py-2 flex items-center justify-between gap-2">
 
-                    {/* Logo */}
-                    <div className="flex items-center shrink-0 pl-1">
-                        <Logo />
-                    </div>
+                    {/* Left group — Logo + Location. Sized to its own content (no flex-1) so
+                        the nav's `justify-between` splits the leftover space evenly between
+                        this group, the category dropdown, and the right group — equal gaps on
+                        both sides regardless of how wide the left/right content is. */}
+                    <div className="flex items-center gap-1 min-w-0">
+                        {/* Logo */}
+                        <div className="flex items-center shrink-0 pl-1">
+                            <Logo />
+                        </div>
 
-                    {/* Desktop Nav — lg and above */}
-                    <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-                        {navCategories.map(({ href, label }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
-                            >
-                                {label}
-                            </Link>
-                        ))}
-                        {!isAuthenticated && isCustomerWaitlistMode && (
-                            <Link
-                                href={customerWaitlistPath}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
-                            >
-                                <Heart className="w-3.5 h-3.5" />
-                                Join Waitlist
-                            </Link>
-                        )}
-                        {!isAuthenticated && isVendorOnboardingEnabled && (
+                        {/* Location picker — md and above */}
+                        <div className="relative hidden md:block shrink-0" ref={locationDropdownRef}>
                             <button
-                                onClick={handleSellClick}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
+                                onClick={() => { setLocationOpen(o => !o); setIsMenuOpen(false); setNotifOpen(false); setCategoriesOpen(false); setIsMobileMenuOpen(false); }}
+                                className="flex items-center gap-1.5 px-2.5 py-2 rounded-full hover:bg-gray-100 transition-all duration-200 max-w-[8.5rem] lg:max-w-[10rem]"
+                                aria-label="Change delivery location"
                             >
-                                <Store className="w-3.5 h-3.5" />
-                                Sell on Afrochow
+                                <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+                                <span className="text-sm font-medium text-gray-700 truncate">
+                                    {isDetecting ? "Locating…" : (city || "Set location")}
+                                </span>
+                                <ChevronDown className={`hidden lg:block w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${locationOpen ? "rotate-180" : ""}`} />
                             </button>
+
+                            {locationOpen && (
+                                <div className="absolute left-0 top-full mt-2 z-20 w-80 bg-white border border-gray-200 rounded-2xl shadow-lg p-3">
+                                    <LocationSearchInput
+                                        compact
+                                        placeholder="Search city or address…"
+                                        onSelect={() => setLocationOpen(false)}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Category menu — md and above. A single fixed-width dropdown trigger
+                        replaces the old three-variant horizontal link rows (which kept
+                        overflowing/crowding the bar as content grew — e.g. the unauthenticated
+                        view adding "Sell on Afrochow" + "Sign In"). Fixed width means this
+                        block never fights the left/right flex-1 groups for space, so the bar
+                        stays visually centered and never overlaps regardless of category count
+                        or auth state. */}
+                    <div className="relative hidden md:block shrink-0" ref={categoriesDropdownRef}>
+                        <button
+                            onClick={() => { setCategoriesOpen(o => !o); setIsMenuOpen(false); setNotifOpen(false); setLocationOpen(false); setIsMobileMenuOpen(false); }}
+                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
+                        >
+                            Browse Categories
+                            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${categoriesOpen ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {categoriesOpen && (
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 w-56 bg-white border border-gray-200 rounded-2xl shadow-lg p-1.5">
+                                {navCategories.map(({ href, label }) => (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        onClick={() => setCategoriesOpen(false)}
+                                        className="block px-3 py-2.5 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap"
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                                {!isAuthenticated && (isCustomerWaitlistMode || isVendorOnboardingEnabled) && (
+                                    <div className="my-1 border-t border-gray-100" />
+                                )}
+                                {!isAuthenticated && isCustomerWaitlistMode && (
+                                    <Link
+                                        href={customerWaitlistPath}
+                                        onClick={() => setCategoriesOpen(false)}
+                                        className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Heart className="w-3.5 h-3.5 text-gray-400" />
+                                        Join Waitlist
+                                    </Link>
+                                )}
+                                {!isAuthenticated && isVendorOnboardingEnabled && (
+                                    <button
+                                        onClick={() => { setCategoriesOpen(false); handleSellClick(); }}
+                                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Store className="w-3.5 h-3.5 text-gray-400" />
+                                        Sell on Afrochow
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
 
-                    {/* Tablet Nav — md only */}
-                    <div className="hidden md:flex lg:hidden items-center gap-1 flex-1 justify-center">
-                        {navCategories.slice(0, 2).map(({ href, label }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 whitespace-nowrap"
-                            >
-                                {label}
-                            </Link>
-                        ))}
-                        {!isAuthenticated && isCustomerWaitlistMode && (
-                            <Link
-                                href={customerWaitlistPath}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
-                            >
-                                <Heart className="w-3.5 h-3.5" />
-                                Waitlist
-                            </Link>
-                        )}
-                        {!isAuthenticated && isVendorOnboardingEnabled && (
-                            <button
-                                onClick={handleSellClick}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-200 whitespace-nowrap"
-                            >
-                                <Store className="w-3.5 h-3.5" />
-                                Sell
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Right side */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Right side — sized to its own content (no flex-1); see left group's
+                        comment above for why. */}
+                    <div className="flex items-center gap-1.5 min-w-0">
                         {isAuthenticated && user ? (
                             <>
                                 {/* Cart */}
@@ -275,9 +392,9 @@ const Header = () => {
 
                                 {/* Notification bell — visible on all breakpoints */}
                                 {isOrderingEnabled && (
-                                <div className="relative">
+                                <div className="relative" ref={notifDropdownRef}>
                                     <button
-                                        onClick={() => { setNotifOpen(o => !o); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                                        onClick={() => { setNotifOpen(o => !o); setIsMenuOpen(false); setLocationOpen(false); setCategoriesOpen(false); setIsMobileMenuOpen(false); }}
                                         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
                                         aria-label="Notifications"
                                     >
@@ -293,29 +410,26 @@ const Header = () => {
                                         )}
                                     </button>
                                     {notifOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-10" onClick={() => setNotifOpen(false)} />
-                                            <div className="absolute right-0 top-full z-20">
-                                                <CustomerNotificationDropdown
-                                                    isOpen={notifOpen}
-                                                    notifications={notifications}
-                                                    unreadCount={unreadCount}
-                                                    loading={notifLoading}
-                                                    onClose={() => setNotifOpen(false)}
-                                                    onMarkAllRead={markAllRead}
-                                                    onMarkRead={markRead}
-                                                    onDelete={deleteOne}
-                                                />
-                                            </div>
-                                        </>
+                                        <div className="absolute right-0 top-full z-20">
+                                            <CustomerNotificationDropdown
+                                                isOpen={notifOpen}
+                                                notifications={notifications}
+                                                unreadCount={unreadCount}
+                                                loading={notifLoading}
+                                                onClose={() => setNotifOpen(false)}
+                                                onMarkAllRead={markAllRead}
+                                                onMarkRead={markRead}
+                                                onDelete={deleteOne}
+                                            />
+                                        </div>
                                     )}
                                 </div>
                                 )}
 
                                 {/* Desktop user dropdown */}
-                                <div className="relative hidden md:block">
+                                <div className="relative hidden md:block" ref={accountDropdownRef}>
                                     <button
-                                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                        onClick={() => { setIsMenuOpen(o => !o); setNotifOpen(false); setLocationOpen(false); setCategoriesOpen(false); }}
                                         className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-gray-100 transition-all duration-200"
                                     >
                                         <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center shadow-sm shrink-0">
@@ -330,8 +444,6 @@ const Header = () => {
                                     </button>
 
                                     {isMenuOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
                                             <div className="absolute right-0 top-full mt-2 z-20 w-56 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
 
                                                 {/* User info */}
@@ -368,7 +480,6 @@ const Header = () => {
                                                     </button>
                                                 </div>
                                             </div>
-                                        </>
                                     )}
                                 </div>
                             </>
@@ -383,7 +494,7 @@ const Header = () => {
 
                         {/* Hamburger — mobile only */}
                         <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            onClick={() => { setIsMobileMenuOpen(o => !o); setIsMenuOpen(false); setNotifOpen(false); setLocationOpen(false); setCategoriesOpen(false); }}
                             className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors ml-0.5"
                             aria-label="Toggle menu"
                         >
@@ -406,6 +517,12 @@ const Header = () => {
                         />
                     <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden z-20">
                         <div className="divide-y divide-gray-100">
+
+                            {/* Location — mobile only, shown regardless of auth state */}
+                            <div className="px-3 py-3">
+                                <p className="px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Delivering to</p>
+                                <LocationSearchInput compact className="px-3" placeholder="Search city or address…" />
+                            </div>
 
                             {isAuthenticated && user ? (
                                 <>

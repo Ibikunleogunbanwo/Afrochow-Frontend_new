@@ -323,9 +323,9 @@ export const useAuth = () => {
         }
     };
 
-    const changePassword = async (currentPassword, newPassword) => {
+    const changePassword = async (currentPassword, newPassword, confirmPassword) => {
         try {
-            return await AuthAPI.changePassword(currentPassword, newPassword);
+            return await AuthAPI.changePassword(currentPassword, newPassword, confirmPassword);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to change password";
             dispatch(setError(errorMessage));

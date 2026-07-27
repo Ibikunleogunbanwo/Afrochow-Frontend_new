@@ -39,10 +39,15 @@ const setCacheEntry = (key, products, promoMap, isFallback = false) => {
 const FeaturedRestaurants = () => {
     const { isAuthenticated } = useAuth();
     const { openSignIn }      = useAuthModal();
-    const { city, isDetecting } = useLocation();
+    const { city, isDetecting, coordinates } = useLocation();
+    const lat = coordinates?.lat ?? null;
+    const lng = coordinates?.lng ?? null;
 
-    // Use city as cache key; fall back to 'global' while location is still loading
-    const cacheKey = city || 'global';
+    // Cache key includes whether coordinates are known — once GPS/precise
+    // coordinates arrive, distanceKm becomes available and results should be
+    // refetched (and cached separately) rather than reusing a city-only cache
+    // entry that has no distance data baked in.
+    const cacheKey = `${city || 'global'}:${lat != null && lng != null ? 'geo' : 'nogeo'}`;
 
     const valid = isCacheValid(cacheKey);
     const cached = valid ? getCacheEntry(cacheKey) : null;
@@ -72,7 +77,7 @@ const FeaturedRestaurants = () => {
                 setError(false);
 
                 // Try city-scoped first
-                let response = await SearchAPI.getFeaturedProducts(city || null);
+                let response = await SearchAPI.getFeaturedProducts(city || null, lat, lng);
                 let products =
                     response?.success && response?.data
                         ? response.data
@@ -81,7 +86,7 @@ const FeaturedRestaurants = () => {
                 // Fallback: city returned nothing → fetch nationwide
                 let fallback = false;
                 if (products.length === 0 && city) {
-                    response = await SearchAPI.getFeaturedProducts(null);
+                    response = await SearchAPI.getFeaturedProducts(null, lat, lng);
                     products =
                         response?.success && response?.data
                             ? response.data
@@ -123,7 +128,7 @@ const FeaturedRestaurants = () => {
         };
 
         void fetchFeatured();
-    }, [cacheKey, isDetecting, retryCount]);
+    }, [cacheKey, isDetecting, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps -- lat/lng folded into cacheKey
 
     const handleRetry = () => {
         delete cityCache[cacheKey];

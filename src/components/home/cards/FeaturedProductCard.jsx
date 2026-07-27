@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Star, Flame, Clock, ArrowRight, Calendar, Heart } from "lucide-react";
+import { Star, Flame, Clock, ArrowRight, Calendar, Heart, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
 import { useFavorite } from "@/hooks/useFavorite";
 import { isCustomerWaitlistMode } from "@/lib/mvp";
+import { formatDistance } from "@/lib/utils/distance";
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -48,6 +49,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         isVegetarian,
         isGlutenFree,
         isSpicy,
+        distanceKm,
     } = product;
 
     const isAdvance = scheduleType === 'ADVANCE_ORDER';
@@ -55,6 +57,12 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     const router = useRouter();
     const [imgError, setImgError] = useState(false);
     const promoBadge = getPromoBadge(promotions);
+
+    // distanceKm is computed server-side (Redis geo index) — see
+    // SearchService.getFeaturedProducts / VendorGeoIndexService.getDistancesKm.
+    // Present only when the request included the user's coordinates and the
+    // vendor resolved within the lookup radius.
+    const distanceLabel = formatDistance(distanceKm);
 
     const { isFavorited, toggleFavorite } = useFavorite('PRODUCT', publicProductId, {
         name,
@@ -109,14 +117,20 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                     {/* Gradient overlay — stronger at bottom for text legibility */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                    {/* Top-left: category */}
-                    {categoryName && (
-                        <div className="absolute top-3 left-3">
+                    {/* Top-left: category + distance */}
+                    <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
+                        {categoryName && (
                             <span className="px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-sm">
                                 {categoryName}
                             </span>
-                        </div>
-                    )}
+                        )}
+                        {distanceLabel && (
+                            <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white/90 backdrop-blur-sm text-gray-600 rounded-full shadow-sm">
+                                <MapPin className="w-3 h-3 text-orange-500" />
+                                {distanceLabel}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Top-right: favorite button + orders badge, stacked */}
                     <div className="absolute top-3 right-3 flex flex-col items-end gap-2">

@@ -109,7 +109,7 @@ export default function AdminSettingsPage() {
 
         setPwSaving(true);
         try {
-            await AuthAPI.changePassword(pwForm.current, pwForm.next);
+            await AuthAPI.changePassword(pwForm.current, pwForm.next, pwForm.confirm);
             setPwForm({ current: '', next: '', confirm: '' });
             toast.success('Password updated', { description: 'Your password has been changed successfully.' });
         } catch (e) {

@@ -35,7 +35,7 @@ const buildLabel = (result) => {
     return parts.length > 0 ? parts.join(", ") : result.display_name;
 };
 
-export default function LocationSearchInput({ placeholder = "Search city or address…", className = "", compact = false }) {
+export default function LocationSearchInput({ placeholder = "Search city or address…", className = "", compact = false, onSelect }) {
     const { city, isDetecting, locationSource, requestPreciseLocation, updateCityWithCoordinates } = useLocation();
 
     const [query,       setQuery]       = useState("");
@@ -100,6 +100,7 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
         setQuery(buildLabel(result));
         setSuggestions([]);
         setOpen(false);
+        onSelect?.(selectedCity);
     };
 
     const handleClear = () => {
