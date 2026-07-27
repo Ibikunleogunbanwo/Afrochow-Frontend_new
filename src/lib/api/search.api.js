@@ -180,17 +180,17 @@ export const SearchAPI = {
 
   getVendorsNearCoordinates: async (lat, lng, radiusKm = 25) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/near-coordinates?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`,
+        `${API_BASE_URL}/search/vendors/near-coordinates?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radiusKm=${encodeURIComponent(radiusKm)}`,
         { method: 'GET' }
     );
   },
 
   getProductsNearCoordinates: async (lat, lng, radiusKm = 25) => {
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/products/near-coordinates?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`,
+        `${API_BASE_URL}/search/products/near-coordinates?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radiusKm=${encodeURIComponent(radiusKm)}`,
         { method: 'GET' }
     );
-  },
+  },  
 
   // ================= STATS =================
 

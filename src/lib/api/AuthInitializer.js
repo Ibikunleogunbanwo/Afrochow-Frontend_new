@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { setAuth, clearAuth, setLoading, setError, updateUser } from "@/redux-store/authSlice";
 import { AuthAPI } from "@/lib/api/auth.api";
 import { toast } from '@/components/ui/toast';
+import { customerWaitlistPath, isCustomerWaitlistMode } from "@/lib/mvp";
 
 // How long a user can be inactive before being silently logged out.
 const IDLE_TIMEOUT_MS   = 30 * 60 * 1000; // 30 minutes
@@ -23,12 +24,24 @@ const PUBLIC_ROUTES = [
 
 const ONBOARDING_ROUTE = '/onboarding';
 
+const CUSTOMER_WAITLIST_ROUTES = [
+    '/checkout',
+    '/orders',
+    '/order-confirmation',
+    '/favorites',
+    '/notifications',
+    '/settings',
+];
+
 const isPublicRoute = (pathname) => {
     if (pathname === '/' || pathname.startsWith('/restaurants')) {
         return true;
     }
     return PUBLIC_ROUTES.some(route => pathname.startsWith(route));
 };
+
+const isCustomerWaitlistRoute = (pathname) =>
+    CUSTOMER_WAITLIST_ROUTES.some(route => pathname.startsWith(route));
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
@@ -72,16 +85,24 @@ export default function AuthInitializer({ children }) {
         const isAdminRole = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
 
         if (isAuth) {
-            // New Google users: enforce onboarding before going anywhere else
-            if (isProfileComplete === false && pathname !== ONBOARDING_ROUTE) {
-                router.replace(ONBOARDING_ROUTE);
-                return;
-            }
+            // Onboarding is customer-only — it collects a delivery address, which
+            // doesn't apply to vendors/admins. isProfileComplete is computed purely
+            // from "does this user have a phone on file" (see AuthenticationService),
+            // with no role check, so staff accounts without a phone (e.g. the
+            // SUPERADMIN bootstrap account) used to get forced into this wizard on
+            // every login instead of their dashboard. Scope both checks to CUSTOMER.
+            if (userRole === 'CUSTOMER') {
+                // New Google users: enforce onboarding before going anywhere else
+                if (isProfileComplete === false && pathname !== ONBOARDING_ROUTE) {
+                    router.replace(ONBOARDING_ROUTE);
+                    return;
+                }
 
-            // Completed users must not revisit onboarding directly
-            if (isProfileComplete === true && pathname === ONBOARDING_ROUTE) {
-                router.replace('/');
-                return;
+                // Completed users must not revisit onboarding directly
+                if (isProfileComplete === true && pathname === ONBOARDING_ROUTE) {
+                    router.replace('/');
+                    return;
+                }
             }
 
             // Redirect vendors/admins to their dashboard when on public routes
@@ -126,7 +147,17 @@ export default function AuthInitializer({ children }) {
                 router.replace('/');
                 return;
             }
+
+            if (userRole === 'CUSTOMER' && isCustomerWaitlistMode && isCustomerWaitlistRoute(pathname)) {
+                router.replace(customerWaitlistPath);
+                return;
+            }
         } else {
+            if (isCustomerWaitlistMode && isCustomerWaitlistRoute(pathname)) {
+                router.replace(customerWaitlistPath);
+                return;
+            }
+
             // Redirect unauthenticated users from protected routes
             const isProtectedRoute = !isPublicRoute(pathname) &&
                 (pathname.startsWith('/admin') ||

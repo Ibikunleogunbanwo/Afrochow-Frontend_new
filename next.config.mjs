@@ -38,13 +38,6 @@ const nextConfig = {
         pathname: '/**',
       },
 
-      // Backend — production Railway
-      {
-        protocol: 'https',
-        hostname: 'afrochow-backendnew-production.up.railway.app',
-        pathname: '/**',
-      },
-
       // Backend — custom domain
       {
         protocol: 'https',

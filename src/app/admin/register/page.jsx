@@ -5,49 +5,38 @@ import Link from 'next/link';
 import {
     LayoutDashboard, ChevronRight, UserPlus, User, Mail, Phone,
     Lock, Eye, EyeOff, Building2, Shield, AlertCircle, CheckCircle,
-    RefreshCw, Image as ImageIcon, X,
+    RefreshCw, Image as ImageIcon, X, Info,
 } from 'lucide-react';
 import { RegistrationAPI } from '@/lib/api/registration.api';
 import { ImageUploadAPI } from '@/lib/api/imageUpload';
 import { toast } from '@/components/ui/toast';
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
+// Must match com.afrochow.common.enums.Department exactly — these values are
+// deserialized straight into that Java enum server-side. The previous list
+// here (SUPPORT, TECHNOLOGY, COMPLIANCE, LEGAL) didn't exist on the backend
+// at all, so those selections failed on submit.
 const DEPARTMENTS = [
-    { value: 'OPERATIONS',       label: 'Operations' },
-    { value: 'FINANCE',          label: 'Finance' },
-    { value: 'SUPPORT',          label: 'Customer Support' },
-    { value: 'MARKETING',        label: 'Marketing' },
-    { value: 'TECHNOLOGY',       label: 'Technology' },
-    { value: 'COMPLIANCE',       label: 'Compliance' },
-    { value: 'LEGAL',            label: 'Legal' },
+    { value: 'OPERATIONS',        label: 'Operations' },
+    { value: 'CUSTOMER_SUPPORT',  label: 'Customer Support' },
+    { value: 'FINANCE',           label: 'Finance' },
+    { value: 'MARKETING',         label: 'Marketing' },
+    { value: 'HR',                label: 'HR' },
+    { value: 'MANAGEMENT',        label: 'Management' },
 ];
 
-const ACCESS_LEVELS = [
-    { value: 'MODERATOR',   label: 'Moderator',   desc: 'Review content only' },
-    { value: 'MANAGER',     label: 'Manager',     desc: 'Manage vendors and users' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', desc: 'Full system access' },
-];
-
-const PERMISSIONS = [
-    { key: 'canVerifyVendors',    label: 'Verify Vendors',    desc: 'Approve and verify vendor registrations' },
-    { key: 'canManageUsers',      label: 'Manage Users',      desc: 'Activate, suspend, and manage user accounts' },
-    { key: 'canViewReports',      label: 'View Reports',      desc: 'Access platform analytics and reports' },
-    { key: 'canManagePayments',   label: 'Manage Payments',   desc: 'View and process payment records' },
-    { key: 'canManageCategories', label: 'Manage Categories', desc: 'Create and update food categories' },
-];
-
-const PERMISSION_PRESETS = {
-    MODERATOR:   { canVerifyVendors: false, canManageUsers: false, canViewReports: true,  canManagePayments: false, canManageCategories: false },
-    MANAGER:     { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: false, canManageCategories: true  },
-    SUPER_ADMIN: { canVerifyVendors: true,  canManageUsers: true,  canViewReports: true,  canManagePayments: true,  canManageCategories: true  },
-};
-
+// NOTE: Access level / granular permission checkboxes used to live here, but
+// they were never actually enforced by the backend — every admin account has
+// identical privileges regardless of what was picked, and picking "Super
+// Admin" here did NOT grant real super-admin access (that field only ever
+// affected a display label). Removed to stop misleading whoever's creating
+// the account. Every account created here is a standard Admin. Granting real
+// Super Admin access is a separate, deliberate action — done afterward from
+// the Users page (Promote), which actually changes the account's role.
 const EMPTY_FORM = {
     firstName: '', lastName: '', email: '', phone: '',
     password: '', confirmPassword: '',
-    department: '', accessLevel: '',
-    canVerifyVendors: false, canManageUsers: false, canViewReports: false,
-    canManagePayments: false, canManageCategories: false,
+    department: '',
 };
 
 /* ─── small components ───────────────────────────────────────────────────── */
@@ -87,12 +76,6 @@ export default function AdminRegisterPage() {
         setErrors(p => { const n = { ...p }; delete n[key]; return n; });
     };
 
-    const handleAccessLevel = (level) => {
-        const preset = PERMISSION_PRESETS[level] ?? {};
-        setForm(p => ({ ...p, accessLevel: level, ...preset }));
-        setErrors(p => { const n = { ...p }; delete n.accessLevel; return n; });
-    };
-
     const handleImage = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -115,7 +98,6 @@ export default function AdminRegisterPage() {
         else if (form.password.length < 8) e.password  = 'Password must be at least 8 characters';
         if (form.password !== form.confirmPassword) e.confirmPassword = 'Passwords do not match';
         if (!form.department)            e.department   = 'Department is required';
-        if (!form.accessLevel)           e.accessLevel  = 'Access level is required';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -141,20 +123,14 @@ export default function AdminRegisterPage() {
                 password:  form.password,
                 confirmPassword: form.confirmPassword,
                 department:  form.department,
-                accessLevel: form.accessLevel,
                 profileImageUrl,
-                canVerifyVendors:    form.canVerifyVendors,
-                canManageUsers:      form.canManageUsers,
-                canViewReports:      form.canViewReports,
-                canManagePayments:   form.canManagePayments,
-                canManageCategories: form.canManageCategories,
                 acceptTerms: true,
             };
 
             const res = await RegistrationAPI.registerAdmin(payload);
             if (res?.success === false) throw new Error(res.message || 'Registration failed');
 
-            const successMsg = `${form.firstName} ${form.lastName} has been registered as ${ACCESS_LEVELS.find(l => l.value === form.accessLevel)?.label}.`;
+            const successMsg = `${form.firstName} ${form.lastName} has been registered as an Admin.`;
             setSuccess(successMsg);
             toast.success('Admin Account Created', { description: successMsg });
             setForm(EMPTY_FORM);
@@ -347,9 +323,9 @@ export default function AdminRegisterPage() {
                         <div className="w-7 h-7 bg-gray-200 rounded-lg flex items-center justify-center">
                             <Shield className="w-3.5 h-3.5 text-gray-600" />
                         </div>
-                        <h2 className="text-sm font-bold text-gray-900">Role &amp; Department</h2>
+                        <h2 className="text-sm font-bold text-gray-900">Department</h2>
                     </div>
-                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-5 space-y-4">
                         <Field label="Department" error={errors.department} required>
                             <div className="relative">
                                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -367,67 +343,13 @@ export default function AdminRegisterPage() {
                             </div>
                         </Field>
 
-                        <Field label="Access Level" error={errors.accessLevel} required>
-                            <div className="space-y-2">
-                                {ACCESS_LEVELS.map(l => (
-                                    <label key={l.value} className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                                        form.accessLevel === l.value
-                                            ? 'border-gray-900 bg-gray-50'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                    }`}>
-                                        <input
-                                            type="radio" name="accessLevel" value={l.value}
-                                            checked={form.accessLevel === l.value}
-                                            onChange={() => handleAccessLevel(l.value)}
-                                            className="accent-gray-900"
-                                        />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-gray-900">{l.label}</p>
-                                            <p className="text-xs text-gray-500">{l.desc}</p>
-                                        </div>
-                                    </label>
-                                ))}
-                                {errors.accessLevel && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />{errors.accessLevel}
-                                    </p>
-                                )}
-                            </div>
-                        </Field>
-                    </div>
-                </div>
-
-                {/* ── Permissions ── */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-gray-200 rounded-lg flex items-center justify-center">
-                                <Shield className="w-3.5 h-3.5 text-gray-600" />
-                            </div>
-                            <div>
-                                <h2 className="text-sm font-bold text-gray-900">Permissions</h2>
-                                {form.accessLevel && (
-                                    <p className="text-xs text-gray-500">Pre-filled for {ACCESS_LEVELS.find(l => l.value === form.accessLevel)?.label} — customize if needed</p>
-                                )}
-                            </div>
+                        <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                            <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                            <p className="text-xs text-blue-800">
+                                This account is created as a standard Admin. Super Admin access (register other admins,
+                                change roles, delete accounts) is granted separately, afterward, from the Users page.
+                            </p>
                         </div>
-                    </div>
-                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {PERMISSIONS.map(p => (
-                            <label key={p.key} className={`flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${
-                                form[p.key] ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
-                            }`}>
-                                <input
-                                    type="checkbox" checked={!!form[p.key]}
-                                    onChange={e => set(p.key, e.target.checked)}
-                                    className="mt-0.5 accent-gray-900"
-                                />
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900">{p.label}</p>
-                                    <p className="text-xs text-gray-500">{p.desc}</p>
-                                </div>
-                            </label>
-                        ))}
                     </div>
                 </div>
 

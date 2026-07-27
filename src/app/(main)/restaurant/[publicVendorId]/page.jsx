@@ -18,6 +18,7 @@ import {
     Check,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useFavorite } from '@/hooks/useFavorite';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
 import { PromotionsAPI } from '@/lib/api';
@@ -26,6 +27,7 @@ import ProductDetailModal from '@/components/register/vendor/ProductDetailModal'
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
 import ReviewsModal from '@/components/register/vendor/vendorComponent/ReviewsModal';
 import WriteReviewModal from '@/components/register/vendor/vendorComponent/WriteReviewModal';
+import { customerWaitlistPath, isCustomerWaitlistMode } from '@/lib/mvp';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -83,8 +85,7 @@ const VendorProfilePage = () => {
     // Review eligibility — null = not fetched yet, false = not eligible
     const [reviewEligibility, setReviewEligibility] = useState(null);
 
-    // Share + Like state
-    const [isFavorited, setIsFavorited]   = useState(false);
+    // Share state (favorite/like state comes from useFavorite below)
     const [showShareMenu, setShowShareMenu] = useState(false);
     const [copied, setCopied]             = useState(false);
     const shareMenuRef                    = useRef(null);
@@ -310,15 +311,6 @@ const VendorProfilePage = () => {
             .catch(() => setReviewEligibility(null));
     }, [publicVendorId, isCustomer]);
 
-    // Restore saved/liked state from localStorage
-    useEffect(() => {
-        if (!publicVendorId) return;
-        try {
-            const saved = JSON.parse(localStorage.getItem('afrochow_favorites') || '[]');
-            setIsFavorited(saved.includes(publicVendorId));
-        } catch { /* ignore */ }
-    }, [publicVendorId]);
-
     // Close share menu on outside click
     useEffect(() => {
         if (!showShareMenu) return;
@@ -392,17 +384,6 @@ const VendorProfilePage = () => {
 
     // ── share / like handlers (must be before early returns — Rules of Hooks) ──
 
-    const handleToggleFavorite = useCallback(() => {
-        try {
-            const saved = JSON.parse(localStorage.getItem('afrochow_favorites') || '[]');
-            const updated = isFavorited
-                ? saved.filter(id => id !== publicVendorId)
-                : [...saved, publicVendorId];
-            localStorage.setItem('afrochow_favorites', JSON.stringify(updated));
-            setIsFavorited(prev => !prev);
-        } catch { /* ignore */ }
-    }, [isFavorited, publicVendorId]);
-
     const handleCopyLink = useCallback(() => {
         navigator.clipboard.writeText(window.location.href).then(() => {
             setCopied(true);
@@ -452,6 +433,14 @@ const VendorProfilePage = () => {
             new CustomEvent('afrochow:open-auth-modal', { detail: { mode } }),
         );
     }, []);
+
+    // Favorite/like state — backed by the real /favorites endpoints, not
+    // localStorage. Must stay above the early returns below (Rules of Hooks).
+    const { isFavorited, toggleFavorite: handleToggleFavorite } = useFavorite(
+        'VENDOR',
+        publicVendorId,
+        { name: vendor?.restaurantName, onRequireAuth: () => openAuthModal('signin') },
+    );
 
     // ── render states ─────────────────────────────────────────────────────────
 
@@ -521,21 +510,34 @@ const VendorProfilePage = () => {
                 <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2.5">
                     <div className="container mx-auto max-w-7xl flex items-center justify-between gap-3 flex-wrap">
                         <p className="text-sm font-semibold">
-                            Loving {restaurantName}? Sign in to order, save it, or write a review.
+                            {isCustomerWaitlistMode
+                                ? `Loving ${restaurantName}? Join the customer waitlist while vendors onboard.`
+                                : `Loving ${restaurantName}? Sign in to order, save it, or write a review.`}
                         </p>
                         <div className="flex items-center gap-2 shrink-0">
-                            <button
-                                onClick={() => openAuthModal('signin')}
-                                className="px-3 py-1.5 text-xs font-bold rounded-full bg-white/15 hover:bg-white/25 border border-white/40 transition-colors"
-                            >
-                                Sign in
-                            </button>
-                            <button
-                                onClick={() => openAuthModal('signup')}
-                                className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
-                            >
-                                Create account
-                            </button>
+                            {isCustomerWaitlistMode ? (
+                                <Link
+                                    href={customerWaitlistPath}
+                                    className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
+                                >
+                                    Join Waitlist
+                                </Link>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => openAuthModal('signin')}
+                                        className="px-3 py-1.5 text-xs font-bold rounded-full bg-white/15 hover:bg-white/25 border border-white/40 transition-colors"
+                                    >
+                                        Sign in
+                                    </button>
+                                    <button
+                                        onClick={() => openAuthModal('signup')}
+                                        className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
+                                    >
+                                        Create account
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -837,6 +839,7 @@ const VendorProfilePage = () => {
                                     promotions={vendorPromos}
                                     onViewReviews={() => handleViewProductReviews(product)}
                                     onCardClick={() => handleProductCardClick(product)}
+                                    onUnauthenticated={() => openAuthModal('signin')}
                                 />
                             ))}
                         </div>
@@ -890,6 +893,7 @@ const VendorProfilePage = () => {
                                         promotions={vendorPromos}
                                         onViewReviews={() => handleViewProductReviews(product)}
                                         onCardClick={() => handleProductCardClick(product)}
+                                        onUnauthenticated={() => openAuthModal('signin')}
                                     />
                                 ))
                             }
@@ -915,6 +919,7 @@ const VendorProfilePage = () => {
                             ? () => handleWriteProductReview(selectedProductModal)
                             : undefined
                     }
+                    onUnauthenticated={() => openAuthModal('signin')}
                 />
             )}
 

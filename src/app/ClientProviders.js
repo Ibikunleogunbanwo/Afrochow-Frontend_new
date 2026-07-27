@@ -6,6 +6,7 @@ import AuthInitializer from "@/lib/api/AuthInitializer";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function ClientProviders({ children }) {
@@ -16,7 +17,9 @@ export default function ClientProviders({ children }) {
                     <AuthInitializer>
                         <CartProvider>
                             <LocationProvider>
-                                {children}
+                                <FavoritesProvider>
+                                    {children}
+                                </FavoritesProvider>
                             </LocationProvider>
                         </CartProvider>
                     </AuthInitializer>

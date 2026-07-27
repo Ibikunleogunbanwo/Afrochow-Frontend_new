@@ -66,6 +66,7 @@ const VENDOR_STATUS = {
 
 const FILTERS = [
     { key: 'all',              label: 'All' },
+    { key: 'PENDING_PROFILE',  label: 'Pending Profile' },
     { key: 'PENDING_REVIEW',   label: 'Pending Review' },
     { key: 'PROVISIONAL',      label: 'Provisional' },
     { key: 'VERIFIED',         label: 'Verified' },
@@ -221,6 +222,7 @@ export default function AdminVendorsPage() {
             .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
         // status tab filter
         switch (filter) {
+            case 'PENDING_PROFILE':  return status === VENDOR_STATUS.PENDING_PROFILE;
             case 'PENDING_REVIEW':   return status === VENDOR_STATUS.PENDING_REVIEW;
             case 'PROVISIONAL':      return status === VENDOR_STATUS.PROVISIONAL;
             case 'VERIFIED':         return status === VENDOR_STATUS.VERIFIED;
@@ -282,15 +284,20 @@ export default function AdminVendorsPage() {
                         .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
                     return true;
                 });
+                // Every VENDOR_STATUS value gets a card — Total previously counted
+                // REJECTED and PENDING_PROFILE vendors with no card (or, for
+                // PENDING_PROFILE, no filter tab at all) to see them broken out.
                 const statCards = [
-                    { key: 'all',            label: 'Total',       value: pool.length },
-                    { key: 'VERIFIED',       label: 'Verified',    value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
-                    { key: 'PROVISIONAL',    label: 'Provisional', value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
-                    { key: 'PENDING_REVIEW', label: 'Pending',     value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
-                    { key: 'SUSPENDED',      label: 'Suspended',   value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
+                    { key: 'all',              label: 'Total',          value: pool.length },
+                    { key: 'VERIFIED',         label: 'Verified',       value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
+                    { key: 'PROVISIONAL',      label: 'Provisional',    value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
+                    { key: 'PENDING_REVIEW',   label: 'Pending',        value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
+                    { key: 'PENDING_PROFILE',  label: 'Profile Setup',  value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_PROFILE).length },
+                    { key: 'SUSPENDED',        label: 'Suspended',      value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
+                    { key: 'REJECTED',         label: 'Rejected',       value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.REJECTED).length },
                 ];
                 return (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
                 {statCards.map(s => (
                     <button
                         key={s.key}
@@ -519,7 +526,10 @@ export default function AdminVendorsPage() {
                                                     </button>
                                                 )}
                                                 <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend')}
+                                                    onClick={() => {
+                                                        if (!confirm(`Suspend "${v.restaurantName || 'this vendor'}"? They will be taken offline immediately and unable to receive new orders.`)) return;
+                                                        doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend');
+                                                    }}
                                                     disabled={!!actionLoading[v.publicVendorId + 'suspend']}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
                                                 >
@@ -533,7 +543,10 @@ export default function AdminVendorsPage() {
                                         if (status === VENDOR_STATUS.VERIFIED) {
                                             return (
                                                 <button
-                                                    onClick={() => doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend')}
+                                                    onClick={() => {
+                                                        if (!confirm(`Suspend "${v.restaurantName || 'this vendor'}"? They will be taken offline immediately and unable to receive new orders.`)) return;
+                                                        doAction(v.publicVendorId, AdminVendorsAPI.suspend, 'suspend');
+                                                    }}
                                                     disabled={!!actionLoading[v.publicVendorId + 'suspend']}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50"
                                                 >
@@ -543,7 +556,7 @@ export default function AdminVendorsPage() {
                                             );
                                         }
 
-                                        // SUSPENDED — Reinstate shortcut
+                                        // SUSPENDED — Reinstate shortcut (non-destructive: no confirm needed)
                                         if (status === VENDOR_STATUS.SUSPENDED) {
                                             return (
                                                 <button

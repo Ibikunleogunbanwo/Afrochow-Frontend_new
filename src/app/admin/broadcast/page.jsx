@@ -88,7 +88,7 @@ function SendTab({ onSent }) {
             {success && (
                 <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
                     <CheckCircle className="w-4 h-4 shrink-0" />
-                    Broadcast sent successfully!
+                    Broadcast queued — recipients will be notified shortly. It'll appear in History once delivery completes.
                 </div>
             )}
             {error && (

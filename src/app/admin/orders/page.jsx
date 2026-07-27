@@ -320,25 +320,64 @@ export default function AdminOrdersPage() {
     const [modalError, setModalError]       = useState(null);
     const [cancelling, setCancelling]       = useState(false);
 
+    // ALL and specific-status tabs are server-paginated — orders grow without
+    // bound in production, so fetching the whole table on every load/filter
+    // click is a real scale risk (see AdminOrdersAPI). ACTIVE stays a full
+    // client fetch since in-flight orders are naturally bounded (they can't
+    // pile up indefinitely — they transition to a terminal status). When
+    // server-paginated, `orders` already IS just the current page's rows.
+    const isServerPaged = statusFilter !== 'ACTIVE';
+    const [serverTotalPages, setServerTotalPages] = useState(1);
+    const [serverTotalItems, setServerTotalItems] = useState(0);
+
+    // Stat cards come from a dedicated stats endpoint that aggregates over
+    // EVERY order, independent of the current filter/page — computing them
+    // from `orders` would only reflect whatever subset happens to be loaded.
+    const [stats, setStats] = useState(null);
+    const fetchStats = useCallback(async () => {
+        try {
+            const res = await AdminOrdersAPI.getStats();
+            const data = res?.data ?? res ?? null;
+            if (data) setStats(data);
+        } catch {
+            // Non-fatal — cards just keep their last known values.
+        }
+    }, []);
+
     /* ── fetch list ── */
     const fetchOrders = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             let res;
-            if (statusFilter === 'ALL')                 res = await AdminOrdersAPI.getAll();
-            else if (statusFilter === 'ACTIVE')         res = await AdminOrdersAPI.getActive();
-            else                                        res = await AdminOrdersAPI.getByStatus(statusFilter);
-            const data = res?.data ?? res ?? [];
-            setOrders(Array.isArray(data) ? data : []);
+            if (statusFilter === 'ALL') {
+                res = await AdminOrdersAPI.getAll(page - 1, PAGE_SIZE);
+            } else if (statusFilter === 'ACTIVE') {
+                res = await AdminOrdersAPI.getActive();
+            } else {
+                res = await AdminOrdersAPI.getByStatus(statusFilter, page - 1, PAGE_SIZE);
+            }
+            const body = res?.data ?? res ?? [];
+            if (Array.isArray(body)) {
+                // ACTIVE — plain array, paginate client-side same as before.
+                setOrders(body);
+            } else {
+                // Paginated wrapper: { content, totalElements, totalPages, page, size }
+                setOrders(Array.isArray(body.content) ? body.content : []);
+                setServerTotalPages(body.totalPages ?? 1);
+                setServerTotalItems(body.totalElements ?? 0);
+            }
         } catch (e) {
             setError(e.message || 'Failed to load orders');
         } finally {
             setLoading(false);
         }
-    }, [statusFilter]);
+    }, [statusFilter, page]);
 
     useEffect(() => { fetchOrders(); }, [fetchOrders]);
+    useEffect(() => { fetchStats(); }, [fetchStats]);
+
+    const refreshAll = () => { fetchOrders(); fetchStats(); };
 
     /* ── cancel order (admin) ── */
     const handleCancelOrder = async () => {
@@ -349,7 +388,7 @@ export default function AdminOrdersPage() {
             const res = await AdminOrdersAPI.cancel(selectedOrder.publicOrderId);
             const updated = res?.data ?? res;
             setSelectedOrder(updated);
-            await fetchOrders();
+            await Promise.all([fetchOrders(), fetchStats()]);
             toast.success('Order Cancelled', { description: `Order ${selectedOrder.publicOrderId} has been cancelled.` });
         } catch (e) {
             toast.error('Cancel Failed', { description: e.message || 'Failed to cancel order' });
@@ -386,13 +425,13 @@ export default function AdminOrdersPage() {
         );
     });
 
-    /* ── stat counts from current list ── */
+    /* ── stat counts — from the dedicated stats endpoint, not the current page ── */
     const statCounts = {
-        total:     orders.length,
-        pending:   orders.filter(o => o.status === 'PENDING').length,
-        active:    orders.filter(o => !TERMINAL_STATUSES.has(o.status)).length,
-        delivered: orders.filter(o => o.status === 'DELIVERED').length,
-        cancelled: orders.filter(o => o.status === 'CANCELLED').length,
+        total:     stats?.total ?? 0,
+        pending:   stats?.pending ?? 0,
+        active:    stats?.active ?? 0,
+        delivered: stats?.delivered ?? 0,
+        cancelled: stats?.cancelled ?? 0,
     };
 
     return (
@@ -414,7 +453,7 @@ export default function AdminOrdersPage() {
                     <p className="text-gray-500 mt-1">View and monitor all platform orders</p>
                 </div>
                 <button
-                    onClick={fetchOrders}
+                    onClick={refreshAll}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
                 >
                     <RefreshCw className="h-4 w-4" />
@@ -427,13 +466,13 @@ export default function AdminOrdersPage() {
                 {[
                     { label: 'Total',     value: statCounts.total,     filter: 'ALL' },
                     { label: 'Pending',   value: statCounts.pending,   filter: 'PENDING' },
-                    { label: 'Active',    value: statCounts.active,    filter: 'ALL' },
+                    { label: 'Active',    value: statCounts.active,    filter: 'ACTIVE' },
                     { label: 'Delivered', value: statCounts.delivered, filter: 'DELIVERED' },
                     { label: 'Cancelled', value: statCounts.cancelled, filter: 'CANCELLED' },
                 ].map(s => (
                     <button
                         key={s.label}
-                        onClick={() => setStatusFilter(s.filter)}
+                        onClick={() => { setStatusFilter(s.filter); goToPage(1); }}
                         className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all hover:shadow-md ${
                             statusFilter === s.filter && s.filter !== 'ALL' ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-200'
                         }`}
@@ -549,7 +588,10 @@ export default function AdminOrdersPage() {
                             { label: 'Amount',   className: 'w-24 shrink-0 text-right' },
                             { label: '',         className: 'w-20 shrink-0' },
                         ]} />
-                        {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(o => {
+                        {/* Server-paginated tabs (ALL/status) already hold just the current
+                            page's rows — slicing again would show nothing past page 1.
+                            ACTIVE fetches everything, so it still slices client-side. */}
+                        {(isServerPaged ? filtered : filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)).map(o => {
                             const customer = o.customerName || null;
                             const vendor   = o.restaurantName || o.vendorName || null;
                             const amount   = o.totalAmount ?? o.total;
@@ -641,8 +683,8 @@ export default function AdminOrdersPage() {
                 )}
                 <Pagination
                     page={page}
-                    totalPages={Math.ceil(filtered.length / PAGE_SIZE)}
-                    totalItems={filtered.length}
+                    totalPages={isServerPaged ? serverTotalPages : Math.ceil(filtered.length / PAGE_SIZE)}
+                    totalItems={isServerPaged ? serverTotalItems : filtered.length}
                     pageSize={PAGE_SIZE}
                     onPageChange={goToPage}
                 />

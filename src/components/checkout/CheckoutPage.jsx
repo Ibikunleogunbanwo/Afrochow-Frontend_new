@@ -7,6 +7,7 @@ import { useStripePayment } from "@/hooks/useStripePayment";
 import { CustomerAPI } from "@/lib/api/customer.api";
 import { SearchAPI } from "@/lib/api/search.api";
 import { OrderAPI } from "@/lib/api/order/order.api";
+import { PaymentAPI } from "@/lib/api/payment.api";
 import { PromotionsAPI } from "@/lib/api/promotions.api";
 import StripeCardFields from "@/components/home/cards/StripeCardFields";
 import Image from "next/image";
@@ -53,7 +54,7 @@ const PROVINCES = [
 export default function CheckoutPage() {
     const { isAuthenticated, isLoading: authLoading } = useAuth();
     const { cartItems, cartTotal, vendorId, clearCart } = useCart();
-    const { createPaymentMethod, stripeReady, stripeError, setStripeError } = useStripePayment();
+    const { stripe, createPaymentMethod, stripeReady, stripeError, setStripeError } = useStripePayment();
     const router = useRouter();
 
     const [profileData, setProfileData]         = useState(null);
@@ -359,9 +360,47 @@ export default function CheckoutPage() {
                 throw new Error("Order was not created. Please try again.");
             }
 
-            const publicOrderId = orderRes.data.publicOrderId;
+            const orderData = orderRes.data;
+            const publicOrderId = orderData.publicOrderId;
 
-            // 8 — Success
+            // 8 — Some cards require an extra bank verification step (3D Secure).
+            // The order and payment both already exist at this point (they're
+            // PENDING, not lost) — we just need the customer to complete the
+            // challenge right here before we can call the order "placed".
+            if (orderData.requiresAction && orderData.stripeClientSecret) {
+                const { error: confirmError } = await stripe.confirmCardPayment(orderData.stripeClientSecret);
+                if (confirmError) {
+                    // Card verification failed or was dismissed — the order-confirmation
+                    // page has its own retry/resume flow, so send them there rather than
+                    // stranding them on checkout.
+                    toast.error("Card verification was not completed", {
+                        description: confirmError.message || "You can try again from your order page.",
+                    });
+                    clearCart();
+                    router.push(`/order-confirmation/${publicOrderId}`);
+                    return;
+                }
+
+                const confirmRes = await PaymentAPI.confirmPayment(publicOrderId);
+                const finalStatus = confirmRes?.data?.status;
+
+                clearCart();
+                if (finalStatus === "AUTHORIZED" || finalStatus === "COMPLETED") {
+                    toast.success("Order placed!", {
+                        description: "Your order has been received by the vendor.",
+                    });
+                } else {
+                    // Still not resolved (rare) or failed — the order-confirmation page
+                    // will show the right retry UI based on the payment's actual status.
+                    toast.error("Payment needs another look", {
+                        description: "We couldn't fully confirm your payment. You can retry it from your order page.",
+                    });
+                }
+                router.push(`/order-confirmation/${publicOrderId}`);
+                return;
+            }
+
+            // 9 — Happy path — payment already authorized, no 3DS needed
             clearCart();
             toast.success("Order placed!", {
                 description: "Your order has been received by the vendor.",
@@ -376,14 +415,18 @@ export default function CheckoutPage() {
                     description: raw,
                 });
             } else {
-                const description =
-                    raw.includes("card was declined") || raw.includes("Your card")
-                        ? raw                                                    // Stripe card errors — safe to show
-                        : raw.includes("minimum amount")
-                        ? raw                                                    // Business rule — safe to show
-                        : raw.includes("not available")
-                        ? raw                                                    // Product unavailable — safe to show
-                        : "Something went wrong processing your payment. Please try again or use a different card.";
+                const isCardDecline = raw.includes("card was declined") || raw.includes("Your card");
+                // Backend messages are prefixed "Payment failed: " for logs — strip it here
+                // since the toast title already says "Order could not be placed".
+                const cleanReason = raw.replace(/^Payment failed:\s*/i, "");
+                const description = isCardDecline
+                    ? cleanReason + " You have not been charged — no funds were taken from your card. " +
+                      "Please try a different card or contact your bank."
+                    : raw.includes("minimum amount")
+                    ? raw                                                    // Business rule — safe to show
+                    : raw.includes("not available")
+                    ? raw                                                    // Product unavailable — safe to show
+                    : "Something went wrong processing your payment. Please try again or use a different card.";
                 toast.error("Order could not be placed", { description });
             }
         } finally {

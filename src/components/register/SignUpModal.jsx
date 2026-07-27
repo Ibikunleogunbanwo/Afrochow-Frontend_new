@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, ChefHat, Check, ArrowRight } from "lucide-react"
+import { customerWaitlistPath, isCustomerWaitlistMode, isVendorOnboardingEnabled } from "@/lib/mvp"
 import {
     Dialog,
     DialogContent,
@@ -13,8 +14,8 @@ import {
 
 const customerBenefits = [
     "Browse hundreds of restaurants",
-    "Fast & reliable delivery",
-    "Exclusive deals & offers",
+    "Get early access in your city",
+    "Be first to know when ordering opens",
 ]
 
 const vendorBenefits = [
@@ -60,7 +61,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
 
     const handleCustomerClick = () => {
         onClose()
-        router.push("/register/customer")
+        router.push(isCustomerWaitlistMode ? customerWaitlistPath : "/register/customer")
     }
 
     const handleVendorClick = () => {
@@ -76,7 +77,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                         Join Afrochow
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                        Choose how you'd like to get started
+                        Choose how you would like to get started
                     </DialogDescription>
                 </DialogHeader>
 
@@ -147,8 +148,10 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                                 <User className="w-5 h-5 text-orange-600" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">I'm a Customer</h3>
-                                <p className="text-xs text-gray-500">Order African cuisine near you</p>
+                                <h3 className="font-bold text-gray-900">Customer</h3>
+                                <p className="text-xs text-gray-500">
+                                    {isCustomerWaitlistMode ? "Join the customer launch list" : "Order African cuisine near you"}
+                                </p>
                             </div>
                         </div>
 
@@ -158,21 +161,21 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                             onClick={handleCustomerClick}
                             className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            <span>Sign Up as Customer</span>
+                            <span>{isCustomerWaitlistMode ? "Join Customer Waitlist" : "Sign Up as Customer"}</span>
                             <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
                 )}
 
                 {/* Vendor Tab */}
-                {activeTab === "Vendor" && (
+                {activeTab === "Vendor" && isVendorOnboardingEnabled && (
                     <div className="mt-2">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
                                 <ChefHat className="w-5 h-5 text-orange-600" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">I'm a Vendor</h3>
+                                <h3 className="font-bold text-gray-900">Vendor</h3>
                                 <p className="text-xs text-gray-500">Grow your restaurant business online</p>
                             </div>
                         </div>

@@ -24,8 +24,37 @@ import {
 import { AuthAPI } from "@/lib/api/auth.api";
 import { RegistrationAPI } from "@/lib/api/registration.api";
 import { CustomerAPI } from "@/lib/api/customer.api";
+import { FavoritesAPI } from "@/lib/api/favorites.api";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/components/ui/toast";
+
+// Applies a favorite a guest tried to add before signing in (stashed by
+// FavoritesContext.toggleFavorite in sessionStorage as "pendingFavorite").
+// Best-effort: any failure (already favorited, network hiccup, etc.) is
+// swallowed — worst case the user just taps the heart again themselves.
+const completePendingFavoriteIntent = async (userData) => {
+    let raw;
+    try {
+        raw = sessionStorage.getItem("pendingFavorite");
+        sessionStorage.removeItem("pendingFavorite");
+    } catch {
+        return;
+    }
+    if (!raw || userData?.role !== "CUSTOMER") return;
+
+    try {
+        const { favoriteType, targetPublicId, name } = JSON.parse(raw);
+        if (!favoriteType || !targetPublicId) return;
+
+        await FavoritesAPI.addFavorite(favoriteType, targetPublicId);
+        const label = name || (favoriteType === "VENDOR" ? "Restaurant" : "Dish");
+        toast.success("Added to favorites", {
+            description: `${label} saved to your favorites.`,
+        });
+    } catch {
+        // Already favorited (409) or any other failure — silently skip.
+    }
+};
 
 const ROLE_ROUTES = {
     VENDOR: "/vendor/dashboard",
@@ -86,6 +115,13 @@ export const useAuth = () => {
                 throw new Error("Invalid user data received");
             }
 
+            // Runs before dispatch(setAuth(...)) — the login cookie is already
+            // set by AuthAPI.login() above, so the API call itself succeeds
+            // either way, but completing it first means FavoritesContext's
+            // hydration fetch (triggered by the isAuthenticated change below)
+            // picks up the newly-added favorite on its very first load.
+            await completePendingFavoriteIntent(userData);
+
             dispatch(setAuth({ user: userData }));
 
             // Vendors and admins always go to their own dashboards.
@@ -132,6 +168,10 @@ export const useAuth = () => {
             if (!userData.role || !userData.publicUserId) {
                 throw new Error("Invalid user data received");
             }
+
+            // See the equivalent call in login() above for why this runs
+            // before dispatch(setAuth(...)).
+            await completePendingFavoriteIntent(userData);
 
             dispatch(setAuth({ user: userData }));
 

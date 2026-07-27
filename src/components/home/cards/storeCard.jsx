@@ -8,8 +8,10 @@ import Image from 'next/image';
 import StoreCardSkeleton from '@/components/home/cards/StoreCardSkeleton';
 import { resolveImageUrl } from '@/lib/utils/imageUrl';
 import { useAuth } from '@/hooks/useAuth';
+import { useFavorite } from '@/hooks/useFavorite';
 import { SignInModal } from "@/components/signin/SignInModal";
 import { SignUpModal } from "@/components/register/SignUpModal";
+import { isCustomerWaitlistMode } from "@/lib/mvp";
 
 // Returns the most prominent active promo label, or null
 const getPromoBadge = (promotions) => {
@@ -26,7 +28,12 @@ const getPromoBadge = (promotions) => {
 };
 
 const StoreCard = ({ store, isLoading = false, priority = false, promotions = [], onUnauthenticated }) => {
-    const [isFavorite, setIsFavorite] = useState(false);
+    // Read ahead of the early returns below (Rules of Hooks) — store may be
+    // undefined/null while isLoading is true, so this favors safety over the
+    // fuller destructure that happens after the guards.
+    const favoriteTargetId = store?.vendorPublicId || store?.storeId;
+    const favoriteTargetName = store?.name;
+
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
     // Only used when onUnauthenticated prop is NOT provided (standalone usage in allstore / DisplayRestaurant)
@@ -34,6 +41,21 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
     const [showSignUp, setShowSignUp] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+
+    const { isFavorited: isFavorite, toggleFavorite: handleFavoriteClick } = useFavorite(
+        'VENDOR',
+        favoriteTargetId,
+        {
+            name: favoriteTargetName,
+            onRequireAuth: () => {
+                if (onUnauthenticated) {
+                    onUnauthenticated();
+                } else {
+                    setShowSignIn(true);
+                }
+            },
+        }
+    );
 
     if (isLoading) {
         return <StoreCardSkeleton />;
@@ -66,16 +88,10 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
         ? categories.slice(0, 2).join(' • ')
         : 'African Cuisine';
 
-    const handleFavoriteClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsFavorite((prev) => !prev);
-    };
-
     const handleCardClick = (e) => {
         e.preventDefault();
-        if (!isAuthenticated) {
-            const restaurantId = vendorPublicId || storeId;
+        const restaurantId = vendorPublicId || storeId;
+        if (!isAuthenticated && !isCustomerWaitlistMode) {
             sessionStorage.setItem('returnTo', `/restaurant/${restaurantId}`);
             // Delegate to parent modal when provided, otherwise use internal modal
             if (onUnauthenticated) {
@@ -84,7 +100,6 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                 setShowSignIn(true);
             }
         } else {
-            const restaurantId = vendorPublicId || storeId;
             router.push(`/restaurant/${restaurantId}`);
         }
     };

@@ -36,7 +36,7 @@ Production deploys to Vercel. Previews auto-deploy from branches.
 
 * Node.js 20 or later
 * npm 10+ (or pnpm, if you prefer; there's no lockfile for it yet)
-* A running backend. In dev that's usually the Java API on `http://localhost:8080`; you can also point at the Railway staging API.
+* A running backend. In dev that's usually the Java API on `http://localhost:8080`; you can also point at the deployed API at `api.afrochow.ca`.
 
 ## Getting it running locally
 
@@ -139,7 +139,7 @@ src/
 
 Vercel picks up pushes to `main` and promotes them to production. Preview deployments are created for every PR.
 
-Environment variables for preview and production are configured in the Vercel project settings. Preview builds point at the Railway staging API; production points at `api.afrochow.ca`.
+Environment variables for preview and production are configured in the Vercel project settings, including which backend URL each environment points at. Production points at `api.afrochow.ca`.
 
 If you need to bust the CDN cache after a deploy (rare, since Vercel handles this), use the "Redeploy" button on the Vercel dashboard. `revalidatePath` and `revalidateTag` are preferred for targeted invalidation inside the app.
 
@@ -154,7 +154,7 @@ If you need to bust the CDN cache after a deploy (rare, since Vercel handles thi
 
 ## Contributing
 
-Branch naming: `feat/<short-description>`, `fix/<short-description>`, `chore/<short-description>`. Keep PRs focused; split renames and behavioural changes into separate commits so review is tractable. Run `npm run lint` and `npm run build` before pushing; Vercel will catch it if you don't, but the feedback loop is slower.
+Branch naming: Keep PRs focused; split renames and behavioural changes into separate commits so review is tractable. Run `npm run lint` and `npm run build` before pushing; Vercel will catch it if you don't, but the feedback loop is slower.
 
 ## Contact
 

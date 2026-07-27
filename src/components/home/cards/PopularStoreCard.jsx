@@ -2,9 +2,11 @@
 
 import React from "react";
 import Image from "next/image";
-import { Star, Flame, Clock, MapPin, Store, Truck, DollarSign } from "lucide-react";
+import { Star, Flame, Clock, MapPin, Store, Truck, DollarSign, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
+import { useFavorite } from "@/hooks/useFavorite";
+import { isCustomerWaitlistMode } from "@/lib/mvp";
 
 // ── Promo badge helper ────────────────────────────────────────────────────────
 
@@ -26,9 +28,14 @@ const getPromoBadge = (promotions) => {
 const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauthenticated, promotions = [] }) => {
     const router = useRouter();
 
+    const { isFavorited, toggleFavorite } = useFavorite('VENDOR', product.vendorPublicId, {
+        name: product.restaurantName || product.name,
+        onRequireAuth: onUnauthenticated,
+    });
+
     const handleClick = (e) => {
         e.preventDefault();
-        if (!isAuthenticated) {
+        if (!isAuthenticated && !isCustomerWaitlistMode) {
             sessionStorage.setItem('returnTo', `/restaurant/${product.vendorPublicId}`);
             onUnauthenticated();
         } else {
@@ -91,21 +98,33 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                         </div>
                     )}
 
-                    {/* Top-right: orders badge OR promo */}
-                    {product.totalOrders > 0 ? (
-                        <div className="absolute top-3 right-3">
+                    {/* Top-right: favorite button + orders badge/promo, stacked */}
+                    <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                        <button
+                            onClick={toggleFavorite}
+                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                            <Heart
+                                className={`w-4 h-4 transition-colors ${
+                                    isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                                }`}
+                            />
+                        </button>
+
+                        {product.totalOrders > 0 ? (
                             <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
                                 <Flame className="w-3 h-3" />
                                 {product.totalOrders >= 1000
                                     ? `${(product.totalOrders / 1000).toFixed(1)}k`
                                     : product.totalOrders} orders
                             </span>
-                        </div>
-                    ) : promoBadge ? (
-                        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-sm ${promoBadge.bg}`}>
-                            {promoBadge.label}
-                        </div>
-                    ) : null}
+                        ) : promoBadge ? (
+                            <div className={`px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-sm ${promoBadge.bg}`}>
+                                {promoBadge.label}
+                            </div>
+                        ) : null}
+                    </div>
 
                     {/* Bottom-left: open/closed status */}
                     {product.isOpenNow !== null && product.isOpenNow !== undefined && (

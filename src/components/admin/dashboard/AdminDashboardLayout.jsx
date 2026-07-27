@@ -55,6 +55,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Users',          icon: Users,           href: '/admin/users',         badgeKey: null },
         { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors', badgeMeta: { label: 'pending', colors: { default: 'bg-yellow-100 text-yellow-700', active: 'bg-yellow-400/30 text-yellow-100' } } },
         { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders',  badgeMeta: { label: 'pending',   colors: { default: 'bg-red-100 text-red-700',    active: 'bg-red-400/30 text-red-100'    } } },
+        { name: 'Payments',       icon: CreditCard,      href: '/admin/payments',      badgeKey: null },
         { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
         { name: 'Products',       icon: Package,         href: '/admin/products',      badgeKey: null },
@@ -70,10 +71,15 @@ const AdminDashboardLayout = ({ children }) => {
         return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
     };
 
+    // Derived from the real, enforced role (isSuperAdmin, computed server-side
+    // from User.role) rather than the legacy AdminProfile.accessLevel field —
+    // accessLevel is unenforced and could show a stale label after a
+    // promote/demote (e.g. still say "Moderator" for a freshly-promoted
+    // SUPERADMIN, or "Super Admin" for a demoted one).
     const admin = {
         name: `${adminData?.firstName || ""} ${adminData?.lastName || ""}`.trim(),
         email: adminData?.email || "",
-        role: adminData?.accessLevel?.replace(/_/g, " ") || "",
+        role: adminData?.isSuperAdmin ? "Super Admin" : "Admin",
         avatar: getInitials(adminData?.firstName, adminData?.lastName)
     };
 

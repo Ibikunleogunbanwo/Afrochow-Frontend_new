@@ -101,18 +101,55 @@ const timeToMins = (t) => {
     return h * 60 + m;
 };
 
-// Compute open/closed from hoursForm using the browser's local clock.
-// Avoids timezone bugs where the backend isOpenNow uses UTC but hours are in local time.
-const computeIsOpenFromHours = (hoursForm) => {
+// Province → IANA timezone, mirroring VendorProfile.getTimezoneFromProvince()
+// on the backend (VendorProfile.java:304-323) so this preview lines up with
+// what the backend will compute once these hours are saved.
+const PROVINCE_TIMEZONES = {
+    BC: 'America/Vancouver',
+    AB: 'America/Edmonton',
+    SK: 'America/Regina',
+    MB: 'America/Winnipeg',
+    ON: 'America/Toronto',
+    QC: 'America/Montreal',
+    NB: 'America/Moncton',
+    NS: 'America/Halifax',
+    PE: 'America/Halifax',
+    NL: 'America/St_Johns',
+    NT: 'America/Yellowknife',
+    NU: 'America/Rankin_Inlet',
+    YT: 'America/Whitehorse',
+};
+const DEFAULT_VENDOR_TIMEZONE = 'America/Edmonton';
+
+const WEEKDAY_SHORT_TO_KEY = {
+    Sun: 'sunday', Mon: 'monday', Tue: 'tuesday', Wed: 'wednesday',
+    Thu: 'thursday', Fri: 'friday', Sat: 'saturday',
+};
+
+// Current weekday + minutes-since-midnight in a given IANA timezone.
+const nowInZone = (timeZone) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone, weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false,
+    }).formatToParts(new Date());
+    const get = (type) => parts.find(p => p.type === type)?.value;
+    let hour = parseInt(get('hour'), 10);
+    if (hour === 24) hour = 0; // some locales render midnight as "24"
+    const minute = parseInt(get('minute'), 10);
+    return { dayKey: WEEKDAY_SHORT_TO_KEY[get('weekday')], minutes: hour * 60 + minute };
+};
+
+// Compute open/closed from hoursForm (the vendor's in-progress, possibly-unsaved
+// edits) using the store's own timezone rather than the browser's — this is a
+// live preview so the backend can't compute it for us, but it should still use
+// the same timezone logic the backend uses once these hours are saved.
+const computeIsOpenFromHours = (hoursForm, provinceCode) => {
     if (!hoursForm) return null;
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = dayNames[new Date().getDay()];
-    const day = hoursForm[today];
+    const timeZone = PROVINCE_TIMEZONES[(provinceCode || '').toUpperCase()] || DEFAULT_VENDOR_TIMEZONE;
+    const { dayKey, minutes: currentMins } = nowInZone(timeZone);
+    const day = hoursForm[dayKey];
     if (!day?.isOpen) return false;
-    const now = new Date();
-    const currentMins = now.getHours() * 60 + now.getMinutes();
-    const openMins    = timeToMins(day.openTime);
-    const closeMins   = timeToMins(day.closeTime);
+    const openMins  = timeToMins(day.openTime);
+    const closeMins = timeToMins(day.closeTime);
     return closeMins > openMins
         ? currentMins >= openMins && currentMins < closeMins
         : currentMins >= openMins || currentMins < closeMins;
@@ -469,8 +506,10 @@ export default function VendorProfilePage() {
         setSavingInfo(true);
         try {
             const profilePayload = {
-                restaurantName:           infoForm.restaurantName           || undefined,
-                storeCategory:              infoForm.storeCategory              || undefined,
+                // Locked once verified — see identityLocked. Omitted rather than sent
+                // unchanged so the backend never has to decide whether to ignore them.
+                restaurantName:           identityLocked ? undefined : (infoForm.restaurantName || undefined),
+                storeCategory:              identityLocked ? undefined : (infoForm.storeCategory || undefined),
                 description:              infoForm.description              || undefined,
                 offersDelivery:           infoForm.offersDelivery,
                 offersPickup:             infoForm.offersPickup,
@@ -652,6 +691,10 @@ export default function VendorProfilePage() {
     }
 
     // ── Derived ───────────────────────────────────────────────────────────────
+    // Once verified, restaurant name / category are locked — changing them requires
+    // support, since they're tied to the vendor's approved identity. Everything else
+    // (hours, delivery settings, description, logo, banner) stays editable.
+    const identityLocked = profile?.vendorStatus === 'VERIFIED';
     const totalOrders   = analytics?.totalOrders   ?? 0;
     const totalRevenue  = analytics?.totalRevenue  ?? 0;
     const avgRating     = analytics?.averageRating ?? profile?.averageRating ?? 0;
@@ -731,7 +774,7 @@ export default function VendorProfilePage() {
                                     {profile?.restaurantName || 'Your Store'}
                                 </h1>
                                 {(() => {
-                                    const isOpen = computeIsOpenFromHours(hoursForm);
+                                    const isOpen = computeIsOpenFromHours(hoursForm, addrForm.province);
                                     if (isOpen === null) return null;
                                     return (
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${isOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -857,18 +900,32 @@ export default function VendorProfilePage() {
                                 <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div>
                                         <Label required>Store name</Label>
-                                        <input {...fi('restaurantName')} placeholder="e.g. Mama's Kitchen" />
+                                        <input {...fi('restaurantName')} placeholder="e.g. Mama's Kitchen"
+                                            disabled={identityLocked}
+                                            className={`${fi('restaurantName').className} ${identityLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`} />
                                         <FieldError msg={infoErrors.restaurantName} />
+                                        {identityLocked && (
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                Locked after verification — contact Afrochow support to change your store name.
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label>Store Category</Label>
-                                        <select {...fi('storeCategory')}>
+                                        <select {...fi('storeCategory')}
+                                            disabled={identityLocked}
+                                            className={`${fi('storeCategory').className} ${identityLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}>
                                             <option value="">Select product type…</option>
                                             {storeCategorys.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
                                         </select>
                                         <FieldError msg={infoErrors.storeCategory} />
+                                        {identityLocked && (
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                Locked after verification — contact Afrochow support to change your category.
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label>Phone number</Label>

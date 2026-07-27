@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { User, ChefHat, Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { SignInModal } from '@/components/signin/SignInModal'
+import { customerWaitlistPath, isCustomerWaitlistMode, isVendorOnboardingEnabled } from '@/lib/mvp'
 
 const customerBenefits = [
     "Browse hundreds of restaurants",
-    "Fast & reliable delivery",
-    "Exclusive deals & offers",
+    "Get early access in your city",
+    "Be first to know when ordering opens",
 ]
 
 const vendorBenefits = [
@@ -124,14 +125,16 @@ export function RegisterTabs() {
                                 I&#39;m a Customer
                             </h2>
                             <p className="text-gray-600 mb-8 text-lg leading-relaxed">
-                                Order delicious African cuisine from the best restaurants near you
+                                {isCustomerWaitlistMode
+                                    ? "Customers can browse the showroom now. Join the launch list for ordering access."
+                                    : "Order delicious African cuisine from the best restaurants near you"}
                             </p>
                             <BenefitsList benefits={customerBenefits} />
                             <Link
-                                href="/register/customer"
+                                href={isCustomerWaitlistMode ? customerWaitlistPath : "/register/customer"}
                                 className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
                             >
-                                <span>Sign Up as Customer</span>
+                                <span>{isCustomerWaitlistMode ? "Join Customer Waitlist" : "Sign Up as Customer"}</span>
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
                             <SignInPrompt onSignIn={() => setShowSignIn(true)} />
@@ -140,7 +143,7 @@ export function RegisterTabs() {
                 )}
 
                 {/* Vendor Content */}
-                {activeTab === "Vendor" && (
+                {activeTab === "Vendor" && isVendorOnboardingEnabled && (
                     <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-orange-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
                         <div className="absolute inset-0 bg-linear-to-br from-red-50/0 via-orange-50/0 to-red-100/0 group-hover:to-red-100/30 transition-all duration-500 pointer-events-none" />
                         <div className="relative z-10">

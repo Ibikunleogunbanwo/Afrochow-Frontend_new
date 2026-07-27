@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Star, Flame, Clock, ArrowRight, Calendar } from "lucide-react";
+import { Star, Flame, Clock, ArrowRight, Calendar, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
+import { useFavorite } from "@/hooks/useFavorite";
+import { isCustomerWaitlistMode } from "@/lib/mvp";
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -29,6 +31,7 @@ const StatItem = ({ label, value }) => (
 
 const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUnauthenticated, promotions = [] }) => {
     const {
+        publicProductId,
         vendorPublicId,
         name,
         restaurantName,
@@ -53,9 +56,14 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     const [imgError, setImgError] = useState(false);
     const promoBadge = getPromoBadge(promotions);
 
+    const { isFavorited, toggleFavorite } = useFavorite('PRODUCT', publicProductId, {
+        name,
+        onRequireAuth: onUnauthenticated,
+    });
+
     const handleClick = (e) => {
         e.preventDefault();
-        if (!isAuthenticated) {
+        if (!isAuthenticated && !isCustomerWaitlistMode) {
             sessionStorage.setItem('returnTo', `/restaurant/${vendorPublicId}`);
             onUnauthenticated();
         } else {
@@ -110,17 +118,29 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                         </div>
                     )}
 
-                    {/* Top-right: orders badge */}
-                    {totalOrders > 0 && (
-                        <div className="absolute top-3 right-3">
+                    {/* Top-right: favorite button + orders badge, stacked */}
+                    <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                        <button
+                            onClick={toggleFavorite}
+                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                            <Heart
+                                className={`w-4 h-4 transition-colors ${
+                                    isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                                }`}
+                            />
+                        </button>
+
+                        {totalOrders > 0 && (
                             <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
                                 <Flame className="w-3 h-3" />
                                 {totalOrders >= 1000
                                     ? `${(totalOrders / 1000).toFixed(1)}k`
                                     : totalOrders} orders
                             </span>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Bottom overlay: name + restaurant + hover button */}
                     <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-4">
