@@ -232,17 +232,16 @@ const HeroSection = () => {
                         </span>
                     </div>
 
-                    {/* Heading */}
-                    <div className="space-y-3">
-                        <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-white tracking-tight leading-none drop-shadow-2xl">
+                    {/* Heading — single h1 (two visual lines) for correct page
+                        semantics; a page should have exactly one h1. */}
+                    <h1 className="space-y-3 text-6xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none">
+                        <span className="block text-white drop-shadow-2xl">
                             Authentic
-                        </h1>
-                        <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none">
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 via-amber-400 to-emerald-500 drop-shadow-lg">
-                                African Flavors
-                            </span>
-                        </h1>
-                    </div>
+                        </span>
+                        <span className="block text-transparent bg-clip-text bg-linear-to-r from-emerald-400 via-amber-400 to-emerald-500 drop-shadow-lg">
+                            African Flavors
+                        </span>
+                    </h1>
 
                     {/* Subtitle */}
                     <p className="max-w-2xl text-lg sm:text-xl text-gray-300 leading-relaxed">

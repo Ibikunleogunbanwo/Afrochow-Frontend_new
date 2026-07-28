@@ -69,14 +69,19 @@ export const SearchAPI = {
    * distanceKm from that point via the Redis vendor geo index (see
    * VendorGeoIndexService.getDistancesKm) and returns it precomputed, so the
    * frontend never needs raw vendor coordinates or its own distance math.
+   *
+   * scheduleType is optional — pass 'SAME_DAY' or 'ADVANCE_ORDER' to split the
+   * homepage into a "ready to order" rail vs a "pre-order" rail. Omit to get
+   * both mixed together (original behavior).
    */
-  getFeaturedProducts: async (city = null, lat = null, lng = null) => {
+  getFeaturedProducts: async (city = null, lat = null, lng = null, scheduleType = null) => {
     const params = new URLSearchParams();
     if (city) params.set('city', city);
     if (lat != null && lng != null) {
       params.set('lat', lat);
       params.set('lng', lng);
     }
+    if (scheduleType) params.set('scheduleType', scheduleType);
     const qs = params.toString();
     const url = `${API_BASE_URL}/search/products/featured${qs ? `?${qs}` : ''}`;
     return fetchWithCredentials(url, { method: 'GET' });
