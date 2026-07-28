@@ -796,7 +796,7 @@ const VendorProfilePage = () => {
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Delivery</p>
                                             <p className="text-sm text-gray-600">
-                                                CA${deliveryFee?.toFixed(2)} • {estimatedDeliveryMinutes} min
+                                                {deliveryFee > 0 ? `CA$${deliveryFee.toFixed(2)} delivery fee` : 'Free delivery'}
                                             </p>
                                         </div>
                                     </div>
