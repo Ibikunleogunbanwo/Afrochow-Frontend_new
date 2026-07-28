@@ -100,7 +100,7 @@ function ProductFavoriteCard({ favorite, onRemove, removing }) {
                     <p className="font-bold text-gray-900 truncate">{p.productName || "Dish"}</p>
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{p.vendorName || "—"}</p>
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm font-black text-orange-600">
+                        <span className="text-sm font-black text-emerald-600">
                             CA${Number(p.price ?? 0).toFixed(2)}
                         </span>
                         {p.isAvailable === false && (
@@ -213,7 +213,7 @@ export default function FavoritesPage() {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
             </div>
         );
     }
@@ -227,7 +227,7 @@ export default function FavoritesPage() {
                     <p className="text-sm text-gray-600">{error}</p>
                     <button
                         onClick={loadFavorites}
-                        className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors"
+                        className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors"
                     >
                         Try again
                     </button>
@@ -262,7 +262,7 @@ export default function FavoritesPage() {
                                     onClick={() => { setTab(t.key); setPage(1); }}
                                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                                         tab === t.key
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
+                                            ? "bg-gradient-to-r from-emerald-500 to-amber-600 text-white shadow-md"
                                             : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
                                     }`}
                                 >
@@ -294,7 +294,7 @@ export default function FavoritesPage() {
                         </p>
                         <Link
                             href="/"
-                            className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
+                            className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-amber-600 text-white text-sm font-semibold hover:from-emerald-600 hover:to-amber-700 transition-all"
                         >
                             Browse stores
                         </Link>

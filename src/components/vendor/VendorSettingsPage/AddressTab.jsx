@@ -9,7 +9,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
             {/* ---------- Header ---------- */}
             <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-linear-to-br from-orange-500 to-amber-500 p-2 rounded-xl shrink-0">
+                    <div className="bg-linear-to-br from-emerald-500 to-amber-500 p-2 rounded-xl shrink-0">
                         <MapPin className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -25,7 +25,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                 {/* Street Address */}
                 <div className="group">
                     <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
-                        <Building2 className="h-4 w-4 text-orange-500" />
+                        <Building2 className="h-4 w-4 text-emerald-500" />
                         Street Address <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -34,16 +34,16 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                         onChange={(e) =>
                             setAddressForm({ ...addressForm, addressLine: e.target.value })
                         }
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all group-hover:border-gray-300"
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all group-hover:border-gray-300"
                         style={{ color: 'black', backgroundColor: 'white' }}
                         placeholder="123 Main Street, Suite 100"
                     />
                 </div>
 
                 {/* Location Details Card */}
-                <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-orange-100">
+                <div className="bg-linear-to-br from-emerald-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-emerald-100">
                     <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-orange-600" />
+                        <MapPin className="h-5 w-5 text-emerald-600" />
                         Location Details
                     </h3>
 
@@ -59,7 +59,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                                 onChange={(e) =>
                                     setAddressForm({ ...addressForm, city: e.target.value })
                                 }
-                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all bg-white"
+                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white"
                                 style={{ color: 'black' }}
                                 placeholder="Toronto"
                             />
@@ -75,7 +75,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                                 onChange={(e) =>
                                     setAddressForm({ ...addressForm, province: e.target.value })
                                 }
-                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all bg-white appearance-none"
+                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white appearance-none"
                                 style={{ color: 'black' }}
                             >
                                 <option value="">Select province</option>
@@ -98,7 +98,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                                 onChange={(e) =>
                                     setAddressForm({ ...addressForm, postalCode: e.target.value })
                                 }
-                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all bg-white"
+                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white"
                                 style={{ color: 'black' }}
                                 placeholder="M5H 2N2"
                             />
@@ -107,7 +107,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                         {/* Country */}
                         <div className="group">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                <Globe className="h-4 w-4 text-orange-500" />
+                                <Globe className="h-4 w-4 text-emerald-500" />
                                 Country <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -116,7 +116,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                                 onChange={(e) =>
                                     setAddressForm({ ...addressForm, country: e.target.value })
                                 }
-                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all bg-white"
+                                className="w-full px-4 py-3 border-2 border-white/50 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white"
                                 style={{ color: 'black' }}
                                 placeholder="Canada"
                             />
@@ -143,7 +143,7 @@ const AddressTab = ({ addressForm, setAddressForm, profile, saving, onSave }) =>
                 <button
                     onClick={onSave}
                     disabled={saving}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-linear-to-r from-orange-600 to-amber-600 text-white font-bold rounded-xl hover:from-orange-700 hover:to-amber-700 transition-all disabled:opacity-50 shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 hover:scale-[1.02] disabled:hover:scale-100"
+                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-linear-to-r from-emerald-600 to-amber-600 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-amber-700 transition-all disabled:opacity-50 shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 hover:scale-[1.02] disabled:hover:scale-100"
                 >
                     {saving ? (
                         <>

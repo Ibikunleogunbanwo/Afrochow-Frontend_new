@@ -19,9 +19,9 @@ const BC = { MARK_READ: 'MARK_READ', MARK_ALL_READ: 'MARK_ALL_READ', DELETE: 'DE
 const fullDate = (dateVal) => formatDateTime(dateVal);
 
 const TYPE_META = {
-    ORDER_UPDATE:    { Icon: ShoppingBag, bg: 'bg-orange-50',  accent: 'bg-orange-400',  icon: 'text-orange-500', label: 'Order',    baseHref: '/orders'      },
-    NEW_ORDER:       { Icon: ShoppingBag, bg: 'bg-orange-50',  accent: 'bg-orange-400',  icon: 'text-orange-500', label: 'Order',    baseHref: '/orders'      },
-    ORDER:           { Icon: ShoppingBag, bg: 'bg-orange-50',  accent: 'bg-orange-400',  icon: 'text-orange-500', label: 'Order',    baseHref: '/orders'      },
+    ORDER_UPDATE:    { Icon: ShoppingBag, bg: 'bg-emerald-50',  accent: 'bg-emerald-400',  icon: 'text-emerald-500', label: 'Order',    baseHref: '/orders'      },
+    NEW_ORDER:       { Icon: ShoppingBag, bg: 'bg-emerald-50',  accent: 'bg-emerald-400',  icon: 'text-emerald-500', label: 'Order',    baseHref: '/orders'      },
+    ORDER:           { Icon: ShoppingBag, bg: 'bg-emerald-50',  accent: 'bg-emerald-400',  icon: 'text-emerald-500', label: 'Order',    baseHref: '/orders'      },
     DELIVERY_UPDATE: { Icon: Truck,       bg: 'bg-blue-50',    accent: 'bg-blue-400',    icon: 'text-blue-600',   label: 'Delivery', baseHref: '/orders'      },
     DELIVERY:        { Icon: Truck,       bg: 'bg-blue-50',    accent: 'bg-blue-400',    icon: 'text-blue-600',   label: 'Delivery', baseHref: '/orders'      },
     PAYMENT_SUCCESS: { Icon: CreditCard,  bg: 'bg-green-50',   accent: 'bg-green-400',   icon: 'text-green-600',  label: 'Payment',  baseHref: '/orders'      },
@@ -338,7 +338,7 @@ export default function CustomerNotificationsPage() {
                     <div className="grid grid-cols-3 gap-3">
                         {[
                             { label: 'Total',  value: stats.totalNotifications  ?? all.length,              color: 'text-gray-900' },
-                            { label: 'Unread', value: stats.unreadNotifications ?? unreadCount,             color: 'text-orange-600' },
+                            { label: 'Unread', value: stats.unreadNotifications ?? unreadCount,             color: 'text-emerald-600' },
                             { label: 'Read',   value: stats.readNotifications   ?? (all.length - unreadCount), color: 'text-green-600' },
                         ].map(s => (
                             <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-4 text-center shadow-sm">
@@ -367,7 +367,7 @@ export default function CustomerNotificationsPage() {
                                     {f.label}
                                     {count > 0 && (
                                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                                            filter === f.key ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
+                                            filter === f.key ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-600'
                                         }`}>{count}</span>
                                     )}
                                 </button>
@@ -414,7 +414,7 @@ export default function CustomerNotificationsPage() {
                                 </p>
                             </div>
                             {showUnreadOnly && (
-                                <button onClick={() => setShowUnreadOnly(false)} className="text-xs font-semibold text-orange-600 hover:underline">
+                                <button onClick={() => setShowUnreadOnly(false)} className="text-xs font-semibold text-emerald-600 hover:underline">
                                     Show all notifications
                                 </button>
                             )}
@@ -430,11 +430,11 @@ export default function CustomerNotificationsPage() {
                                         key={n.notificationId}
                                         onClick={() => openNotification(n)}
                                         className={`group w-full text-left flex items-start gap-3 px-4 py-4 transition-colors ${
-                                            isUnread ? 'bg-orange-50/40 hover:bg-orange-50/70' : 'hover:bg-gray-50'
+                                            isUnread ? 'bg-emerald-50/40 hover:bg-emerald-50/70' : 'hover:bg-gray-50'
                                         }`}
                                     >
                                         {/* Unread indicator bar */}
-                                        <div className={`absolute left-0 w-0.5 h-full rounded-r ${isUnread ? 'bg-orange-400' : 'bg-transparent'}`} />
+                                        <div className={`absolute left-0 w-0.5 h-full rounded-r ${isUnread ? 'bg-emerald-400' : 'bg-transparent'}`} />
 
                                         {/* Icon */}
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${bg}`}>
@@ -449,7 +449,7 @@ export default function CustomerNotificationsPage() {
                                                         {n.title}
                                                     </p>
                                                     {isUnread && (
-                                                        <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                                                     )}
                                                 </div>
                                                 <p className="text-[11px] text-gray-400 whitespace-nowrap shrink-0">
@@ -466,7 +466,7 @@ export default function CustomerNotificationsPage() {
                                                     {label}
                                                 </span>
                                                 {href && (
-                                                    <span className="text-[10px] text-gray-400 group-hover:text-orange-500 font-medium transition-colors">
+                                                    <span className="text-[10px] text-gray-400 group-hover:text-emerald-500 font-medium transition-colors">
                                                         Tap to view details
                                                     </span>
                                                 )}

@@ -39,7 +39,7 @@ function SignInPrompt({ onSignIn }) {
             Already have an account?{' '}
             <button
                 onClick={onSignIn}
-                className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+                className="text-emerald-600 font-bold hover:text-emerald-700 hover:underline transition-colors"
             >
                 Sign In
             </button>
@@ -65,7 +65,7 @@ function TabButton({ label, active, onClick }) {
             }}
             onMouseEnter={(e) => {
                 if (!active) {
-                    e.currentTarget.style.backgroundColor = '#ea580c'
+                    e.currentTarget.style.backgroundColor = '#059669'
                     e.currentTarget.style.color = 'white'
                 }
             }}
@@ -115,13 +115,13 @@ export function RegisterTabs() {
 
                 {/* Customer Content */}
                 {activeTab === "Customer" && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-orange-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
-                        <div className="absolute inset-0 bg-linear-to-br from-orange-50/0 via-orange-50/0 to-orange-100/0 group-hover:to-orange-100/30 transition-all duration-500 pointer-events-none" />
+                    <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-emerald-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
+                        <div className="absolute inset-0 bg-linear-to-br from-emerald-50/0 via-emerald-50/0 to-emerald-100/0 group-hover:to-emerald-100/30 transition-all duration-500 pointer-events-none" />
                         <div className="relative z-10">
                             <div className="w-15 h-15 bg-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
-                                <User className="w-7 h-7 text-black group-hover:text-orange-700 transition-colors" />
+                                <User className="w-7 h-7 text-black group-hover:text-emerald-700 transition-colors" />
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors">
                                 I&#39;m a Customer
                             </h2>
                             <p className="text-gray-600 mb-8 text-lg leading-relaxed">
@@ -132,7 +132,7 @@ export function RegisterTabs() {
                             <BenefitsList benefits={customerBenefits} />
                             <Link
                                 href={isCustomerWaitlistMode ? customerWaitlistPath : "/register/customer"}
-                                className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
+                                className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
                             >
                                 <span>{isCustomerWaitlistMode ? "Join Customer Waitlist" : "Sign Up as Customer"}</span>
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -144,16 +144,16 @@ export function RegisterTabs() {
 
                 {/* Vendor Content */}
                 {activeTab === "Vendor" && isVendorOnboardingEnabled && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-orange-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
-                        <div className="absolute inset-0 bg-linear-to-br from-red-50/0 via-orange-50/0 to-red-100/0 group-hover:to-red-100/30 transition-all duration-500 pointer-events-none" />
+                    <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-emerald-300 transition-all duration-500 hover:shadow-2xl group relative overflow-hidden animate-fade-up">
+                        <div className="absolute inset-0 bg-linear-to-br from-red-50/0 via-emerald-50/0 to-amber-100/0 group-hover:to-amber-100/30 transition-all duration-500 pointer-events-none" />
                         <div className="relative z-10">
-                            <div className="absolute -top-2 -right-2 bg-linear-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            <div className="absolute -top-2 -right-2 bg-linear-to-r from-emerald-500 to-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                                 Grow Business
                             </div>
                             <div className="w-15 h-15 bg-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
-                                <ChefHat className="w-7 h-7 text-black group-hover:text-orange-700 transition-colors" />
+                                <ChefHat className="w-7 h-7 text-black group-hover:text-emerald-700 transition-colors" />
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors">
                                 I&#39;m a Vendor
                             </h2>
                             <p className="text-gray-600 mb-8 text-lg leading-relaxed">
@@ -162,7 +162,7 @@ export function RegisterTabs() {
                             <BenefitsList benefits={vendorBenefits} />
                             <Link
                                 href="/register/vendor/step-1"
-                                className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
+                                className="w-full inline-flex items-center justify-center space-x-2 px-6 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 group/btn"
                             >
                                 <span>Sign Up as Vendor</span>
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -176,6 +176,7 @@ export function RegisterTabs() {
             <SignInModal
                 isOpen={showSignIn}
                 onClose={() => setShowSignIn(false)}
+                context={activeTab === "Vendor" ? "vendor" : "customer"}
             />
         </>
     )

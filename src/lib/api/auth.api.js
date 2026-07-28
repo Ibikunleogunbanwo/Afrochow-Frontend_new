@@ -12,10 +12,14 @@ export const AuthAPI = {
     });
   },
 
-  googleAuth: async (code) => {
+  // context: "customer" (default) or "vendor" — see GoogleAuthRequest.java.
+  // Lets the backend tell a brand-new sign-up apart from a returning user, so a
+  // never-before-seen Google email clicked from the vendor flow isn't silently
+  // turned into a customer account.
+  googleAuth: async (code, context) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, context }),
     });
   },
 

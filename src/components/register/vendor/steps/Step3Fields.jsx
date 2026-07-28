@@ -58,7 +58,7 @@ export default function Step3Fields({ register, watch, errors }) {
             className={`pl-10 min-h-30 resize-y ${
               errors.description
                 ? "border-red-500 focus-visible:ring-red-500"
-                : "border-gray-300 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+                : "border-gray-300 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
             }`}
             {...register("description")}
           />

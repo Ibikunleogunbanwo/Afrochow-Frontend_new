@@ -273,7 +273,7 @@ export default function AdminPromotionsPage() {
                     {[
                         { key: 'ALL',      label: 'Total',    color: 'text-gray-900',   bg: 'bg-gray-50',   border: 'border-gray-200' },
                         { key: 'ACTIVE',   label: 'Active',   color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200' },
-                        { key: 'INACTIVE', label: 'Inactive', color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
+                        { key: 'INACTIVE', label: 'Inactive', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
                         { key: 'EXPIRED',  label: 'Expired',  color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200' },
                     ].map(s => (
                         <button
@@ -604,7 +604,7 @@ export default function AdminPromotionsPage() {
                                                         ? <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full">Expired</span>
                                                         : active
                                                         ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200"><CheckCircle className="w-3 h-3" />Active</span>
-                                                        : <span className="px-2 py-0.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-200">Inactive</span>
+                                                        : <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">Inactive</span>
                                                     }
                                                 </span>
                                             </div>
@@ -636,7 +636,7 @@ export default function AdminPromotionsPage() {
                                                 <CheckCircle className="w-3 h-3" /> Active
                                             </span>
                                         ) : (
-                                            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-200 w-fit">Inactive</span>
+                                            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 w-fit">Inactive</span>
                                         )}
                                         {/* isActive flag vs isCurrentlyActive discrepancy hint */}
                                         {p.isActive && expired && (
@@ -658,7 +658,7 @@ export default function AdminPromotionsPage() {
                                                 onClick={() => handleDeactivate(p)}
                                                 disabled={!!actionLoading[id + 'toggle']}
                                                 title="Deactivate"
-                                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50"
+                                                className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
                                             >
                                                 <ToggleRight className="w-4 h-4 text-green-600" />
                                             </button>

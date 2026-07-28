@@ -10,7 +10,7 @@ export default function DeliveryAddressSection({
                                                }) {
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-orange-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-emerald-100">
                 📍 Delivery Address
             </h2>
             <div className="space-y-6">
@@ -27,10 +27,10 @@ export default function DeliveryAddressSection({
                             value={formData.address.addressLine}
                             onChange={handleInputChange}
                             placeholder="123 Main Street, Apt 4B"
-                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors["address.addressLine"]
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </div>
@@ -51,10 +51,10 @@ export default function DeliveryAddressSection({
                                 value={formData.address.city}
                                 onChange={handleInputChange}
                                 placeholder="Toronto"
-                                className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                                className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                     errors["address.city"]
                                         ? "border-red-500 focus:border-red-500"
-                                        : "border-gray-300 focus:border-orange-500"
+                                        : "border-gray-300 focus:border-emerald-500"
                                 }`}
                             />
                         </div>
@@ -70,10 +70,10 @@ export default function DeliveryAddressSection({
                             name="address.province"
                             value={formData.address.province}
                             onChange={handleInputChange}
-                            className={`w-full px-4 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full px-4 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors["address.province"]
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         >
                             <option value="">Select Province</option>
@@ -97,10 +97,10 @@ export default function DeliveryAddressSection({
                             value={formData.address.postalCode}
                             onChange={handleInputChange}
                             placeholder="M5H 2N2"
-                            className={`w-full px-4 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full px-4 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors["address.postalCode"]
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </InputField>
@@ -118,10 +118,10 @@ export default function DeliveryAddressSection({
                                 name="address.country"
                                 value={formData.address.country}
                                 onChange={handleInputChange}
-                                className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                                className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                     errors["address.country"]
                                         ? "border-red-500 focus:border-red-500"
-                                        : "border-gray-300 focus:border-orange-500"
+                                        : "border-gray-300 focus:border-emerald-500"
                                 }`}
                             />
                         </div>
@@ -135,7 +135,7 @@ export default function DeliveryAddressSection({
                         name="address.defaultAddress"
                         checked={formData.address.defaultAddress}
                         onChange={handleInputChange}
-                        className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-4 focus:ring-orange-100 cursor-pointer"
+                        className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-4 focus:ring-emerald-100 cursor-pointer"
                     />
                     <label
                         htmlFor="address.defaultAddress"

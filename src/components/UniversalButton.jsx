@@ -11,7 +11,7 @@ export default function UniversalButton({
                                             ...props
                                         }) {
     const variants = {
-        primary: "bg-gradient-to-r from-orange-600 to-red-700 hover:from-orange-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl",
+        primary: "bg-gradient-to-r from-emerald-600 to-amber-700 hover:from-emerald-700 hover:to-amber-800 text-white shadow-lg hover:shadow-xl",
         secondary: "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-lg hover:shadow-xl",
         success: "bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl",
         danger: "bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white shadow-lg hover:shadow-xl",

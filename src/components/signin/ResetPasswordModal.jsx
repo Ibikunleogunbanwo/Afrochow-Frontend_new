@@ -130,7 +130,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
 
                         <button
                             onClick={handleSignIn}
-                            className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full bg-linear-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                         >
                             Continue to Sign In
                             <ArrowRight className="h-4 w-4" />
@@ -141,7 +141,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                     <>
                         <DialogHeader>
                             <div className="flex justify-center mb-2">
-                                <div className="w-12 h-12 bg-linear-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                <div className="w-12 h-12 bg-linear-to-br from-emerald-500 to-amber-600 rounded-full flex items-center justify-center shadow-lg">
                                     <Lock className="w-6 h-6 text-white" />
                                 </div>
                             </div>
@@ -191,7 +191,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                                         placeholder="Create a strong password"
                                         autoComplete="new-password"
                                         disabled={loading || !token}
-                                        className="w-full pl-10 pr-12 py-2.5 h-11 border border-slate-300 rounded-xl text-black bg-white focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-sm"
+                                        className="w-full pl-10 pr-12 py-2.5 h-11 border border-slate-300 rounded-xl text-black bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition-all text-sm"
                                     />
                                     <button
                                         type="button"
@@ -248,7 +248,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                                         className={`w-full pl-10 pr-12 py-2.5 h-11 border rounded-xl text-black bg-white focus:outline-none focus:ring-2 transition-all text-sm ${
                                             formData.confirmPassword && formData.password === formData.confirmPassword
                                                 ? "border-green-500 focus:border-green-500 focus:ring-green-100"
-                                                : "border-slate-300 focus:border-orange-500 focus:ring-orange-100"
+                                                : "border-slate-300 focus:border-emerald-500 focus:ring-emerald-100"
                                         }`}
                                     />
                                     <button
@@ -274,7 +274,7 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                             <button
                                 type="submit"
                                 disabled={loading || !token || !formData.password || !formData.confirmPassword}
-                                className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full bg-linear-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {loading ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" /> Resetting Password...</>
@@ -286,15 +286,15 @@ export function ResetPasswordModal({ isOpen, token, onSignInClick, onForgotPassw
                             <button
                                 type="button"
                                 onClick={handleSignIn}
-                                className="flex items-center justify-center w-full text-sm text-slate-600 hover:text-orange-600 font-medium transition-colors"
+                                className="flex items-center justify-center w-full text-sm text-slate-600 hover:text-emerald-600 font-medium transition-colors"
                             >
                                 Back to Sign In
                             </button>
                         </form>
 
-                        <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                             <h3 className="text-xs font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
-                                <ShieldCheck className="h-4 w-4 text-orange-600" />
+                                <ShieldCheck className="h-4 w-4 text-emerald-600" />
                                 Password Requirements
                             </h3>
                             <ul className="text-xs text-slate-700 space-y-0.5">

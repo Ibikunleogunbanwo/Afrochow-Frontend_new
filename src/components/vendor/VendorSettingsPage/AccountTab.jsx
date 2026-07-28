@@ -69,7 +69,7 @@ const AccountTab = ({ profile }) => {
             {/* ---------- Header ---------- */}
             <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-linear-to-br from-orange-500 to-amber-500 p-2 rounded-xl shrink-0">
+                    <div className="bg-linear-to-br from-emerald-500 to-amber-500 p-2 rounded-xl shrink-0">
                         <User className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -83,17 +83,17 @@ const AccountTab = ({ profile }) => {
 
             <div className="space-y-5 sm:space-y-6">
                 {/* Business Profile Card */}
-                <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-orange-100">
+                <div className="bg-linear-to-br from-emerald-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-emerald-100">
                     <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base sm:text-lg">
-                        <Award className="h-5 w-5 text-orange-600" />
+                        <Award className="h-5 w-5 text-emerald-600" />
                         Business Profile
                     </h3>
 
                     <div className="grid gap-3 sm:gap-4">
                         {/* Restaurant Name */}
                         <div className="bg-white p-3 sm:p-4 rounded-xl flex items-center gap-3 sm:gap-4">
-                            <div className="bg-orange-100 p-2.5 sm:p-3 rounded-lg shrink-0">
-                                <User className="h-5 w-5 text-orange-600" />
+                            <div className="bg-emerald-100 p-2.5 sm:p-3 rounded-lg shrink-0">
+                                <User className="h-5 w-5 text-emerald-600" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
@@ -320,7 +320,7 @@ const StatusCard = ({ icon, label, value, color }) => {
         gray: 'bg-gray-100 text-gray-700',
     };
     return (
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border-2 border-gray-100 hover:border-orange-200 transition-all">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border-2 border-gray-100 hover:border-emerald-200 transition-all">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <p className="text-xs sm:text-sm font-bold text-gray-600 uppercase tracking-wide">
                     {label}
@@ -339,7 +339,7 @@ const StatusCard = ({ icon, label, value, color }) => {
 const StatCard = ({ icon, bgIcon, label, value, unit, clickable, onClick }) => {
     const baseClasses = "bg-white p-4 sm:p-6 rounded-xl shadow-sm transition-all";
     const interactiveClasses = clickable
-        ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:border-2 hover:border-orange-300"
+        ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:border-2 hover:border-emerald-300"
         : "hover:shadow-md";
 
     return (
@@ -367,7 +367,7 @@ const StatCard = ({ icon, bgIcon, label, value, unit, clickable, onClick }) => {
             </div>
             {unit && <div className="text-xs text-gray-500 mt-1">{unit}</div>}
             {clickable && (
-                <div className="text-xs text-orange-600 font-semibold mt-2">
+                <div className="text-xs text-emerald-600 font-semibold mt-2">
                     Click to view reviews
                 </div>
             )}

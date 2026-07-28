@@ -6,12 +6,12 @@ import {
 } from "lucide-react";
 
 const TYPE_CONFIG = {
-    new_order:    { Icon: ShoppingBag, bg: "bg-orange-50",  icon: "text-orange-600" },
+    new_order:    { Icon: ShoppingBag, bg: "bg-emerald-50",  icon: "text-emerald-600" },
     order_update: { Icon: ShoppingBag, bg: "bg-gray-100",   icon: "text-gray-700"   },
     delivery:     { Icon: Truck,       bg: "bg-blue-50",    icon: "text-blue-600"   },
     payment:      { Icon: CreditCard,  bg: "bg-green-100",  icon: "text-green-700"  },
     review:       { Icon: Star,        bg: "bg-yellow-50",  icon: "text-yellow-600" },
-    promo:        { Icon: Bell,        bg: "bg-orange-100", icon: "text-orange-600" },
+    promo:        { Icon: Bell,        bg: "bg-emerald-100", icon: "text-emerald-600" },
     system:       { Icon: Bell,        bg: "bg-gray-100",   icon: "text-gray-400"   },
 };
 

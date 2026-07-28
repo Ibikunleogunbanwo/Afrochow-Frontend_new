@@ -17,7 +17,7 @@ const OperatingHoursTab = ({
             {/* Header */}
             <div className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-linear-to-br from-orange-500 to-amber-500 p-2 rounded-xl shrink-0">
+                    <div className="bg-linear-to-br from-emerald-500 to-amber-500 p-2 rounded-xl shrink-0">
                         <Clock className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -65,9 +65,9 @@ const OperatingHoursTab = ({
                 )}
 
                 {/* Weekly Schedule */}
-                <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-orange-100">
+                <div className="bg-linear-to-br from-emerald-50 to-amber-50 rounded-xl p-4 sm:p-6 border border-emerald-100">
                     <h3 className="font-bold text-gray-900 mb-4 sm:mb-5 flex items-center gap-2 text-base sm:text-lg">
-                        <Calendar className="h-5 w-5 text-orange-600 shrink-0" />
+                        <Calendar className="h-5 w-5 text-emerald-600 shrink-0" />
                         Weekly Schedule
                     </h3>
 
@@ -75,7 +75,7 @@ const OperatingHoursTab = ({
                         {DAYS_OF_WEEK.map((day) => (
                             <div
                                 key={day.key}
-                                className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border-2 border-white hover:border-orange-200 transition-all"
+                                className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border-2 border-white hover:border-emerald-200 transition-all"
                             >
                                 {/* Day row */}
                                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -84,9 +84,9 @@ const OperatingHoursTab = ({
                                             type="checkbox"
                                             checked={operatingHours[day.key]?.isOpen || false}
                                             onChange={() => onToggleDay(day.key)}
-                                            className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer shrink-0"
+                                            className="w-5 h-5 text-emerald-600 border-2 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2 cursor-pointer shrink-0"
                                         />
-                                        <span className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-orange-700 transition-colors">
+                                        <span className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                       {day.label}
                     </span>
                                         {!operatingHours[day.key]?.isOpen && (
@@ -102,7 +102,7 @@ const OperatingHoursTab = ({
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pl-0 sm:pl-8">
                                         <div className="group">
                                             <label className="flex items-center gap-2 text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                                                <Clock className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                                                <Clock className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                                                 Opening Time
                                             </label>
                                             <input
@@ -111,14 +111,14 @@ const OperatingHoursTab = ({
                                                 onChange={(e) =>
                                                     onUpdateHours(day.key, 'openTime', e.target.value)
                                                 }
-                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-semibold"
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-semibold"
                                                 style={{ color: 'black', backgroundColor: 'white' }}
                                             />
                                         </div>
 
                                         <div className="group">
                                             <label className="flex items-center gap-2 text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                                                <Clock className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                                                <Clock className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                                                 Closing Time
                                             </label>
                                             <input
@@ -127,7 +127,7 @@ const OperatingHoursTab = ({
                                                 onChange={(e) =>
                                                     onUpdateHours(day.key, 'closeTime', e.target.value)
                                                 }
-                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-semibold"
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-semibold"
                                                 style={{ color: 'black', backgroundColor: 'white' }}
                                             />
                                         </div>
@@ -159,7 +159,7 @@ const OperatingHoursTab = ({
                 <button
                     onClick={onSave}
                     disabled={saving}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-linear-to-r from-orange-600 to-amber-600 text-white font-bold rounded-xl hover:from-orange-700 hover:to-amber-700 transition-all disabled:opacity-50 shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 hover:scale-[1.02] disabled:hover:scale-100"
+                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-linear-to-r from-emerald-600 to-amber-600 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-amber-700 transition-all disabled:opacity-50 shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 hover:scale-[1.02] disabled:hover:scale-100"
                 >
                     {saving ? (
                         <>

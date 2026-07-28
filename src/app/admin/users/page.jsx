@@ -573,13 +573,13 @@ export default function AdminUsersPage() {
                                         {/* Vendors: show store name as primary, owner name as subtitle */}
                                         {u.role === 'VENDOR' && u.restaurantName ? (
                                             <>
-                                                <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.restaurantName}</p>
+                                                <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.restaurantName}</p>
                                                 <p className="text-xs text-gray-500 truncate">{u.fullName || 'No name'}</p>
                                                 <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                             </>
                                         ) : (
                                             <>
-                                                <p className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors">{u.fullName || 'No name'}</p>
+                                                <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.fullName || 'No name'}</p>
                                                 <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                             </>
                                         )}

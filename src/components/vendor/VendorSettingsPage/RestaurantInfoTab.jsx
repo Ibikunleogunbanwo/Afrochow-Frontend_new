@@ -4,7 +4,7 @@ import { Save, RefreshCw } from 'lucide-react';
 
 /* ---------- Helper: reusable wrapper for inputs ---------- */
 const InputBlock = ({ label, children }) => (
-    <div className="group bg-linear-to-br from-white to-gray-50/50 border border-gray-200 rounded-2xl p-5 sm:p-6 hover:border-orange-300 focus-within:border-orange-500 focus-within:shadow-lg focus-within:shadow-orange-500/10 transition-all duration-200">
+    <div className="group bg-linear-to-br from-white to-gray-50/50 border border-gray-200 rounded-2xl p-5 sm:p-6 hover:border-emerald-300 focus-within:border-emerald-500 focus-within:shadow-lg focus-within:shadow-emerald-500/10 transition-all duration-200">
         <label className="block text-sm font-bold text-gray-800 mb-3 tracking-wide">
             {label}
         </label>
@@ -19,7 +19,7 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
         <div className="space-y-6 sm:space-y-8 p-4 sm:p-6">
             {/* ---------- Header ---------- */}
             <div className="relative">
-                <div className="absolute inset-0 bg-linear-to-r from-orange-500/10 via-orange-400/5 to-transparent rounded-2xl blur-xl"></div>
+                <div className="absolute inset-0 bg-linear-to-r from-emerald-500/10 via-emerald-400/5 to-transparent rounded-2xl blur-xl"></div>
                 <h2 className="relative text-2xl sm:text-3xl font-black text-gray-900 py-2">
                     Business Information
                 </h2>
@@ -148,37 +148,37 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
                 )}
 
                 {/* Service Options */}
-                <div className="bg-linear-to-br from-white to-gray-50/50 border border-gray-200 rounded-2xl p-5 sm:p-6 hover:border-orange-300 transition-all duration-200">
+                <div className="bg-linear-to-br from-white to-gray-50/50 border border-gray-200 rounded-2xl p-5 sm:p-6 hover:border-emerald-300 transition-all duration-200">
                     <label className="block text-sm font-bold text-gray-800 mb-4 tracking-wide">
                         Service Options
                     </label>
                     <div className="space-y-3">
-                        <label className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 hover:shadow-md transition-all duration-200 group">
+                        <label className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all duration-200 group">
                             <input
                                 type="checkbox"
                                 checked={profileForm.offersDelivery}
                                 onChange={(e) =>
                                     setProfileForm({ ...profileForm, offersDelivery: e.target.checked })
                                 }
-                                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 shrink-0"
+                                className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 shrink-0"
                             />
                             <div className="flex-1">
-                                <p className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">Offer Delivery</p>
+                                <p className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Offer Delivery</p>
                                 <p className="text-xs sm:text-sm text-gray-600">Accept delivery orders from customers</p>
                             </div>
                         </label>
 
-                        <label className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 hover:shadow-md transition-all duration-200 group">
+                        <label className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all duration-200 group">
                             <input
                                 type="checkbox"
                                 checked={profileForm.offersPickup}
                                 onChange={(e) =>
                                     setProfileForm({ ...profileForm, offersPickup: e.target.checked })
                                 }
-                                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 shrink-0"
+                                className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 shrink-0"
                             />
                             <div className="flex-1">
-                                <p className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">Offer Pickup</p>
+                                <p className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Offer Pickup</p>
                                 <p className="text-xs sm:text-sm text-gray-600">Accept pickup orders from customers</p>
                             </div>
                         </label>
@@ -189,7 +189,7 @@ const RestaurantInfoTab = ({ profileForm, setProfileForm, saving, onSave }) => {
                 <button
                     onClick={onSave}
                     disabled={saving}
-                    className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 hover:shadow-xl hover:shadow-orange-500/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                    className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
                 >
                     {saving ? (
                         <>

@@ -23,8 +23,8 @@ const SettingsSidebar = ({ activeTab, setActiveTab, onLogout }) => {
                                 onClick={() => setActiveTab(id)}
                                 className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 whitespace-nowrap ${
                                     activeTab === id
-                                        ? 'bg-linear-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700'
+                                        ? 'bg-linear-to-r from-emerald-500 to-amber-500 text-white shadow-md'
+                                        : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
                                 }`}
                             >
                                 <Icon className="h-5 w-5 shrink-0" />
@@ -53,8 +53,8 @@ const SettingsSidebar = ({ activeTab, setActiveTab, onLogout }) => {
                                 onClick={() => setActiveTab(id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
                                     activeTab === id
-                                        ? 'bg-linear-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-200 scale-[1.02]'
-                                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700'
+                                        ? 'bg-linear-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-200 scale-[1.02]'
+                                        : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'
                                 }`}
                             >
                                 <Icon className="h-5 w-5 shrink-0" />

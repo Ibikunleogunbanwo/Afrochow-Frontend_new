@@ -6,7 +6,7 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 /**
  * Reusable FormField Component - Afrochow Theme
  * Handles input, textarea, and custom children with consistent styling
- * Uses orange/red focus colors to match Afrochow brand
+ * Uses the brand accent/error focus colors
  */
 export default function FormField({
                                       label,
@@ -54,7 +54,7 @@ export default function FormField({
                         } ${
                             error
                                 ? "border-red-500 focus-visible:ring-red-500"
-                                : "border-gray-300 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+                                : "border-gray-300 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                         }`}
                         {...inputProps}
                     />
@@ -80,7 +80,7 @@ export default function FormField({
                         } ${
                             error
                                 ? "border-red-500 focus-visible:ring-red-500"
-                                : "border-gray-300 focus-visible:ring-orange-500 focus-visible:border-orange-500"
+                                : "border-gray-300 focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                         }`}
                         {...textareaProps}
                     />
@@ -100,7 +100,7 @@ export default function FormField({
                             focus:outline-none focus:ring-2 focus:ring-offset-0 transition
                             ${error
                                 ? "border-red-500 focus:ring-red-500"
-                                : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"}
+                                : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"}
                             ${!value ? 'text-gray-400' : 'text-gray-900'}
                         `}
                         {...selectProps}

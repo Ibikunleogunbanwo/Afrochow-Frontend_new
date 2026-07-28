@@ -136,19 +136,19 @@ const TopStores = () => {
     };
 
     return (
-        <section className="py-16 bg-linear-to-b from-white to-orange-50/30">
+        <section className="py-16 bg-linear-to-b from-white to-emerald-50/30">
             <div className="container px-4 mx-auto max-w-7xl">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-6">
                     <div className="flex-1">
-                        <div className="inline-flex items-center space-x-2 px-4 py-2 mb-4 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
-                            <TrendingUp className="w-4 h-4 text-orange-600" />
-                            <span className="text-sm font-semibold text-orange-800">Top Rated</span>
+                        <div className="inline-flex items-center space-x-2 px-4 py-2 mb-4 bg-linear-to-r from-emerald-100 to-amber-100 rounded-full">
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm font-semibold text-emerald-800">Top Rated</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
                             Popular Stores
-                            <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
+                            <span className="block text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-amber-600">
                                 {city ? `in ${city}` : "Near You"}
                             </span>
                         </h2>
@@ -178,7 +178,7 @@ const TopStores = () => {
                         </p>
                         <button
                             onClick={handleRetry}
-                            className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors"
+                            className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                         >
                             Retry
                         </button>
@@ -212,7 +212,7 @@ const TopStores = () => {
                         <p className="text-gray-600 mb-4">Want to see more amazing stores?</p>
                         <Link
                             href="/allstore"
-                            className="inline-flex items-center space-x-2 px-8 py-4 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                            className="inline-flex items-center space-x-2 px-8 py-4 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                         >
                             <span>Explore All Stores</span>
                             <ArrowRight className="w-5 h-5" />

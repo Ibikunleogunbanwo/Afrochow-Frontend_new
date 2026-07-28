@@ -82,11 +82,11 @@ const CategoriesAndBanner = () => {
     const cardHeight = isMobile ? 260 : 320;
 
     return (
-        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-linear-to-b from-white via-orange-50/40 to-white relative overflow-hidden">
+        <div className="pt-10 pb-8 md:pt-14 md:pb-10 bg-linear-to-b from-white via-emerald-50/40 to-white relative overflow-hidden">
 
             {/* Decorative background blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200/20 rounded-full blur-3xl" />
+                <div className="absolute top-20 right-10 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl" />
                 <div className="absolute bottom-20 left-10 w-96 h-96 bg-red-200/20 rounded-full blur-3xl" />
             </div>
 
@@ -96,7 +96,7 @@ const CategoriesAndBanner = () => {
                 <div className="text-center mb-6 md:mb-8">
                     <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
                         Everything African{" "}
-                        <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-amber-600">
                             All in One Place
                         </span>
                     </h2>
@@ -122,7 +122,7 @@ const CategoriesAndBanner = () => {
                         <p className="text-gray-400 text-sm">Failed to load categories.</p>
                         <button
                             onClick={loadCategories}
-                            className="px-5 py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition-colors"
+                            className="px-5 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                         >
                             Retry
                         </button>
@@ -154,7 +154,7 @@ const CategoriesAndBanner = () => {
                 <div className="text-center mt-4">
                     <Link
                         href="/restaurants"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md hover:shadow-lg"
                     >
                         <span>Browse All Categories</span>
                         <ArrowRight className="w-4 h-4" />

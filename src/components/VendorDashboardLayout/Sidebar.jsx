@@ -72,7 +72,7 @@ const Sidebar = ({
     const statusColors = {
         green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200',  dot: 'bg-green-500'  },
         blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   ring: 'ring-blue-200',   dot: 'bg-blue-500'   },
-        orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200', dot: 'bg-orange-500' },
+        orange: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200', dot: 'bg-emerald-500' },
         red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200',    dot: 'bg-red-500'    },
     };
     const sc = statusColors[status.color];
@@ -90,7 +90,7 @@ const Sidebar = ({
                 <div className={`flex items-center shrink-0 border-b border-gray-200 transition-all duration-300 ${
                     collapsed ? 'px-3 py-5 justify-center' : 'px-6 py-5'
                 }`}>
-                    <Store className="w-8 h-8 text-orange-600 shrink-0" />
+                    <Store className="w-8 h-8 text-emerald-600 shrink-0" />
                     {!collapsed && (
                         <div className="ml-3 min-w-0">
                             <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
@@ -128,8 +128,8 @@ const Sidebar = ({
                                     relative flex items-center h-11 rounded-xl transition-all duration-200
                                     ${collapsed ? 'justify-center px-0' : 'justify-between px-3'}
                                     ${isActive
-                                        ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md'
-                                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md'
+                                        : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-600'
                                     }
                                 `}
                             >
@@ -145,7 +145,7 @@ const Sidebar = ({
                                 {/* Badge — full pill when expanded */}
                                 {!collapsed && badge > 0 && (
                                     <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                        isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'
+                                        isActive ? 'bg-white text-emerald-600' : 'bg-emerald-600 text-white'
                                     }`}>
                                         {badge > 99 ? '99+' : badge}
                                     </span>

@@ -11,9 +11,9 @@ export default function RegistrationSuccessScreen({
     const router = useRouter();
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-orange-50/30 to-red-50/20 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-emerald-50/30 to-amber-50/20 p-4">
             <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">
-                <div className="w-24 h-24 bg-linear-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="w-24 h-24 bg-linear-to-br from-emerald-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                     <MailCheck className="w-14 h-14 text-white" />
                 </div>
 
@@ -24,28 +24,28 @@ export default function RegistrationSuccessScreen({
                     We&apos;ve sent a verification email to
                 </p>
 
-                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
-                    <p className="text-orange-600 font-semibold text-lg break-all">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+                    <p className="text-emerald-600 font-semibold text-lg break-all">
                         {userEmail}
                     </p>
                 </div>
 
-                <div className="text-left bg-orange-50 border border-orange-200 rounded-xl p-6 mb-6">
+                <div className="text-left bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-6">
                     <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-orange-600" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                         Next Steps:
                     </h3>
                     <ol className="space-y-2 text-sm text-gray-700">
                         <li className="flex items-start gap-2">
-                            <span className="font-semibold text-orange-600 mt-0.5">1.</span>
+                            <span className="font-semibold text-emerald-600 mt-0.5">1.</span>
                             <span>Check your inbox (and spam folder)</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="font-semibold text-orange-600 mt-0.5">2.</span>
+                            <span className="font-semibold text-emerald-600 mt-0.5">2.</span>
                             <span>Enter the verification code from your email</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="font-semibold text-orange-600 mt-0.5">3.</span>
+                            <span className="font-semibold text-emerald-600 mt-0.5">3.</span>
                             <span>Once verified, you can log in to your account</span>
                         </li>
                     </ol>
@@ -63,7 +63,7 @@ export default function RegistrationSuccessScreen({
               ${
                             resendDisabled || resendLoading
                                 ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                                : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
+                                : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300"
                         }
             `}
                     >
@@ -89,7 +89,7 @@ export default function RegistrationSuccessScreen({
                 <div className="space-y-3">
                     <button
                         onClick={() => router.push("/verify-email?email=" + encodeURIComponent(userEmail))}
-                        className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                        className="w-full bg-linear-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white py-3 px-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
                     >
                         Enter Verification Code
                     </button>

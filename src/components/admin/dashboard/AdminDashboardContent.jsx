@@ -312,8 +312,8 @@ const AdminDashboardContent = () => {
             value:     loadingAnalytics ? null : fmt$(resolveTotalRevenue(platform)),
             icon:      DollarSign,
             allTime:   !isFiltered,
-            iconBg:    'bg-orange-50',
-            iconColor: 'text-orange-600',
+            iconBg:    'bg-emerald-50',
+            iconColor: 'text-emerald-600',
             trend:     trendObj ? (() => {
                 const r7  = resolveRevenue7d(trendObj);
                 const r30 = resolveRevenue30d(trendObj);
@@ -537,8 +537,8 @@ const AdminDashboardContent = () => {
                             <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%"  stopColor="#f97316" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                        <stop offset="5%"  stopColor="#10b981" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -553,8 +553,8 @@ const AdminDashboardContent = () => {
                                 <Tooltip content={<ChartTooltip isCurrency />} />
                                 <Area
                                     type="monotone" dataKey="revenue" name="Revenue"
-                                    stroke="#f97316" strokeWidth={2}
-                                    fill="url(#revenueGrad)" dot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
+                                    stroke="#10b981" strokeWidth={2}
+                                    fill="url(#revenueGrad)" dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
                                     isAnimationActive={false}
                                 />
                             </AreaChart>
@@ -588,7 +588,7 @@ const AdminDashboardContent = () => {
                                     allowDataOverflow={false}
                                 />
                                 <Tooltip content={<ChartTooltip />} />
-                                <Bar dataKey="orders" name="Orders" fill="#f97316" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                                <Bar dataKey="orders" name="Orders" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false} />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (

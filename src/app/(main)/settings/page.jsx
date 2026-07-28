@@ -52,7 +52,7 @@ function PasswordField({ label, name, value, onChange, showPw, onToggle, disable
                     onChange={onChange}
                     disabled={disabled}
                     placeholder={placeholder}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:opacity-60"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-60"
                 />
                 <button
                     type="button"
@@ -449,7 +449,7 @@ export default function SettingsPage() {
     if (authLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
             </div>
         );
     }
@@ -473,7 +473,7 @@ export default function SettingsPage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <SectionHeader
                         icon={Bell}
-                        gradient="bg-gradient-to-r from-orange-50 to-amber-50"
+                        gradient="bg-gradient-to-r from-emerald-50 to-amber-50"
                         title="Notifications"
                         subtitle="Control whether you receive order and payment alerts"
                     />
@@ -501,7 +501,7 @@ export default function SettingsPage() {
                             disabled={notifLoading || !notifInitialised}
                             aria-label={notifEnabled ? "Disable notifications" : "Enable notifications"}
                             className={`relative w-12 h-6 rounded-full transition-colors shrink-0 disabled:opacity-50 ${
-                                notifEnabled ? "bg-orange-500" : "bg-gray-300"
+                                notifEnabled ? "bg-emerald-500" : "bg-gray-300"
                             }`}
                         >
                             {notifLoading ? (
@@ -529,14 +529,14 @@ export default function SettingsPage() {
                             onClick={openPwModal}
                             className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors group"
                         >
-                            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-                                <Lock className="w-4 h-4 text-orange-600" />
+                            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                                <Lock className="w-4 h-4 text-emerald-600" />
                             </div>
                             <div className="text-left flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900">Change Password</p>
                                 <p className="text-xs text-gray-400 mt-0.5">Update your account password</p>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-orange-500 transition-colors shrink-0" />
+                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-colors shrink-0" />
                         </button>
 
                         {/* Logout all devices */}
@@ -728,7 +728,7 @@ export default function SettingsPage() {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
                         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                                <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-amber-500 rounded-xl flex items-center justify-center">
                                     <Lock className="w-4 h-4 text-white" />
                                 </div>
                                 <h2 className="text-base font-black text-gray-900">Change Password</h2>
@@ -785,7 +785,7 @@ export default function SettingsPage() {
                                     className={`flex-1 py-2.5 text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60 ${
                                         pwSaved
                                             ? "bg-green-500"
-                                            : "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
+                                            : "bg-gradient-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700"
                                     }`}
                                 >
                                     {pwLoading  ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>

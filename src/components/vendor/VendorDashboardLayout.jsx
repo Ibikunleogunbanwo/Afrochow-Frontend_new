@@ -177,7 +177,7 @@ const VendorDashboardLayout = ({ children }) => {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading...</p>
                 </div>
             </div>
@@ -241,7 +241,7 @@ const VendorDashboardLayout = ({ children }) => {
                                         <input
                                             type="text"
                                             placeholder="Search orders, products..."
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 bg-white"
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 bg-white"
                                         />
                                     </div>
                                 </div>
@@ -327,11 +327,11 @@ const VendorDashboardLayout = ({ children }) => {
 
                 {/* ── Resubmit success ── */}
                 {resubmitDone && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
-                        <CheckCircle2 className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-semibold text-orange-800 text-sm">Application resubmitted</p>
-                            <p className="text-orange-700 text-sm mt-0.5">
+                            <p className="font-semibold text-emerald-800 text-sm">Application resubmitted</p>
+                            <p className="text-emerald-700 text-sm mt-0.5">
                                 Your application is back under review — this typically takes 24–48 hours. We&apos;ll email you once a decision is made.
                             </p>
                         </div>
@@ -353,11 +353,11 @@ const VendorDashboardLayout = ({ children }) => {
 
                 {/* ── Pending review ── */}
                 {vendorStatus === 'PENDING_REVIEW' && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
-                        <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <Clock className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-semibold text-orange-800 text-sm">Pending admin approval</p>
-                            <p className="text-orange-700 text-sm mt-0.5">
+                            <p className="font-semibold text-emerald-800 text-sm">Pending admin approval</p>
+                            <p className="text-emerald-700 text-sm mt-0.5">
                                 Your store is under review — this typically takes 24–48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
                             </p>
                         </div>
@@ -366,11 +366,11 @@ const VendorDashboardLayout = ({ children }) => {
 
                 {/* ── Pending profile completion ── */}
                 {vendorStatus === 'PENDING_PROFILE' && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
-                        <Clock className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <Clock className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-orange-800 text-sm">Complete your store profile</p>
-                            <p className="text-orange-700 text-sm mt-0.5">
+                            <p className="font-semibold text-emerald-800 text-sm">Complete your store profile</p>
+                            <p className="text-emerald-700 text-sm mt-0.5">
                                 Finish setting up your store details, then submit for admin approval. Your store won&apos;t go live until it&apos;s reviewed.
                             </p>
                             <div className="flex flex-wrap gap-2 mt-3">
@@ -378,7 +378,7 @@ const VendorDashboardLayout = ({ children }) => {
                                 {pathname !== '/vendor/profile' && (
                                     <Link
                                         href="/vendor/profile?tab=info"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors"
                                     >
                                         <Pencil className="w-3.5 h-3.5" />
                                         Edit Profile
@@ -389,7 +389,7 @@ const VendorDashboardLayout = ({ children }) => {
                                 <button
                                     onClick={handleResubmit}
                                     disabled={resubmitting}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors disabled:opacity-60"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors disabled:opacity-60"
                                 >
                                     {resubmitting
                                         ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting…</>

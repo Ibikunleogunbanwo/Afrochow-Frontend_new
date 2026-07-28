@@ -20,7 +20,7 @@ import { formatDateTime } from '@/lib/utils/dateUtils';
 const STATUS_CONFIG = {
     PENDING:          { color: "text-amber-700  bg-amber-50  border-amber-200",  icon: Clock },
     CONFIRMED:        { color: "text-blue-700   bg-blue-50   border-blue-200",   icon: CheckCircle2 },
-    PREPARING:        { color: "text-orange-700 bg-orange-50 border-orange-200", icon: Clock },
+    PREPARING:        { color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: Clock },
     READY_FOR_PICKUP: { color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
     OUT_FOR_DELIVERY: { color: "text-blue-700   bg-blue-50   border-blue-200",   icon: Truck },
     DELIVERED:        { color: "text-green-700  bg-green-50  border-green-200",  icon: CheckCircle2 },
@@ -42,7 +42,7 @@ const TABS = [
 const STATUS_ACCENT = {
     PENDING:          "border-l-amber-400",
     CONFIRMED:        "border-l-blue-400",
-    PREPARING:        "border-l-orange-400",
+    PREPARING:        "border-l-emerald-400",
     READY_FOR_PICKUP: "border-l-green-400",
     OUT_FOR_DELIVERY: "border-l-blue-500",
     DELIVERED:        "border-l-green-300",
@@ -54,7 +54,7 @@ const STATUS_ACCENT = {
 const STATUS_AVATAR_BG = {
     PENDING:          "bg-amber-100  text-amber-700",
     CONFIRMED:        "bg-blue-100   text-blue-700",
-    PREPARING:        "bg-orange-100 text-orange-700",
+    PREPARING:        "bg-emerald-100 text-emerald-700",
     READY_FOR_PICKUP: "bg-green-100  text-green-700",
     OUT_FOR_DELIVERY: "bg-blue-100   text-blue-700",
     DELIVERED:        "bg-green-50   text-green-600",
@@ -111,7 +111,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
         >
             {/* Active pulse bar */}
             {isActive && (
-                <div className="h-0.5 w-full bg-gradient-to-r from-orange-400 to-red-500" />
+                <div className="h-0.5 w-full bg-gradient-to-r from-emerald-400 to-amber-500" />
             )}
 
             <div className="p-4 sm:p-5 space-y-3.5">
@@ -195,7 +195,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
                             : "—"
                         }
                     </div>
-                    <span className={`text-base font-black ${isCancelled ? "text-gray-400 line-through" : "text-orange-600"}`}>
+                    <span className={`text-base font-black ${isCancelled ? "text-gray-400 line-through" : "text-emerald-600"}`}>
                         CA${Number(order.totalAmount ?? 0).toFixed(2)}
                     </span>
                 </div>
@@ -305,7 +305,7 @@ export default function OrdersPage() {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
             </div>
         );
     }
@@ -319,7 +319,7 @@ export default function OrdersPage() {
                     <p className="text-sm text-gray-600">{error}</p>
                     <button
                         onClick={() => { setError(null); setLoading(true); OrderAPI.getMyOrders().then(res => setOrders(res?.data ?? [])).catch(e => setError(e.message)).finally(() => setLoading(false)); }}
-                        className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors"
+                        className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors"
                     >
                         Try again
                     </button>
@@ -349,7 +349,7 @@ export default function OrdersPage() {
                     <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         {[
                             { label: "Orders",      value: orders.length,                 color: "text-gray-900"   },
-                            { label: "Active",      value: activeCount,                   color: "text-orange-600" },
+                            { label: "Active",      value: activeCount,                   color: "text-emerald-600" },
                             { label: "Total spent", value: `CA$${totalSpent.toFixed(2)}`, color: "text-green-600"  },
                         ].map(s => (
                             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-3 text-center">
@@ -368,7 +368,7 @@ export default function OrdersPage() {
                             onClick={() => { setTab(t.key); setPage(1); }}
                             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                                 tab === t.key
-                                    ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
+                                    ? "bg-gradient-to-r from-emerald-500 to-amber-600 text-white shadow-md"
                                     : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
                             }`}
                         >
@@ -393,7 +393,7 @@ export default function OrdersPage() {
                         {tab === "all" && (
                             <Link
                                 href="/"
-                                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
+                                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-amber-600 text-white text-sm font-semibold hover:from-emerald-600 hover:to-amber-700 transition-all"
                             >
                                 Browse stores
                             </Link>

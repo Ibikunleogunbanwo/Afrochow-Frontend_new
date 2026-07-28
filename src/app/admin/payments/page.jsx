@@ -81,7 +81,7 @@ const PaymentDetailModal = ({ payment, onClose, onRefund, refunding }) => {
 
                 <div className="p-6 space-y-5">
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                        <Link href={`/admin/orders`} className="font-mono font-medium text-gray-700 hover:text-orange-600 transition-colors">
+                        <Link href={`/admin/orders`} className="font-mono font-medium text-gray-700 hover:text-emerald-600 transition-colors">
                             {payment.publicOrderId}
                         </Link>
                         {payment.paymentTime && <span>{formatDateTime(payment.paymentTime)}</span>}

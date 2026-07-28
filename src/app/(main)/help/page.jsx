@@ -19,7 +19,7 @@ const FAQItem = ({ question, answer }) => {
             >
                 <span className="font-semibold text-slate-800 text-sm pr-4">{question}</span>
                 {open
-                    ? <ChevronDown className="w-4 h-4 text-orange-500 shrink-0" />
+                    ? <ChevronDown className="w-4 h-4 text-emerald-500 shrink-0" />
                     : <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />}
             </button>
             {open && (
@@ -35,10 +35,10 @@ const FAQItem = ({ question, answer }) => {
 const TopicCard = ({ icon: Icon, title, description, href }) => (
     <Link
         href={href}
-        className="flex items-start gap-4 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-orange-200 transition-all group"
+        className="flex items-start gap-4 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group"
     >
-        <div className="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
-            <Icon className="w-5 h-5 text-orange-600" />
+        <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+            <Icon className="w-5 h-5 text-emerald-600" />
         </div>
         <div>
             <p className="font-bold text-slate-900 text-sm">{title}</p>
@@ -161,13 +161,13 @@ export default function HelpPage() {
         <div className="min-h-screen bg-slate-50">
 
             {/* Hero */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-16 px-4">
+            <div className="bg-gradient-to-r from-emerald-500 to-amber-600 text-white py-16 px-4">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <MessageCircle className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-4xl font-black mb-3">Help & Support</h1>
-                    <p className="text-orange-100 text-base leading-relaxed max-w-xl mx-auto">
+                    <p className="text-emerald-100 text-base leading-relaxed max-w-xl mx-auto">
                         Everything you need to know about ordering, delivery, payments, and managing your Afrochow account.
                     </p>
                 </div>
@@ -200,8 +200,8 @@ export default function HelpPage() {
                                 onClick={() => setActiveSection(key)}
                                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                                     activeSection === key
-                                        ? "bg-orange-500 text-white shadow-sm"
-                                        : "bg-white text-slate-600 border border-slate-200 hover:border-orange-300 hover:text-orange-600"
+                                        ? "bg-emerald-500 text-white shadow-sm"
+                                        : "bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600"
                                 }`}
                             >
                                 <Icon className="w-4 h-4" />
@@ -228,9 +228,9 @@ export default function HelpPage() {
                             { step: "3", icon: Utensils,    title: "Enjoy authentic flavour", desc: "Track your order in real time and enjoy restaurant-quality African food at home." },
                         ].map(({ step, icon: Icon, title, desc }) => (
                             <div key={step} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-center">
-                                <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-lg mx-auto mb-4">{step}</div>
-                                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <Icon className="w-5 h-5 text-orange-600" />
+                                <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-black text-lg mx-auto mb-4">{step}</div>
+                                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <Icon className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <h3 className="font-bold text-slate-900 mb-2">{title}</h3>
                                 <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
@@ -241,7 +241,7 @@ export default function HelpPage() {
 
                 {/* Contact */}
                 <section className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center">
-                    <MessageCircle className="w-10 h-10 text-orange-500 mx-auto mb-3" />
+                    <MessageCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
                     <h2 className="text-xl font-black text-slate-900 mb-2">Still need help?</h2>
                     <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
                         Can't find what you're looking for? Our support team is happy to help — usually within one business day.
@@ -249,7 +249,7 @@ export default function HelpPage() {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <a
                             href="mailto:support@afrochow.ca"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full transition-colors text-sm"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-full transition-colors text-sm"
                         >
                             <MessageCircle className="w-4 h-4" />
                             Email Support

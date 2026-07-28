@@ -15,12 +15,12 @@ import {
     EmptyTitle,
 } from "@/components/ui/empty";
 
-// Floating orbs — Afrochow orange / red / yellow palette
+// Floating orbs — Afrochow brand accent palette
 const orbs = [
-    { size: 300, x: "10%",  y: "15%",  color: "bg-orange-300", delay: 0,   duration: 8  },
+    { size: 300, x: "10%",  y: "15%",  color: "bg-emerald-300", delay: 0,   duration: 8  },
     { size: 250, x: "70%",  y: "10%",  color: "bg-red-300",    delay: 1,   duration: 10 },
     { size: 200, x: "80%",  y: "60%",  color: "bg-yellow-200", delay: 2,   duration: 9  },
-    { size: 280, x: "5%",   y: "65%",  color: "bg-orange-200", delay: 0.5, duration: 11 },
+    { size: 280, x: "5%",   y: "65%",  color: "bg-emerald-200", delay: 0.5, duration: 11 },
     { size: 150, x: "45%",  y: "80%",  color: "bg-red-200",    delay: 1.5, duration: 7  },
 ];
 
@@ -52,7 +52,7 @@ export default function NotFoundPage() {
           ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50 flex items-center justify-center p-6 relative overflow-hidden">
 
             {/* ── Floating orbs ─────────────────────────────────────── */}
             {orbs.map((orb, i) => (
@@ -92,11 +92,11 @@ export default function NotFoundPage() {
                     <EmptyMedia>
                         <div className="relative">
                             <motion.div
-                                className="w-32 h-32 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center"
+                                className="w-32 h-32 bg-gradient-to-br from-emerald-100 to-amber-100 rounded-full flex items-center justify-center"
                                 animate={{ scale: [1, 1.04, 1] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                             >
-                                <UtensilsCrossed className="w-16 h-16 text-orange-600" />
+                                <UtensilsCrossed className="w-16 h-16 text-emerald-600" />
                             </motion.div>
 
                             <motion.div
@@ -112,7 +112,7 @@ export default function NotFoundPage() {
 
                     {/* Error code */}
                     <motion.h1
-                        className="text-8xl md:text-9xl font-black bg-gradient-to-r from-orange-600 via-red-600 to-orange-500 bg-clip-text text-transparent leading-none"
+                        className="text-8xl md:text-9xl font-black bg-gradient-to-r from-emerald-600 via-amber-600 to-emerald-500 bg-clip-text text-transparent leading-none"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4, delay: 0.15 }}
@@ -135,7 +135,7 @@ export default function NotFoundPage() {
                         <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                             <button
                                 onClick={() => router.push(homeRoute)}
-                                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-orange-600 to-red-500 text-white font-bold rounded-2xl hover:from-orange-700 hover:to-red-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.98]"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-amber-500 text-white font-bold rounded-2xl hover:from-emerald-700 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.98]"
                             >
                                 <Home className="w-5 h-5" />
                                 {isAuthenticated ? "Back to Dashboard" : "Back to Home"}
@@ -143,7 +143,7 @@ export default function NotFoundPage() {
 
                             <button
                                 onClick={() => router.back()}
-                                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white border-2 border-orange-300 text-orange-600 font-bold rounded-2xl hover:bg-orange-50 transition-all shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-[0.98]"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white border-2 border-emerald-300 text-emerald-600 font-bold rounded-2xl hover:bg-emerald-50 transition-all shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-[0.98]"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                                 Go Back
@@ -162,7 +162,7 @@ export default function NotFoundPage() {
                                     {i > 0 && <span className="text-gray-300 select-none">•</span>}
                                     <Link
                                         href={href}
-                                        className="text-orange-600 hover:text-orange-700 font-semibold text-sm hover:underline transition-colors"
+                                        className="text-emerald-600 hover:text-emerald-700 font-semibold text-sm hover:underline transition-colors"
                                     >
                                         {label}
                                     </Link>

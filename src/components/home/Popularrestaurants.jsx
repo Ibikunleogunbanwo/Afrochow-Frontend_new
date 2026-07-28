@@ -232,14 +232,14 @@ const PopularStores = () => {
 
                 {/* Header */}
                 <div className="max-w-2xl mx-auto text-center mb-10">
-                    <div className="inline-flex items-center space-x-2 px-4 py-2 mb-6 bg-linear-to-r from-orange-100 to-red-100 rounded-full">
-                        <Star className="w-4 h-4 text-orange-600 fill-orange-600" />
-                        <span className="text-sm font-semibold text-orange-800">Customer Favorites</span>
+                    <div className="inline-flex items-center space-x-2 px-4 py-2 mb-6 bg-linear-to-r from-emerald-100 to-amber-100 rounded-full">
+                        <Star className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+                        <span className="text-sm font-semibold text-emerald-800">Customer Favorites</span>
                     </div>
 
                     <h2 className="text-2xl sm:text-3xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
                         Popular Home Kitchens and African Stores
-                        <span className="block text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600">
+                        <span className="block text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-amber-600">
                             Near You
                         </span>
                     </h2>
@@ -265,7 +265,7 @@ const PopularStores = () => {
                         </p>
                         <button
                             onClick={handleRetry}
-                            className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors"
+                            className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                         >
                             Retry
                         </button>

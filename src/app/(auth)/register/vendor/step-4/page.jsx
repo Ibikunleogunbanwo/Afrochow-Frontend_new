@@ -199,7 +199,7 @@ export default function Step5() {
     : false;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-orange-50/30 to-red-50/20 p-2 xs:p-3 sm:p-4 md:p-5 lg:p-6">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-emerald-50/30 to-amber-50/20 p-2 xs:p-3 sm:p-4 md:p-5 lg:p-6">
       <Card className="w-full max-w-3xl shadow-lg border-gray-200">
         {/* Step Indicator */}
         <StepIndicator currentStep={4} totalSteps={4} />
@@ -221,14 +221,14 @@ export default function Step5() {
           className="px-3 xs:px-4 sm:px-5 md:px-6 pb-3 xs:pb-4 sm:pb-5 md:pb-6 space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6"
         >
           {/* Info Box */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-2.5 xs:p-3 sm:p-4">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 xs:p-3 sm:p-4">
             <div className="flex items-start gap-2 sm:gap-3">
-              <Info className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 shrink-0 mt-0.5" />
+              <Info className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-orange-900 mb-1">
+                <h3 className="text-[11px] xs:text-xs sm:text-sm md:text-base font-semibold text-emerald-900 mb-1">
                   Weekly Schedule
                 </h3>
-                <p className="text-[10px] xs:text-xs sm:text-sm text-orange-800 leading-relaxed">
+                <p className="text-[10px] xs:text-xs sm:text-sm text-emerald-800 leading-relaxed">
                   Set hours for each day of the week. You can easily copy hours
                   between days or apply to multiple days at once.
                 </p>
@@ -346,19 +346,19 @@ export default function Step5() {
               <div
                 className={`flex items-center justify-between p-2.5 xs:p-3 sm:p-4 rounded-lg border-2 transition-all ${
                   offersDelivery
-                    ? "bg-orange-50 border-orange-200"
+                    ? "bg-emerald-50 border-emerald-200"
                     : "bg-gray-50 border-gray-200"
                 }`}
               >
                 <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3">
                   <div
                     className={`w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      offersDelivery ? "bg-orange-100" : "bg-gray-200"
+                      offersDelivery ? "bg-emerald-100" : "bg-gray-200"
                     }`}
                   >
                     <Truck
                       className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${
-                        offersDelivery ? "text-orange-600" : "text-gray-400"
+                        offersDelivery ? "text-emerald-600" : "text-gray-400"
                       }`}
                     />
                   </div>

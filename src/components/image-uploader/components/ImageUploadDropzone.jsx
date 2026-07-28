@@ -28,7 +28,7 @@ export default function ImageUploadDropzone({
             className={`h-11 border-2 border-dashed rounded-lg flex items-center justify-center gap-2 transition-colors ${
                 disabled
                     ? 'cursor-not-allowed opacity-50'
-                    : 'cursor-pointer hover:border-orange-600 hover:bg-orange-50'
+                    : 'cursor-pointer hover:border-emerald-600 hover:bg-emerald-50'
             }`}
             aria-disabled={disabled}
         >

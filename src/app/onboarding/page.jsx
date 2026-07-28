@@ -41,18 +41,18 @@ function ProgressSteps({ current }) {
                     <div key={label} className="flex items-center gap-2 flex-1 last:flex-none">
                         <div className="flex flex-col items-center gap-1">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors
-                                ${done   ? "bg-orange-500 text-white"
-                                : active ? "bg-orange-100 text-orange-600 border-2 border-orange-500"
+                                ${done   ? "bg-emerald-500 text-white"
+                                : active ? "bg-emerald-100 text-emerald-600 border-2 border-emerald-500"
                                 :          "bg-gray-100 text-gray-400"}`}>
                                 {done ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
                             </div>
                             <span className={`text-[10px] font-semibold whitespace-nowrap
-                                ${active ? "text-orange-600" : done ? "text-gray-700" : "text-gray-400"}`}>
+                                ${active ? "text-emerald-600" : done ? "text-gray-700" : "text-gray-400"}`}>
                                 {label}
                             </span>
                         </div>
                         {i < steps.length - 1 && (
-                            <div className={`flex-1 h-0.5 mb-4 ${done ? "bg-orange-400" : "bg-gray-200"}`} />
+                            <div className={`flex-1 h-0.5 mb-4 ${done ? "bg-emerald-400" : "bg-gray-200"}`} />
                         )}
                     </div>
                 );
@@ -109,7 +109,7 @@ export default function OnboardingPage() {
     const [instructions,  setInstructions]  = useState("");
     const [skipAddress,   setSkipAddress]   = useState(false);
 
-    const inputCls = "w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white text-gray-900 placeholder-gray-400";
+    const inputCls = "w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white text-gray-900 placeholder-gray-400";
     const labelCls = "block text-xs font-semibold text-gray-700 mb-1";
 
     // ── Step 0 validation ─────────────────────────────────────────────────────
@@ -189,14 +189,14 @@ export default function OnboardingPage() {
     // ── Done screen ───────────────────────────────────────────────────────────
     if (step === 2) {
         return (
-            <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
                 <div className="text-center space-y-4">
-                    <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto">
-                        <CheckCircle2 className="w-10 h-10 text-orange-500" />
+                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                     </div>
                     <h1 className="text-2xl font-black text-gray-900">You're all set!</h1>
                     <p className="text-gray-500 text-sm">Taking you to Afrochow…</p>
-                    <Loader2 className="w-5 h-5 animate-spin text-orange-400 mx-auto" />
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-400 mx-auto" />
                 </div>
             </div>
         );
@@ -216,7 +216,7 @@ export default function OnboardingPage() {
 
                     {/* Heading */}
                     <div className="text-center mb-6">
-                        <span className="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-600 text-xs font-bold mb-3">
+                        <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold mb-3">
                             Almost done!
                         </span>
                         <h1 className="text-2xl font-black text-gray-900">
@@ -247,11 +247,11 @@ export default function OnboardingPage() {
                                             <img
                                                 src={photoUrl}
                                                 alt="Profile"
-                                                className="w-16 h-16 rounded-full object-cover border-2 border-orange-200 shadow-sm"
+                                                className="w-16 h-16 rounded-full object-cover border-2 border-emerald-200 shadow-sm"
                                                 referrerPolicy="no-referrer"
                                             />
                                         ) : (
-                                            <div className="w-16 h-16 rounded-full bg-orange-100 border-2 border-orange-200 flex items-center justify-center text-orange-600 text-xl font-black shadow-sm">
+                                            <div className="w-16 h-16 rounded-full bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-xl font-black shadow-sm">
                                                 {initials}
                                             </div>
                                         )}
@@ -327,7 +327,7 @@ export default function OnboardingPage() {
 
                             <button
                                 onClick={handleNextStep}
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-bold shadow-md hover:from-orange-600 hover:to-red-700 transition-all"
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-amber-600 text-white text-sm font-bold shadow-md hover:from-emerald-600 hover:to-amber-700 transition-all"
                             >
                                 Continue <ChevronRight className="w-4 h-4" />
                             </button>
@@ -344,7 +344,7 @@ export default function OnboardingPage() {
                                     type="checkbox"
                                     checked={skipAddress}
                                     onChange={e => { setSkipAddress(e.target.checked); setErrors({}); }}
-                                    className="w-4 h-4 accent-orange-500"
+                                    className="w-4 h-4 accent-emerald-500"
                                 />
                                 <div>
                                     <p className="text-sm font-semibold text-gray-700">Skip for now</p>
@@ -446,7 +446,7 @@ export default function OnboardingPage() {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={saving}
-                                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-bold shadow-md hover:from-orange-600 hover:to-red-700 transition-all disabled:opacity-70"
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-amber-600 text-white text-sm font-bold shadow-md hover:from-emerald-600 hover:to-amber-700 transition-all disabled:opacity-70"
                                 >
                                     {saving
                                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>

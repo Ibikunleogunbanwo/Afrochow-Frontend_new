@@ -65,7 +65,7 @@ export default function StepIndicator({
                     <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
                             isActive
-                                ? 'bg-gradient-to-r from-orange-600 to-red-700 text-white scale-110 ring-2 ring-orange-300 ring-offset-2 shadow-lg'
+                                ? 'bg-gradient-to-r from-emerald-600 to-amber-700 text-white scale-110 ring-2 ring-emerald-300 ring-offset-2 shadow-lg'
                                 : isCompleted
                                     ? 'bg-green-500 text-white shadow-md'
                                     : 'bg-gray-200 text-gray-400'
@@ -90,7 +90,7 @@ export default function StepIndicator({
                     <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
                       <div className={`text-xs px-2.5 py-1.5 rounded shadow-lg font-medium ${
                           isActive
-                              ? 'bg-gradient-to-r from-orange-600 to-red-700 text-white'
+                              ? 'bg-gradient-to-r from-emerald-600 to-amber-700 text-white'
                               : isCompleted
                                   ? 'bg-gray-900 text-white'
                                   : 'bg-gray-200 text-gray-600'
@@ -105,7 +105,7 @@ export default function StepIndicator({
                       {/* Tooltip arrow */}
                       <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 ${
                           isActive
-                              ? 'bg-orange-600'
+                              ? 'bg-emerald-600'
                               : isCompleted
                                   ? 'bg-gray-900'
                                   : 'bg-gray-200'
@@ -135,7 +135,7 @@ export default function StepIndicator({
         {/* Progress Bar - Afrochow Theme */}
         <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden shadow-inner">
           <div
-              className="h-full bg-gradient-to-r from-orange-500 to-red-600 transition-all duration-500 ease-out shadow-sm"
+              className="h-full bg-gradient-to-r from-emerald-500 to-amber-600 transition-all duration-500 ease-out shadow-sm"
               style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -145,7 +145,7 @@ export default function StepIndicator({
         <span className="text-xs text-gray-500">
           {currentStep > 1 && '← Click previous steps to edit'}
         </span>
-          <span className="text-xs font-medium text-orange-600">
+          <span className="text-xs font-medium text-emerald-600">
           {Math.round(progressPercentage)}% Complete
         </span>
         </div>

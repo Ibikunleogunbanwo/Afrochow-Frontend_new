@@ -438,7 +438,7 @@ export default function CheckoutPage() {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -481,8 +481,8 @@ export default function CheckoutPage() {
                         {/* Fulfillment */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                    <Truck className="w-3.5 h-3.5 text-orange-500" />
+                                <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                    <Truck className="w-3.5 h-3.5 text-emerald-500" />
                                 </div>
                                 <h2 className="text-sm font-semibold text-gray-900">Fulfillment</h2>
                             </div>
@@ -519,7 +519,7 @@ export default function CheckoutPage() {
                                             <p className={`text-sm font-semibold ${fulfillment === opt.value && !opt.disabled ? "text-white" : "text-gray-900"}`}>
                                                 {opt.label}
                                             </p>
-                                            <p className={`text-xs mt-0.5 ${fulfillment === opt.value && !opt.disabled ? "text-orange-100" : "text-gray-400"}`}>
+                                            <p className={`text-xs mt-0.5 ${fulfillment === opt.value && !opt.disabled ? "text-emerald-100" : "text-gray-400"}`}>
                                                 {opt.sub}
                                             </p>
                                         </div>
@@ -554,14 +554,14 @@ export default function CheckoutPage() {
                             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                            <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                                        <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                            <MapPin className="w-3.5 h-3.5 text-emerald-500" />
                                         </div>
                                         <h2 className="text-sm font-semibold text-gray-900">Delivery address</h2>
                                     </div>
                                     <button
                                         onClick={() => { setShowNewAddress(!showNewAddress); setSelectedAddressId(null); }}
-                                        className="text-sm text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1"
+                                        className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                         New address
@@ -576,15 +576,15 @@ export default function CheckoutPage() {
                                                 onClick={() => setSelectedAddressId(publicAddressId)}
                                                 className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
                                                     selectedAddressId === publicAddressId
-                                                        ? "border-orange-500 bg-orange-50"
-                                                        : "border-gray-200 hover:border-orange-200"
+                                                        ? "border-emerald-500 bg-emerald-50"
+                                                        : "border-gray-200 hover:border-emerald-200"
                                                 }`}
                                             >
                                                 <div className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
-                                                    selectedAddressId === publicAddressId ? "border-orange-500" : "border-gray-300"
+                                                    selectedAddressId === publicAddressId ? "border-emerald-500" : "border-gray-300"
                                                 }`}>
                                                     {selectedAddressId === publicAddressId && (
-                                                        <div className="w-2 h-2 rounded-full bg-orange-500" />
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -611,7 +611,7 @@ export default function CheckoutPage() {
                                             <p className="text-sm text-gray-500">No saved addresses</p>
                                             <button
                                                 onClick={() => setShowNewAddress(true)}
-                                                className="text-sm text-orange-600 hover:text-orange-700 underline mt-1"
+                                                className="text-sm text-emerald-600 hover:text-emerald-700 underline mt-1"
                                             >
                                                 Add one
                                             </button>
@@ -625,7 +625,7 @@ export default function CheckoutPage() {
                                                 value={newAddress.addressLine}
                                                 onChange={handleNewAddressChange}
                                                 placeholder="Street address"
-                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                                             />
                                             <div className="grid grid-cols-2 gap-3">
                                                 <input
@@ -633,14 +633,14 @@ export default function CheckoutPage() {
                                                     value={newAddress.city}
                                                     onChange={handleNewAddressChange}
                                                     placeholder="City"
-                                                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
+                                                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                                                 />
                                                 <div className="relative">
                                                     <select
                                                         name="province"
                                                         value={newAddress.province}
                                                         onChange={handleNewAddressChange}
-                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 bg-white appearance-none"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 bg-white appearance-none"
                                                     >
                                                         {PROVINCES.map(p => (
                                                             <option key={p.value} value={p.value}>{p.label}</option>
@@ -654,7 +654,7 @@ export default function CheckoutPage() {
                                                 value={newAddress.postalCode}
                                                 onChange={handleNewAddressChange}
                                                 placeholder="Postal code"
-                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                                             />
                                             <p className="text-xs text-gray-400">
                                                 Tax: {PROVINCIAL_TAX[newAddress.province]?.label} · {(PROVINCIAL_TAX[newAddress.province]?.rate * 100).toFixed(2)}%
@@ -678,8 +678,8 @@ export default function CheckoutPage() {
                         {fulfillment === "pickup" && vendorData?.address && (
                             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                                 <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                        <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                                    <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                        <MapPin className="w-3.5 h-3.5 text-emerald-500" />
                                     </div>
                                     <h2 className="text-sm font-semibold text-gray-900">Pickup location</h2>
                                 </div>
@@ -703,8 +703,8 @@ export default function CheckoutPage() {
                         {/* Delivery / pickup note */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                    <FileText className="w-3.5 h-3.5 text-orange-500" />
+                                <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                    <FileText className="w-3.5 h-3.5 text-emerald-500" />
                                 </div>
                                 <h2 className="text-sm font-semibold text-gray-900">
                                     {fulfillment === "delivery" ? "Delivery instructions" : "Pickup note"}
@@ -719,7 +719,7 @@ export default function CheckoutPage() {
                                     placeholder={fulfillment === "delivery"
                                         ? "e.g., Leave at the door, ring the bell..."
                                         : "e.g., I'll arrive at 6pm"}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 resize-none"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 resize-none"
                                 />
                             </div>
                         </div>
@@ -767,8 +767,8 @@ export default function CheckoutPage() {
                         {/* Promo code */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                    <Tag className="w-3.5 h-3.5 text-orange-500" />
+                                <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                    <Tag className="w-3.5 h-3.5 text-emerald-500" />
                                 </div>
                                 <h2 className="text-sm font-semibold text-gray-900">Promo code</h2>
                                 <span className="text-xs text-gray-400">Optional</span>
@@ -802,7 +802,7 @@ export default function CheckoutPage() {
                                             onKeyDown={e => e.key === "Enter" && handleApplyPromo()}
                                             placeholder="e.g. SAVE10"
                                             disabled={promoLoading}
-                                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 uppercase placeholder:normal-case tracking-widest disabled:opacity-50"
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 uppercase placeholder:normal-case tracking-widest disabled:opacity-50"
                                         />
                                         <button
                                             onClick={handleApplyPromo}
@@ -827,8 +827,8 @@ export default function CheckoutPage() {
                         {/* Payment — Stripe hosted fields */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center">
-                                    <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
+                                <div className="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center">
+                                    <ShoppingBag className="w-3.5 h-3.5 text-emerald-500" />
                                 </div>
                                 <h2 className="text-sm font-semibold text-gray-900">Payment</h2>
                                 <span className="text-xs text-gray-400">Credit or debit card</span>
@@ -836,7 +836,7 @@ export default function CheckoutPage() {
                             <div className="p-4">
                                 {!stripeReady ? (
                                     <div className="flex items-center justify-center py-6 gap-2 text-sm text-gray-400">
-                                        <div className="w-4 h-4 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-gray-300 border-t-emerald-500 rounded-full animate-spin" />
                                         Loading secure payment fields…
                                     </div>
                                 ) : (
@@ -987,7 +987,7 @@ export default function CheckoutPage() {
                                     className={`w-full py-3 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 active:scale-95 ${
                                         !canSubmit || placing
                                             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                            : "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-md hover:shadow-lg"
+                                            : "bg-gradient-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
                                     }`}
                                 >
                                     {placing ? (

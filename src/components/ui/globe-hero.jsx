@@ -20,7 +20,7 @@ const Globe = ({ rotationSpeed, radius }) => {
             <mesh>
                 <sphereGeometry args={[radius, 64, 64]} />
                 <meshBasicMaterial
-                    color="#f97316"
+                    color="#10b981"
                     transparent
                     opacity={0.12}
                     wireframe

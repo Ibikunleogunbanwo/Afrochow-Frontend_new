@@ -142,8 +142,8 @@ const FeaturedRestaurants = () => {
 
                 {/* Header */}
                 <div className="mb-12 text-center">
-                    <div className="inline-flex items-center justify-center px-4 py-2 mb-4 bg-orange-100 rounded-full">
-                        <span className="text-sm font-semibold text-orange-800">
+                    <div className="inline-flex items-center justify-center px-4 py-2 mb-4 bg-emerald-100 rounded-full">
+                        <span className="text-sm font-semibold text-emerald-800">
                             Popular Dishes
                         </span>
                     </div>
@@ -176,7 +176,7 @@ const FeaturedRestaurants = () => {
                         </p>
                         <button
                             onClick={handleRetry}
-                            className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors"
+                            className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                         >
                             Retry
                         </button>
@@ -200,7 +200,7 @@ const FeaturedRestaurants = () => {
                         <div className="mt-10 text-center">
                             <Link
                                 href="/restaurants"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md hover:shadow-lg"
                             >
                                 <span>View All Products</span>
                                 <ArrowRight className="w-4 h-4" />

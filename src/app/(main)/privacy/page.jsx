@@ -17,13 +17,13 @@ export default function PrivacyPolicyPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Hero */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-14 px-4">
+            <div className="bg-gradient-to-r from-emerald-500 to-amber-600 text-white py-14 px-4">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Shield className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
-                    <p className="text-orange-100 text-sm">Last updated: March 2025</p>
+                    <p className="text-emerald-100 text-sm">Last updated: March 2025</p>
                 </div>
             </div>
 
@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
                         Welcome to Afrochow. We are committed to protecting your personal information and your right to
                         privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your
                         information when you use our platform, available at{" "}
-                        <span className="text-orange-600 font-medium">www.afrochow.ca</span> and our mobile
+                        <span className="text-emerald-600 font-medium">www.afrochow.ca</span> and our mobile
                         application. Please read this policy carefully.
                     </p>
 
@@ -71,7 +71,7 @@ export default function PrivacyPolicyPage() {
 
                     <Section title="4. Data Retention">
                         <p>We retain your personal information for as long as your account is active or as needed to provide you with our services. You may request deletion of your account and associated data at any time by contacting us at{" "}
-                            <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline">support@afrochow.ca</a>.
+                            <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline">support@afrochow.ca</a>.
                         </p>
                         <p>Certain information may be retained for longer periods where required by law or for legitimate business purposes such as fraud prevention and dispute resolution.</p>
                     </Section>
@@ -79,7 +79,7 @@ export default function PrivacyPolicyPage() {
                     <Section title="5. Cookies and Tracking">
                         <p>We use cookies and similar tracking technologies to enhance your experience on our platform. These include essential cookies required for the platform to function, as well as analytics cookies that help us understand how users interact with our service.</p>
                         <p>You can manage your cookie preferences through your browser settings. For more details, please review our{" "}
-                            <Link href="/cookies" className="text-orange-600 hover:underline">Cookie Policy</Link>.
+                            <Link href="/cookies" className="text-emerald-600 hover:underline">Cookie Policy</Link>.
                         </p>
                     </Section>
 
@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
                             <li>File a complaint with the Office of the Privacy Commissioner of Canada</li>
                         </ul>
                         <p>To exercise any of these rights, contact us at{" "}
-                            <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline">support@afrochow.ca</a>.
+                            <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline">support@afrochow.ca</a>.
                         </p>
                     </Section>
 
@@ -111,18 +111,18 @@ export default function PrivacyPolicyPage() {
 
                     <Section title="10. Contact Us">
                         <p>If you have questions or concerns about this Privacy Policy or our data practices, please contact us:</p>
-                        <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-                            <Mail className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                        <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                             <div>
                                 <p className="font-semibold text-slate-800 text-sm">Afrochow Privacy Team</p>
-                                <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline text-sm">support@afrochow.ca</a>
+                                <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline text-sm">support@afrochow.ca</a>
                             </div>
                         </div>
                     </Section>
 
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
-                        <Link href="/terms" className="text-sm text-orange-600 hover:underline font-medium">Terms of Service →</Link>
-                        <Link href="/cookies" className="text-sm text-orange-600 hover:underline font-medium">Cookie Policy →</Link>
+                        <Link href="/terms" className="text-sm text-emerald-600 hover:underline font-medium">Terms of Service →</Link>
+                        <Link href="/cookies" className="text-sm text-emerald-600 hover:underline font-medium">Cookie Policy →</Link>
                     </div>
                 </div>
             </div>

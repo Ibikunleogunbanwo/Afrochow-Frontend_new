@@ -116,9 +116,9 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
             {/* Input */}
             <div className={`flex items-center gap-2 bg-white border-2 rounded-2xl px-4 shadow-sm transition-colors
                 ${compact ? "py-1.5" : "py-3"}
-                ${focused ? "border-orange-400" : "border-gray-200 hover:border-gray-300"}`}>
+                ${focused ? "border-emerald-400" : "border-gray-200 hover:border-gray-300"}`}>
                 {searching ? (
-                    <Loader2 className="w-4 h-4 text-orange-500 animate-spin shrink-0" />
+                    <Loader2 className="w-4 h-4 text-emerald-500 animate-spin shrink-0" />
                 ) : (
                     <Search className="w-4 h-4 text-gray-400 shrink-0" />
                 )}
@@ -141,7 +141,7 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
                     onClick={() => { requestPreciseLocation(); setQuery(""); }}
                     disabled={isDetecting}
                     title="Use my current location"
-                    className="shrink-0 p-1 rounded-lg text-orange-500 hover:bg-orange-50 transition-colors disabled:opacity-50"
+                    className="shrink-0 p-1 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors disabled:opacity-50"
                 >
                     {isDetecting
                         ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -152,10 +152,10 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
             {/* Current city pill — hidden in compact (navbar) mode */}
             {!compact && city && !query && (
                 <div className="mt-2 flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3 text-orange-500" />
+                    <MapPin className="w-3 h-3 text-emerald-500" />
                     <span className="text-xs text-gray-500">
                         Showing results near <span className="font-semibold text-gray-700">{city}</span>
-                        {locationSource === "gps" && <span className="text-orange-500"> (GPS)</span>}
+                        {locationSource === "gps" && <span className="text-emerald-500"> (GPS)</span>}
                     </span>
                 </div>
             )}
@@ -168,9 +168,9 @@ export default function LocationSearchInput({ placeholder = "Search city or addr
                             <button
                                 onMouseDown={(e) => e.preventDefault()} // prevent blur before click
                                 onClick={() => handleSelect(result)}
-                                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b border-gray-50 last:border-0"
+                                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-emerald-50 transition-colors border-b border-gray-50 last:border-0"
                             >
-                                <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                                <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                                 <div className="min-w-0">
                                     <p className="text-sm font-semibold text-gray-800 truncate">
                                         {buildLabel(result)}

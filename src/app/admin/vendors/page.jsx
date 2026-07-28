@@ -488,7 +488,7 @@ export default function AdminVendorsPage() {
                                 {/* Joined + click hint — desktop only */}
                                 <div className="hidden md:block w-32 shrink-0">
                                     <p className="text-xs text-gray-500">{formatDate(v.createdAt)}</p>
-                                    <p className="text-[10px] text-gray-300 mt-0.5 group-hover:text-orange-400 transition-colors">
+                                    <p className="text-[10px] text-gray-300 mt-0.5 group-hover:text-emerald-400 transition-colors">
                                         Click to view details
                                     </p>
                                 </div>

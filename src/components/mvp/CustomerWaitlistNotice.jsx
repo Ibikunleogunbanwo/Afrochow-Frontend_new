@@ -12,7 +12,7 @@ export default function CustomerWaitlistNotice({
     return (
         <div className="min-h-[70vh] flex items-center justify-center bg-gray-50 px-4 py-12">
             <div className="w-full max-w-md text-center bg-white border border-gray-100 rounded-2xl shadow-sm p-8">
-                <div className="w-14 h-14 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4">
                     <Heart className="w-7 h-7" />
                 </div>
                 <h1 className="text-2xl font-black text-gray-900">{title}</h1>
@@ -20,7 +20,7 @@ export default function CustomerWaitlistNotice({
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                     <Link
                         href={customerWaitlistPath}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white hover:bg-orange-700 transition-colors"
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors"
                     >
                         Join Waitlist
                         <ArrowRight className="w-4 h-4" />

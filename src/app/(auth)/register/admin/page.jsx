@@ -269,16 +269,16 @@ export default function AdminRegistrationPage() {
                       name="acceptTerms"
                       checked={formData.acceptTerms}
                       onChange={handleChange}
-                      className="mt-1 w-5 h-5 rounded border-2 border-gray-300 text-orange-600 focus:ring-4 focus:ring-orange-100"
+                      className="mt-1 w-5 h-5 rounded border-2 border-gray-300 text-emerald-600 focus:ring-4 focus:ring-emerald-100"
                   />
                   <div className="flex-1">
                   <span className="text-sm text-gray-700">
                     I accept the{" "}
-                    <a href="/terms" className="text-orange-600 hover:text-orange-700 underline">
+                    <a href="/terms" className="text-emerald-600 hover:text-emerald-700 underline">
                       Terms and Conditions
                     </a>{" "}
                     and{" "}
-                    <a href="/privacy" className="text-orange-600 hover:text-orange-700 underline">
+                    <a href="/privacy" className="text-emerald-600 hover:text-emerald-700 underline">
                       Privacy Policy
                     </a>
                     {" *"}
@@ -308,7 +308,7 @@ export default function AdminRegistrationPage() {
                 <button
                     type="submit"
                     disabled={loading || !!registerSuccess}
-                    className="w-full py-4 bg-linear-to-r from-orange-500 to-red-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full py-4 bg-linear-to-r from-emerald-500 to-amber-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? (
                       <div className="flex items-center justify-center gap-3">

@@ -135,7 +135,7 @@ function formatRetryMessage(message) {
 function SectionHeading({ icon: Icon, title }) {
   return (
       <div className="flex items-center gap-2 pt-2">
-        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-50 text-orange-500">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-500">
           <Icon className="w-4 h-4" />
         </div>
         <h3 className="text-sm font-semibold text-gray-700 tracking-wide uppercase">
@@ -263,7 +263,7 @@ function AvatarUpload({ value, onChange, onFileChange }) {
         {/* Circle preview */}
         <div
             onClick={() => fileRef.current?.click()}
-            className="relative w-24 h-24 rounded-full cursor-pointer group border-2 border-dashed border-orange-200 hover:border-orange-400 transition-colors overflow-hidden shrink-0 flex items-center justify-center bg-orange-50"
+            className="relative w-24 h-24 rounded-full cursor-pointer group border-2 border-dashed border-emerald-200 hover:border-emerald-400 transition-colors overflow-hidden shrink-0 flex items-center justify-center bg-emerald-50"
         >
           {value ? (
               <Image
@@ -276,8 +276,8 @@ function AvatarUpload({ value, onChange, onFileChange }) {
               />
           ) : (
               <div className="flex flex-col items-center gap-1">
-                <Camera className="w-8 h-8 text-orange-300 group-hover:text-orange-500 transition-colors" />
-                <span className="text-[10px] text-orange-300 group-hover:text-orange-500 transition-colors font-medium">
+                <Camera className="w-8 h-8 text-emerald-300 group-hover:text-emerald-500 transition-colors" />
+                <span className="text-[10px] text-emerald-300 group-hover:text-emerald-500 transition-colors font-medium">
               Upload
             </span>
               </div>
@@ -294,7 +294,7 @@ function AvatarUpload({ value, onChange, onFileChange }) {
           <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors text-left"
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors text-left"
           >
             {value ? "Change photo" : "Upload profile photo"}
           </button>
@@ -355,7 +355,7 @@ function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, 
             {/* Primary CTA — go to the verify email page */}
             <Button
                 type="button"
-                className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white border-0 shadow-md flex items-center justify-center gap-2"
+                className="w-full bg-linear-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white border-0 shadow-md flex items-center justify-center gap-2"
                 onClick={() => router.push(`/verify-email?email=${encodeURIComponent(email)}`)}
             >
               <Mail className="w-4 h-4" />
@@ -386,7 +386,7 @@ function SuccessScreen({ email, resendLoading, resendDisabled, resendCountdown, 
               <button
                   type="button"
                   onClick={() => router.push("/?signin=true")}
-                  className="font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                  className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
               >
                 Go to Sign In
               </button>
@@ -501,7 +501,7 @@ export default function CustomerRegistration() {
   if (authLoading || isAuthenticated || isCustomerWaitlistMode) {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
         </div>
     );
   }
@@ -1008,10 +1008,10 @@ export default function CustomerRegistration() {
                     <div
                         className={`mt-0.5 w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-all ${
                             formData.acceptTerms
-                                ? "bg-orange-500 border-orange-500"
+                                ? "bg-emerald-500 border-emerald-500"
                                 : err("acceptTerms")
                                     ? "bg-white border-red-400"
-                                    : "bg-white border-gray-300 hover:border-orange-400"
+                                    : "bg-white border-gray-300 hover:border-emerald-400"
                         }`}
                     >
                       {formData.acceptTerms && (
@@ -1037,7 +1037,7 @@ export default function CustomerRegistration() {
                           href="/terms"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-semibold text-orange-600 underline underline-offset-2 hover:text-orange-700"
+                          className="font-semibold text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
                       >
                       Terms and Conditions
                     </a>{" "}
@@ -1046,7 +1046,7 @@ export default function CustomerRegistration() {
                           href="/privacy"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-semibold text-orange-600 underline underline-offset-2 hover:text-orange-700"
+                          className="font-semibold text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
                       >
                       Privacy Policy
                     </a>
@@ -1069,7 +1069,7 @@ export default function CustomerRegistration() {
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.01] transition-all h-11 flex items-center justify-center gap-2"
+                    className="w-full bg-linear-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.01] transition-all h-11 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                       <>
@@ -1089,7 +1089,7 @@ export default function CustomerRegistration() {
                   <button
                       type="button"
                       onClick={() => router.push("/?signin=true")}
-                      className="font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                      className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
                   >
                     Sign in
                   </button>

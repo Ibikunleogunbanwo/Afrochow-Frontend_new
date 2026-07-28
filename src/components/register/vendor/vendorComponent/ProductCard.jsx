@@ -14,7 +14,7 @@ const getPromoBadge = (promotions) => {
     const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
     if (pct) return { label: `${pct.value}% OFF`, bg: 'bg-green-500' };
     const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
-    if (fixed) return { label: `$${fixed.value} OFF`, bg: 'bg-orange-500' };
+    if (fixed) return { label: `$${fixed.value} OFF`, bg: 'bg-emerald-500' };
     return null;
 };
 
@@ -40,7 +40,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
         <div
             onClick={onCardClick}
             className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100
-                       hover:shadow-md hover:border-orange-200 transition-all duration-200
+                       hover:shadow-md hover:border-emerald-200 transition-all duration-200
                        cursor-pointer flex flex-col"
         >
             {/* ── Image ── */}
@@ -55,8 +55,8 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                         onError={() => setImgError(true)}
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-gray-100">
-                        <ShoppingBag className="w-10 h-10 text-orange-200" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-gray-100">
+                        <ShoppingBag className="w-10 h-10 text-emerald-200" />
                     </div>
                 )}
 
@@ -73,7 +73,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                 {/* Favorite Button — top right */}
                 <button
                     onClick={toggleFavorite}
-                    className="absolute z-10 p-1.5 top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="absolute z-10 p-1.5 top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                 >
                     <Heart
@@ -95,7 +95,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                 {/* Price pill — bottom right on image */}
                 {product.price != null && (
                     <div className="absolute bottom-2 right-2">
-                        <span className="px-2.5 py-1 bg-orange-500 text-white text-xs font-black rounded-full shadow-md">
+                        <span className="px-2.5 py-1 bg-emerald-500 text-white text-xs font-black rounded-full shadow-md">
                             CA${product.price.toFixed(2)}
                         </span>
                     </div>
@@ -118,7 +118,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                 {/* Category + schedule */}
                 <div className="flex flex-wrap gap-1">
                     {product.categoryName && (
-                        <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-semibold rounded">
+                        <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-semibold rounded">
                             {product.categoryName}
                         </span>
                     )}
@@ -148,11 +148,11 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                 <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
                     <button
                         onClick={(e) => { e.stopPropagation(); onViewReviews(); }}
-                        className="flex items-center gap-1 group/star hover:text-orange-500 transition-colors"
+                        className="flex items-center gap-1 group/star hover:text-emerald-500 transition-colors"
                         aria-label="View reviews"
                     >
                         <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
-                        <span className="text-xs font-semibold text-gray-800 group-hover/star:text-orange-500 transition-colors">
+                        <span className="text-xs font-semibold text-gray-800 group-hover/star:text-emerald-500 transition-colors">
                             {product.averageRating?.toFixed(1) ?? '0.0'}
                         </span>
                         <span className="text-[10px] text-gray-400">
@@ -160,7 +160,7 @@ const ProductCard = ({ product, onViewReviews, onCardClick, onUnauthenticated, p
                         </span>
                     </button>
 
-                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-gray-400 group-hover:text-orange-500 transition-colors">
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold text-gray-400 group-hover:text-emerald-500 transition-colors">
                         View <ChevronRight className="w-3 h-3" />
                     </span>
                 </div>

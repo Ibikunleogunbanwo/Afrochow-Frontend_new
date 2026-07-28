@@ -40,8 +40,8 @@ const fmtTime = (t) => {
 const Section = ({ icon: Icon, title, children }) => (
     <div className="mb-6">
         <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-            <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-                <Icon className="w-3.5 h-3.5 text-orange-600" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{title}</h3>
         </div>
@@ -211,8 +211,8 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 className="w-10 h-10 rounded-xl object-cover border border-gray-200 shrink-0"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
-                                <Store className="w-5 h-5 text-orange-600" />
+                            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                                <Store className="w-5 h-5 text-emerald-600" />
                             </div>
                         )}
                         <div className="min-w-0">
@@ -268,7 +268,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                     {/* Loading skeleton */}
                     {loadingDetail && (
                         <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
-                            <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                            <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
                             <span className="text-sm font-medium">Loading vendor details…</span>
                         </div>
                     )}
@@ -334,7 +334,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                                 href={d.businessLicenseUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1.5 text-sm text-orange-600 font-semibold hover:underline"
+                                                className="inline-flex items-center gap-1.5 text-sm text-emerald-600 font-semibold hover:underline"
                                             >
                                                 <FileText className="w-3.5 h-3.5" />
                                                 View Document
@@ -380,7 +380,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                                     href={d.foodHandlingCertUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 text-sm text-orange-600 font-semibold hover:underline"
+                                                    className="inline-flex items-center gap-1.5 text-sm text-emerald-600 font-semibold hover:underline"
                                                 >
                                                     <FileText className="w-3.5 h-3.5" />
                                                     Open Certificate
@@ -505,9 +505,9 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 {/* Services */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div className={`flex items-center gap-2 p-3 rounded-xl border-2 ${
-                                        d.offersDelivery ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
+                                        d.offersDelivery ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"
                                     }`}>
-                                        <Truck className={`w-4 h-4 shrink-0 ${d.offersDelivery ? "text-orange-600" : "text-gray-300"}`} />
+                                        <Truck className={`w-4 h-4 shrink-0 ${d.offersDelivery ? "text-emerald-600" : "text-gray-300"}`} />
                                         <span className="text-sm font-semibold text-gray-800">Delivery</span>
                                         {d.offersDelivery
                                             ? <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto shrink-0" />

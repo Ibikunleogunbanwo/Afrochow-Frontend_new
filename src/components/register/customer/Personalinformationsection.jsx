@@ -18,7 +18,7 @@ export default function PersonalInformationSection({
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-orange-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-emerald-100">
                 👤 Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -37,10 +37,10 @@ export default function PersonalInformationSection({
                             onChange={handleInputChange}
                             placeholder="John"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.firstName
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </div>
@@ -61,10 +61,10 @@ export default function PersonalInformationSection({
                             onChange={handleInputChange}
                             placeholder="Doe"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.lastName
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </div>
@@ -85,10 +85,10 @@ export default function PersonalInformationSection({
                             onChange={handleInputChange}
                             placeholder="+1 (555) 123-4567"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.phone
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </div>
@@ -124,7 +124,7 @@ export default function PersonalInformationSection({
                     placeholder="e.g., Ring doorbell twice, leave at front door"
                     rows={3}
                     style={{ color: 'black', backgroundColor: 'white' }}
-                    className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all resize-none"
+                    className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all resize-none"
                 />
             </div>
         </div>

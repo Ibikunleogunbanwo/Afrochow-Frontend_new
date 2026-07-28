@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/hooks/useAuth"
 import { useGoogleLogin } from "@react-oauth/google"
 import { useRouter } from "next/navigation"
+import { customerWaitlistPath } from "@/lib/mvp"
 
 const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address." }),
@@ -35,7 +36,7 @@ const formSchema = z.object({
     rememberMe: z.boolean().default(false),
 })
 
-export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick }) {
+export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordClick, context = "customer" }) {
     const { login, loginWithGoogle, isLoading } = useAuth()
     const router = useRouter()
     const [showPassword, setShowPassword] = useState(false)
@@ -70,11 +71,39 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
     const handleGoogleSuccess = async (codeResponse) => {
         setGoogleLoading(true)
         try {
-            const destination = await loginWithGoogle(codeResponse.code)
+            const destination = await loginWithGoogle(codeResponse.code, context)
             toast.success("Welcome to Afrochow!", { id: 'google-login-success' })
             const isRoleRoute = destination?.startsWith('/vendor') || destination?.startsWith('/admin')
             if (!isRoleRoute) onClose()
         } catch (err) {
+            // Backend blocks Google auto-provisioning for brand-new customer
+            // accounts while waitlist mode is active (see
+            // GoogleAuthService.findOrCreateCustomer / CustomerWaitlistModeException).
+            // Existing accounts of any role sign in normally and never hit this —
+            // route new sign-ups to the waitlist instead of showing a raw failure.
+            const isWaitlistBlocked = err?.status === 403 && err?.message?.toLowerCase().includes("waitlist")
+            if (isWaitlistBlocked) {
+                toast.info("Customer accounts aren't open yet", {
+                    description: "Join the waitlist and we'll let you know when ordering goes live.",
+                })
+                onClose()
+                router.push(customerWaitlistPath)
+                return
+            }
+
+            // context="vendor" (e.g. this modal opened from the vendor
+            // registration flow's "Already have an account?"): a Google click on
+            // an email with no existing account never auto-creates one — Google
+            // can't supply the business details a vendor profile needs. Point
+            // them at the registration form instead of a generic failure toast.
+            const isUnknownVendorAccount = context === "vendor" && err?.status === 404
+            if (isUnknownVendorAccount) {
+                toast.info("No account found", {
+                    description: "We couldn't find a vendor account for that Google email. Please complete registration below.",
+                })
+                return
+            }
+
             toast.error("Google Sign-In Failed", {
                 description: err?.message || "Something went wrong. Please try again.",
             })
@@ -161,7 +190,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                         <button
                             type="button"
                             onClick={onSignUpClick}
-                            className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+                            className="text-emerald-600 font-bold hover:text-emerald-700 hover:underline transition-colors"
                         >
                             Sign Up
                         </button>
@@ -205,7 +234,7 @@ export function SignInModal({ isOpen, onClose, onSignUpClick, onForgotPasswordCl
                                                 <button
                                                     type="button"
                                                     onClick={onForgotPasswordClick}
-                                                    className="text-xs text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                                                    className="text-xs text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
                                                 >
                                                     Forgot password?
                                                 </button>

@@ -40,9 +40,9 @@ const LocationSelector = () => {
         <div className="relative inline-block" ref={dropdownRef}>
             <button
                 onClick={() => setShowSelector(!showSelector)}
-                className="flex items-center space-x-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-orange-300 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="flex items-center space-x-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-300 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400"
             >
-                <MapPin className="w-5 h-5 text-orange-600" />
+                <MapPin className="w-5 h-5 text-emerald-600" />
                 <span className="font-medium text-gray-900">{city}</span>
                 {detectedCity && (
                     <span className="text-xs text-green-600 font-medium">(Auto)</span>
@@ -55,9 +55,9 @@ const LocationSelector = () => {
                     <button
                         onClick={autoDetectCity}
                         disabled={isDetecting}
-                        className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors flex items-center space-x-2 border-b border-gray-100"
+                        className="w-full px-4 py-3 text-left hover:bg-emerald-50 transition-colors flex items-center space-x-2 border-b border-gray-100"
                     >
-                        <MapPin className="w-4 h-4 text-orange-600" />
+                        <MapPin className="w-4 h-4 text-emerald-600" />
                         <span className="font-medium text-gray-900">
                             {isDetecting ? 'Detecting...' : '🎯 Auto-detect my location'}
                         </span>
@@ -68,8 +68,8 @@ const LocationSelector = () => {
                             <button
                                 key={cityName}
                                 onClick={() => handleCityChange(cityName)}
-                                className={`w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors ${
-                                    city === cityName ? 'bg-orange-100 font-semibold text-orange-700' : 'text-gray-700'
+                                className={`w-full px-4 py-3 text-left hover:bg-emerald-50 transition-colors ${
+                                    city === cityName ? 'bg-emerald-100 font-semibold text-emerald-700' : 'text-gray-700'
                                 }`}
                             >
                                 {cityName}

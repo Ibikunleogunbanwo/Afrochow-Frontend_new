@@ -17,8 +17,8 @@ import PaymentIssuePanel from '@/components/checkout/PaymentIssuePanel';
 
 const HERO = {
     PENDING: {
-        gradient: 'from-orange-500 to-red-600',
-        ringColor: 'ring-orange-300',
+        gradient: 'from-emerald-500 to-amber-600',
+        ringColor: 'ring-emerald-300',
         Icon: Clock,
         title: 'Order Placed!',
         subtitle: (isDelivery) =>
@@ -37,7 +37,7 @@ const HERO = {
                 : 'Great news — the vendor has confirmed your order and will have it ready for pickup.',
     },
     PREPARING: {
-        gradient: 'from-orange-400 to-amber-600',
+        gradient: 'from-emerald-400 to-amber-600',
         ringColor: 'ring-amber-300',
         Icon: Clock,
         title: 'Being Prepared',
@@ -119,17 +119,17 @@ function OrderTimeline({ status, isDelivery }) {
                         <div key={step.key} className="flex-1 flex flex-col items-center relative">
                             {/* Connector line */}
                             {!last && (
-                                <div className={`absolute top-3.5 left-1/2 w-full h-0.5 ${done || current ? 'bg-orange-400' : 'bg-gray-200'}`} />
+                                <div className={`absolute top-3.5 left-1/2 w-full h-0.5 ${done || current ? 'bg-emerald-400' : 'bg-gray-200'}`} />
                             )}
                             {/* Dot */}
                             <div className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors
-                                ${done    ? 'bg-orange-500 border-orange-500'
-                                : current ? 'bg-white border-orange-500 ring-4 ring-orange-100'
+                                ${done    ? 'bg-emerald-500 border-emerald-500'
+                                : current ? 'bg-white border-emerald-500 ring-4 ring-emerald-100'
                                 :           'bg-white border-gray-200'}`}>
                                 {done ? (
                                     <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                                 ) : current ? (
-                                    <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                                 ) : (
                                     <div className="w-2 h-2 rounded-full bg-gray-300" />
                                 )}
@@ -152,7 +152,7 @@ function OrderTimeline({ status, isDelivery }) {
 const STATUS_BADGE = {
     PENDING:           { color: "text-amber-600  bg-amber-50  border-amber-200",  Icon: Clock },
     CONFIRMED:         { color: "text-blue-600   bg-blue-50   border-blue-200",   Icon: CheckCircle2 },
-    PREPARING:         { color: "text-orange-600 bg-orange-50 border-orange-200", Icon: Clock },
+    PREPARING:         { color: "text-emerald-600 bg-emerald-50 border-emerald-200", Icon: Clock },
     READY_FOR_PICKUP:  { color: "text-green-600  bg-green-50  border-green-200",  Icon: CheckCircle2 },
     OUT_FOR_DELIVERY:  { color: "text-blue-600   bg-blue-50   border-blue-200",   Icon: Truck },
     DELIVERED:         { color: "text-green-600  bg-green-50  border-green-200",  Icon: CheckCircle2 },
@@ -182,13 +182,13 @@ const CANCELLATION_AUDIT = {
     },
     VENDOR: {
         badge:   'Declined by restaurant',
-        badgeCss: 'bg-orange-100 text-orange-700 border-orange-200',
+        badgeCss: 'bg-emerald-100 text-emerald-700 border-emerald-200',
         message: 'The restaurant was unable to accept this order.',
         refund:  true,
     },
     VENDOR_POST_ACCEPT: {
         badge:   'Cancelled by restaurant',
-        badgeCss: 'bg-orange-100 text-orange-700 border-orange-200',
+        badgeCss: 'bg-emerald-100 text-emerald-700 border-emerald-200',
         message: 'The restaurant accepted your order but was subsequently unable to fulfil it.',
         refund:  true,
     },
@@ -246,7 +246,7 @@ function Row({ label, value, bold, highlight }) {
         <div className={`flex items-center justify-between text-sm
             ${bold ? "font-semibold text-gray-900 pt-2 border-t border-gray-100 mt-1" : "text-gray-500"}`}>
             <span>{label}</span>
-            <span className={bold || highlight ? "text-orange-600 font-bold" : ""}>{value}</span>
+            <span className={bold || highlight ? "text-emerald-600 font-bold" : ""}>{value}</span>
         </div>
     );
 }
@@ -327,7 +327,7 @@ export default function OrderConfirmationPage() {
                                 Go back
                             </button>
                         )}
-                        <Link href="/orders" className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors">
+                        <Link href="/orders" className="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
                             My orders
                         </Link>
                     </div>
@@ -543,7 +543,7 @@ export default function OrderConfirmationPage() {
                 {/* ── Order items ────────────────────────────────────────── */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-50">
-                        <ShoppingBag className="w-4 h-4 text-orange-500" />
+                        <ShoppingBag className="w-4 h-4 text-emerald-500" />
                         <h2 className="text-sm font-semibold text-gray-800">Your order</h2>
                         {!loading && order?.vendorName && (
                             <span className="ml-auto text-xs text-gray-400 font-medium">{order.vendorName}</span>
@@ -564,7 +564,7 @@ export default function OrderConfirmationPage() {
                             {order?.orderLines?.map((item, idx) => (
                                 <div key={idx} className="px-5 py-3.5 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <span className="w-6 h-6 rounded-full bg-orange-50 text-orange-600 text-xs font-bold flex items-center justify-center shrink-0">
+                                        <span className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold flex items-center justify-center shrink-0">
                                             {item.quantity}
                                         </span>
                                         <span className="text-sm text-gray-800 truncate">{item.productNameAtPurchase ?? "Item"}</span>
@@ -601,7 +601,7 @@ export default function OrderConfirmationPage() {
                 {!loading && isDelivery && order?.deliveryAddress && (
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <div className="flex items-center gap-2 mb-3">
-                            <MapPin className="w-4 h-4 text-orange-500" />
+                            <MapPin className="w-4 h-4 text-emerald-500" />
                             <h2 className="text-sm font-semibold text-gray-800">Delivery address</h2>
                         </div>
                         <p className="text-sm text-gray-600 leading-relaxed">
@@ -759,7 +759,7 @@ export default function OrderConfirmationPage() {
                         <button
                             onClick={() => fetchOrder({ silent: true })}
                             disabled={refreshing || cancelling}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-semibold shadow-md hover:from-orange-600 hover:to-red-700 transition-all disabled:opacity-70"
+                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-amber-600 text-white text-sm font-semibold shadow-md hover:from-emerald-600 hover:to-amber-700 transition-all disabled:opacity-70"
                         >
                             {refreshing
                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</>

@@ -47,7 +47,7 @@ function SignInPrompt({ onSignInClick }) {
             <button
                 type="button"
                 onClick={onSignInClick}
-                className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+                className="text-emerald-600 font-bold hover:text-emerald-700 hover:underline transition-colors"
             >
                 Sign In
             </button>
@@ -73,7 +73,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader className="items-center">
-                    <DialogTitle className="text-2xl font-black bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                    <DialogTitle className="text-2xl font-black bg-linear-to-r from-emerald-600 to-amber-600 bg-clip-text text-transparent">
                         Join Afrochow
                     </DialogTitle>
                     <DialogDescription className="text-center">
@@ -88,7 +88,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                         <button
                             type="button"
                             onClick={onSignInClick}
-                            className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
+                            className="text-emerald-600 font-bold hover:text-emerald-700 hover:underline transition-colors"
                         >
                             Sign In
                         </button>
@@ -124,7 +124,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                             }}
                             onMouseEnter={(e) => {
                                 if (activeTab !== tab) {
-                                    e.currentTarget.style.backgroundColor = '#ea580c'
+                                    e.currentTarget.style.backgroundColor = '#059669'
                                     e.currentTarget.style.color = 'white'
                                 }
                             }}
@@ -144,8 +144,8 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                 {activeTab === "Customer" && (
                     <div className="mt-2">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
-                                <User className="w-5 h-5 text-orange-600" />
+                            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+                                <User className="w-5 h-5 text-emerald-600" />
                             </div>
                             <div>
                                 <h3 className="font-bold text-gray-900">Customer</h3>
@@ -159,7 +159,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
 
                         <button
                             onClick={handleCustomerClick}
-                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <span>{isCustomerWaitlistMode ? "Join Customer Waitlist" : "Sign Up as Customer"}</span>
                             <ArrowRight className="w-4 h-4" />
@@ -171,8 +171,8 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
                 {activeTab === "Vendor" && isVendorOnboardingEnabled && (
                     <div className="mt-2">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
-                                <ChefHat className="w-5 h-5 text-orange-600" />
+                            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+                                <ChefHat className="w-5 h-5 text-emerald-600" />
                             </div>
                             <div>
                                 <h3 className="font-bold text-gray-900">Vendor</h3>
@@ -184,7 +184,7 @@ export function SignUpModal({ isOpen, onClose, onSignInClick }) {
 
                         <button
                             onClick={handleVendorClick}
-                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <span>Sign Up as Vendor</span>
                             <ArrowRight className="w-4 h-4" />

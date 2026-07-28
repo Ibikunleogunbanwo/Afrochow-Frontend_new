@@ -110,6 +110,23 @@ export const SearchAPI = {
     );
   },
 
+  /**
+   * "Same dish elsewhere" — finds this exact product (by name) sold by other
+   * vendors. lat/lng optional, same distanceKm behavior as getFeaturedProducts.
+   */
+  getSimilarProducts: async (publicProductId, lat = null, lng = null) => {
+    const params = new URLSearchParams();
+    if (lat != null && lng != null) {
+      params.set('lat', lat);
+      params.set('lng', lng);
+    }
+    const qs = params.toString();
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/products/${publicProductId}/similar${qs ? `?${qs}` : ''}`,
+        { method: 'GET' }
+    );
+  },
+
   // ================= VENDORS =================
 
   getTopRatedVendors: async () => {
@@ -133,9 +150,20 @@ export const SearchAPI = {
     );
   },
 
-  getVendorDetails: async (publicVendorId) => {
+  /**
+   * lat/lng are optional — when supplied, the backend resolves the vendor's
+   * distanceKm from that point via the Redis vendor geo index, same as
+   * getFeaturedProducts.
+   */
+  getVendorDetails: async (publicVendorId, lat = null, lng = null) => {
+    const params = new URLSearchParams();
+    if (lat != null && lng != null) {
+      params.set('lat', lat);
+      params.set('lng', lng);
+    }
+    const qs = params.toString();
     return fetchWithCredentials(
-        `${API_BASE_URL}/search/vendors/${publicVendorId}`,
+        `${API_BASE_URL}/search/vendors/${publicVendorId}${qs ? `?${qs}` : ''}`,
         { method: 'GET' }
     );
   },

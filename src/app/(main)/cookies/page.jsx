@@ -22,7 +22,7 @@ const CookieRow = ({ name, purpose, duration, type }) => (
             <span className={`px-2 py-0.5 rounded-full font-medium ${
                 type === "Essential" ? "bg-blue-50 text-blue-700" :
                 type === "Functional" ? "bg-green-50 text-green-700" :
-                "bg-orange-50 text-orange-700"
+                "bg-emerald-50 text-emerald-700"
             }`}>{type}</span>
         </td>
     </tr>
@@ -32,13 +32,13 @@ export default function CookiePolicyPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Hero */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-14 px-4">
+            <div className="bg-gradient-to-r from-emerald-500 to-amber-600 text-white py-14 px-4">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Cookie className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Cookie Policy</h1>
-                    <p className="text-orange-100 text-sm">Last updated: March 2025</p>
+                    <p className="text-emerald-100 text-sm">Last updated: March 2025</p>
                 </div>
             </div>
 
@@ -49,7 +49,7 @@ export default function CookiePolicyPage() {
                     <p className="text-slate-600 text-sm leading-relaxed mb-8">
                         This Cookie Policy explains how Afrochow ("we", "us", or "our") uses cookies and similar
                         tracking technologies on our platform at{" "}
-                        <span className="text-orange-600 font-medium">www.afrochow.ca</span>. By continuing to use
+                        <span className="text-emerald-600 font-medium">www.afrochow.ca</span>. By continuing to use
                         our platform, you consent to our use of cookies as described in this policy.
                     </p>
 
@@ -98,7 +98,7 @@ export default function CookiePolicyPage() {
                         <p>You can control and manage cookies in several ways:</p>
                         <p><strong className="text-slate-800">Browser Settings:</strong> Most browsers allow you to refuse or delete cookies through their settings. The process varies by browser — refer to your browser's help documentation for instructions.</p>
                         <p><strong className="text-slate-800">Opt-out Tools:</strong> You can opt out of Google Analytics tracking by installing the{" "}
-                            <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Google Analytics Opt-out Browser Add-on</a>.
+                            <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">Google Analytics Opt-out Browser Add-on</a>.
                         </p>
                         <p>Please note that disabling certain cookies may affect the functionality of the Platform, including your ability to stay signed in or keep items in your cart.</p>
                     </Section>
@@ -113,18 +113,18 @@ export default function CookiePolicyPage() {
 
                     <Section title="9. Contact Us">
                         <p>If you have any questions about our use of cookies, please contact us:</p>
-                        <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-                            <Mail className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                        <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                             <div>
                                 <p className="font-semibold text-slate-800 text-sm">Afrochow Support</p>
-                                <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline text-sm">support@afrochow.ca</a>
+                                <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline text-sm">support@afrochow.ca</a>
                             </div>
                         </div>
                     </Section>
 
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
-                        <Link href="/privacy" className="text-sm text-orange-600 hover:underline font-medium">Privacy Policy →</Link>
-                        <Link href="/terms" className="text-sm text-orange-600 hover:underline font-medium">Terms of Service →</Link>
+                        <Link href="/privacy" className="text-sm text-emerald-600 hover:underline font-medium">Privacy Policy →</Link>
+                        <Link href="/terms" className="text-sm text-emerald-600 hover:underline font-medium">Terms of Service →</Link>
                     </div>
                 </div>
             </div>

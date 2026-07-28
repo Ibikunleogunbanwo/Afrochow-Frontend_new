@@ -1,10 +1,15 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Clock, Star, Pencil, Heart } from 'lucide-react';
+import Link from 'next/link';
+import { X, Loader2, Clock, Star, Pencil, Heart, MapPin, ArrowRight } from 'lucide-react';
 import { useCart } from "@/contexts/CartContext";
 import { useFavorite } from '@/hooks/useFavorite';
+import { useLocation } from '@/contexts/LocationContext';
+import { SearchAPI } from '@/lib/api/search.api';
+import { formatDistance } from '@/lib/utils/distance';
 import { customerWaitlistPath, isOrderingEnabled } from '@/lib/mvp';
+import { isGroceryOrProduceCategory } from '@/lib/utils/productCategory';
 
 const Tag = ({ text }) => (
     <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
@@ -15,6 +20,7 @@ const Tag = ({ text }) => (
 const ProductDetailModal = ({
                                 product,
                                 vendorName,
+                                storeCategory,
                                 isLoading,
                                 isStoreOpen,
                                 onClose,
@@ -28,6 +34,30 @@ const ProductDetailModal = ({
     const timerRef = useRef(null);
 
     const { addToCart, clearCart } = useCart();
+    const { coordinates } = useLocation();
+
+    // "Also available at" — same dish, other vendors
+    const [similarProducts, setSimilarProducts] = useState([]);
+    const [similarLoading, setSimilarLoading]   = useState(false);
+
+    useEffect(() => {
+        if (!product?.publicProductId) {
+            setSimilarProducts([]);
+            return;
+        }
+        let cancelled = false;
+        setSimilarLoading(true);
+        SearchAPI.getSimilarProducts(product.publicProductId, coordinates?.lat, coordinates?.lng)
+            .then((res) => {
+                if (cancelled) return;
+                const list = res?.success && Array.isArray(res.data) ? res.data : [];
+                setSimilarProducts(list);
+            })
+            .catch(() => { if (!cancelled) setSimilarProducts([]); })
+            .finally(() => { if (!cancelled) setSimilarLoading(false); });
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [product?.publicProductId, coordinates?.lat, coordinates?.lng]);
 
     // Must stay above the `if (!product) return null;` guard below
     // (Rules of Hooks) — the hook itself already tolerates an undefined id.
@@ -76,6 +106,9 @@ const ProductDetailModal = ({
     } = product;
 
     const hasDietaryTags = isVegetarian || isVegan || isGlutenFree || isSpicy;
+    // Groceries/farm produce are pre-packaged/raw goods, not cooked-to-order —
+    // "min prep time" doesn't make sense on a bag of poundo yam.
+    const isGroceryOrProduce = isGroceryOrProduceCategory(storeCategory);
     const totalPrice = (price * quantity).toFixed(2);
     const isDisabled = !available || !isStoreOpen;
 
@@ -156,7 +189,7 @@ const ProductDetailModal = ({
                                 className="object-cover"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-amber-100">
                                 <span className="text-6xl">🍲</span>
                             </div>
                         )}
@@ -165,7 +198,7 @@ const ProductDetailModal = ({
                         {!isLoading && (
                             <button
                                 onClick={toggleFavorite}
-                                className="absolute z-10 p-2 top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="absolute z-10 p-2 top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                             >
                                 <Heart
@@ -212,7 +245,7 @@ const ProductDetailModal = ({
                     )}
 
                     {/* Prep Time */}
-                    {preparationTimeMinutes > 0 && (
+                    {preparationTimeMinutes > 0 && !isGroceryOrProduce && (
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Clock className="w-4 h-4" />
                             <span>{preparationTimeMinutes} min prep time</span>
@@ -238,6 +271,47 @@ const ProductDetailModal = ({
                                     <Pencil className="w-3.5 h-3.5" />
                                     Write a Review
                                 </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Also available at — same dish, other vendors */}
+                    {(similarLoading || similarProducts.length > 0) && (
+                        <div>
+                            <h3 className="text-base font-bold text-gray-900 mb-2">Also available at</h3>
+                            {similarLoading ? (
+                                <div className="space-y-2">
+                                    {[...Array(2)].map((_, i) => (
+                                        <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {similarProducts.map((item) => (
+                                        <Link
+                                            key={item.publicProductId}
+                                            href={`/restaurant/${item.vendorPublicId}`}
+                                            onClick={onClose}
+                                            className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors group"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                                    {item.restaurantName}
+                                                </p>
+                                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                                    <span>CA${Number(item.price).toFixed(2)}</span>
+                                                    {formatDistance(item.distanceKm) && (
+                                                        <span className="flex items-center gap-0.5">
+                                                            <MapPin className="w-3 h-3" />
+                                                            {formatDistance(item.distanceKm)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 shrink-0 transition-colors" />
+                                        </Link>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     )}
@@ -287,7 +361,7 @@ const ProductDetailModal = ({
                                     ? 'bg-green-600 text-white'
                                     : isDisabled
                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-orange-600 text-white hover:bg-orange-700 active:scale-95'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
                             }`}
                         >
                             {getButtonText()}

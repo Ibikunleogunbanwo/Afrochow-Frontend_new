@@ -178,7 +178,7 @@ export default function CropModal({ file, aspectRatio = 16 / 9, label = "Image",
                     <div
                         ref={containerRef}
                         style={{ aspectRatio: `${aspectRatio}`, maxWidth: "100%" }}
-                        className={`relative overflow-hidden rounded-xl border-2 border-orange-400 mx-auto bg-gray-100 ${
+                        className={`relative overflow-hidden rounded-xl border-2 border-emerald-400 mx-auto bg-gray-100 ${
                             dragging ? "cursor-grabbing" : "cursor-grab"
                         } select-none`}
                         onMouseDown={onMouseDown}
@@ -252,7 +252,7 @@ export default function CropModal({ file, aspectRatio = 16 / 9, label = "Image",
                     <button
                         type="button"
                         onClick={handleConfirm}
-                        className="flex-1 px-4 py-2.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                     >
                         <Check className="w-4 h-4" />
                         Apply Crop

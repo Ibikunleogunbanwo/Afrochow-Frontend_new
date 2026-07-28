@@ -56,7 +56,7 @@ const AdminDashboardLayout = ({ children }) => {
         { name: 'Vendors',        icon: Store,           href: '/admin/vendors',       badgeKey: 'vendors', badgeMeta: { label: 'pending', colors: { default: 'bg-yellow-100 text-yellow-700', active: 'bg-yellow-400/30 text-yellow-100' } } },
         { name: 'Orders',         icon: ShoppingBag,     href: '/admin/orders',        badgeKey: 'orders',  badgeMeta: { label: 'pending',   colors: { default: 'bg-red-100 text-red-700',    active: 'bg-red-400/30 text-red-100'    } } },
         { name: 'Payments',       icon: CreditCard,      href: '/admin/payments',      badgeKey: null },
-        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-orange-100 text-orange-700', active: 'bg-orange-400/30 text-orange-100' } } },
+        { name: 'Reviews',        icon: Star,            href: '/admin/reviews',       badgeKey: 'reviews', badgeMeta: { label: 'hidden',    colors: { default: 'bg-emerald-100 text-emerald-700', active: 'bg-emerald-400/30 text-emerald-100' } } },
         { name: 'Promotions',     icon: Tag,             href: '/admin/promotions',    badgeKey: null },
         { name: 'Products',       icon: Package,         href: '/admin/products',      badgeKey: null },
         { name: 'Categories',     icon: LayoutGrid,      href: '/admin/categories',    badgeKey: null },
@@ -429,7 +429,7 @@ const AdminDashboardLayout = ({ children }) => {
                                     {notificationsOpen && (() => {
                                         const unread = notifications.filter((n) => n.unread).slice(0, 3);
                                         const iconMap = {
-                                            new_order:    { bg: 'bg-orange-100', color: 'text-orange-600', Icon: Package },
+                                            new_order:    { bg: 'bg-emerald-100', color: 'text-emerald-600', Icon: Package },
                                             order_update: { bg: 'bg-blue-100',   color: 'text-blue-600',   Icon: Package },
                                             delivery:     { bg: 'bg-blue-100',   color: 'text-blue-600',   Icon: Truck },
                                             payment:      { bg: 'bg-green-100',  color: 'text-green-600',  Icon: CreditCard },
@@ -476,7 +476,7 @@ const AdminDashboardLayout = ({ children }) => {
                                                             return (
                                                                 <div
                                                                     key={n.id}
-                                                                    className="flex items-start gap-3 px-4 py-3 bg-orange-50/30 hover:bg-gray-50 transition-colors"
+                                                                    className="flex items-start gap-3 px-4 py-3 bg-emerald-50/30 hover:bg-gray-50 transition-colors"
                                                                 >
                                                                     {/* Icon */}
                                                                     <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center mt-0.5 ${bg}`}>

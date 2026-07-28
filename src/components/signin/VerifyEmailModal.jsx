@@ -192,7 +192,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                     </p>
                     <button
                         onClick={handleSignIn}
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3.5 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white py-3.5 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                     >
                         Continue to Sign In
                     </button>
@@ -209,7 +209,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
 
                         {/* Header */}
                         <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                                 <ShieldCheck className="w-8 h-8 text-white" />
                             </div>
                             <h1 className="text-2xl font-black text-gray-900 mb-1">Verify Your Email</h1>
@@ -217,7 +217,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                                 We&apos;ve sent a 6-digit code to
                             </p>
                             {email && (
-                                <p className="text-sm font-semibold text-orange-600 mt-0.5 break-all">{email}</p>
+                                <p className="text-sm font-semibold text-emerald-600 mt-0.5 break-all">{email}</p>
                             )}
                         </div>
 
@@ -248,8 +248,8 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                                                 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2
                                                 disabled:opacity-50
                                                 ${digit
-                                                    ? "border-orange-500 bg-orange-50 text-gray-900 focus:ring-orange-400"
-                                                    : "border-gray-200 bg-white text-gray-900 focus:border-orange-400 focus:ring-orange-300"
+                                                    ? "border-emerald-500 bg-emerald-50 text-gray-900 focus:ring-emerald-400"
+                                                    : "border-gray-200 bg-white text-gray-900 focus:border-emerald-400 focus:ring-emerald-300"
                                                 }
                                             `}
                                         />
@@ -261,7 +261,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                             <button
                                 type="submit"
                                 disabled={loading || !isComplete}
-                                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white py-3 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full bg-gradient-to-r from-emerald-500 to-amber-600 hover:from-emerald-600 hover:to-amber-700 text-white py-3 px-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {loading ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" /> Verifying…</>
@@ -282,7 +282,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                                             ? "bg-green-50 text-green-600 border-green-200"
                                             : resendDisabled || resendLoading
                                                 ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
-                                                : "bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300"
+                                                : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300"
                                     }`}
                                 >
                                     {resendLoading ? (
@@ -299,9 +299,9 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                         </form>
 
                         {/* Help tip */}
-                        <div className="mt-6 p-3.5 bg-orange-50 border border-orange-100 rounded-2xl">
+                        <div className="mt-6 p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl">
                             <h3 className="text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-                                <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+                                <AlertCircle className="h-3.5 w-3.5 text-emerald-500" />
                                 Need help?
                             </h3>
                             <ul className="text-xs text-gray-500 space-y-0.5">
@@ -315,7 +315,7 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
                         <button
                             type="button"
                             onClick={handleBack}
-                            className="mt-5 w-full text-sm text-gray-400 hover:text-orange-600 font-medium transition-colors text-center"
+                            className="mt-5 w-full text-sm text-gray-400 hover:text-emerald-600 font-medium transition-colors text-center"
                         >
                             ← Back to Home
                         </button>

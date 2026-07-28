@@ -293,7 +293,7 @@ const DisplayStores = () => {
                     <nav className="flex items-center gap-1 text-sm mb-8 flex-wrap" aria-label="Breadcrumb">
                         <Link
                             href="/"
-                            className="flex items-center gap-1 text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="flex items-center gap-1 text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             <Home className="w-3.5 h-3.5" />
                             <span>Home</span>
@@ -303,7 +303,7 @@ const DisplayStores = () => {
 
                         <Link
                             href="/allstore"
-                            className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             All Vendors
                         </Link>
@@ -330,7 +330,7 @@ const DisplayStores = () => {
                         <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
                             {getPageTitle()}
                             {!isLoading && totalCount > 0 && (
-                                <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
+                                <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-amber-600 mt-1">
                                     {totalCount} {totalCount === 1 ? 'product' : 'products'} found
                                 </span>
                             )}
@@ -352,7 +352,7 @@ const DisplayStores = () => {
                                 onChange={(e) => setQueryInput(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="Search vendors, category, or products — e.g. Jollof Rice, Grocery, Farm Produce, Mama's Kitchen..."
-                                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
+                                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
 
@@ -364,13 +364,13 @@ const DisplayStores = () => {
                                 onChange={(e) => setCityInput(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="City..."
-                                className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
+                                className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
 
                         <button
                             onClick={handleSearch}
-                            className="flex items-center justify-center gap-2 px-6 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold whitespace-nowrap"
                         >
                             <HiSearch className="w-5 h-5" />
                             <span>Search</span>
@@ -380,7 +380,7 @@ const DisplayStores = () => {
                     {/* Results count */}
                     {!isLoading && totalCount > 0 && (
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-                            <span className="font-semibold text-orange-600">
+                            <span className="font-semibold text-emerald-600">
                                 {totalCount} {totalCount === 1 ? 'product' : 'products'}
                                 {effectiveCity ? ` in ${effectiveCity}` : ''}
                             </span>
@@ -456,7 +456,7 @@ const DisplayStores = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 0}
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-emerald-50 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Previous
                                     </button>
@@ -469,8 +469,8 @@ const DisplayStores = () => {
                                                     onClick={() => handlePageChange(page)}
                                                     className={`min-w-10 px-3 py-2 rounded-lg font-semibold transition-all ${
                                                         currentPage === page
-                                                            ? 'bg-orange-600 text-white shadow-lg'
-                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-orange-400'
+                                                            ? 'bg-emerald-600 text-white shadow-lg'
+                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-emerald-50 hover:border-emerald-400'
                                                     }`}
                                                 >
                                                     {page + 1}
@@ -484,7 +484,7 @@ const DisplayStores = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage >= totalPages - 1}
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-emerald-50 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Next
                                     </button>
@@ -499,8 +499,8 @@ const DisplayStores = () => {
                 ) : (
                     <div className="text-center py-20">
                         <div className="max-w-md mx-auto">
-                            <div className="w-24 h-24 mx-auto mb-6 bg-orange-100 rounded-full flex items-center justify-center">
-                                <HiSearch className="w-12 h-12 text-orange-500" />
+                            <div className="w-24 h-24 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                                <HiSearch className="w-12 h-12 text-emerald-500" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-3">
                                 No vendors found
@@ -510,7 +510,7 @@ const DisplayStores = () => {
                             </p>
                             <button
                                 onClick={handleClearAll}
-                                className="inline-block px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                                className="inline-block px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
                             >
                                 Browse All Vendors
                             </button>

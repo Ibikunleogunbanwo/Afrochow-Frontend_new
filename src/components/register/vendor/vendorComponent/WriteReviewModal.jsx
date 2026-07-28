@@ -147,7 +147,7 @@ const WriteReviewModal = ({
                     {/* Star Selector */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Your Rating <span className="text-orange-500">*</span>
+                            Your Rating <span className="text-emerald-500">*</span>
                         </label>
                         <div
                             className="flex items-center gap-1"
@@ -166,7 +166,7 @@ const WriteReviewModal = ({
                                         onClick={() => setRating(star)}
                                         onMouseEnter={() => setHoverRating(star)}
                                         onMouseLeave={() => setHoverRating(0)}
-                                        className="p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded transition-transform hover:scale-110"
+                                        className="p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded transition-transform hover:scale-110"
                                     >
                                         <Star
                                             className={`w-8 h-8 transition-colors ${
@@ -201,7 +201,7 @@ const WriteReviewModal = ({
                             onChange={(e) => setComment(e.target.value)}
                             placeholder={`Share your experience with ${subjectLabel}…`}
                             rows={4}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                         />
                     </div>
 
@@ -220,8 +220,8 @@ const WriteReviewModal = ({
                             success
                                 ? 'bg-green-600 text-white'
                                 : submitting
-                                    ? 'bg-orange-400 text-white cursor-not-allowed'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700 active:scale-95'
+                                    ? 'bg-emerald-400 text-white cursor-not-allowed'
+                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
                         }`}
                     >
                         {success

@@ -23,7 +23,7 @@ const getPromoBadge = (promotions) => {
     const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
     if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
     const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
-    if (fixed) return { label: `🏷️ CA$${fixed.value} OFF`, bg: 'bg-orange-500' };
+    if (fixed) return { label: `🏷️ CA$${fixed.value} OFF`, bg: 'bg-emerald-500' };
     return null;
 };
 
@@ -135,7 +135,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                                 )}
                             </>
                         ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
+                            <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-emerald-100 to-amber-100">
                                 <span className="text-4xl">🍲</span>
                             </div>
                         )}
@@ -146,7 +146,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                         {/* Favorite Button */}
                         <button
                             onClick={handleFavoriteClick}
-                            className="absolute z-10 p-2.5 transition-all duration-300 rounded-full top-3 right-3 bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-lg"
+                            className="absolute z-10 p-2.5 transition-all duration-300 rounded-full top-3 right-3 bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-lg"
                             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                         >
                             <Heart
@@ -206,7 +206,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                                 {categoryDisplay.split(' • ').map((cat, idx) => (
                                     <span
                                         key={idx}
-                                        className="px-2.5 py-0.5 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-100 rounded-full"
+                                        className="px-2.5 py-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full"
                                     >
                                         {cat}
                                     </span>
@@ -219,8 +219,8 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
 
                             {/* Delivery Time */}
                             <div className="flex items-center space-x-2 text-gray-600">
-                                <div className="p-1.5 bg-orange-100 rounded-lg">
-                                    <Truck className="w-4 h-4 text-orange-600" />
+                                <div className="p-1.5 bg-emerald-100 rounded-lg">
+                                    <Truck className="w-4 h-4 text-emerald-600" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Delivery</p>
@@ -247,7 +247,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                             {(deliveryFee !== undefined || location) && (
                                 <div className="flex items-center justify-between">
                                     {deliveryFee !== undefined && (
-                                        <span className="font-semibold text-orange-600">
+                                        <span className="font-semibold text-emerald-600">
                                             {deliveryFee === 0 || deliveryFee === '0'
                                                 ? '🎉 Free Delivery'
                                                 : `CA$${deliveryFee} delivery`}
@@ -275,7 +275,7 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
                     </div>
 
                     {/* Hover Arrow Indicator */}
-                    <div className="absolute bottom-5 right-5 w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                    <div className="absolute bottom-5 right-5 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>

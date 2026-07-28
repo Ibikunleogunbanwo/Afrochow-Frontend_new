@@ -114,10 +114,10 @@ export function CardStack({
                     <button
                         onClick={prev}
                         disabled={!canGoPrev}
-                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
                         aria-label="Previous category"
                     >
-                        <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors" />
+                        <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-emerald-600 transition-colors" />
                     </button>
                 )}
                 {/* Stage */}
@@ -202,10 +202,10 @@ export function CardStack({
                     <button
                         onClick={next}
                         disabled={!canGoNext}
-                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                        className="hidden sm:flex shrink-0 z-20 w-10 h-10 sm:w-12 sm:h-12 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
                         aria-label="Next category"
                     >
-                        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors" />
+                        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-emerald-600 transition-colors" />
                     </button>
                 )}
             </div>
@@ -221,7 +221,7 @@ export function CardStack({
                                 className={cn(
                                     "transition-all duration-300",
                                     idx === active
-                                        ? "w-6 h-2 rounded-full bg-orange-600"
+                                        ? "w-6 h-2 rounded-full bg-emerald-600"
                                         : "w-2 h-2 rounded-full bg-gray-300 hover:bg-gray-500",
                                 )}
                                 aria-label={`Go to ${it.title}`}
@@ -231,7 +231,7 @@ export function CardStack({
                     {activeItem?.href && (
                         <Link
                             href={activeItem.href}
-                            className="text-gray-400 hover:text-orange-600 transition-colors"
+                            className="text-gray-400 hover:text-emerald-600 transition-colors"
                             aria-label="Open link"
                         >
                             <SquareArrowOutUpRight className="h-4 w-4" />

@@ -17,13 +17,13 @@ export default function TermsOfServicePage() {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Hero */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-14 px-4">
+            <div className="bg-gradient-to-r from-emerald-500 to-amber-600 text-white py-14 px-4">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <ScrollText className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Terms of Service</h1>
-                    <p className="text-orange-100 text-sm">Last updated: March 2025</p>
+                    <p className="text-emerald-100 text-sm">Last updated: March 2025</p>
                 </div>
             </div>
 
@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
 
                     <p className="text-slate-600 text-sm leading-relaxed mb-8">
                         These Terms of Service ("Terms") govern your access to and use of the Afrochow platform,
-                        including the website at <span className="text-orange-600 font-medium">www.afrochow.ca</span> and
+                        including the website at <span className="text-emerald-600 font-medium">www.afrochow.ca</span> and
                         any associated mobile applications (collectively, the "Platform"). By creating an account or
                         placing an order, you agree to be bound by these Terms. If you do not agree, please do not use
                         our Platform.
@@ -46,7 +46,7 @@ export default function TermsOfServicePage() {
                     <Section title="2. Eligibility">
                         <p>You must be at least 18 years of age to create an account and use the Platform. By using Afrochow, you represent and warrant that you meet this requirement.</p>
                         <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately at{" "}
-                            <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline">support@afrochow.ca</a> if you suspect unauthorized access to your account.
+                            <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline">support@afrochow.ca</a> if you suspect unauthorized access to your account.
                         </p>
                     </Section>
 
@@ -104,18 +104,18 @@ export default function TermsOfServicePage() {
 
                     <Section title="11. Contact Us">
                         <p>If you have questions about these Terms, please contact us:</p>
-                        <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-                            <Mail className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                        <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                             <div>
                                 <p className="font-semibold text-slate-800 text-sm">Afrochow Support</p>
-                                <a href="mailto:support@afrochow.ca" className="text-orange-600 hover:underline text-sm">support@afrochow.ca</a>
+                                <a href="mailto:support@afrochow.ca" className="text-emerald-600 hover:underline text-sm">support@afrochow.ca</a>
                             </div>
                         </div>
                     </Section>
 
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
-                        <Link href="/privacy" className="text-sm text-orange-600 hover:underline font-medium">Privacy Policy →</Link>
-                        <Link href="/cookies" className="text-sm text-orange-600 hover:underline font-medium">Cookie Policy →</Link>
+                        <Link href="/privacy" className="text-sm text-emerald-600 hover:underline font-medium">Privacy Policy →</Link>
+                        <Link href="/cookies" className="text-sm text-emerald-600 hover:underline font-medium">Cookie Policy →</Link>
                     </div>
                 </div>
             </div>

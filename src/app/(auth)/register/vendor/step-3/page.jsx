@@ -67,7 +67,7 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
             <div className="relative">
               {uploading && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-lg">
-                    <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                    <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                   </div>
               )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -88,10 +88,10 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
         ) : (
             <div
                 className={`relative w-full h-40 rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer bg-gray-50 transition-all ${
-                    uploading    ? "border-orange-400 bg-orange-50/40" :
-                        dragActive   ? "border-orange-500 bg-orange-50"   :
+                    uploading    ? "border-emerald-400 bg-emerald-50/40" :
+                        dragActive   ? "border-emerald-500 bg-emerald-50"   :
                             displayError ? "border-red-300 bg-red-50"         :
-                                "border-gray-300 hover:border-orange-400"
+                                "border-gray-300 hover:border-emerald-400"
                 }`}
                 onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
                 onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
@@ -100,8 +100,8 @@ function BannerUploader({ onChange, error, initialUrl, uploading }) {
             >
               {uploading ? (
                   <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-                    <p className="text-sm text-orange-600 font-medium">Uploading banner…</p>
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                    <p className="text-sm text-emerald-600 font-medium">Uploading banner…</p>
                   </div>
               ) : (
                   <>
@@ -182,7 +182,7 @@ function LicenseUploader({ onChange, error, initialUrl, uploading }) {
             <div className="relative p-3 bg-gray-50 rounded-lg border border-gray-200">
               {uploading && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-lg">
-                    <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
                   </div>
               )}
               <div className="flex items-center gap-3">
@@ -209,14 +209,14 @@ function LicenseUploader({ onChange, error, initialUrl, uploading }) {
             </div>
         ) : (
             <div className={`relative border-2 border-dashed rounded-lg bg-gray-50 transition-all ${
-                uploading    ? "border-orange-400 bg-orange-50/40" :
+                uploading    ? "border-emerald-400 bg-emerald-50/40" :
                     displayError ? "border-red-300 bg-red-50"         :
-                        "border-gray-300 hover:border-orange-400"
+                        "border-gray-300 hover:border-emerald-400"
             }`}>
               {uploading ? (
                   <div className="flex flex-col items-center justify-center py-6 gap-2">
-                    <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
-                    <p className="text-sm text-orange-600 font-medium">Uploading license…</p>
+                    <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                    <p className="text-sm text-emerald-600 font-medium">Uploading license…</p>
                   </div>
               ) : (
                   <>
@@ -266,7 +266,7 @@ function AddressField({ id, label, icon: Icon, value, onChange, error, placehold
               maxLength={maxLength}
               onChange={(e) => onChange(transform ? transform(e.target.value) : e.target.value)}
               className={`pl-9 h-11 ${value && !error ? "pr-10" : ""} ${
-                  error ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300 focus-visible:ring-orange-500"
+                  error ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300 focus-visible:ring-emerald-500"
               }`}
           />
           {!error && value && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />}
@@ -457,7 +457,7 @@ export default function Step3() {
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
 
           {/* ── BRANDING ── */}
-          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Branding</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Branding</p>
 
           {/* Logo */}
           <Controller
@@ -467,7 +467,7 @@ export default function Step3() {
                   <div className="relative">
                     {uploadingLogo && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-xl">
-                          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                         </div>
                     )}
                     <ImageUploader
@@ -518,15 +518,15 @@ export default function Step3() {
 
           {/* ── ADDRESS ── */}
           <div className="pt-3 border-t border-gray-100">
-            <div className="flex items-start gap-2 mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-              <Info className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <Info className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-orange-900">Business Address</p>
-                <p className="text-xs text-orange-800 mt-0.5">Ensure your address is accurate — it will be shown publicly to customers.</p>
+                <p className="text-xs font-semibold text-emerald-900">Business Address</p>
+                <p className="text-xs text-emerald-800 mt-0.5">Ensure your address is accurate — it will be shown publicly to customers.</p>
               </div>
             </div>
 
-            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Location</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 mb-4">Your Location</p>
 
             <div className="space-y-4">
               <AddressField
@@ -558,7 +558,7 @@ export default function Step3() {
                     disabled:cursor-not-allowed disabled:opacity-50 transition-all
                     ${errors.province
                           ? "border-red-500 focus-visible:ring-red-500 bg-red-50/30"
-                          : "border-gray-300 focus-visible:ring-orange-500"
+                          : "border-gray-300 focus-visible:ring-emerald-500"
                       }`}
                   >
                     <option value="" disabled>Select province</option>
@@ -593,13 +593,13 @@ export default function Step3() {
 
               {/* Default Address Toggle */}
               <div className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
-                  defaultAddress ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
+                  defaultAddress ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                      defaultAddress ? "bg-orange-100" : "bg-gray-200"
+                      defaultAddress ? "bg-emerald-100" : "bg-gray-200"
                   }`}>
-                    <Home className={`h-4 w-4 ${defaultAddress ? "text-orange-600" : "text-gray-400"}`} />
+                    <Home className={`h-4 w-4 ${defaultAddress ? "text-emerald-600" : "text-gray-400"}`} />
                   </div>
                   <div>
                     <Label htmlFor="defaultAddress" className="text-gray-900 font-medium cursor-pointer text-sm">

@@ -27,7 +27,7 @@ export default function AccountInformationSection({
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-orange-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-emerald-100">
                 📧 Account Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -46,10 +46,10 @@ export default function AccountInformationSection({
                             onChange={handleInputChange}
                             placeholder="johndoe"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 pr-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 pr-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.username
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                         {!errors.username && formData.username && (
@@ -73,10 +73,10 @@ export default function AccountInformationSection({
                             onChange={handleInputChange}
                             placeholder="you@example.com"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 pr-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 pr-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.email
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                         {!errors.email && formData.email && (
@@ -102,10 +102,10 @@ export default function AccountInformationSection({
                             onBlur={() => setPasswordFocused(false)}
                             placeholder="Create a strong password"
                             style={{ color: 'black', backgroundColor: 'white' }}
-                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all ${
+                            className={`w-full pl-10 py-2.5 h-11 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all ${
                                 errors.password
                                     ? "border-red-500 focus:border-red-500"
-                                    : "border-gray-300 focus:border-orange-500"
+                                    : "border-gray-300 focus:border-emerald-500"
                             }`}
                         />
                     </div>
@@ -161,7 +161,7 @@ export default function AccountInformationSection({
                                     ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                                     : passwordsMatch
                                         ? "border-green-500 focus:border-green-500 ring-2 ring-green-100"
-                                        : "border-gray-300 focus:border-orange-500 focus:ring-orange-100"
+                                        : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-100"
                             }`}
                         />
                         {passwordsMatch && !errors.confirmPassword && (

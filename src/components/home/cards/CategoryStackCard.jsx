@@ -5,10 +5,10 @@ import Image from "next/image";
 import { ArrowRight, ChefHat } from "lucide-react";
 
 const cardGradients = [
-    "from-orange-500 to-red-600",
+    "from-emerald-500 to-amber-600",
     "from-pink-500 to-purple-600",
     "from-emerald-500 to-teal-600",
-    "from-yellow-500 to-orange-600",
+    "from-yellow-500 to-emerald-600",
     "from-blue-500 to-indigo-600",
     "from-purple-500 to-indigo-700",
 ];

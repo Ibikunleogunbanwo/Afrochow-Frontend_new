@@ -216,7 +216,7 @@ const HeroSection = () => {
             </div>
 
             {/* Glow orbs */}
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-red-500/8 rounded-full blur-3xl pointer-events-none" />
 
             {/* Content */}
@@ -224,10 +224,10 @@ const HeroSection = () => {
                 <div className="flex flex-col items-center text-center space-y-8">
 
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-orange-400/40 bg-orange-500/15 backdrop-blur-md shadow-lg">
-                        <div className="w-2 h-2 bg-orange-400 rounded-full animate-ping" />
-                        <Flame className="w-4 h-4 text-orange-400" />
-                        <span className="text-sm font-bold text-orange-200 tracking-wide">
+                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md shadow-lg">
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                        <Flame className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-bold text-emerald-200 tracking-wide">
                             🌍 Canada&#39;s #1 African Food Platform
                         </span>
                     </div>
@@ -238,7 +238,7 @@ const HeroSection = () => {
                             Authentic
                         </h1>
                         <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none">
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 via-amber-400 to-orange-500 drop-shadow-lg">
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 via-amber-400 to-emerald-500 drop-shadow-lg">
                                 African Flavors
                             </span>
                         </h1>
@@ -248,7 +248,7 @@ const HeroSection = () => {
                     <p className="max-w-2xl text-lg sm:text-xl text-gray-300 leading-relaxed">
                         From home kitchens to African grocery stores order your favourite
                         dishes, spices, and ingredients from verified vendors near you.
-                        <span className="block mt-1 text-orange-300 font-semibold">
+                        <span className="block mt-1 text-emerald-300 font-semibold">
                             Fresh. Authentic. Delivered fast.
                         </span>
                     </p>
@@ -279,7 +279,7 @@ const HeroSection = () => {
                                 {/* Input row */}
                                 <div className="flex items-center">
                                     {locSearching ? (
-                                        <Loader2 className="absolute left-4 w-5 h-5 text-orange-400 animate-spin pointer-events-none" />
+                                        <Loader2 className="absolute left-4 w-5 h-5 text-emerald-400 animate-spin pointer-events-none" />
                                     ) : (
                                         <MapPin className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
                                     )}
@@ -313,7 +313,7 @@ const HeroSection = () => {
                                             onClick={handleLocateMe}
                                             disabled={isDetecting}
                                             title="Use my current location"
-                                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-50 text-xs font-semibold whitespace-nowrap"
+                                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors disabled:opacity-50 text-xs font-semibold whitespace-nowrap"
                                         >
                                             {isDetecting
                                                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -333,9 +333,9 @@ const HeroSection = () => {
                                                     type="button"
                                                     onMouseDown={(e) => e.preventDefault()}
                                                     onClick={() => handleSelectSuggestion(result)}
-                                                    className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b border-gray-50 last:border-0"
+                                                    className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-emerald-50 transition-colors border-b border-gray-50 last:border-0"
                                                 >
-                                                    <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                                                    <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                                                     <div className="min-w-0">
                                                         <p className="text-sm font-semibold text-gray-800 truncate">{buildLabel(result)}</p>
                                                         <p className="text-xs text-gray-400 truncate">{result.address?.state || 'Canada'}</p>
@@ -351,7 +351,7 @@ const HeroSection = () => {
                             <button
                                 type="submit"
                                 disabled={!searchQuery?.trim() && !effectiveCity}
-                                className="flex items-center justify-center gap-2 px-7 py-3.5 font-bold text-white bg-linear-to-r from-orange-600 to-orange-500 rounded-xl hover:from-orange-700 hover:to-orange-600 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 group shrink-0"
+                                className="flex items-center justify-center gap-2 px-7 py-3.5 font-bold text-white bg-linear-to-r from-emerald-600 to-emerald-500 rounded-xl hover:from-emerald-700 hover:to-emerald-600 hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 group shrink-0"
                             >
                                 <span>Search</span>
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -375,7 +375,7 @@ const HeroSection = () => {
                                     aria-label={`Search for ${category}`}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200 hover:scale-105 ${
                                         activeTag === category
-                                            ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/30'
+                                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30'
                                             : 'bg-white/10 border-white/25 text-white hover:bg-white/20 hover:border-white/40'
                                     }`}
                                 >

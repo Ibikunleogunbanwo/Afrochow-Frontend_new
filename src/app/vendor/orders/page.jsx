@@ -272,14 +272,14 @@ const CANCELLATION_AUDIT = {
     },
     VENDOR: {
         badge:    'Declined by you',
-        badgeCss: 'bg-orange-100 text-orange-700 border-orange-300',
+        badgeCss: 'bg-emerald-100 text-emerald-700 border-emerald-300',
         message:  'This order was declined before preparation began.',
         showNote: false,
         refund:   true,
     },
     VENDOR_POST_ACCEPT: {
         badge:    'Cancelled — unable to fulfil',
-        badgeCss: 'bg-orange-100 text-orange-700 border-orange-300',
+        badgeCss: 'bg-emerald-100 text-emerald-700 border-emerald-300',
         message:  'You accepted this order but subsequently cancelled it.',
         showNote: true,   // show vendor-supplied reason
         refund:   true,

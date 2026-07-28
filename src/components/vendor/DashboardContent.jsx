@@ -508,7 +508,7 @@ const DashboardContent = () => {
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     cursor={{ fill: '#fff7ed' }}
                                 />
-                                <Bar dataKey="revenue" fill="#f97316" radius={[6, 6, 0, 0]} maxBarSize={72} />
+                                <Bar dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={72} />
                             </BarChart>
                         </ResponsiveContainer>
                         </div>
@@ -536,7 +536,7 @@ const DashboardContent = () => {
                         const hasData    = delivered + cancelled + active > 0;
                         const pieData    = [
                             { name: 'Delivered', value: delivered, color: '#22c55e' },
-                            { name: 'Active',    value: active,    color: '#f97316' },
+                            { name: 'Active',    value: active,    color: '#f59e0b' },
                             { name: 'Cancelled', value: cancelled, color: '#ef4444' },
                         ].filter(d => d.value > 0);
 

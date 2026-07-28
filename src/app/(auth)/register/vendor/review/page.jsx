@@ -94,8 +94,8 @@ const Card = ({ children, className = "" }) => (
 const CardHead = ({ icon: Icon, title, desc, step, onEdit, disabled }) => (
     <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100">
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-          <Icon className="h-4 w-4 text-orange-600" />
+        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-emerald-600" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
@@ -106,7 +106,7 @@ const CardHead = ({ icon: Icon, title, desc, step, onEdit, disabled }) => (
           type="button"
           onClick={() => onEdit(step)}
           disabled={disabled}
-          className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 hover:bg-orange-100 px-2.5 py-1.5 rounded-lg shrink-0 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg shrink-0 disabled:opacity-50 transition-colors"
       >
         <Edit className="h-3 w-3" /> Edit
       </button>
@@ -287,10 +287,10 @@ export default function Review() {
 
           {/* ── Progress banner ── */}
           {progress && (
-              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
-                <Upload className="h-4 w-4 text-orange-500 shrink-0 animate-pulse" />
-                <p className="flex-1 text-sm font-medium text-orange-800 min-w-0">{progress}</p>
-                {loading && <Loader2 className="h-4 w-4 text-orange-500 shrink-0 animate-spin" />}
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                <Upload className="h-4 w-4 text-emerald-500 shrink-0 animate-pulse" />
+                <p className="flex-1 text-sm font-medium text-emerald-800 min-w-0">{progress}</p>
+                {loading && <Loader2 className="h-4 w-4 text-emerald-500 shrink-0 animate-spin" />}
               </div>
           )}
 
@@ -415,8 +415,8 @@ export default function Review() {
                 <Label icon={Shield} text="Business License" />
                 {state.businessLicenseUrl ? (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText className="h-5 w-5 text-orange-600" />
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900">License uploaded</p>
@@ -495,9 +495,9 @@ export default function Review() {
                 <Label icon={UtensilsCrossed} text="Services" />
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div className={`flex items-center gap-2 p-2.5 rounded-lg border-2 ${
-                      state.offersDelivery ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"
+                      state.offersDelivery ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"
                   }`}>
-                    <Truck className={`h-4 w-4 shrink-0 ${state.offersDelivery ? "text-orange-600" : "text-gray-400"}`} />
+                    <Truck className={`h-4 w-4 shrink-0 ${state.offersDelivery ? "text-emerald-600" : "text-gray-400"}`} />
                     <span className="text-xs font-medium text-gray-800">Delivery</span>
                     {state.offersDelivery && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />}
                   </div>
@@ -590,7 +590,7 @@ export default function Review() {
           {/* ── Submit ── */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
             <div className="flex flex-col items-center text-center mb-5">
-              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mb-3 shadow">
+              <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mb-3 shadow">
                 <CheckCircle2 className="h-6 w-6 text-white" />
               </div>
               <p className="text-base font-bold text-gray-900">Ready to Submit?</p>
@@ -603,7 +603,7 @@ export default function Review() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading || validationErrors.length > 0}
-                  className="w-full h-12 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 {loading
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account...</>

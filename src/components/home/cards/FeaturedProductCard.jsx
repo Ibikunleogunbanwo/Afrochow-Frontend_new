@@ -9,6 +9,7 @@ import { resolveImageUrl } from "@/lib/utils/imageUrl";
 import { useFavorite } from "@/hooks/useFavorite";
 import { isCustomerWaitlistMode } from "@/lib/mvp";
 import { formatDistance } from "@/lib/utils/distance";
+import { isGroceryOrProduceCategory } from "@/lib/utils/productCategory";
 
 const getPromoBadge = (promotions) => {
     if (!promotions?.length) return null;
@@ -19,7 +20,7 @@ const getPromoBadge = (promotions) => {
     const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
     if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
     const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
-    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-emerald-500' };
     return null;
 };
 
@@ -40,7 +41,6 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
         price,
         averageRating,
         reviewCount,
-        totalOrders,
         categoryName,
         preparationTimeMinutes,
         scheduleType,
@@ -53,6 +53,9 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     } = product;
 
     const isAdvance = scheduleType === 'ADVANCE_ORDER';
+    // Groceries/farm produce are pre-packaged/raw goods, not cooked-to-order —
+    // "ready in X min" reads as a false promise on a bag of garri or fresh yam.
+    const isGroceryOrProduce = isGroceryOrProduceCategory(categoryName);
 
     const router = useRouter();
     const [imgError, setImgError] = useState(false);
@@ -109,8 +112,8 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             onError={() => setImgError(true)}
                         />
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-gray-100">
-                            <Flame className="w-12 h-12 text-orange-200" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-gray-100">
+                            <Flame className="w-12 h-12 text-emerald-200" />
                         </div>
                     )}
 
@@ -126,17 +129,17 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                         )}
                         {distanceLabel && (
                             <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white/90 backdrop-blur-sm text-gray-600 rounded-full shadow-sm">
-                                <MapPin className="w-3 h-3 text-orange-500" />
+                                <MapPin className="w-3 h-3 text-emerald-500" />
                                 {distanceLabel}
                             </span>
                         )}
                     </div>
 
-                    {/* Top-right: favorite button + orders badge, stacked */}
+                    {/* Top-right: favorite button */}
                     <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
                         <button
                             onClick={toggleFavorite}
-                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                         >
                             <Heart
@@ -145,15 +148,6 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                                 }`}
                             />
                         </button>
-
-                        {totalOrders > 0 && (
-                            <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
-                                <Flame className="w-3 h-3" />
-                                {totalOrders >= 1000
-                                    ? `${(totalOrders / 1000).toFixed(1)}k`
-                                    : totalOrders} orders
-                            </span>
-                        )}
                     </div>
 
                     {/* Bottom overlay: name + restaurant + hover button */}
@@ -174,7 +168,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             which overrides CSS and kept the button permanently invisible. */}
                         <div className="opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out shrink-0">
                             <button
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-900 text-xs font-bold rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-900 text-xs font-bold rounded-full shadow-lg hover:bg-emerald-500 hover:text-white transition-colors"
                                 aria-label={`View menu for ${restaurantName || name}`}
                             >
                                 View Store
@@ -200,8 +194,12 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[11px] font-semibold">
                                 📅 Advance order &mdash; {advanceNoticeHours ? `${advanceNoticeHours}h` : '24h+'} notice required
                             </span>
+                        ) : isGroceryOrProduce ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[11px] font-semibold">
+                                🛒 Ready to order
+                            </span>
                         ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-[11px] font-semibold">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[11px] font-semibold">
                                 ⚡ Ready to order &mdash; {preparationTimeMinutes > 0 ? `ready in ${preparationTimeMinutes} min` : 'same day'}
                             </span>
                         )}
@@ -225,20 +223,13 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                     {/* Divider */}
                     <div className="h-px w-full bg-gray-100 mb-3" />
 
-                    {/* 3-column stats */}
+                    {/* 2-column stats */}
                     <div className="flex items-center justify-between">
                         <StatItem
                             label="Rating"
                             value={averageRating > 0
                                 ? `⭐ ${averageRating.toFixed(1)}${reviewCount > 0 ? ` (${reviewCount >= 1000 ? `${(reviewCount / 1000).toFixed(1)}k` : reviewCount})` : ''}`
                                 : '⭐ 0'}
-                        />
-                        <div className="w-px h-8 bg-gray-100" />
-                        <StatItem
-                            label="Orders"
-                            value={totalOrders > 0
-                                ? (totalOrders >= 1000 ? `${(totalOrders / 1000).toFixed(1)}k` : totalOrders)
-                                : 0}
                         />
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem

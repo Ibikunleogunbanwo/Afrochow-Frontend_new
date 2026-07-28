@@ -325,7 +325,7 @@ export default function AdminReviewsPage() {
                                                     </span>
                                                 )}
                                                 {r.productName && (
-                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[11px] font-medium">
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[11px] font-medium">
                                                         <UtensilsCrossed className="w-2.5 h-2.5 shrink-0" />
                                                         <span className="truncate max-w-[120px]">{r.productName}</span>
                                                     </span>
@@ -358,8 +358,8 @@ export default function AdminReviewsPage() {
                                             </span>
                                         )}
                                         {r.productName && (
-                                            <span title={r.productName} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[11px] font-medium max-w-full">
-                                                <UtensilsCrossed className="w-3 h-3 shrink-0 text-orange-400" />
+                                            <span title={r.productName} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[11px] font-medium max-w-full">
+                                                <UtensilsCrossed className="w-3 h-3 shrink-0 text-emerald-400" />
                                                 <span className="truncate">{r.productName}</span>
                                             </span>
                                         )}

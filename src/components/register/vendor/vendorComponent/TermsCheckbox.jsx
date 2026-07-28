@@ -9,7 +9,7 @@ function TermsCheckbox({ control, error }) {
             <div className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
                 error
                     ? "bg-red-50 border-red-300"
-                    : "bg-gray-50 border-gray-300 hover:border-orange-300 hover:bg-orange-50/30"
+                    : "bg-gray-50 border-gray-300 hover:border-emerald-300 hover:bg-emerald-50/30"
             }`}>
                 <Controller
                     name="acceptTerms"
@@ -30,7 +30,7 @@ function TermsCheckbox({ control, error }) {
                     I agree to the{" "}
                     <a
                         href="/terms"
-                        className="text-orange-600 hover:text-orange-700 font-semibold underline underline-offset-2"
+                        className="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-2"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -39,7 +39,7 @@ function TermsCheckbox({ control, error }) {
                     and{" "}
                     <a
                         href="/privacy"
-                        className="text-orange-600 hover:text-orange-700 font-semibold underline underline-offset-2"
+                        className="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-2"
                         target="_blank"
                         rel="noopener noreferrer"
                     >

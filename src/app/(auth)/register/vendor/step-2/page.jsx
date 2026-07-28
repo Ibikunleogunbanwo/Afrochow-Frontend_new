@@ -173,7 +173,7 @@ export default function Step2() {
       >
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
 
-          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Your Profile</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Your Profile</p>
 
           <Controller
               name="profileImageUrl"
@@ -182,7 +182,7 @@ export default function Step2() {
                   <div className="relative">
                     {uploadingImage && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-xl">
-                          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                         </div>
                     )}
                     <ImageUploader
@@ -230,7 +230,7 @@ export default function Step2() {
           />
 
           <div className="pt-3 border-t border-gray-100">
-            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-4">Your Store</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 mb-4">Your Store</p>
 
             <div className="space-y-5">
               <FormField
@@ -288,7 +288,7 @@ export default function Step2() {
                       } ${
                           errors.description
                               ? "border-red-500 focus-visible:ring-red-500"
-                              : "border-gray-300 focus-visible:ring-orange-500"
+                              : "border-gray-300 focus-visible:ring-emerald-500"
                       }`}
                       {...register("description")}
                   />

@@ -53,7 +53,7 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, 
     const statusColors = {
         green:  { bg: 'bg-green-50',  text: 'text-green-700',  ring: 'ring-green-200'  },
         blue:   { bg: 'bg-blue-50',   text: 'text-blue-700',   ring: 'ring-blue-200'   },
-        orange: { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200' },
+        orange: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
         red:    { bg: 'bg-red-50',    text: 'text-red-700',    ring: 'ring-red-200'    },
     };
     const sc = statusColors[status.color];
@@ -73,7 +73,7 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, 
                 {/* Mobile Logo */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
                     <div className="flex items-center">
-                        <Store className="w-8 h-8 text-orange-600" />
+                        <Store className="w-8 h-8 text-emerald-600" />
                         <div className="ml-3">
                             <h1 className="text-xl font-black text-gray-900">Afrochow</h1>
                             <p className="text-xs text-gray-500">Vendor Dashboard</p>
@@ -113,8 +113,8 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, 
                                 className={`
                                     flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all
                                     ${isActive
-                                    ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg'
-                                    : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg'
+                                    : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-600'
                                 }
                                 `}
                             >
@@ -125,7 +125,7 @@ const MobileSidebar = ({ isOpen, onClose, pathname, onLogout, badgeCounts = {}, 
                                 {badge > 0 && (
                                     <span className={`
                                         px-2 py-0.5 text-xs font-bold rounded-full
-                                        ${isActive ? 'bg-white text-orange-600' : 'bg-orange-600 text-white'}
+                                        ${isActive ? 'bg-white text-emerald-600' : 'bg-emerald-600 text-white'}
                                     `}>
                                         {badge > 99 ? '99+' : badge}
                                     </span>

@@ -8,7 +8,7 @@ const Logo = ({ showTagline = false, lightMode = false }) => {
             className="group flex items-center space-x-3 transition-all duration-300 hover:scale-105"
         >
             {/* Logo with African Pattern */}
-            <div className="relative w-10 h-10 flex items-center justify-center bg-linear-to-br from-orange-500 via-orange-600 to-red-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div className="relative w-10 h-10 flex items-center justify-center bg-linear-to-br from-emerald-500 via-emerald-600 to-amber-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 overflow-hidden">
                 {/* African Pattern Background */}
                 <div className="absolute inset-0 opacity-20">
                     <svg viewBox="0 0 40 40" className="w-full h-full">
@@ -37,11 +37,11 @@ const Logo = ({ showTagline = false, lightMode = false }) => {
             {/* Text */}
             <div className="flex flex-col">
                 <div className="flex items-center">
-                    <span className="text-2xl font-black text-orange-600">AFRO</span>
+                    <span className="text-2xl font-black text-emerald-600">AFRO</span>
                     <span className={`text-2xl font-black ${lightMode ? 'text-white' : 'text-gray-900'}`}>CHOW</span>
                 </div>
                 {showTagline && (
-                    <span className="text-xs text-orange-600 font-semibold tracking-widest -mt-1">
+                    <span className="text-xs text-emerald-600 font-semibold tracking-widest -mt-1">
                         🌍 TASTE OF AFRICA
                     </span>
                 )}

@@ -95,10 +95,10 @@ function BannerUploader({ onChange, error }) {
         <div
           className={`relative w-full h-48 rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer bg-gray-50 transition-all ${
             dragActive
-              ? 'border-orange-500 bg-orange-50'
+              ? 'border-emerald-500 bg-emerald-50'
               : error
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-300 hover:border-orange-400'
+                : 'border-gray-300 hover:border-emerald-400'
           }`}
           onDragEnter={(e) => handleDrag(e, true)}
           onDragLeave={(e) => handleDrag(e, false)}
@@ -232,10 +232,10 @@ function DocumentUploader({ label, helpText, onChange, error, required = false }
         <div
           className={`relative border-2 border-dashed rounded-lg transition-all ${
             dragActive
-              ? 'border-orange-500 bg-orange-50'
+              ? 'border-emerald-500 bg-emerald-50'
               : error
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-300 bg-gray-50 hover:border-orange-400'
+                : 'border-gray-300 bg-gray-50 hover:border-emerald-400'
           }`}
           onDragEnter={(e) => handleDrag(e, true)}
           onDragLeave={(e) => handleDrag(e, false)}

@@ -11,7 +11,7 @@ function LoginPrompt() {
                 <button
                     type="button"
                     onClick={() => setShowSignIn(true)}
-                    className="text-orange-600 hover:text-orange-700 font-medium hover:underline"
+                    className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline"
                 >
                     Sign in
                 </button>
@@ -20,6 +20,7 @@ function LoginPrompt() {
             <SignInModal
                 isOpen={showSignIn}
                 onClose={() => setShowSignIn(false)}
+                context="vendor"
             />
         </>
     );

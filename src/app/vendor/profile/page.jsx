@@ -880,7 +880,7 @@ export default function VendorProfilePage() {
                                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
                                 )}
                                 {id === 'notifications' && notifUnread > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 sm:static sm:min-w-[18px] sm:h-[18px] sm:px-1 w-2 h-2 sm:w-auto sm:h-auto text-[10px] font-black bg-orange-500 text-white rounded-full flex items-center justify-center leading-none">
+                                    <span className="absolute top-1.5 right-1.5 sm:static sm:min-w-[18px] sm:h-[18px] sm:px-1 w-2 h-2 sm:w-auto sm:h-auto text-[10px] font-black bg-emerald-500 text-white rounded-full flex items-center justify-center leading-none">
                                         <span className="hidden sm:inline">{notifUnread > 9 ? '9+' : notifUnread}</span>
                                     </span>
                                 )}
@@ -1309,7 +1309,7 @@ export default function VendorProfilePage() {
                                                     className={`group flex items-start gap-3 px-4 py-3.5 ${isUnread ? 'bg-gray-50' : ''}`}
                                                 >
                                                     {/* Unread dot */}
-                                                    <span className={`mt-2 w-2 h-2 rounded-full shrink-0 ${isUnread ? 'bg-orange-500' : 'bg-transparent'}`} />
+                                                    <span className={`mt-2 w-2 h-2 rounded-full shrink-0 ${isUnread ? 'bg-emerald-500' : 'bg-transparent'}`} />
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-start justify-between gap-2">
@@ -1454,7 +1454,7 @@ export default function VendorProfilePage() {
                                             <span className="text-sm font-medium text-gray-700 truncate">Current certificate</span>
                                         </div>
                                         <a href={profile.foodHandlingCertUrl} target="_blank" rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:underline shrink-0">
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline shrink-0">
                                             <ExternalLink className="w-3.5 h-3.5" />
                                             View
                                         </a>

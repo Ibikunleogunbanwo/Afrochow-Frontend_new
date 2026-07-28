@@ -61,11 +61,11 @@ const FEATURES = [
 ];
 
 const VendorCTA = () => (
-    <section className="relative py-24 overflow-hidden bg-gradient-to-b from-orange-50/40 to-white">
+    <section className="relative py-24 overflow-hidden bg-gradient-to-b from-emerald-50/40 to-white">
 
         {/* Subtle background decoration */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-orange-100/30 rounded-full blur-3xl" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-100/30 rounded-full blur-3xl" />
         </div>
 
         <div className="container relative z-10 px-4 mx-auto max-w-7xl">
@@ -76,10 +76,10 @@ const VendorCTA = () => (
             <div className="flex justify-center mb-12">
                 <Link
                     href="/register/vendor/step-1"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full hover:from-orange-200 hover:to-red-200 transition-colors duration-200"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-amber-100 rounded-full hover:from-emerald-200 hover:to-amber-200 transition-colors duration-200"
                 >
-                    <ChefHat className="w-4 h-4 text-orange-600" />
-                    <span className="text-sm font-semibold text-orange-800">Become a Vendor</span>
+                    <ChefHat className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-800">Become a Vendor</span>
                 </Link>
             </div>
 
@@ -91,7 +91,7 @@ const VendorCTA = () => (
                     <div>
                         <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-5 leading-tight">
                             Sell Your African Food
-                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-600">
                                 Online With Afrochow
                             </span>
                         </h2>
@@ -112,8 +112,8 @@ const VendorCTA = () => (
                                     key={benefit.title}
                                     className="flex items-start gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100"
                                 >
-                                    <div className="shrink-0 p-2 bg-orange-100 rounded-lg">
-                                        <Icon className="w-4 h-4 text-orange-600" />
+                                    <div className="shrink-0 p-2 bg-emerald-100 rounded-lg">
+                                        <Icon className="w-4 h-4 text-emerald-600" />
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-gray-900 mb-0.5">{benefit.title}</h3>
@@ -128,14 +128,14 @@ const VendorCTA = () => (
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <Link
                             href="/register/vendor/step-1"
-                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                         >
                             <span>Start Selling Today</span>
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
                             href="/vendor-info"
-                            className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-300"
+                            className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300"
                         >
                             Learn More
                         </Link>
@@ -158,7 +158,7 @@ const VendorCTA = () => (
                     </div>
 
                     {/* Floating badge — z-10 so it always sits above the image */}
-                    <div className="absolute z-10 -top-4 -right-4 bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg rotate-12">
+                    <div className="absolute z-10 -top-4 -right-4 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg rotate-12">
                         <div className="text-center leading-tight">
                             <div className="text-2xl font-black">Free</div>
                             <div className="text-xs font-semibold tracking-wide">To Join</div>
@@ -166,7 +166,7 @@ const VendorCTA = () => (
                     </div>
 
                     {/* Decorative orbs — outside the image overflow but inside section overflow-hidden */}
-                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-200 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden />
+                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-emerald-200 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden />
                     <div className="absolute -top-8 -right-8 w-32 h-32 bg-red-200 rounded-full blur-3xl opacity-50 pointer-events-none" aria-hidden />
                 </div>
             </div>
@@ -190,9 +190,9 @@ const VendorCTA = () => (
 
             {/* Testimonial */}
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-lg p-8 border-l-4 border-orange-500">
+                <div className="bg-white rounded-2xl shadow-lg p-8 border-l-4 border-emerald-500">
                     <div className="flex items-start gap-4">
-                        <div className="shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold text-lg select-none">
+                        <div className="shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center text-white font-bold text-lg select-none">
                             {TESTIMONIAL.initials}
                         </div>
                         <div className="flex-1">

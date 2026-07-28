@@ -14,7 +14,7 @@ export default function ProfileImageSection({ data, errors, onChange }) {
     return (
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-        <span className="w-8 h-8 bg-linear-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center text-white mr-3">
+        <span className="w-8 h-8 bg-linear-to-br from-emerald-500 to-amber-500 rounded-lg flex items-center justify-center text-white mr-3">
           3
         </span>
                 Profile Image <span className="text-red-500 ml-1">*</span>

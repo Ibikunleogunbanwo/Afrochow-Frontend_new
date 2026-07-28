@@ -84,7 +84,7 @@ export default function WaitlistPage() {
             <section className="px-4 py-12 md:py-16">
                 <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
                     <div className="space-y-6 pt-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                             <Store className="h-3.5 w-3.5" />
                             Vendor-first MVP
                         </div>
@@ -101,14 +101,14 @@ export default function WaitlistPage() {
 
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                                <User className="mb-3 h-5 w-5 text-orange-600" />
+                                <User className="mb-3 h-5 w-5 text-emerald-600" />
                                 <h2 className="font-bold text-gray-950">Customers</h2>
                                 <p className="mt-1 text-sm leading-6 text-gray-500">
                                     Join the waitlist for launch updates, early access, and city availability.
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                                <ChefHat className="mb-3 h-5 w-5 text-orange-600" />
+                                <ChefHat className="mb-3 h-5 w-5 text-emerald-600" />
                                     <h2 className="font-bold text-gray-950">Vendors</h2>
                                     <p className="mt-1 text-sm leading-6 text-gray-500">
                                         Vendor onboarding is open. Build your profile and get ready for customer launch.
@@ -155,7 +155,7 @@ export default function WaitlistPage() {
                                     <input
                                         value={form.name}
                                         onChange={(e) => updateField("name", e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                                         placeholder="Your name"
                                     />
                                 </label>
@@ -168,7 +168,7 @@ export default function WaitlistPage() {
                                             type="email"
                                             value={form.email}
                                             onChange={(e) => updateField("email", e.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                            className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                                             placeholder="you@example.com"
                                         />
                                     </div>
@@ -181,7 +181,7 @@ export default function WaitlistPage() {
                                         <input
                                             value={form.city}
                                             onChange={(e) => updateField("city", e.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                            className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                                             placeholder="Calgary"
                                         />
                                     </div>
@@ -196,7 +196,7 @@ export default function WaitlistPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-black text-white hover:bg-orange-700 disabled:opacity-60 transition-colors"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
                                 >
                                     {submitting ? "Submitting..." : "Join Waitlist"}
                                     <ArrowRight className="h-4 w-4" />
@@ -204,7 +204,7 @@ export default function WaitlistPage() {
 
                                 <p className="text-center text-xs text-gray-500">
                                     Are you a vendor?{" "}
-                                    <Link href="/register/vendor/step-1" className="font-bold text-orange-600 hover:text-orange-700">
+                                    <Link href="/register/vendor/step-1" className="font-bold text-emerald-600 hover:text-emerald-700">
                                         Start vendor registration
                                     </Link>
                                 </p>

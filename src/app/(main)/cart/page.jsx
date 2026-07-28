@@ -100,7 +100,7 @@ const CartPage = () => {
                                             {item.restaurantName && (
                                                 <Link
                                                     href={`restaurant/${item.vendorPublicId}`}
-                                                    className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-full text-xs font-medium text-orange-600 hover:bg-orange-100 hover:border-orange-300 transition-colors"
+                                                    className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded-full text-xs font-medium text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
                                                 >
                                                     <Store className="w-3 h-3 shrink-0" />
                                                     {item.restaurantName}
@@ -178,7 +178,7 @@ const CartPage = () => {
                     <div className="px-6 pb-6 pt-1">
                         <Link
                             href="/checkout"
-                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 active:scale-95 transition-colors"
+                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 active:scale-95 transition-colors"
                         >
                             Proceed to Checkout
                             <ArrowRight className="w-4 h-4" />

@@ -225,7 +225,7 @@ export default function AdminAnalyticsPage() {
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                             <StatusRow icon={Clock}       iconCls="bg-yellow-400" barCls="bg-yellow-400" label="Pending (unconfirmed)"  value={platform.pendingOrders}          barPct={pct(platform.pendingOrders)} />
                             <StatusRow icon={CheckCircle} iconCls="bg-blue-500"   barCls="bg-blue-500"   label="Confirmed"              value={platform.confirmedOrders}        barPct={pct(platform.confirmedOrders)} />
-                            <StatusRow icon={Package}     iconCls="bg-orange-500" barCls="bg-orange-500" label="Preparing"              value={platform.preparingOrders}        barPct={pct(platform.preparingOrders)} />
+                            <StatusRow icon={Package}     iconCls="bg-emerald-500" barCls="bg-emerald-500" label="Preparing"              value={platform.preparingOrders}        barPct={pct(platform.preparingOrders)} />
                             <StatusRow icon={Package}     iconCls="bg-purple-500" barCls="bg-purple-500" label="Ready for Pickup"        value={platform.readyOrders}            barPct={pct(platform.readyOrders)} />
                             <StatusRow icon={Truck}       iconCls="bg-indigo-500" barCls="bg-indigo-500" label="Out for Delivery"        value={platform.outForDeliveryOrders}   barPct={pct(platform.outForDeliveryOrders)} />
                             <StatusRow icon={CheckCircle} iconCls="bg-green-500"  barCls="bg-green-500"  label="Delivered"              value={platform.deliveredOrders}        barPct={pct(platform.deliveredOrders)} />

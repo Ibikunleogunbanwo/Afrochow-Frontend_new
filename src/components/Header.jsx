@@ -288,7 +288,7 @@ const Header = () => {
                                 className="flex items-center gap-1.5 px-2.5 py-2 rounded-full hover:bg-gray-100 transition-all duration-200 max-w-[8.5rem] lg:max-w-[10rem]"
                                 aria-label="Change delivery location"
                             >
-                                <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+                                <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
                                 <span className="text-sm font-medium text-gray-700 truncate">
                                     {isDetecting ? "Locating…" : (city || "Set location")}
                                 </span>
@@ -384,7 +384,7 @@ const Header = () => {
                                 ) : (
                                     <Link
                                         href={customerWaitlistPath}
-                                        className="hidden sm:flex items-center px-4 py-2 text-sm font-semibold text-orange-700 bg-orange-50 rounded-full hover:bg-orange-100 transition-all duration-200"
+                                        className="hidden sm:flex items-center px-4 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-all duration-200"
                                     >
                                         Waitlist
                                     </Link>
@@ -561,9 +561,9 @@ const Header = () => {
                                             <Link
                                                 href={customerWaitlistPath}
                                                 onClick={() => setIsMobileMenuOpen(false)}
-                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-orange-50 text-orange-700 transition-colors"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-emerald-50 text-emerald-700 transition-colors"
                                             >
-                                                <Heart className="w-4 h-4 text-orange-500" />
+                                                <Heart className="w-4 h-4 text-emerald-500" />
                                                 <span className="text-sm font-medium flex-1">Join Customer Waitlist</span>
                                             </Link>
                                         </div>

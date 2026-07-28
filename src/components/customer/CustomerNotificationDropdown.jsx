@@ -10,7 +10,7 @@ const TYPE_CONFIG = {
     delivery:       { Icon: Truck,       bg: "bg-blue-50",     icon: "text-blue-600"   },
     payment:        { Icon: CreditCard,  bg: "bg-green-100",   icon: "text-green-700"  },
     payment_failed: { Icon: CreditCard,  bg: "bg-red-100",     icon: "text-red-600"    },
-    promo:          { Icon: Tag,         bg: "bg-orange-100",  icon: "text-orange-600" },
+    promo:          { Icon: Tag,         bg: "bg-emerald-100",  icon: "text-emerald-600" },
     system:         { Icon: Bell,        bg: "bg-gray-100",    icon: "text-gray-400"   },
 };
 

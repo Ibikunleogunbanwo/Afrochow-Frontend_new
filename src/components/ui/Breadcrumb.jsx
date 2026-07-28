@@ -26,14 +26,14 @@ export default function Breadcrumb({ items = [] }) {
                             <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                         )}
                         {idx === 0 ? (
-                            <Link href="/" className="flex items-center gap-1 text-gray-400 hover:text-orange-500 transition-colors">
+                            <Link href="/" className="flex items-center gap-1 text-gray-400 hover:text-emerald-500 transition-colors">
                                 <Home className="w-3.5 h-3.5" />
                                 <span className="sr-only">Home</span>
                             </Link>
                         ) : isLast ? (
                             <span className="font-medium text-gray-900">{crumb.label}</span>
                         ) : (
-                            <Link href={crumb.href} className="text-gray-400 hover:text-orange-500 transition-colors">
+                            <Link href={crumb.href} className="text-gray-400 hover:text-emerald-500 transition-colors">
                                 {crumb.label}
                             </Link>
                         )}

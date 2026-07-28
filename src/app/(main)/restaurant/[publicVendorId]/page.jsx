@@ -19,9 +19,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorite } from '@/hooks/useFavorite';
+import { useLocation } from '@/contexts/LocationContext';
 import { SearchAPI } from '@/lib/api/search.api';
 import { ReviewsAPI } from '@/lib/api/reviews.api';
 import { PromotionsAPI } from '@/lib/api';
+import { formatDistance } from '@/lib/utils/distance';
 import StoreCard from '@/components/home/cards/storeCard';
 import ProductDetailModal from '@/components/register/vendor/ProductDetailModal';
 import ProductCard from '@/components/register/vendor/vendorComponent/ProductCard';
@@ -57,6 +59,7 @@ const VendorProfilePage = () => {
     const publicVendorId = params.publicVendorId;
     const { isAuthenticated, role } = useAuth();
     const isCustomer = isAuthenticated && role?.toUpperCase() === 'CUSTOMER';
+    const { coordinates } = useLocation();
 
     const cached = vendorCache[publicVendorId];
 
@@ -159,13 +162,13 @@ const VendorProfilePage = () => {
         }
     }, []);
 
-    const fetchVendorDetails = useCallback(async () => {
+    const fetchVendorDetails = useCallback(async (lat, lng) => {
         // Cache hit — skip fetch
         if (vendorCache[publicVendorId]?.vendor) return;
 
         try {
             setLoading(true);
-            const response = await SearchAPI.getVendorDetails(publicVendorId);
+            const response = await SearchAPI.getVendorDetails(publicVendorId, lat, lng);
 
             if (response?.success && response?.data) {
                 const vendorData = response.data;
@@ -298,10 +301,12 @@ const VendorProfilePage = () => {
             return;
         }
 
-        // Cache miss — fetch everything
-        fetchVendorDetails();
+        // Cache miss — fetch everything. coordinates may still be resolving (geolocation
+        // permission prompt) on first mount — fetchVendorDetails is fine called with
+        // undefined lat/lng, it just means distanceKm comes back null for that call.
+        fetchVendorDetails(coordinates?.lat, coordinates?.lng);
         fetchVendorProducts();
-    }, [publicVendorId, fetchVendorDetails, fetchVendorProducts]);
+    }, [publicVendorId, fetchVendorDetails, fetchVendorProducts, coordinates?.lat, coordinates?.lng]);
 
     // Fetch review eligibility once we know the user is an authenticated customer
     useEffect(() => {
@@ -492,7 +497,10 @@ const VendorProfilePage = () => {
         preparationTime,
         minimumOrderAmount,
         address,
+        distanceKm,
     } = vendor;
+
+    const distanceLabel = formatDistance(distanceKm);
 
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out ${restaurantName} on Afrochow! ${shareUrl}`)}`;
@@ -507,7 +515,7 @@ const VendorProfilePage = () => {
             {/* Anonymous-visitor CTA — only renders when not signed in.
                 Non-blocking: the page still scrolls freely behind it. */}
             {!isAuthenticated && (
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2.5">
+                <div className="bg-gradient-to-r from-emerald-500 to-amber-500 text-white px-4 py-2.5">
                     <div className="container mx-auto max-w-7xl flex items-center justify-between gap-3 flex-wrap">
                         <p className="text-sm font-semibold">
                             {isCustomerWaitlistMode
@@ -518,7 +526,7 @@ const VendorProfilePage = () => {
                             {isCustomerWaitlistMode ? (
                                 <Link
                                     href={customerWaitlistPath}
-                                    className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
+                                    className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-emerald-600 hover:bg-emerald-50 transition-colors"
                                 >
                                     Join Waitlist
                                 </Link>
@@ -532,7 +540,7 @@ const VendorProfilePage = () => {
                                     </button>
                                     <button
                                         onClick={() => openAuthModal('signup')}
-                                        className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-orange-600 hover:bg-orange-50 transition-colors"
+                                        className="px-3 py-1.5 text-xs font-bold rounded-full bg-white text-emerald-600 hover:bg-emerald-50 transition-colors"
                                     >
                                         Create account
                                     </button>
@@ -549,7 +557,7 @@ const VendorProfilePage = () => {
                     <nav className="flex items-center gap-1.5 text-sm flex-wrap" aria-label="Breadcrumb">
                         <Link
                             href="/"
-                            className="flex items-center gap-1 text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="flex items-center gap-1 text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             <Home className="w-3.5 h-3.5" />
                             <span>Home</span>
@@ -559,7 +567,7 @@ const VendorProfilePage = () => {
 
                         <Link
                             href="/restaurants"
-                            className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             All Products
                         </Link>
@@ -573,8 +581,10 @@ const VendorProfilePage = () => {
                 </div>
             </div>
 
-            {/* Banner */}
-            <div className="relative w-full h-80 bg-linear-to-r from-orange-500 to-red-500">
+            {/* Banner — shorter on mobile so wide (recommended 1920x600) banner images
+                aren't crammed into a near-square crop window; grows back up at sm/md
+                to the original desktop proportions. */}
+            <div className="relative w-full h-44 sm:h-64 md:h-80 bg-linear-to-r from-emerald-500 to-amber-500">
                 {bannerUrl ? (
                     <Image
                         src={bannerUrl}
@@ -586,21 +596,21 @@ const VendorProfilePage = () => {
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-9xl">🍽️</span>
+                        <span className="text-6xl sm:text-8xl md:text-9xl">🍽️</span>
                     </div>
                 )}
                 <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
             </div>
 
-            <div className="container mx-auto px-4 -mt-20 relative z-10 max-w-7xl">
+            <div className="container mx-auto px-4 -mt-10 sm:-mt-16 md:-mt-20 relative z-10 max-w-7xl">
 
                 {/* Vendor Info */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-8">
                     <div className="flex flex-col md:flex-row gap-6">
 
                         {/* Logo */}
                         <div className="shrink-0">
-                            <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-lg bg-white">
+                            <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl overflow-hidden border-4 border-white shadow-lg bg-white">
                                 {logoUrl ? (
                                     <Image
                                         src={logoUrl}
@@ -610,8 +620,8 @@ const VendorProfilePage = () => {
                                         className="object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-100 to-red-100">
-                                        <span className="text-5xl">🍴</span>
+                                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-emerald-100 to-amber-100">
+                                        <span className="text-3xl sm:text-4xl md:text-5xl">🍴</span>
                                     </div>
                                 )}
                             </div>
@@ -648,7 +658,7 @@ const VendorProfilePage = () => {
                                             reviewEligibility?.canReview ? (
                                                 <button
                                                     onClick={handleWriteVendorReview}
-                                                    className="px-3 py-1.5 text-sm font-semibold text-orange-600 border border-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                                                    className="px-3 py-1.5 text-sm font-semibold text-emerald-600 border border-emerald-500 rounded-lg hover:bg-emerald-50 transition-colors"
                                                 >
                                                     Write a Review
                                                 </button>
@@ -682,7 +692,7 @@ const VendorProfilePage = () => {
                                             <button
                                                 onClick={handleShare}
                                                 title="Share this restaurant"
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50 transition-colors text-sm font-semibold shadow-sm"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors text-sm font-semibold shadow-sm"
                                             >
                                                 {copied
                                                     ? <Check className="w-4 h-4 text-green-500" />
@@ -759,10 +769,13 @@ const VendorProfilePage = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {address?.formattedAddress && (
                                     <div className="flex items-start space-x-3">
-                                        <MapPin className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                                        <MapPin className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Location</p>
                                             <p className="text-sm text-gray-600">{address.formattedAddress}</p>
+                                            {distanceLabel && (
+                                                <p className="text-xs text-emerald-600 font-semibold mt-0.5">{distanceLabel}</p>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -803,7 +816,7 @@ const VendorProfilePage = () => {
 
                                 {minimumOrderAmount && (
                                     <div className="flex items-start space-x-3">
-                                        <span className="text-orange-600 shrink-0 mt-0.5">💰</span>
+                                        <span className="text-emerald-600 shrink-0 mt-0.5">💰</span>
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900">Min Delivery Order</p>
                                             <p className="text-sm text-gray-600">
@@ -907,6 +920,7 @@ const VendorProfilePage = () => {
                 <ProductDetailModal
                     product={selectedProductModal}
                     vendorName={restaurantName}
+                    storeCategory={storeCategory}
                     isLoading={productModalLoading}
                     isStoreOpen={isOpenNow}
                     onClose={handleCloseProductModal}

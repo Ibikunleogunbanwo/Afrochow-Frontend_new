@@ -281,7 +281,7 @@ const DisplayRestaurant = () => {
                     <nav className="flex items-center gap-1 text-sm mb-8 flex-wrap" aria-label="Breadcrumb">
                         <Link
                             href="/"
-                            className="flex items-center gap-1 text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="flex items-center gap-1 text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             <Home className="w-3.5 h-3.5" />
                             <span>Home</span>
@@ -291,7 +291,7 @@ const DisplayRestaurant = () => {
 
                         <Link
                             href="/restaurants"
-                            className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                            className="text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                         >
                             All Products
                         </Link>
@@ -301,7 +301,7 @@ const DisplayRestaurant = () => {
                                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
                                 <Link
                                     href={`/restaurants?categoryId=${urlCategoryId}`}
-                                    className="text-gray-400 hover:text-orange-600 font-medium transition-colors"
+                                    className="text-gray-400 hover:text-emerald-600 font-medium transition-colors"
                                 >
                                     {resolvedCategory}
                                 </Link>
@@ -337,7 +337,7 @@ const DisplayRestaurant = () => {
                         <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
                             {getPageTitle()}
                             {!isLoading && totalElements > 0 && (
-                                <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-red-600 mt-1">
+                                <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-amber-600 mt-1">
                                     {totalElements} {totalElements === 1 ? 'product' : 'products'} found
                                 </span>
                             )}
@@ -357,7 +357,7 @@ const DisplayRestaurant = () => {
                                 onChange={e => setInputSearchQuery(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="Search Jollof Rice, Egusi, Suya, Groceries..."
-                                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
+                                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
 
@@ -368,13 +368,13 @@ const DisplayRestaurant = () => {
                                 onChange={e => setInputCity(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                                 placeholder="Calgary, Toronto, Vancouver..."
-                                className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
+                                className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
 
                         <button
                             onClick={handleSearch}
-                            className="flex items-center space-x-2 px-6 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold whitespace-nowrap"
+                            className="flex items-center space-x-2 px-6 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold whitespace-nowrap"
                         >
                             <HiSearch className="w-5 h-5" />
                             <span>Search</span>
@@ -394,8 +394,8 @@ const DisplayRestaurant = () => {
                                 onClick={() => handleScheduleFilter(value)}
                                 className={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition-all ${
                                     urlSchedule === value
-                                        ? 'bg-orange-600 border-orange-600 text-white shadow-sm'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600'
+                                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-600'
                                 }`}
                             >
                                 {label}
@@ -406,7 +406,7 @@ const DisplayRestaurant = () => {
                     {/* Results Count */}
                     {!isLoading && totalElements > 0 && (
                         <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-                            <span className="font-semibold text-orange-600">
+                            <span className="font-semibold text-emerald-600">
                                 {getResultsLabel()}
                             </span>
                             {totalPages > 1 && (
@@ -419,7 +419,7 @@ const DisplayRestaurant = () => {
                     {hasActiveFilters && !isLoading && (
                         <div className="mt-3 flex flex-wrap gap-2">
                             {(urlCategoryId || urlCategory) && resolvedCategory && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
                                     📂 {resolvedCategory}
                                 </span>
                             )}
@@ -435,7 +435,7 @@ const DisplayRestaurant = () => {
                                 </span>
                             )}
                             {urlSchedule === 'SAME_DAY' && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
                                     ⚡ Same day
                                 </span>
                             )}
@@ -499,7 +499,7 @@ const DisplayRestaurant = () => {
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 0}
                                         aria-label="Previous page"
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-emerald-50 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Previous
                                     </button>
@@ -514,8 +514,8 @@ const DisplayRestaurant = () => {
                                                     aria-current={currentPage === page ? 'page' : undefined}
                                                     className={`min-w-10 px-3 py-2 rounded-lg font-semibold transition-all ${
                                                         currentPage === page
-                                                            ? 'bg-orange-600 text-white shadow-lg'
-                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-orange-400'
+                                                            ? 'bg-emerald-600 text-white shadow-lg'
+                                                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-emerald-50 hover:border-emerald-400'
                                                     }`}
                                                 >
                                                     {page + 1}
@@ -530,7 +530,7 @@ const DisplayRestaurant = () => {
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={!hasMore}
                                         aria-label="Next page"
-                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
+                                        className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-emerald-50 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-gray-700"
                                     >
                                         Next
                                     </button>
@@ -545,8 +545,8 @@ const DisplayRestaurant = () => {
                 ) : (
                     <div className="text-center py-20">
                         <div className="max-w-md mx-auto">
-                            <div className="w-24 h-24 mx-auto mb-6 bg-orange-100 rounded-full flex items-center justify-center">
-                                <HiSearch className="w-12 h-12 text-orange-500" />
+                            <div className="w-24 h-24 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                                <HiSearch className="w-12 h-12 text-emerald-500" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-3">
                                 No results found
@@ -556,7 +556,7 @@ const DisplayRestaurant = () => {
                             </p>
                             <button
                                 onClick={handleClearAll}
-                                className="inline-block px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors"
+                                className="inline-block px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
                             >
                                 Browse All Products
                             </button>

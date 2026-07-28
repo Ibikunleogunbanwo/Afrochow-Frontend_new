@@ -20,11 +20,11 @@ export default function InfoBox({
       Icon: Info,
     },
     warning: {
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
-      textColor: "text-orange-800",
-      titleColor: "text-orange-900",
-      iconColor: "text-orange-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200",
+      textColor: "text-emerald-800",
+      titleColor: "text-emerald-900",
+      iconColor: "text-emerald-600",
       Icon: AlertCircle,
     },
     tip: {

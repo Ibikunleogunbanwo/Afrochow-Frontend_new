@@ -11,7 +11,7 @@ const buttonVariants = cva(
           default:
               "bg-primary text-primary-foreground hover:bg-primary/90",
           destructive:
-              "bg-orange-600 text-white hover:bg-orange-700 hover:scale-[1.02] active:scale-[0.98] active:bg-orange-800 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:bg-orange-600 dark:hover:bg-orange-700",
+              "bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] active:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:bg-emerald-600 dark:hover:bg-emerald-700",
           outline:
               "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
           google:

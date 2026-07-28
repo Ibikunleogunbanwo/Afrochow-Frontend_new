@@ -248,7 +248,7 @@ export default function AdminUserDetailPage() {
                                         referrerPolicy="no-referrer"
                                     />
                                 ) : (
-                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-red-100 border-2 border-orange-200 flex items-center justify-center text-orange-600 text-2xl font-black shadow-sm">
+                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-amber-100 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-2xl font-black shadow-sm">
                                         {initials}
                                     </div>
                                 )}

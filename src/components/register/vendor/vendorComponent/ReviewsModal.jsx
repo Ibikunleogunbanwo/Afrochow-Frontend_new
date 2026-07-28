@@ -47,8 +47,8 @@ const ReviewCard = ({ review, onMarkHelpful }) => {
                     disabled={marked}
                     className={`flex items-center space-x-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
                         marked
-                            ? 'border-orange-200 bg-orange-50 text-orange-600 cursor-default'
-                            : 'border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default'
+                            : 'border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50'
                     }`}
                 >
                     <span>👍</span>
@@ -96,7 +96,7 @@ const ReviewsModal = ({
                             {canWriteReview ? (
                                 <button
                                     onClick={onWriteReview}
-                                    className="px-4 py-2 text-sm font-semibold text-orange-600 border border-orange-500 rounded-xl hover:bg-orange-50 transition-colors"
+                                    className="px-4 py-2 text-sm font-semibold text-emerald-600 border border-emerald-500 rounded-xl hover:bg-emerald-50 transition-colors"
                                 >
                                     Write a Review
                                 </button>
@@ -125,7 +125,7 @@ const ReviewsModal = ({
                                 <select
                                     value={ratingFilter}
                                     onChange={(e) => onRatingFilterChange(Number(e.target.value))}
-                                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                 >
                                     <option value={0}>All Ratings</option>
                                     <option value={4}>4+ Stars</option>

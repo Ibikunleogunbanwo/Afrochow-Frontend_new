@@ -25,7 +25,7 @@ const fieldCls = (hasError) =>
     `w-full px-3 py-2.5 border rounded-lg transition-all ${
         hasError
             ? "border-red-400 bg-red-50"
-            : "border-gray-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20"
+            : "border-gray-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20"
     }`;
 
 const FieldError = ({ message }) =>
@@ -75,7 +75,7 @@ const StripeCardFields = ({
                     onChange={e => onCardholderChange(e.target.value)}
                     placeholder="Name on card"
                     disabled={disabled}
-                    className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-gray-900 transition-all disabled:opacity-50 ${
+                    className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-gray-900 transition-all disabled:opacity-50 ${
                         errors.name ? "border-red-400 bg-red-50" : "border-gray-300"
                     }`}
                 />

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { resolveImageUrl } from "@/lib/utils/imageUrl";
 import { useFavorite } from "@/hooks/useFavorite";
 import { isCustomerWaitlistMode } from "@/lib/mvp";
+import { isGroceryOrProduceCategory } from "@/lib/utils/productCategory";
 
 // ── Promo badge helper ────────────────────────────────────────────────────────
 
@@ -19,7 +20,7 @@ const getPromoBadge = (promotions) => {
     const pct = active.filter(p => p.type === 'PERCENTAGE').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
     if (pct) return { label: `🏷️ ${pct.value}% OFF`, bg: 'bg-green-500' };
     const fixed = active.filter(p => p.type === 'FIXED_AMOUNT').sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
-    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-orange-500' };
+    if (fixed) return { label: `🏷️ $${fixed.value} OFF`, bg: 'bg-emerald-500' };
     return null;
 };
 
@@ -52,6 +53,10 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
 
     const promoBadge = getPromoBadge(promotions);
 
+    // Groceries/farm produce are pre-packaged/raw goods, not cooked-to-order —
+    // "min prep" doesn't make sense on a bag of garri or fresh yam.
+    const isGroceryOrProduce = isGroceryOrProduceCategory(product.storeCategory);
+
     const deliveryFeeLabel = product.deliveryFee === 0 || product.deliveryFee === '0'
         ? 'Free delivery'
         : product.deliveryFee != null
@@ -81,8 +86,8 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
-                            <Flame className="w-12 h-12 text-orange-200" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100">
+                            <Flame className="w-12 h-12 text-emerald-200" />
                         </div>
                     )}
 
@@ -98,11 +103,11 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                         </div>
                     )}
 
-                    {/* Top-right: favorite button + orders badge/promo, stacked */}
+                    {/* Top-right: favorite button + promo badge, stacked */}
                     <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
                         <button
                             onClick={toggleFavorite}
-                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            className="p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                         >
                             <Heart
@@ -112,18 +117,11 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                             />
                         </button>
 
-                        {product.totalOrders > 0 ? (
-                            <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-orange-500 text-white rounded-full shadow-sm">
-                                <Flame className="w-3 h-3" />
-                                {product.totalOrders >= 1000
-                                    ? `${(product.totalOrders / 1000).toFixed(1)}k`
-                                    : product.totalOrders} orders
-                            </span>
-                        ) : promoBadge ? (
+                        {promoBadge && (
                             <div className={`px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-sm ${promoBadge.bg}`}>
                                 {promoBadge.label}
                             </div>
-                        ) : null}
+                        )}
                     </div>
 
                     {/* Bottom-left: open/closed status */}
@@ -135,12 +133,6 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                         </div>
                     )}
 
-                    {/* Bottom-right: promo (when orders badge occupies top-right) */}
-                    {product.totalOrders > 0 && promoBadge && (
-                        <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur-sm shadow-sm ${promoBadge.bg}`}>
-                            {promoBadge.label}
-                        </div>
-                    )}
                 </div>
 
                 {/* ── Body ── */}
@@ -191,7 +183,7 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                         {/* Rating */}
                         <div className="flex flex-col items-center gap-0.5 flex-1">
                             <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
+                                <Star className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                                 <span className="text-sm font-bold text-gray-800">
                                     {product.averageRating > 0 ? product.averageRating.toFixed(1) : "0"}
                                 </span>
@@ -203,18 +195,22 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
                             </span>
                         </div>
 
-                        <div className="w-px h-8 bg-gray-100" />
+                        {!isGroceryOrProduce && (
+                            <>
+                                <div className="w-px h-8 bg-gray-100" />
 
-                        {/* Prep time */}
-                        <div className="flex flex-col items-center gap-0.5 flex-1">
-                            <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm font-bold text-gray-800">
-                                    {product.preparationTimeMinutes > 0 ? `${product.preparationTimeMinutes}` : "0"}
-                                </span>
-                            </div>
-                            <span className="text-[10px] text-gray-400">min prep</span>
-                        </div>
+                                {/* Prep time */}
+                                <div className="flex flex-col items-center gap-0.5 flex-1">
+                                    <div className="flex items-center gap-1">
+                                        <Clock className="w-4 h-4 text-gray-400" />
+                                        <span className="text-sm font-bold text-gray-800">
+                                            {product.preparationTimeMinutes > 0 ? `${product.preparationTimeMinutes}` : "0"}
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-400">min prep</span>
+                                </div>
+                            </>
+                        )}
 
                         <div className="w-px h-8 bg-gray-100" />
 

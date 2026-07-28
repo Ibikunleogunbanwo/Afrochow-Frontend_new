@@ -21,7 +21,7 @@ const fullDate = (dateVal) => formatDateTime(dateVal);
 // ─── type meta ────────────────────────────────────────────────────────────────
 
 const TYPE_META = {
-    NEW_ORDER:       { Icon: ShoppingBag, bg: "bg-orange-50",  icon: "text-orange-600", label: "New Order",  baseHref: "/vendor/orders"     },
+    NEW_ORDER:       { Icon: ShoppingBag, bg: "bg-emerald-50",  icon: "text-emerald-600", label: "New Order",  baseHref: "/vendor/orders"     },
     ORDER_UPDATE:    { Icon: ShoppingBag, bg: "bg-gray-100",   icon: "text-gray-700",   label: "Order",      baseHref: "/vendor/orders"     },
     ORDER:           { Icon: ShoppingBag, bg: "bg-gray-100",   icon: "text-gray-700",   label: "Order",      baseHref: "/vendor/orders"     },
     DELIVERY_UPDATE: { Icon: Truck,       bg: "bg-blue-50",    icon: "text-blue-600",   label: "Delivery",   baseHref: "/vendor/orders"     },
@@ -30,8 +30,8 @@ const TYPE_META = {
     PAYMENT_FAILED:  { Icon: CreditCard,  bg: "bg-red-50",     icon: "text-red-600",    label: "Failed",     baseHref: "/vendor/earnings"   },
     PAYMENT_FAILURE: { Icon: CreditCard,  bg: "bg-red-50",     icon: "text-red-600",    label: "Failed",     baseHref: "/vendor/earnings"   },
     REVIEW:          { Icon: Star,        bg: "bg-yellow-50",  icon: "text-yellow-600", label: "Review",     baseHref: "/vendor/reviews"    },
-    PROMO:           { Icon: Tag,         bg: "bg-orange-50",  icon: "text-orange-500", label: "Promo",      baseHref: "/vendor/promotions" },
-    PROMOTION:       { Icon: Tag,         bg: "bg-orange-50",  icon: "text-orange-500", label: "Promo",      baseHref: "/vendor/promotions" },
+    PROMO:           { Icon: Tag,         bg: "bg-emerald-50",  icon: "text-emerald-500", label: "Promo",      baseHref: "/vendor/promotions" },
+    PROMOTION:       { Icon: Tag,         bg: "bg-emerald-50",  icon: "text-emerald-500", label: "Promo",      baseHref: "/vendor/promotions" },
     SYSTEM_ALERT:    { Icon: Bell,        bg: "bg-gray-100",   icon: "text-gray-400",   label: "System",     baseHref: null                 },
     SYSTEM:          { Icon: Bell,        bg: "bg-gray-100",   icon: "text-gray-400",   label: "System",     baseHref: null                 },
 };
@@ -83,7 +83,7 @@ function NotificationModal({ notification, onClose, onDelete }) {
                     bg === "bg-green-50"  ? "bg-green-400"  :
                     bg === "bg-red-50"   ? "bg-red-400"    :
                     bg === "bg-blue-50"  ? "bg-blue-400"   :
-                    bg === "bg-orange-50"? "bg-orange-400" :
+                    bg === "bg-emerald-50"? "bg-emerald-400" :
                     bg === "bg-yellow-50"? "bg-yellow-400" :
                     "bg-gray-300"
                 }`} />
