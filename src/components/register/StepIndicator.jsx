@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 
 export default function StepIndicator({
                                         currentStep = 1,
-                                        totalSteps = 6,
+                                        totalSteps = 4,
+                                        // Matches the current 4-step vendor wizard (step-5/step-6 were merged
+                                        // into step-4/step-3 respectively — see their redirect shims). No
+                                        // caller overrides this prop, so these must stay in sync with the
+                                        // actual step-N page content.
                                         stepLabels = [
                                           'Account',
-                                          'Profile',
-                                          'Restaurant',
-                                          'Business',
-                                          'Hours',
-                                          'Address'
+                                          'Profile & Store',
+                                          'Branding & Location',
+                                          'Business Operations',
                                         ]
                                       }) {
   const router = useRouter();
@@ -25,14 +27,14 @@ export default function StepIndicator({
     // Only allow navigation to previous (completed) steps
     if (stepNumber > currentStep) return;
 
-    // Map step numbers to routes
+    // Map step numbers to routes. Only 4 steps exist in the current wizard —
+    // step-5/step-6 are dead redirect shims, not real steps, so they're
+    // intentionally not included here.
     const stepRoutes = {
       1: '/register/vendor/step-1',
       2: '/register/vendor/step-2',
       3: '/register/vendor/step-3',
       4: '/register/vendor/step-4',
-      5: '/register/vendor/step-5',
-      6: '/register/vendor/step-6',
     };
 
     const route = stepRoutes[stepNumber];

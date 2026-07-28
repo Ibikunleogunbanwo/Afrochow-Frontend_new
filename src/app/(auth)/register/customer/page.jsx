@@ -1033,13 +1033,23 @@ export default function CustomerRegistration() {
 
                     <span className="text-sm text-gray-600 leading-snug">
                     I agree to the{" "}
-                      <span className="font-semibold text-orange-600">
+                      <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-orange-600 underline underline-offset-2 hover:text-orange-700"
+                      >
                       Terms and Conditions
-                    </span>{" "}
+                    </a>{" "}
                       and{" "}
-                      <span className="font-semibold text-orange-600">
+                      <a
+                          href="/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-orange-600 underline underline-offset-2 hover:text-orange-700"
+                      >
                       Privacy Policy
-                    </span>
+                    </a>
                   </span>
                   </label>
 

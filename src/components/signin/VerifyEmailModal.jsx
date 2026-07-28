@@ -120,9 +120,14 @@ export function VerifyEmailModal({ email, onClose, onSignInClick }) {
             toast.error("Incomplete Code", { description: "Please enter all 6 digits" })
             return
         }
+        if (!email) {
+            toast.error("Missing email", { description: "We couldn't find your email address. Please use the link from your inbox instead." })
+            return
+        }
+
         setLoading(true)
         try {
-            await RegistrationAPI.verifyEmail(codeString)
+            await RegistrationAPI.verifyEmail(email, codeString)
             setSuccess(true)
         } catch (err) {
             toast.error("Verification Failed", { description: err.message || "Invalid or expired code" })

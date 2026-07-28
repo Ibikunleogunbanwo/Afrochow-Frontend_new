@@ -22,10 +22,10 @@ export const RegistrationAPI = {
     });
   },
 
-  verifyEmail: async (code) => {
+  verifyEmail: async (email, code) => {
     return fetchWithCredentials(`${API_BASE_URL}/auth/verify-email`, {
       method: 'POST',
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ email, code }),
     });
   },
 

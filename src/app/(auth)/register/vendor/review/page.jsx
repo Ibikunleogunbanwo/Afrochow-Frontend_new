@@ -187,7 +187,12 @@ export default function Review() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [loading]);
 
-  const handleEdit = (step) => router.push(`/register/vendor/step-${step}`);
+  // ?from=review tells the step page to show the "editing from review" banner
+  // and swap its footer to "Save & Return" instead of the normal Back/Continue
+  // pair (see useReviewMode/FormActions) — without this param that whole
+  // round-trip is unreachable and the user gets bounced through every
+  // remaining step instead of straight back here.
+  const handleEdit = (step) => router.push(`/register/vendor/step-${step}?from=review`);
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -211,11 +216,15 @@ export default function Review() {
         return;
       }
 
+      // Capture the email before RESET clears the shared form context — the
+      // success page (same client-side tree, not remounted) reads it for the
+      // "code sent to {email}" text, the Resend button, and the verify-email
+      // link, so wiping it first breaks all three.
+      const registeredEmail = state.email;
+
       setProgress("Registration complete!");
       dispatch?.({ type: "RESET" });
-      localStorage.removeItem("vendorRegistrationData");
-      localStorage.removeItem("vendorRegistrationStep");
-      router.replace("/register/vendor/success");
+      router.replace(`/register/vendor/success?email=${encodeURIComponent(registeredEmail || "")}`);
     } catch (err) {
       setProgress(null);
 

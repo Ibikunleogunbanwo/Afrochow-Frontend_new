@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   CheckCircle2,
@@ -25,7 +25,12 @@ const RESEND_COOLDOWN = 60;
 
 export default function RegistrationSuccess() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { state } = useForm();
+  // The review page resets the shared form context (clearing state.email)
+  // before navigating here, so the registered address is passed through the
+  // URL instead. Fall back to state.email for direct-navigation edge cases.
+  const email = searchParams.get("email") || state.email || "";
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
@@ -37,9 +42,13 @@ export default function RegistrationSuccess() {
 
   const handleResend = async () => {
     if (resending || cooldown > 0) return;
+    if (!email) {
+      toast.error("We couldn't find your email address. Please verify from the link in your inbox instead.");
+      return;
+    }
     setResending(true);
     try {
-      await RegistrationAPI.resendVerificationEmail(state.email);
+      await RegistrationAPI.resendVerificationEmail(email);
       toast.success("Verification email sent! Check your inbox.");
       setCooldown(RESEND_COOLDOWN);
     } catch (err) {
@@ -81,8 +90,8 @@ export default function RegistrationSuccess() {
                   </h3>
                   <p className="text-sm text-gray-600 mb-3">
                     We&apos;ve sent a <span className="font-medium text-gray-900">6-digit verification code</span> to{" "}
-                    {state.email && (
-                      <span className="font-medium text-gray-900">{state.email}</span>
+                    {email && (
+                      <span className="font-medium text-gray-900">{email}</span>
                     )}
                     . Enter the code to activate your account and unlock your dashboard login. The code is valid for 24 hours.
                   </p>
@@ -228,7 +237,7 @@ export default function RegistrationSuccess() {
               <Button
                 onClick={() =>
                   router.push(
-                    `/verify-email?email=${encodeURIComponent(state.email || "")}`
+                    `/verify-email?email=${encodeURIComponent(email)}`
                   )
                 }
                 className="flex-1 h-11 bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors shadow-sm"
