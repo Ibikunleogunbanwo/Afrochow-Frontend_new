@@ -522,7 +522,7 @@ export default function Step3() {
               <Info className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-semibold text-emerald-900">Business Address</p>
-                <p className="text-xs text-emerald-800 mt-0.5">Ensure your address is accurate — it will be shown publicly to customers.</p>
+                <p className="text-xs text-emerald-800 mt-0.5">Ensure your address is accurate. It will be shown publicly to customers.</p>
               </div>
             </div>
 

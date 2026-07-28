@@ -417,7 +417,7 @@ export default function SettingsPage() {
             }
             toast.success(
                 wasDefault
-                    ? "Address removed — another address is now your default"
+                    ? "Address removed. Another address is now your default"
                     : "Address removed"
             );
         } catch (err) {
@@ -703,7 +703,7 @@ export default function SettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-base font-black text-gray-900">Danger Zone</h2>
-                            <p className="text-xs text-red-600 mt-0.5">Irreversible — proceed with caution</p>
+                            <p className="text-xs text-red-600 mt-0.5">Irreversible, proceed with caution</p>
                         </div>
                     </div>
                     <div className="p-5">

@@ -278,7 +278,7 @@ const CANCELLATION_AUDIT = {
         refund:   true,
     },
     VENDOR_POST_ACCEPT: {
-        badge:    'Cancelled — unable to fulfil',
+        badge:    'Cancelled: unable to fulfil',
         badgeCss: 'bg-emerald-100 text-emerald-700 border-emerald-300',
         message:  'You accepted this order but subsequently cancelled it.',
         showNote: true,   // show vendor-supplied reason
@@ -442,7 +442,7 @@ const VendorOrdersPage = () => {
             if (selectedOrder?.publicOrderId === publicOrderId) setSelectedOrder(prev => ({ ...prev, ...updated }));
 
             const targetLabel = ORDER_STATUSES[targetStatus]?.label ?? targetStatus;
-            toast.success(`Order updated — ${targetLabel}`);
+            toast.success(`Order updated: ${targetLabel}`);
         } catch (err) {
             toast.error('Could not update order', { description: err.message });
         } finally {
@@ -472,7 +472,7 @@ const VendorOrdersPage = () => {
             setOrders(prev => prev.map(o => o.publicOrderId === publicOrderId ? { ...o, ...updated } : o));
             if (selectedOrder?.publicOrderId === publicOrderId) setSelectedOrder(prev => ({ ...prev, ...updated }));
             setUnableModal(null);
-            toast.success('Order cancelled — customer will be refunded');
+            toast.success('Order cancelled, customer will be refunded');
         } catch (err) {
             toast.error('Could not cancel order', { description: err.message });
         } finally {
@@ -642,7 +642,7 @@ const VendorOrdersPage = () => {
                                                     <button
                                                         onClick={() => setUnableModal(order)}
                                                         disabled={isActioning}
-                                                        title="Cancel this order and issue a full refund — use if you can't prepare it"
+                                                        title="Cancel this order and issue a full refund. Use if you can't prepare it"
                                                         className="inline-flex items-center gap-1.5 px-3 py-2 border border-red-200 text-red-600 rounded-lg text-xs sm:text-sm hover:bg-red-50 transition-colors disabled:opacity-50"
                                                     >
                                                         <XCircle className="h-3.5 w-3.5" />
@@ -902,7 +902,7 @@ const VendorOrdersPage = () => {
                                             {audit?.refund === false && (
                                                 <div className="flex items-start gap-3 pt-1 border-t border-red-100">
                                                     <span className="text-xs font-semibold text-red-400 w-14 shrink-0 pt-0.5">Refund</span>
-                                                    <p className="text-xs text-red-700">No refund — cancelled by customer.</p>
+                                                    <p className="text-xs text-red-700">No refund: cancelled by customer.</p>
                                                 </div>
                                             )}
                                         </div>
@@ -946,7 +946,7 @@ const VendorOrdersPage = () => {
                                             Can&apos;t complete this order?
                                         </p>
                                         <p className="text-xs text-gray-500 mb-2">
-                                            Use this if you&apos;re out of an ingredient, closing early, or otherwise can&apos;t prepare it. The customer is refunded in full right away — this can&apos;t be undone.
+                                            Use this if you&apos;re out of an ingredient, closing early, or otherwise can&apos;t prepare it. The customer is refunded in full right away. This can&apos;t be undone.
                                         </p>
                                         <button
                                             onClick={() => { setShowDetailModal(false); setUnableModal(selectedOrder); }}

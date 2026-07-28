@@ -72,7 +72,7 @@ const FAQS = {
     menu: [
         {
             question: "How do I add a new product to my menu?",
-            answer: "Go to Products in the sidebar and click 'Add Product'. Fill in the product name, description, price, and category. Upload a clear photo of the dish — listings with photos get significantly more clicks. You can also tag items as Vegan, Vegetarian, Gluten-Free, or Spicy to help customers filter.",
+            answer: "Go to Products in the sidebar and click 'Add Product'. Fill in the product name, description, price, and category. Upload a clear photo of the dish, listings with photos get significantly more clicks. You can also tag items as Vegan, Vegetarian, Gluten-Free, or Spicy to help customers filter.",
         },
         {
             question: "How do I edit or remove a product?",
@@ -84,7 +84,7 @@ const FAQS = {
         },
         {
             question: "Can I set a product as temporarily unavailable?",
-            answer: "Yes — when editing a product, toggle the availability switch to mark it as unavailable. It will be hidden from customers until you turn it back on. This is useful when you run out of an ingredient.",
+            answer: "Yes, when editing a product, toggle the availability switch to mark it as unavailable. It will be hidden from customers until you turn it back on. This is useful when you run out of an ingredient.",
         },
         {
             question: "How many products can I add?",
@@ -94,7 +94,7 @@ const FAQS = {
     orders: [
         {
             question: "How do I receive and manage orders?",
-            answer: "New orders appear in the Orders section of your dashboard and will show a 'New Order' badge. Accept or reject an order promptly — customers are notified in real time. Once accepted, update the order status as you progress: Preparing → Ready → Out for Delivery → Delivered.",
+            answer: "New orders appear in the Orders section of your dashboard and will show a 'New Order' badge. Accept or reject an order promptly, customers are notified in real time. Once accepted, update the order status as you progress: Preparing → Ready → Out for Delivery → Delivered.",
         },
         {
             question: "What happens if I don't respond to an order?",
@@ -109,7 +109,7 @@ const FAQS = {
             answer: "In exceptional circumstances you may need to cancel after accepting. Use the reject/cancel option on the order detail page and add a reason. Frequent cancellations after acceptance negatively affect your store rating.",
         },
         {
-            question: "A customer claims their order was wrong or missing items — what do I do?",
+            question: "A customer claims their order was wrong or missing items. What do I do?",
             answer: "Contact the customer through the order detail page and try to resolve it directly. If a refund is warranted, email support@afrochow.ca with the order ID and details. We'll review and process any applicable refund.",
         },
     ],
@@ -138,7 +138,7 @@ const FAQS = {
         },
         {
             question: "Can I offer a discount on specific products?",
-            answer: "Yes — when creating a promotion, you can choose to apply it to your entire menu or restrict it to specific products or categories.",
+            answer: "Yes, when creating a promotion, you can choose to apply it to your entire menu or restrict it to specific products or categories.",
         },
         {
             question: "How do I track promotion performance?",

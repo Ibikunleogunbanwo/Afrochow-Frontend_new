@@ -188,7 +188,7 @@ export default function AdminVendorsPage() {
         suspend:           'Vendor Suspended',
         reinstate:         'Vendor Reinstated',
         approveProvisional: 'Vendor Provisionally Approved',
-        verifyCert:        'Certificate Verified — Vendor Fully Verified',
+        verifyCert:        'Certificate Verified: Vendor Fully Verified',
         verify:            'Vendor Fully Verified',
         reject:            'Vendor Rejected',
     };

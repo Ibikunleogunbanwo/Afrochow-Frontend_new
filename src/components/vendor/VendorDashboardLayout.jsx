@@ -332,7 +332,7 @@ const VendorDashboardLayout = ({ children }) => {
                         <div>
                             <p className="font-semibold text-emerald-800 text-sm">Application resubmitted</p>
                             <p className="text-emerald-700 text-sm mt-0.5">
-                                Your application is back under review — this typically takes 24–48 hours. We&apos;ll email you once a decision is made.
+                                Your application is back under review, this typically takes 24–48 hours. We&apos;ll email you once a decision is made.
                             </p>
                         </div>
                     </div>
@@ -358,7 +358,7 @@ const VendorDashboardLayout = ({ children }) => {
                         <div>
                             <p className="font-semibold text-emerald-800 text-sm">Pending admin approval</p>
                             <p className="text-emerald-700 text-sm mt-0.5">
-                                Your store is under review — this typically takes 24–48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
+                                Your store is under review, this typically takes 24–48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
                             </p>
                         </div>
                     </div>

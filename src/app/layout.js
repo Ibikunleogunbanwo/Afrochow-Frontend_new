@@ -20,7 +20,7 @@ export const metadata = {
     // don't set their own absolute image) to resolve correctly.
     metadataBase: new URL(SITE_URL),
     title: "Afrochow - African Food Delivery",
-    description: "Order authentic African and Caribbean food, groceries and farm produce from verified local vendors — delivered across Canada, starting in Calgary.",
+    description: "Order authentic African and Caribbean food, groceries, and farm produce from verified local vendors. Now delivering across Canada, starting in Calgary.",
     keywords: [
         "African food delivery",
         "African restaurants Canada",
@@ -45,13 +45,13 @@ export const metadata = {
         url: SITE_URL,
         siteName: "Afrochow",
         title: "Afrochow - African Food Delivery",
-        description: "Order authentic African and Caribbean food, groceries and farm produce from verified local vendors — delivered across Canada.",
+        description: "Order authentic African and Caribbean food, groceries, and farm produce from verified local vendors across Canada.",
         images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Afrochow — Taste of Africa" }],
     },
     twitter: {
         card: "summary_large_image",
         title: "Afrochow - African Food Delivery",
-        description: "Order authentic African and Caribbean food, groceries and farm produce from verified local vendors — delivered across Canada.",
+        description: "Order authentic African and Caribbean food, groceries, and farm produce from verified local vendors across Canada.",
         images: ["/og-default.png"],
     },
 };

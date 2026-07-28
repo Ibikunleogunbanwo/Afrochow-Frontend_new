@@ -24,7 +24,7 @@ const SECTIONS = [
             },
             {
                 q: 'Can I undo a verification?',
-                a: 'Yes — click Revoke on any verified vendor to remove their verified status without deleting their account.',
+                a: 'Yes, click Revoke on any verified vendor to remove their verified status without deleting their account.',
             },
         ],
     },
@@ -39,7 +39,7 @@ const SECTIONS = [
             },
             {
                 q: 'Can I delete a SUPERADMIN?',
-                a: 'No. SUPERADMIN accounts are fully protected — they cannot be modified, suspended, or deleted through the dashboard.',
+                a: 'No. SUPERADMIN accounts are fully protected, they cannot be modified, suspended, or deleted through the dashboard.',
             },
             {
                 q: 'How do I promote an admin to SUPERADMIN?',
@@ -69,7 +69,7 @@ const SECTIONS = [
         faqs: [
             {
                 q: 'What\'s the difference between Hide and Delete?',
-                a: 'Hide removes the review from public view but keeps it in the system — it can be restored. Delete permanently removes it.',
+                a: 'Hide removes the review from public view but keeps it in the system, so it can be restored. Delete permanently removes it.',
             },
             {
                 q: 'Can vendors see hidden reviews?',
@@ -88,7 +88,7 @@ const SECTIONS = [
             },
             {
                 q: 'Can I update an active promotion?',
-                a: 'Yes — click Edit on any promotion to update its details. Changes take effect immediately.',
+                a: 'Yes, click Edit on any promotion to update its details. Changes take effect immediately.',
             },
             {
                 q: 'What does Deactivate do?',
@@ -107,7 +107,7 @@ const SECTIONS = [
             },
             {
                 q: 'How often is analytics data updated?',
-                a: 'Analytics are computed in real time from the database — data is current as of when you load the page.',
+                a: 'Analytics are computed in real time from the database. Data is current as of when you load the page.',
             },
         ],
     },

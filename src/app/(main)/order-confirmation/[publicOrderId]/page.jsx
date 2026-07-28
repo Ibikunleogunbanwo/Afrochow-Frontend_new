@@ -33,8 +33,8 @@ const HERO = {
         title: 'Order Confirmed!',
         subtitle: (isDelivery) =>
             isDelivery
-                ? 'Great news — the vendor has accepted your order and will start preparing it shortly.'
-                : 'Great news — the vendor has confirmed your order and will have it ready for pickup.',
+                ? 'Great news, the vendor has accepted your order and will start preparing it shortly.'
+                : 'Great news, the vendor has confirmed your order and will have it ready for pickup.',
     },
     PREPARING: {
         gradient: 'from-emerald-400 to-amber-600',
@@ -215,7 +215,7 @@ const STATUS_NOTE = {
                           : 'The restaurant will confirm your order shortly.',
     CONFIRMED:        ()  => 'Your order is confirmed. The restaurant will start preparing it soon.',
     PREPARING:        ()  => 'Your order is being freshly prepared. Sit tight!',
-    READY_FOR_PICKUP: ()  => 'Head to the restaurant — your order is packed and ready.',
+    READY_FOR_PICKUP: ()  => 'Head to the restaurant, your order is packed and ready.',
     OUT_FOR_DELIVERY: ()  => 'Your delivery driver is on the way. Keep an eye out!',
 };
 
@@ -478,7 +478,7 @@ export default function OrderConfirmationPage() {
                                             <div className="flex items-start gap-3 pt-1 border-t border-red-100">
                                                 <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Charge</span>
                                                 <p className="text-xs text-red-700 leading-relaxed">
-                                                    No charge was made to your payment method — the order was cancelled before payment completed, so there&apos;s nothing to refund.
+                                                    No charge was made to your payment method. The order was cancelled before payment completed, so there&apos;s nothing to refund.
                                                 </p>
                                             </div>
                                         );
@@ -653,12 +653,12 @@ export default function OrderConfirmationPage() {
                                         <PolicyRow
                                             icon="💳"
                                             title="Authorization hold placed"
-                                            body="Your card has an authorization hold — no money has been charged yet. The hold will appear as a pending transaction on your statement but no funds are taken until the restaurant confirms your order."
+                                            body="Your card has an authorization hold, no money has been charged yet. The hold will appear as a pending transaction on your statement but no funds are taken until the restaurant confirms your order."
                                         />
                                         <PolicyRow
                                             icon="✅"
                                             title="Free to cancel"
-                                            body="You can cancel this order at any time before the restaurant accepts it. The authorization hold will be released immediately — no charge will ever appear."
+                                            body="You can cancel this order at any time before the restaurant accepts it. The authorization hold will be released immediately, no charge will ever appear."
                                         />
                                         <PolicyRow
                                             icon="⏱"
@@ -679,7 +679,7 @@ export default function OrderConfirmationPage() {
                                         <PolicyRow
                                             icon="✅"
                                             title="Cancellation window is open"
-                                            body="You can still cancel this order for a full refund — your 6-hour cancellation window is active. Refunds are initiated immediately and typically appear on your statement within 5–10 business days."
+                                            body="You can still cancel this order for a full refund. Your 6-hour cancellation window is active. Refunds are initiated immediately and typically appear on your statement within 5–10 business days."
                                         />
                                         <PolicyRow
                                             icon="🍽"

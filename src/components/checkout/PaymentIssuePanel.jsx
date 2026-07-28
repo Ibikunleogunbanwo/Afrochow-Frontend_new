@@ -90,7 +90,7 @@ function PaymentIssuePanelInner({ publicOrderId, paymentStatus, onResolved }) {
         }
 
         // FAILED
-        setIssueMessage("That didn't work — you have not been charged, no funds were taken. You can try a different card below.");
+        setIssueMessage("That didn't work. You have not been charged, no funds were taken. You can try a different card below.");
         setShowCardForm(true);
     };
 

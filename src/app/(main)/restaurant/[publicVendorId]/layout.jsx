@@ -72,7 +72,7 @@ export async function generateMetadata({ params }) {
     const vendor = await fetchVendorForMetadata(publicVendorId);
 
     const fallback = {
-        title: 'Discover local African flavours — Afrochow',
+        title: 'Discover local African flavours | Afrochow',
         description:
             'Order from trusted African restaurants and grocery stores across Canada on Afrochow.',
     };
@@ -83,10 +83,10 @@ export async function generateMetadata({ params }) {
         ? ` · ★ ${vendor.averageRating.toFixed(1)}`
         : '';
 
-    const title = `${name} — ${cuisine} on Afrochow${rating}`;
+    const title = `${name} | ${cuisine} on Afrochow${rating}`;
     const description = cityLine
         ? `${name} in ${cityLine}. Order ${cuisine.toLowerCase()} on Afrochow.`
-        : `Order from ${name} on Afrochow — ${cuisine.toLowerCase()}.`;
+        : `Order from ${name} on Afrochow, ${cuisine.toLowerCase()}.`;
 
     return {
         title,

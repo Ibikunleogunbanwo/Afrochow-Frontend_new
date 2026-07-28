@@ -90,13 +90,13 @@ export default function CookiePolicyPage() {
                     </Section>
 
                     <Section title="5. Analytics Cookies">
-                        <p>Analytics cookies help us understand how visitors interact with our Platform — for example, which pages are visited most, how long users spend on each page, and where users come from. This data is aggregated and anonymous, and helps us improve our service.</p>
+                        <p>Analytics cookies help us understand how visitors interact with our Platform, for example, which pages are visited most, how long users spend on each page, and where users come from. This data is aggregated and anonymous, and helps us improve our service.</p>
                         <p>We may use analytics services such as Google Analytics. These services have their own privacy policies governing their use of the collected data.</p>
                     </Section>
 
                     <Section title="6. Managing Your Cookie Preferences">
                         <p>You can control and manage cookies in several ways:</p>
-                        <p><strong className="text-slate-800">Browser Settings:</strong> Most browsers allow you to refuse or delete cookies through their settings. The process varies by browser — refer to your browser's help documentation for instructions.</p>
+                        <p><strong className="text-slate-800">Browser Settings:</strong> Most browsers allow you to refuse or delete cookies through their settings. The process varies by browser, so refer to your browser's help documentation for instructions.</p>
                         <p><strong className="text-slate-800">Opt-out Tools:</strong> You can opt out of Google Analytics tracking by installing the{" "}
                             <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">Google Analytics Opt-out Browser Add-on</a>.
                         </p>

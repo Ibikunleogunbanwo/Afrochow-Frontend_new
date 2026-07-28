@@ -781,7 +781,7 @@ const VendorMenuPage = () => {
                                             {product.adminVisible === false ? (
                                                 <span
                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border bg-red-50 text-red-600 border-red-200 cursor-default"
-                                                    title="Suspended by platform admin — contact support to resolve"
+                                                    title="Suspended by platform admin, contact support to resolve"
                                                 >
                                                     <ShieldOff className="w-3 h-3" />
                                                     Suspended
@@ -1055,7 +1055,7 @@ const VendorMenuPage = () => {
                                     <div>
                                         <p className="text-sm font-semibold text-gray-900">Visible to customers</p>
                                         <p className="text-xs text-gray-500 mt-0.5">
-                                            {formData.available ? 'Currently live — customers can order this' : 'Hidden — not visible in your menu'}
+                                            {formData.available ? 'Currently live, customers can order this' : 'Hidden, not visible in your menu'}
                                         </p>
                                     </div>
                                     <button

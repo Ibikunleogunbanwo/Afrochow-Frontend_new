@@ -3,7 +3,7 @@ import { UtensilsCrossed, Heart, Globe2, Truck, Store, Users } from "lucide-reac
 
 export const metadata = {
     title: "About Us | Afrochow",
-    description: "Learn about Afrochow — bringing authentic African flavours to your doorstep across Canada.",
+    description: "Afrochow brings authentic African flavours to doorsteps across Canada. Here's our story.",
 }
 
 const ValueCard = ({ icon: Icon, title, description }) => (
@@ -36,7 +36,7 @@ export default function AboutPage() {
                     <h1 className="text-4xl font-black mb-4">About Afrochow</h1>
                     <p className="text-emerald-100 text-lg leading-relaxed max-w-2xl mx-auto">
                         We're on a mission to celebrate African cuisine by connecting food lovers with the best
-                        African restaurants across Canada — one delicious meal at a time.
+                        African restaurants across Canada, one delicious meal at a time.
                     </p>
                 </div>
             </div>
@@ -56,8 +56,8 @@ export default function AboutPage() {
                                 on a Friday night.
                             </p>
                             <p>
-                                So we built it. Afrochow is the marketplace dedicated exclusively to African cuisine —
-                                connecting customers who crave the real thing with the talented chefs and restaurants
+                                So we built it. Afrochow is the only marketplace dedicated exclusively to African
+                                cuisine, connecting people who crave the real thing with the chefs and restaurants
                                 serving it across Canada.
                             </p>
                             <p>
@@ -119,12 +119,12 @@ export default function AboutPage() {
                         <ValueCard
                             icon={Store}
                             title="Authentic Only"
-                            description="Every restaurant on our platform serves genuine African cuisine — no imitations, no shortcuts."
+                            description="Every restaurant on our platform serves genuine African cuisine. No imitations, no shortcuts."
                         />
                         <ValueCard
                             icon={Users}
                             title="Built for the Diaspora"
-                            description="Afrochow is by Africans, for Africans — and for anyone who loves the bold, rich flavours of African cooking."
+                            description="Afrochow is by Africans, for Africans, and for anyone who loves the bold, rich flavours of African cooking."
                         />
                         <ValueCard
                             icon={UtensilsCrossed}

@@ -406,7 +406,7 @@ export default function Review() {
                 <Label icon={Hash} text="Business / Tax ID" />
                 {state.taxId
                     ? <Value mono>{state.taxId}</Value>
-                    : <Missing text="Not provided — required before first payout" />
+                    : <Missing text="Not provided, required before first payout" />
                 }
               </div>
 
@@ -425,7 +425,7 @@ export default function Review() {
                       <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
                     </div>
                 ) : (
-                    <Missing text="Not provided — recommended for verification" />
+                    <Missing text="Not provided, recommended for verification" />
                 )}
               </div>
 

@@ -493,7 +493,7 @@ export default function AdminProductsPage() {
                     <p className="font-semibold text-gray-700">
                         {filterTab === 'featured'     ? 'No featured products yet' :
                          filterTab === 'not_featured' ? 'No unfeatured products found' :
-                         filterTab === 'hidden'       ? 'No hidden products — all products are visible' :
+                         filterTab === 'hidden'       ? 'No hidden products, all products are visible' :
                          filterTab === 'visible'      ? 'No visible products found' :
                          debouncedQ                   ? `No products match "${debouncedQ}"` :
                                                         'No products found'}

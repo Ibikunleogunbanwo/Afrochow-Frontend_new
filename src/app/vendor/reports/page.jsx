@@ -239,7 +239,7 @@ const VendorReportsPage = () => {
 
         const salesHtml = salesReport ? `
             <section>
-                <h2>Sales Report — ${rangeLabel}</h2>
+                <h2>Sales Report: ${rangeLabel}</h2>
                 <div class="grid-4">
                     <div class="card accent-orange">
                         <p class="label">Total Orders</p>
@@ -307,7 +307,7 @@ const VendorReportsPage = () => {
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Reports &amp; Analytics — Afrochow</title>
+<title>Reports &amp; Analytics | Afrochow</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111; background: #fff; padding: 32px; font-size: 13px; }

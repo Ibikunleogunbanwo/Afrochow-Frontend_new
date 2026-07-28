@@ -137,7 +137,7 @@ export default function RegistrationSuccess() {
                       <h4 className="font-semibold text-gray-900 text-sm">Enter the Code → Login Unlocked</h4>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Enter the 6-digit code from your inbox (valid 24 hours). This verifies your email and immediately enables your login — you can sign in to your dashboard right away.
+                      Enter the 6-digit code from your inbox (valid 24 hours). This verifies your email and immediately enables your login, so you can sign in to your dashboard right away.
                     </p>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export default function RegistrationSuccess() {
                       <h4 className="font-semibold text-gray-900 text-sm">Log In & Set Up While You Wait</h4>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Once your email is verified you can sign in, explore your dashboard, and set up your menu. Your profile is under review — you won&apos;t receive orders yet, but everything else is fully accessible.
+                      Once your email is verified you can sign in, explore your dashboard, and set up your menu. Your profile is under review, so you won&apos;t receive orders yet, but everything else is fully accessible.
                     </p>
                   </div>
                 </div>
@@ -167,7 +167,7 @@ export default function RegistrationSuccess() {
                       <h4 className="font-semibold text-gray-900 text-sm">Admin Approval → Orders Open</h4>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Our team verifies your business documents — typically 24–48 hours. Once approved you&apos;ll receive a confirmation email and your store will be live and able to accept orders.
+                      Our team verifies your business documents, typically 24–48 hours. Once approved you&apos;ll receive a confirmation email and your store will be live and able to accept orders.
                     </p>
                   </div>
                 </div>
@@ -258,17 +258,17 @@ export default function RegistrationSuccess() {
             </p>
             <div className="flex flex-col sm:flex-row gap-1.5 justify-center text-sm">
               <a
-                href="mailto:support@afrochow.com"
+                href="mailto:support@afrochow.ca"
                 className="text-emerald-600 hover:text-emerald-700 font-medium text-xs"
               >
-                support@afrochow.com
+                support@afrochow.ca
               </a>
               <span className="hidden sm:inline text-gray-300">•</span>
               <a
-                href="tel:+1234567890"
+                href="tel:+18259822347"
                 className="text-emerald-600 hover:text-emerald-700 font-medium text-xs"
               >
-                +1 (234) 567-8900
+                825-982-2347
               </a>
             </div>
           </div>

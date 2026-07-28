@@ -107,6 +107,21 @@ const Header = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, [isMobileMenuOpen]);
 
+    // Lock background scroll while the mobile menu is open. The menu content
+    // (location search + browse + account links) is often taller than the
+    // visible viewport, and without this the only way to reach lower items
+    // was to scroll the page itself — which immediately triggered the
+    // scroll-close listener above and killed the menu before a tap on e.g.
+    // "Settings" could land. Locking body scroll means any drag inside the
+    // menu scrolls its own internal container (see overflow-y-auto below)
+    // instead of the window, so it never trips the close-on-scroll handler.
+    useEffect(() => {
+        if (!isMobileMenuOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = previousOverflow; };
+    }, [isMobileMenuOpen]);
+
     // Close the desktop profile dropdown when the user scrolls more than 10px
     useEffect(() => {
         if (!isMenuOpen) return;
@@ -516,7 +531,7 @@ const Header = () => {
                             onClick={() => setIsMobileMenuOpen(false)}
                         />
                     <div className="pointer-events-auto absolute top-18 left-3 right-3 sm:left-4 sm:right-4 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden z-20">
-                        <div className="divide-y divide-gray-100">
+                        <div className="divide-y divide-gray-100 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain">
 
                             {/* Location — mobile only, shown regardless of auth state */}
                             <div className="px-3 py-3">

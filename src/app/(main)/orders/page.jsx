@@ -181,7 +181,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
                     <div className="flex items-center gap-2 px-3 py-2 bg-red-50 rounded-xl border border-red-100">
                         <Ban className="w-3.5 h-3.5 text-red-400 shrink-0" />
                         <p className="text-xs text-red-500">
-                            Order cancelled — view details for the full reason.
+                            Order cancelled. View details for the full reason.
                         </p>
                     </div>
                 )}

@@ -11,7 +11,7 @@ const TESTIMONIAL = {
     initials:        "AO",
     quote:           "Afrochow helped me reach customers I never thought possible. My online orders have tripled in just 3 months. Setting up my store took less than an hour and the support team was incredible throughout.",
     name:            "Amara Okafor",
-    storeAndLocation:"Owner, Mama's Kitchen — Calgary, AB",
+    storeAndLocation:"Owner, Mama's Kitchen, Calgary, AB",
     rating:          5,
 };
 
@@ -30,7 +30,7 @@ const BENEFITS = [
     {
         icon: DollarSign,
         title: "Zero Commission",
-        description: "Keep 100% of your earnings — no hidden fees, ever",
+        description: "Keep 100% of your earnings. No hidden fees, ever.",
     },
     {
         icon: ShoppingBag,
@@ -51,11 +51,11 @@ const BENEFITS = [
 
 const FEATURES = [
     "Easy menu management",
-    "Real-time order tracking",
+    "Order status notifications",
     "Detailed analytics dashboard",
     "Marketing & promotions tools",
     "24/7 customer support",
-    "Flexible payment options",
+    "Secure card payments",
     "Mobile-friendly dashboard",
     "Custom store branding",
 ];
@@ -96,10 +96,9 @@ const VendorCTA = () => (
                             </span>
                         </h2>
                         <p className="text-xl text-gray-600 leading-relaxed">
-                            Whether you run a home kitchen, a restaurant, or an African grocery store,
-                            Afrochow gives you the tools to reach more customers, manage orders effortlessly,
-                            and grow your business.
-                            Join hundreds of vendors already thriving on our platform.
+                            Run a home kitchen, a restaurant, or an African grocery store? Afrochow gives you
+                            the tools to reach more customers, manage orders without the hassle, and grow
+                            your business. Hundreds of vendors are already selling on the platform.
                         </p>
                     </div>
 

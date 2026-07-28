@@ -650,14 +650,14 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                         <div className="space-y-3">
                             <p className="text-sm font-semibold text-gray-900 text-center">
                                 {confirmAction === "approve"
-                                    ? `${approveLabel} — ${d.restaurantName || "this vendor"}?`
+                                    ? `${approveLabel}: ${d.restaurantName || "this vendor"}?`
                                     : `Reject ${d.restaurantName || "this vendor"}?`}
                             </p>
                             <p className="text-xs text-gray-500 text-center">
                                 {confirmAction === "approve"
                                     ? isRejected
-                                        ? "The vendor will be moved to PROVISIONAL status — live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent."
-                                        : "The vendor will be moved to PROVISIONAL status — live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent to them."
+                                        ? "The vendor will be moved to PROVISIONAL status, live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent."
+                                        : "The vendor will be moved to PROVISIONAL status, live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent to them."
                                     : "The vendor's application will be rejected and they will be notified by email."}
                             </p>
 

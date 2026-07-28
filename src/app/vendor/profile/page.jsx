@@ -228,7 +228,7 @@ function validateInfo(infoForm, addrForm, storeCategorys) {
 
         const postalOk = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(addrForm.postalCode || '');
         if (!postalOk)
-            e.postalCode = 'Invalid postal code — use format A1A 1A1';
+            e.postalCode = 'Invalid postal code, use format A1A 1A1';
     }
 
     return e;
@@ -644,7 +644,7 @@ export default function VendorProfilePage() {
                 setCertNumber('');
                 setCertIssuingBody('');
                 setCertExpiry('');
-                toast.success('Certificate uploaded — pending admin review');
+                toast.success('Certificate uploaded, pending admin review');
             } else {
                 throw new Error(res?.message || 'Upload failed');
             }
@@ -847,7 +847,7 @@ export default function VendorProfilePage() {
                             <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-blue-800">
-                                    Action required — upload your food handling certificate
+                                    Action required: upload your food handling certificate
                                 </p>
                                 <p className="text-xs text-blue-600 mt-0.5">
                                     Your store is live with a temporary order cap. Upload your certificate in the{' '}
@@ -906,7 +906,7 @@ export default function VendorProfilePage() {
                                         <FieldError msg={infoErrors.restaurantName} />
                                         {identityLocked && (
                                             <p className="text-xs text-gray-400 mt-1">
-                                                Locked after verification — contact Afrochow support to change your store name.
+                                                Locked after verification. Contact Afrochow support to change your store name.
                                             </p>
                                         )}
                                     </div>
@@ -923,7 +923,7 @@ export default function VendorProfilePage() {
                                         <FieldError msg={infoErrors.storeCategory} />
                                         {identityLocked && (
                                             <p className="text-xs text-gray-400 mt-1">
-                                                Locked after verification — contact Afrochow support to change your category.
+                                                Locked after verification. Contact Afrochow support to change your category.
                                             </p>
                                         )}
                                     </div>
@@ -1380,7 +1380,7 @@ export default function VendorProfilePage() {
                                         <div className="flex items-center gap-3 px-4 py-3.5 bg-green-50 border border-green-200 rounded-xl">
                                             <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
                                             <div>
-                                                <p className="text-sm font-semibold text-green-800">Certificate verified — fully approved</p>
+                                                <p className="text-sm font-semibold text-green-800">Certificate verified, fully approved</p>
                                                 <p className="text-xs text-green-600 mt-0.5">
                                                     Verified on {formatDateLong(verified)}
                                                 </p>
@@ -1410,7 +1410,7 @@ export default function VendorProfilePage() {
                                         <div className="flex items-center gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl">
                                             <Clock className="w-5 h-5 text-amber-500 shrink-0" />
                                             <div>
-                                                <p className="text-sm font-semibold text-amber-800">Certificate uploaded — pending admin review</p>
+                                                <p className="text-sm font-semibold text-amber-800">Certificate uploaded, pending admin review</p>
                                                 <p className="text-xs text-amber-600 mt-0.5">
                                                     You can replace the file below if there was an error with your submission.
                                                 </p>
@@ -1596,7 +1596,7 @@ export default function VendorProfilePage() {
                             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl p-4">
                                 <Info className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                                 <p className="text-xs text-amber-700 leading-relaxed">
-                                    Images save immediately — no separate Save button needed.
+                                    Images save immediately, no separate Save button needed.
                                     Your logo appears in search results; the banner is shown at the top of your store page.
                                 </p>
                             </div>

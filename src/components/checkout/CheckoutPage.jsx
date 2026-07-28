@@ -158,7 +158,7 @@ export default function CheckoutPage() {
             //      redirect doesn't feel like a glitch.
             sessionStorage.setItem("returnTo", "/checkout");
             toast.info("Sign in to complete your order", {
-                description: "Your cart is saved — sign in and we'll bring you right back to checkout.",
+                description: "Your cart is saved. Sign in and we'll bring you right back to checkout.",
             });
             router.replace("/cart");
             window.dispatchEvent(
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                 // since the toast title already says "Order could not be placed".
                 const cleanReason = raw.replace(/^Payment failed:\s*/i, "");
                 const description = isCardDecline
-                    ? cleanReason + " You have not been charged — no funds were taken from your card. " +
+                    ? cleanReason + " You have not been charged, no funds were taken from your card. " +
                       "Please try a different card or contact your bank."
                     : raw.includes("minimum amount")
                     ? raw                                                    // Business rule — safe to show
@@ -741,7 +741,7 @@ export default function CheckoutPage() {
                                     <ul className="text-xs text-blue-700 space-y-0.5 pl-3">
                                         {advanceItems.map(item => (
                                             <li key={item.publicProductId}>
-                                                • <span className="font-medium">{item.name}</span> — {item.advanceNoticeHours ?? 24}hr notice required
+                                                • <span className="font-medium">{item.name}</span>: {item.advanceNoticeHours ?? 24}hr notice required
                                             </li>
                                         ))}
                                     </ul>

@@ -91,7 +91,7 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
         const updated = res?.data ?? res;
         const nowVisible = updated?.adminVisible ?? (localProduct.adminVisible === false);
         setLocal(prev => ({ ...prev, adminVisible: nowVisible }));
-        toast.success(nowVisible ? "Product reinstated — visible to customers" : "Product suspended — hidden from customers");
+        toast.success(nowVisible ? "Product reinstated, visible to customers" : "Product suspended, hidden from customers");
         onMutated?.();
     });
 
@@ -249,7 +249,7 @@ export default function AdminProductDetailModal({ product, onClose, onMutated })
                                     </p>
                                     <p className="text-xs text-gray-400 mt-0.5">
                                         {localProduct.adminVisible !== false
-                                            ? "Platform suspension — vendor cannot override this"
+                                            ? "Platform suspension, vendor cannot override this"
                                             : "Restore product visibility across the platform"}
                                     </p>
                                 </div>

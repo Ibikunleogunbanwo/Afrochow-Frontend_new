@@ -11,7 +11,7 @@
 import NotFoundContent from "@/components/NotFoundContent";
 
 export const metadata = {
-    title: "Page Not Found — Afrochow",
+    title: "Page Not Found | Afrochow",
     description: "The page you're looking for doesn't exist or may have moved.",
     robots: { index: false, follow: true },
 };

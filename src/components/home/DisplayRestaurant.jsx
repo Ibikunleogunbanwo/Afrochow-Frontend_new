@@ -206,7 +206,7 @@ const DisplayRestaurant = () => {
     const getResultsLabel = () => {
         const count = totalElements;
         const noun  = count === 1 ? 'result' : 'results';
-        if (resolvedCategory && decodedCity) return `${count} ${noun} in ${resolvedCategory} — ${decodedCity}`;
+        if (resolvedCategory && decodedCity) return `${count} ${noun} in ${resolvedCategory}, ${decodedCity}`;
         if (resolvedCategory)               return `${count} ${noun} in ${resolvedCategory}`;
         if (decodedQuery && decodedCity)    return `${count} ${noun} for "${decodedQuery}" in ${decodedCity}`;
         if (decodedQuery)                   return `${count} ${noun} for "${decodedQuery}"`;

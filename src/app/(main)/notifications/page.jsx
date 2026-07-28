@@ -410,7 +410,7 @@ export default function CustomerNotificationsPage() {
                                     {showUnreadOnly ? 'No unread notifications' : 'No notifications yet'}
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                    {showUnreadOnly ? 'All caught up — nothing new to read.' : 'Order updates and alerts will appear here.'}
+                                    {showUnreadOnly ? 'All caught up, nothing new to read.' : 'Order updates and alerts will appear here.'}
                                 </p>
                             </div>
                             {showUnreadOnly && (

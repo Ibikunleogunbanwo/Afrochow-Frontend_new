@@ -584,7 +584,7 @@ const VendorPromotionsPage = () => {
                                 <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
                                     <span className="text-lg shrink-0">🚚</span>
                                     <p>
-                                        <span className="font-semibold">Free Delivery</span> — the discount applied at checkout will equal your store's delivery fee. No value needed.
+                                        <span className="font-semibold">Free Delivery</span>: the discount applied at checkout will equal your store's delivery fee. No value needed.
                                     </p>
                                 </div>
                             )}

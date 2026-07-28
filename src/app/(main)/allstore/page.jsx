@@ -351,7 +351,7 @@ const DisplayStores = () => {
                                 value={queryInput}
                                 onChange={(e) => setQueryInput(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                placeholder="Search vendors, category, or products — e.g. Jollof Rice, Grocery, Farm Produce, Mama's Kitchen..."
+                                placeholder="Search vendors, category, or products, e.g. Jollof Rice, Grocery, Farm Produce, Mama's Kitchen..."
                                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>

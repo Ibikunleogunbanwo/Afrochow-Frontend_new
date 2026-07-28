@@ -140,16 +140,16 @@ const Footer = () => {
                 <li className="flex items-start space-x-3 text-sm">
                   <Phone className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                   <Link
-                      href="tel:+11234567890"
+                      href="tel:+18259822347"
                       className="text-gray-400 hover:text-emerald-500 transition-colors"
                   >
-                    +1 (123) 456-7890
+                    825-982-2347
                   </Link>
                 </li>
                 <li className="flex items-start space-x-3 text-sm">
                   <MapPin className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                   <span className="text-gray-400">
-                    583 Carrington Blvd NW, Calgary, AB T3P 2L8
+                    NW Calgary, AB
                   </span>
                 </li>
               </ul>

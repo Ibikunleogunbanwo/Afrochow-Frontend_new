@@ -64,7 +64,7 @@ const FAQS = {
         },
         {
             question: "Can I add special instructions for my order?",
-            answer: "Yes — you can add notes for individual items (e.g. 'no onions') or a general note for the restaurant when you review your cart before checkout.",
+            answer: "Yes, you can add notes for individual items (e.g. 'no onions') or a general note for the restaurant when you review your cart before checkout.",
         },
     ],
     delivery: [
@@ -81,7 +81,7 @@ const FAQS = {
             answer: "Many restaurants on Afrochow offer store pickup. If available, you'll see a 'Store pickup available' badge on the restaurant card. Choose 'Pickup' at checkout to collect your order in person.",
         },
         {
-            question: "My order is taking longer than expected — what should I do?",
+            question: "My order is taking longer than expected. What should I do?",
             answer: "Check your order status on the Orders page. If the delay is significant, use the contact option on the order detail page to reach the restaurant directly.",
         },
     ],
@@ -96,7 +96,7 @@ const FAQS = {
         },
         {
             question: "Can I get a refund?",
-            answer: "If there's an issue with your order — wrong items, missing items, or a quality problem — contact us through the Help & Support link on the order detail page. Refunds are reviewed case by case and typically processed within 3–5 business days.",
+            answer: "If there's an issue with your order (wrong items, missing items, or a quality problem), contact us through the Help & Support link on the order detail page. Refunds are reviewed case by case and typically processed within 3–5 business days.",
         },
         {
             question: "Is my payment information secure?",
@@ -106,7 +106,7 @@ const FAQS = {
     account: [
         {
             question: "How do I create an account?",
-            answer: "Click 'Sign Up' in the top navigation. Enter your name, email address, and a password. You'll receive a verification email — click the link to activate your account.",
+            answer: "Click 'Sign Up' in the top navigation. Enter your name, email address, and a password. You'll receive a verification email, click the link to activate your account.",
         },
         {
             question: "I forgot my password. How do I reset it?",
@@ -136,7 +136,7 @@ const FAQS = {
         },
         {
             question: "How and when do I get paid?",
-            answer: "Earnings are tracked in your vendor dashboard under the Earnings section. Payouts are processed on a regular schedule — contact support@afrochow.ca for details about your specific payout arrangement.",
+            answer: "Earnings are tracked in your vendor dashboard under the Earnings section. Payouts are processed on a regular schedule; contact support@afrochow.ca for details about your specific payout arrangement.",
         },
         {
             question: "How do I respond to reviews?",
@@ -244,7 +244,7 @@ export default function HelpPage() {
                     <MessageCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
                     <h2 className="text-xl font-black text-slate-900 mb-2">Still need help?</h2>
                     <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
-                        Can't find what you're looking for? Our support team is happy to help — usually within one business day.
+                        Can't find what you're looking for? Our support team is happy to help, usually within one business day.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <a

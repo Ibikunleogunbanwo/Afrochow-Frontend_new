@@ -219,7 +219,7 @@ export default function AdminSettingsPage() {
                                 {strength.label && (
                                     <p className="text-[11px] text-gray-500">
                                         Strength: <span className="font-semibold">{strength.label}</span>
-                                        {strength.score < 4 && ' — include uppercase, numbers, and symbols'}
+                                        {strength.score < 4 && ' (include uppercase, numbers, and symbols)'}
                                     </p>
                                 )}
                             </div>

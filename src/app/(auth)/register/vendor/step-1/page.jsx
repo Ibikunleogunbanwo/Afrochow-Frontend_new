@@ -67,7 +67,7 @@ export default function Step1() {
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
               You&apos;re signed in{signedInEmail ? ` as ${signedInEmail}` : ""}. Vendor accounts
-              need their own email, separate from your customer account — use a different email below.
+              need their own email, separate from your customer account. Use a different email below.
             </span>
           </div>
         )}
