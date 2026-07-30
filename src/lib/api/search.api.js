@@ -222,6 +222,26 @@ export const SearchAPI = {
 
   // ================= LOCATION =================
 
+  /**
+   * Is Afrochow active in this city/location — i.e. is there at least one
+   * active, verified vendor there or within ~100km of the given coordinates?
+   * Used to decide whether the homepage should show real content or an
+   * honest "not in your area yet" state instead of nationwide fallback data.
+   */
+  getMarketStatus: async (city = null, lat = null, lng = null) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (lat != null && lng != null) {
+      params.set('lat', lat);
+      params.set('lng', lng);
+    }
+    const qs = params.toString();
+    return fetchWithCredentials(
+        `${API_BASE_URL}/search/market-status${qs ? `?${qs}` : ''}`,
+        { method: 'GET' }
+    );
+  },
+
   getVendorsNearCoordinates: async (lat, lng, radiusKm = 25) => {
     return fetchWithCredentials(
         `${API_BASE_URL}/search/vendors/near-coordinates?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radiusKm=${encodeURIComponent(radiusKm)}`,

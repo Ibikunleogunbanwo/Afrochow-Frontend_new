@@ -27,8 +27,12 @@ import {
 } from "@/lib/mvp";
 
 // ─── Sign-in param watcher ───────────────────────────────────────────────────
-// Strips any stale ?signin=true from the URL without triggering the modal.
-// The modal only opens via explicit user action (clicking Sign In).
+// Every "you need to be signed in" redirect in the app (AuthInitializer's route
+// guard, vendor/admin layout guards, order-confirmation, the registration page's
+// "already have an account" link) pushes /?signin=true expecting it to open the
+// sign-in modal. This dispatches the same afrochow:open-auth-modal event the
+// Header already listens for (see the handler below), then strips the param so
+// it doesn't linger in the URL/browser history.
 
 const SignInParamWatcher = () => {
     const searchParams = useSearchParams();
@@ -36,6 +40,7 @@ const SignInParamWatcher = () => {
     const pathname = usePathname();
     useEffect(() => {
         if (searchParams.get('signin') === 'true') {
+            window.dispatchEvent(new CustomEvent('afrochow:open-auth-modal', { detail: { mode: 'signin' } }));
             const params = new URLSearchParams(searchParams.toString());
             params.delete('signin');
             const qs = params.toString();

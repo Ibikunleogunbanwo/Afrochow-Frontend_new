@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { OrderAPI } from "@/lib/api/order/order.api";
 import {
@@ -264,6 +264,7 @@ export default function OrderConfirmationPage() {
     const [error,      setError]      = useState(null);
 
     const FINAL_STATUSES = new Set(["DELIVERED", "CANCELLED", "REFUNDED"]);
+    const sessionInvalidRef = useRef(false);
 
     const fetchOrder = (opts = {}) => {
         const { silent = false } = opts;
@@ -279,7 +280,33 @@ export default function OrderConfirmationPage() {
                 setError(null);
                 return res.data;
             })
-            .catch(err => setError({ message: err.message || "Could not load order details.", status: err.status }))
+            .catch(err => {
+                if (err.status === 401) {
+                    if (silent) {
+                        // This is the background 30s poll (see the effect below) —
+                        // the customer is already looking at successfully-loaded
+                        // order content. Redirecting them away mid-view because a
+                        // background refresh's session lapsed is jarring and wrong;
+                        // just stop polling quietly and leave the last-good content
+                        // on screen. The next real navigation/reload will correctly
+                        // send them to sign in via this same handler (silent=false)
+                        // or via AuthInitializer's route guard.
+                        sessionInvalidRef.current = true;
+                        return;
+                    }
+                    // Initial (non-silent) load with no session — email link opened
+                    // cold, or the session expired between page loads. Nothing is
+                    // on screen yet, so redirecting straight to sign-in is the right
+                    // call. Bring them right back here afterward.
+                    const fullPath = typeof window !== 'undefined'
+                        ? window.location.pathname + window.location.search
+                        : `/order-confirmation/${publicOrderId}`;
+                    sessionStorage.setItem('returnTo', fullPath);
+                    router.push('/?signin=true');
+                    return;
+                }
+                setError({ message: err.message || "Could not load order details.", status: err.status });
+            })
             .finally(() => { setLoading(false); setRefreshing(false); });
     };
 
@@ -288,7 +315,13 @@ export default function OrderConfirmationPage() {
     // Poll every 30 s while order is still active
     useEffect(() => {
         if (!order || FINAL_STATUSES.has(order.status)) return;
-        const id = setInterval(() => fetchOrder({ silent: true }), 30_000);
+        const id = setInterval(() => {
+            if (sessionInvalidRef.current) {
+                clearInterval(id);
+                return;
+            }
+            fetchOrder({ silent: true });
+        }, 30_000);
         return () => clearInterval(id);
     }, [order?.status]);
 
