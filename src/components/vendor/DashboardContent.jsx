@@ -161,7 +161,7 @@ const DashboardContent = () => {
         `CA$${parseFloat(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const formatDate = (d) => {
-        if (!d) return '—';
+        if (!d) return 'Not available';
         return formatDateTime(d);
     };
 
@@ -239,7 +239,7 @@ const DashboardContent = () => {
     // Get display text for selected date range
     const getDateRangeDisplay = () => {
         if (dateRange === 'custom' && customStartDate && customEndDate) {
-            return `${customStartDate} - ${customEndDate}`;
+            return `${customStartDate} to ${customEndDate}`;
         }
         return dateRangeOptions.find(opt => opt.value === dateRange)?.label || 'Today';
     };
@@ -248,7 +248,7 @@ const DashboardContent = () => {
         {
             name: "Total Orders",
             value: filteredOrders.length.toString(),
-            change: "—",
+            change: "No comparison",
             trend: "neutral",
             icon: ShoppingBag,
             color: "gray"
@@ -258,7 +258,7 @@ const DashboardContent = () => {
             value: `CA$${filteredRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             change: revenueTrend !== null
                 ? `${revenueTrend > 0 ? '+' : ''}${revenueTrend}% vs prev 7d`
-                : "—",
+                : "No comparison",
             trend: revenueTrend !== null ? (revenueTrend >= 0 ? "up" : "down") : "neutral",
             icon: DollarSign,
             color: "green"
@@ -266,15 +266,15 @@ const DashboardContent = () => {
         {
             name: "Avg Order Value",
             value: `CA$${filteredAvg.toFixed(2)}`,
-            change: "—",
+            change: "No comparison",
             trend: "neutral",
             icon: Users,
             color: "blue"
         },
         {
             name: "Rating",
-            value: stats.rating !== null ? parseFloat(stats.rating).toFixed(1) : "—",
-            change: "—",
+            value: stats.rating !== null ? parseFloat(stats.rating).toFixed(1) : "No rating",
+            change: "All time",
             trend: "neutral",
             icon: Star,
             color: "yellow",
@@ -588,7 +588,7 @@ const DashboardContent = () => {
                             <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
                             <p className="text-sm text-gray-600 mt-1">
                                 Last {RECENT_LIMIT} orders
-                                {filteredOrders.length > RECENT_LIMIT && ` — ${filteredOrders.length} total`}
+                                {filteredOrders.length > RECENT_LIMIT && `, ${filteredOrders.length} total`}
                             </p>
                         </div>
                         <button
@@ -618,7 +618,7 @@ const DashboardContent = () => {
                         const statusConfig = getStatusConfig(order.status);
                         const orderTime = order.orderTime
                             ? new Date(order.orderTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                            : '—';
+                            : 'Time unavailable';
 
                         return (
                             <div
@@ -700,7 +700,7 @@ const DashboardContent = () => {
                                         <span className="truncate">
                                             {order.deliveryAddress?.formattedAddress
                                                 || order.deliveryAddress?.addressLine
-                                                || (order.fulfillmentType === 'PICKUP' ? 'Pickup' : '—')}
+                                                || (order.fulfillmentType === 'PICKUP' ? 'Pickup' : 'Address unavailable')}
                                         </span>
                                     </div>
 
@@ -753,7 +753,7 @@ const DashboardContent = () => {
                                 <p className="text-xs text-gray-500 mt-0.5">
                                     {filteredOrders.length === 0
                                         ? 'No orders'
-                                        : `Showing ${start}–${end} of ${filteredOrders.length}`}
+                                        : `Showing ${start} to ${end} of ${filteredOrders.length}`}
                                 </p>
                             </div>
                             <button onClick={() => setShowAllModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">

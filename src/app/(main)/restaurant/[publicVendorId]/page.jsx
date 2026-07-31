@@ -808,7 +808,9 @@ const VendorProfilePage = () => {
                                         <div>
                                             <p className="text-sm font-semibold text-teal-900">Store pickup available</p>
                                             <p className="text-xs text-teal-600 mt-0.5">
-                                                Skip delivery, pick up your order in {preparationTime ?? '—'} min
+                                                {preparationTime
+                                                    ? `Skip delivery, pick up your order in ${preparationTime} min`
+                                                    : 'Skip delivery and pick up your order when it is ready'}
                                             </p>
                                         </div>
                                     </div>

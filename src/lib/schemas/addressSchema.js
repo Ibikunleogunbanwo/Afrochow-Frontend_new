@@ -18,7 +18,7 @@ export const addressSchema = z.object({
       }),
   postalCode: z.string()
       .regex(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, {
-        message: "Invalid postal code — use format A1A 1A1",
+        message: "Invalid postal code. Use format A1A 1A1",
       }),
   country: z.string().min(2, { message: "Country is required" }),
   defaultAddress: z.boolean(),

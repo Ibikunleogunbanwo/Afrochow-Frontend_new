@@ -70,7 +70,7 @@ const FAQS = {
     delivery: [
         {
             question: "How long does delivery take?",
-            answer: "Estimated delivery times are shown on each restaurant's page and depend on their current workload and your distance. Most deliveries arrive in 30–60 minutes.",
+            answer: "Estimated delivery times are shown on each restaurant's page and depend on their current workload and your distance. Most deliveries arrive in 30 to 60 minutes.",
         },
         {
             question: "What is the delivery fee?",
@@ -96,11 +96,11 @@ const FAQS = {
         },
         {
             question: "Can I get a refund?",
-            answer: "If there's an issue with your order (wrong items, missing items, or a quality problem), contact us through the Help & Support link on the order detail page. Refunds are reviewed case by case and typically processed within 3–5 business days.",
+            answer: "If there's an issue with your order (wrong items, missing items, or a quality problem), contact us through the Help & Support link on the order detail page. Refunds are reviewed case by case and typically processed within 3 to 5 business days.",
         },
         {
             question: "Is my payment information secure?",
-            answer: "Yes. Afrochow does not store your full card details. All payments are handled through industry-standard encrypted payment providers.",
+            answer: "Yes. Afrochow does not store your full card details. All payments are handled through secure encrypted payment providers.",
         },
     ],
     account: [
@@ -110,11 +110,11 @@ const FAQS = {
         },
         {
             question: "I forgot my password. How do I reset it?",
-            answer: "On the sign-in page, click 'Forgot password?'. Enter your email address and we'll send you a reset link valid for 30 minutes.",
+            answer: "On the sign in page, click 'Forgot password?'. Enter your email address and we'll send you a reset link valid for 30 minutes.",
         },
         {
             question: "How do I update my profile or delivery address?",
-            answer: "Go to your Account Settings (click your avatar in the top-right corner, then 'Settings'). You can update your name, email, phone number, and saved addresses there.",
+            answer: "Go to your Account Settings (click your avatar in the top right corner, then 'Settings'). You can update your name, email, phone number, and saved addresses there.",
         },
         {
             question: "Can I delete my account?",
@@ -128,7 +128,7 @@ const FAQS = {
         },
         {
             question: "How do I manage my menu?",
-            answer: "From your vendor dashboard, go to the Menu section. You can add, edit, or remove products, set prices, upload photos, and mark items with dietary tags (Vegan, Vegetarian, Gluten-Free, Spicy).",
+            answer: "From your vendor dashboard, go to the Menu section. You can add, edit, or remove products, set prices, upload photos, and mark items with dietary tags (Vegan, Vegetarian, Gluten Free, Spicy).",
         },
         {
             question: "How do I update my operating hours?",
@@ -223,9 +223,9 @@ export default function HelpPage() {
                     <h2 className="text-xl font-black text-slate-900 mb-5">How Afrochow Works</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { step: "1", icon: Search,      title: "Find your craving",      desc: "Search by dish, store category, or city. Filter by dietary preferences like Vegan, Gluten-Free, or Spicy." },
+                            { step: "1", icon: Search,      title: "Find your craving",      desc: "Search by dish, store category, or city. Filter by dietary preferences like Vegan, Gluten Free, or Spicy." },
                             { step: "2", icon: ShoppingBag, title: "Add to cart & checkout", desc: "Select your items, choose delivery or pickup, confirm your address, and pay securely." },
-                            { step: "3", icon: Utensils,    title: "Enjoy authentic flavour", desc: "Track your order in real time and enjoy restaurant-quality African food at home." },
+                            { step: "3", icon: Utensils,    title: "Enjoy authentic flavour", desc: "Track your order in real time and enjoy restaurant quality African food at home." },
                         ].map(({ step, icon: Icon, title, desc }) => (
                             <div key={step} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-center">
                                 <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center font-black text-lg mx-auto mb-4">{step}</div>
@@ -244,7 +244,7 @@ export default function HelpPage() {
                     <MessageCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
                     <h2 className="text-xl font-black text-slate-900 mb-2">Still need help?</h2>
                     <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
-                        Can't find what you're looking for? Our support team is happy to help, usually within one business day.
+                        Can&apos;t find what you&apos;re looking for? Our support team is happy to help, usually within one business day.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <a

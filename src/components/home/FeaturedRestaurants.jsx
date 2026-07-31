@@ -276,8 +276,8 @@ const FeaturedRestaurants = () => {
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
                         {city
-                            ? `Ready-to-order dishes available near you in ${city}. No advance notice needed.`
-                            : "Ready-to-order dishes loved by our community. No advance notice needed."}
+                            ? `Fresh dishes available near you in ${city}. No advance notice needed.`
+                            : "Fresh dishes loved by our community. No advance notice needed."}
                     </p>
                 </div>
 
@@ -303,14 +303,14 @@ const FeaturedRestaurants = () => {
                             <div className="inline-flex items-center gap-1.5 justify-center px-4 py-2 mb-4 bg-blue-50 rounded-full">
                                 <CalendarClock className="w-4 h-4 text-blue-700" />
                                 <span className="text-sm font-semibold text-blue-700">
-                                    Pre-Order
+                                    Order Ahead
                                 </span>
                             </div>
                             <h2 className="text-3xl font-black text-gray-900 mb-4">
                                 Worth the Wait
                             </h2>
                             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                                Custom cakes, slow-cooked soups, and catering. Order ahead so it&apos;s ready exactly when you need it.
+                                Custom cakes, slow cooked soups, and catering. Order ahead so it&apos;s ready exactly when you need it.
                             </p>
                         </div>
 
@@ -325,7 +325,7 @@ const FeaturedRestaurants = () => {
                             onUnauthenticated={openSignIn}
                             onRetry={handleRetry}
                             skeletonCount={4}
-                            emptyMessage="No pre-order items available at the moment"
+                            emptyMessage="No order ahead items available at the moment"
                             showViewAll={false}
                         />
                     </div>

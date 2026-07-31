@@ -24,7 +24,7 @@ export const profileSchema = z.object({
         .min(1, "Phone number is required")
         .refine(
             (val) => /^[\d\s\-\(\)\+.]+$/.test(val),
-            { message: "Phone number contains invalid characters — only digits, spaces, dashes, dots, and parentheses are allowed" }
+            { message: "Phone number contains invalid characters. Only digits, spaces, dashes, dots, and parentheses are allowed" }
         )
         .refine(
             (val) => {

@@ -85,7 +85,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
     const dietaryTags = [
         isVegan        && { label: '🌱 Vegan',       bg: 'bg-green-50 text-green-700 border-green-100' },
         isVegetarian && !isVegan && { label: '🥬 Vegetarian',  bg: 'bg-green-50 text-green-700 border-green-100' },
-        isGlutenFree   && { label: '🌾 Gluten-Free',  bg: 'bg-blue-50 text-blue-700 border-blue-100' },
+        isGlutenFree   && { label: '🌾 Gluten Free',  bg: 'bg-blue-50 text-blue-700 border-blue-100' },
         isSpicy        && { label: '🌶️ Spicy',        bg: 'bg-red-50 text-red-700 border-red-100' },
     ].filter(Boolean);
 
@@ -234,7 +234,7 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
                         <div className="w-px h-8 bg-gray-100" />
                         <StatItem
                             label="Price"
-                            value={price != null ? `$${Number(price).toFixed(2)}` : '—'}
+                            value={price != null ? `$${Number(price).toFixed(2)}` : 'Price unavailable'}
                         />
                     </div>
 
