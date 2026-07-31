@@ -56,7 +56,7 @@ const FEATURES = [
     "Marketing & promotions tools",
     "24/7 customer support",
     "Secure card payments",
-    "Mobile-friendly dashboard",
+    "Mobile friendly dashboard",
     "Custom store branding",
 ];
 

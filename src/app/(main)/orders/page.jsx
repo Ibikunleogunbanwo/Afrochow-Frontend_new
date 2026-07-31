@@ -100,7 +100,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
 
     const dateTimeStr = order.orderTime
         ? formatDateTime(order.orderTime)
-        : "—";
+        : "Not available";
 
     const accent = STATUS_ACCENT[order.status] ?? "border-l-gray-200";
 
@@ -123,7 +123,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                             <p className="font-bold text-gray-900 text-sm leading-snug truncate">
-                                {order.vendorName ?? "—"}
+                                {order.vendorName ?? "Vendor unavailable"}
                             </p>
                             <StatusBadge status={order.status} statusLabel={order.statusLabel} />
                         </div>
@@ -192,7 +192,7 @@ function OrderCard({ order, onCancel, cancelling, onReview, reviewed }) {
                         <Package className="w-3.5 h-3.5" />
                         {itemCount != null
                             ? `${itemCount} ${itemCount === 1 ? "item" : "items"}`
-                            : "—"
+                            : "Item count unavailable"
                         }
                     </div>
                     <span className={`text-base font-black ${isCancelled ? "text-gray-400 line-through" : "text-emerald-600"}`}>

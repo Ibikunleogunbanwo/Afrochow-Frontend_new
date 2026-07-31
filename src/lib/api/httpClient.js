@@ -126,8 +126,8 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
       const isLastAttempt = attempt === retries;
 
       if (isLastAttempt) {
-        console.error('Network Error —', networkError.message, '| url:', url);
-        const error = new Error('Network error — please check your connection');
+        console.error('Network Error:', networkError.message, '| url:', url);
+        const error = new Error('Network error. Please check your connection');
         error.status = undefined;
         throw error;
       }
@@ -196,7 +196,7 @@ export const fetchWithCredentials = async (url, options = {}, retries = 3, retry
         options.silent === true;
 
     if (!isSilent) {
-      console.error('API Error —', response.status, errorMessage, '| url:', url);
+      console.error('API Error:', response.status, errorMessage, '| url:', url);
     }
 
     const error = new Error(errorMessage);

@@ -84,7 +84,7 @@ export default function PrivacyPolicyPage() {
                     </Section>
 
                     <Section title="6. Security">
-                        <p>We implement industry-standard security measures including encryption in transit (HTTPS), hashed passwords, and access controls to protect your personal information. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.</p>
+                        <p>We implement strong security measures including encryption in transit (HTTPS), hashed passwords, and access controls to protect your personal information. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.</p>
                     </Section>
 
                     <Section title="7. Your Rights (Canadian Residents)">

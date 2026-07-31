@@ -76,7 +76,7 @@ const HERO = {
         ringColor: 'ring-purple-300',
         Icon: AlertCircle,
         title: 'Order Refunded',
-        subtitle: () => 'A refund has been issued. Please allow 3–5 business days for it to appear on your statement.',
+        subtitle: () => 'A refund has been issued. Please allow 3 to 5 business days for it to appear on your statement.',
     },
 };
 
@@ -211,7 +211,7 @@ const CANCELLATION_AUDIT = {
 
 const STATUS_NOTE = {
     PENDING:          (isDelivery) => isDelivery
-                          ? 'The restaurant typically responds within 10–15 minutes. You\'ll receive a notification as soon as your order is accepted.'
+                          ? 'The restaurant typically responds within 10 to 15 minutes. You\'ll receive a notification as soon as your order is accepted.'
                           : 'The restaurant will confirm your order shortly.',
     CONFIRMED:        ()  => 'Your order is confirmed. The restaurant will start preparing it soon.',
     PREPARING:        ()  => 'Your order is being freshly prepared. Sit tight!',
@@ -501,7 +501,7 @@ export default function OrderConfirmationPage() {
                                             <div className="flex items-start gap-3 pt-1 border-t border-red-100">
                                                 <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
                                                 <p className="text-xs text-red-700 leading-relaxed">
-                                                    A full refund has been issued to your original payment method and will appear within <strong>3–5 business days</strong>.
+                                                    A full refund has been issued to your original payment method and will appear within <strong>3 to 5 business days</strong>.
                                                 </p>
                                             </div>
                                         );
@@ -524,7 +524,7 @@ export default function OrderConfirmationPage() {
                                             <div className="flex items-start gap-3 pt-1 border-t border-red-100">
                                                 <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
                                                 <p className="text-xs text-red-700 leading-relaxed">
-                                                    A full refund has been issued to your original payment method and will appear within <strong>3–5 business days</strong>.
+                                                    A full refund has been issued to your original payment method and will appear within <strong>3 to 5 business days</strong>.
                                                 </p>
                                             </div>
                                         );
@@ -533,7 +533,7 @@ export default function OrderConfirmationPage() {
                                         return (
                                             <div className="flex items-start gap-3 pt-1 border-t border-red-100">
                                                 <span className="text-xs font-semibold text-red-400 w-16 shrink-0 pt-0.5">Refund</span>
-                                                <p className="text-xs text-red-700">No refund applicable for customer-initiated cancellations at this stage.</p>
+                                                    <p className="text-xs text-red-700">No refund applies for cancellations started by the customer at this stage.</p>
                                             </div>
                                         );
                                     }
@@ -712,12 +712,12 @@ export default function OrderConfirmationPage() {
                                         <PolicyRow
                                             icon="✅"
                                             title="Cancellation window is open"
-                                            body="You can still cancel this order for a full refund. Your 6-hour cancellation window is active. Refunds are initiated immediately and typically appear on your statement within 5–10 business days."
+                                            body="You can still cancel this order for a full refund. Your 6 hour cancellation window is active. Refunds are initiated immediately and typically appear on your statement within 5 to 10 business days."
                                         />
                                         <PolicyRow
                                             icon="🍽"
                                             title="If the restaurant can't fulfil"
-                                            body="If the restaurant becomes unable to complete your order, you will receive a full automatic refund within 5–10 business days."
+                                            body="If the restaurant becomes unable to complete your order, you will receive a full automatic refund within 5 to 10 business days."
                                         />
                                     </>
                                 )}
@@ -733,12 +733,12 @@ export default function OrderConfirmationPage() {
                                         <PolicyRow
                                             icon="🔒"
                                             title="Cancellation window has closed"
-                                            body="Your 6-hour cancellation window has passed. Self-service cancellation is no longer available. If you need to cancel, please contact Afrochow support."
+                                            body="Your 6 hour cancellation window has passed. Cancellation from this page is no longer available. If you need to cancel, please contact Afrochow support."
                                         />
                                         <PolicyRow
                                             icon="🍽"
                                             title="If the restaurant can't fulfil"
-                                            body="If the restaurant is unable to complete your order, you will receive a full automatic refund within 5–10 business days."
+                                            body="If the restaurant is unable to complete your order, you will receive a full automatic refund within 5 to 10 business days."
                                         />
                                     </>
                                 )}
@@ -753,13 +753,13 @@ export default function OrderConfirmationPage() {
                                         />
                                         <PolicyRow
                                             icon="🔒"
-                                            title="Self-service cancellation unavailable"
-                                            body="Your order is being prepared and can no longer be self-cancelled. If something has come up, contact Afrochow support as soon as possible."
+                                            title="Cancellation unavailable"
+                                            body="Your order is being prepared and can no longer be cancelled from this page. If something has come up, contact Afrochow support as soon as possible."
                                         />
                                         <PolicyRow
                                             icon="🍽"
                                             title="If the restaurant can't fulfil"
-                                            body="In the rare case the restaurant cannot complete your order at this stage, you will receive a full automatic refund within 5–10 business days."
+                                            body="In the rare case the restaurant cannot complete your order at this stage, you will receive a full automatic refund within 5 to 10 business days."
                                         />
                                     </>
                                 )}

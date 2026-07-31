@@ -98,7 +98,7 @@ function ProductFavoriteCard({ favorite, onRemove, removing }) {
                 </div>
                 <div className="flex-1 min-w-0 pr-8">
                     <p className="font-bold text-gray-900 truncate">{p.productName || "Dish"}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{p.vendorName || "—"}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{p.vendorName || "Vendor unavailable"}</p>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm font-black text-emerald-600">
                             CA${Number(p.price ?? 0).toFixed(2)}
