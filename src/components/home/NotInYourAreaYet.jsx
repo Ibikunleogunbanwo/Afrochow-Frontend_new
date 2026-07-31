@@ -49,7 +49,7 @@ const PreviewCard = ({ product }) => (
  * waitlist CTA, purely as "here's a taste of the platform" — not orderable
  * from here, since Afrochow genuinely can't deliver to an unserved city.
  */
-export default function NotInYourAreaYet({ city }) {
+export default function NotInYourAreaYet() {
     const [previewProducts, setPreviewProducts] = useState([]);
 
     useEffect(() => {
@@ -77,11 +77,11 @@ export default function NotInYourAreaYet({ city }) {
                 </div>
 
                 <h2 className="text-3xl font-black text-gray-900 mb-4">
-                    We&apos;re not in {city ? city : "your area"} yet
+                    Afrochow is not available in your area yet
                 </h2>
                 <p className="text-lg text-gray-600 mb-8">
-                    Afrochow is currently live in Calgary, with more cities on the way.
-                    Join the waitlist and we&apos;ll let you know the moment we launch near you.
+                    Afrochow is not available in your area yet. Join the waitlist and
+                    we&apos;ll let you know the moment we launch near you.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -105,7 +105,7 @@ export default function NotInYourAreaYet({ city }) {
             {previewProducts.length > 0 && (
                 <div className="container px-4 mx-auto max-w-5xl mt-16">
                     <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide text-center mb-6">
-                        Popular on Afrochow in Calgary
+                        Popular on Afrochow
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {previewProducts.map((product, i) => (
