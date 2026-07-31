@@ -385,7 +385,7 @@ const DisplayStores = () => {
                                 {effectiveCity ? ` in ${effectiveCity}` : ''}
                             </span>
                             {totalPages > 1 && (
-                                <span>— Page {currentPage + 1} of {totalPages}</span>
+                                <span>Page {currentPage + 1} of {totalPages}</span>
                             )}
                         </div>
                     )}
@@ -491,7 +491,7 @@ const DisplayStores = () => {
                                 </div>
 
                                 <p className="text-center text-gray-400 text-sm">
-                                    Showing {stores.length} of {totalCount} vendors — page {currentPage + 1} of {totalPages}
+                                    Showing {stores.length} of {totalCount} vendors. Page {currentPage + 1} of {totalPages}
                                 </p>
                             </div>
                         )}
