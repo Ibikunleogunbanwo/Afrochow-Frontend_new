@@ -24,6 +24,11 @@ const buildLabel = (result) => {
     return parts.length > 0 ? parts.join(', ') : result.display_name;
 };
 
+const normalizeCityForSearch = (value) => {
+    const city = value?.split(',')[0]?.trim();
+    return city || '';
+};
+
 const HeroSection = () => {
     const [searchQuery, setSearchQuery]   = useState('');
     const [popularCuisines, setPopularCuisines] = useState([
@@ -36,19 +41,27 @@ const HeroSection = () => {
     // ── location state ──────────────────────────────────────────────────────
     const { city: contextCity, isDetecting, locationSource, requestPreciseLocation, updateCityWithCoordinates } = useLocation();
     const [locationInput, setLocationInput]     = useState('');
+    const [selectedCity, setSelectedCity]       = useState('');
+    const [selectedLocationLabel, setSelectedLocationLabel] = useState('');
+    const [locationManuallyEdited, setLocationManuallyEdited] = useState(false);
     const [suggestions, setSuggestions]         = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [locSearching, setLocSearching]       = useState(false);
     const [locFocused, setLocFocused]           = useState(false);
     const debounceRef   = useRef(null);
     const suggestionsRef = useRef(null);
+    const locationInputRef = useRef(null);
 
     const router = useRouter();
 
     // Sync input with LocationContext city (GPS / IP detect / navbar search)
     useEffect(() => {
-        if (contextCity && !locFocused) setLocationInput(contextCity);
-    }, [contextCity, locFocused]);
+        if (contextCity && !locFocused && !locationManuallyEdited) {
+            setLocationInput(contextCity);
+            setSelectedCity(contextCity);
+            setSelectedLocationLabel(contextCity);
+        }
+    }, [contextCity, locFocused, locationManuallyEdited]);
 
     // Close suggestions dropdown on outside click
     useEffect(() => {
@@ -81,6 +94,9 @@ const HeroSection = () => {
     const handleLocationChange = (e) => {
         const val = e.target.value;
         setLocationInput(val);
+        setSelectedCity('');
+        setSelectedLocationLabel('');
+        setLocationManuallyEdited(true);
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => searchLocation(val), 350);
     };
@@ -97,8 +113,12 @@ const HeroSection = () => {
             country: addr.country || null,
             displayName: result.display_name,
         };
+        const label = buildLabel(result);
         updateCityWithCoordinates(city, lat, lng, details);
-        setLocationInput(buildLabel(result));
+        setSelectedCity(city);
+        setSelectedLocationLabel(label);
+        setLocationManuallyEdited(false);
+        setLocationInput(label);
         setSuggestions([]);
         setShowSuggestions(false);
     };
@@ -106,12 +126,18 @@ const HeroSection = () => {
     const handleLocateMe = () => {
         requestPreciseLocation();
         setLocationInput('');
+        setSelectedCity('');
+        setSelectedLocationLabel('');
+        setLocationManuallyEdited(false);
         setSuggestions([]);
         setShowSuggestions(false);
     };
 
     const handleClearLocation = () => {
         setLocationInput('');
+        setSelectedCity('');
+        setSelectedLocationLabel('');
+        setLocationManuallyEdited(false);
         setSuggestions([]);
         setShowSuggestions(false);
     };
@@ -140,24 +166,34 @@ const HeroSection = () => {
         }
     };
 
-    const effectiveCity = locationInput.trim() || contextCity || '';
+    const getCityForSearch = (rawLocation = locationInput) => {
+        const typedLocation = rawLocation.trim();
+        if (!typedLocation) return contextCity || '';
+        if (selectedCity && typedLocation === selectedLocationLabel) return selectedCity;
+        if (selectedCity && typedLocation === selectedCity) return selectedCity;
+        return normalizeCityForSearch(typedLocation);
+    };
+
+    const cityForSearch = getCityForSearch();
 
     const handleSearch = (e) => {
         e.preventDefault();
         setShowSuggestions(false);
-        if (!searchQuery?.trim() && !effectiveCity) return;
+        const city = getCityForSearch(locationInputRef.current?.value || locationInput);
+        if (!searchQuery?.trim() && !city) return;
         const params = new URLSearchParams();
         if (searchQuery?.trim()) params.append('search', searchQuery.trim());
-        if (effectiveCity)       params.append('city',   effectiveCity);
+        if (city)                params.append('city',   city);
         router.push(`/restaurants?${params.toString()}`);
     };
 
     const handlePopularClick = (category) => {
         setActiveTag(category);
         setShowSuggestions(false);
+        const city = getCityForSearch(locationInputRef.current?.value || locationInput);
         const params = new URLSearchParams();
         params.append('search', category);
-        if (effectiveCity) params.append('city', effectiveCity);
+        if (city) params.append('city', city);
         router.push(`/restaurants?${params.toString()}`);
     };
 
@@ -167,10 +203,11 @@ const HeroSection = () => {
             e.preventDefault();
             setShowSuggestions(false);
             setSuggestions([]);
-            if (searchQuery?.trim() || locationInput.trim()) {
+            const city = getCityForSearch(e.currentTarget.value);
+            if (searchQuery?.trim() || city) {
                 const params = new URLSearchParams();
                 if (searchQuery?.trim())  params.append('search', searchQuery.trim());
-                if (locationInput.trim()) params.append('city',   locationInput.trim());
+                if (city)                 params.append('city',   city);
                 router.push(`/restaurants?${params.toString()}`);
             }
         }
@@ -283,6 +320,7 @@ const HeroSection = () => {
                                         <MapPin className="absolute left-4 w-5 h-5 text-gray-400 pointer-events-none" />
                                     )}
                                     <input
+                                        ref={locationInputRef}
                                         type="text"
                                         value={locFocused ? locationInput : (locationInput || contextCity || '')}
                                         onChange={handleLocationChange}
@@ -349,7 +387,7 @@ const HeroSection = () => {
                             {/* Search Button */}
                             <button
                                 type="submit"
-                                disabled={!searchQuery?.trim() && !effectiveCity}
+                                disabled={!searchQuery?.trim() && !cityForSearch}
                                 className="flex items-center justify-center gap-2 px-7 py-3.5 font-bold text-white bg-linear-to-r from-emerald-600 to-emerald-500 rounded-xl hover:from-emerald-700 hover:to-emerald-600 hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 group shrink-0"
                             >
                                 <span>Search</span>

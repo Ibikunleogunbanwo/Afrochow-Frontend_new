@@ -72,7 +72,13 @@ const FILTERS = [
     { key: 'VERIFIED',         label: 'Verified' },
     { key: 'SUSPENDED',        label: 'Suspended' },
     { key: 'REJECTED',         label: 'Rejected' },
+    // "Can't take orders" is the actionable view: with STRIPE_CONNECT_REQUIRED=true the
+    // backend refuses checkout for any vendor that isn't payout-ready, so these are the
+    // restaurants customers currently cannot order from.
+    { key: 'not-payout-ready',  label: "Can't Take Orders" },
     { key: 'stripe-incomplete', label: 'Stripe Incomplete' },
+    { key: 'real',              label: 'Real (Non-Demo)' },
+    { key: 'seed',              label: 'Demo Data' },
 ];
 
 /** Derive status from vendorStatus field (primary) with fallback to legacy booleans. */
@@ -228,7 +234,10 @@ export default function AdminVendorsPage() {
             case 'VERIFIED':         return status === VENDOR_STATUS.VERIFIED;
             case 'SUSPENDED':        return status === VENDOR_STATUS.SUSPENDED;
             case 'REJECTED':         return status === VENDOR_STATUS.REJECTED;
+            case 'not-payout-ready': return v.payoutReady === false;
             case 'stripe-incomplete': return v.stripeOnboardingComplete === false;
+            case 'real':             return v.isSeedData !== true;
+            case 'seed':             return v.isSeedData === true;
             default:                 return true;
         }
     });
@@ -466,8 +475,22 @@ export default function AdminVendorsPage() {
                                         size="md"
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <p className="font-semibold text-gray-900 truncate">{v.restaurantName || 'Unnamed'}</p>
+                                            {v.isSeedData === true && (
+                                                <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                                                    DEMO
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-xs text-gray-400 truncate">{v.storeCategory || 'N/A'}</p>
+                                        {/* Payouts not configured = customers literally cannot order from
+                                            this vendor, so it needs to be visible without opening the row. */}
+                                        {v.payoutReady === false && (
+                                            <span className="inline-block text-[10px] font-semibold text-red-600 mt-1">
+                                                ⚠ No payouts — can&apos;t take orders
+                                            </span>
+                                        )}
                                         {/* Mobile-only: status + date */}
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <StatusBadge status={status} />

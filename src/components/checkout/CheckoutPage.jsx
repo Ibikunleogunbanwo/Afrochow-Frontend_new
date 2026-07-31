@@ -181,9 +181,23 @@ export default function CheckoutPage() {
     const vendorDeliveryFee = vendorData?.deliveryFee ?? 0;
     const deliveryFee       = fulfillment === "delivery" ? vendorDeliveryFee : 0;
     const discountAmount    = promoPreview?.discountAmount ?? 0;
-    // Tax mirrors backend: calculated on full subtotal+delivery, discount applied after
-    const taxAmount         = (cartTotal + deliveryFee) * taxInfo.rate;
-    const total             = Math.max(0, cartTotal + deliveryFee + taxAmount - discountAmount);
+
+    // Mirrors Order.calculateTax()/calculateTotal() on the backend — these two must
+    // agree exactly or the customer is shown a total that isn't what we charge.
+    //
+    // Tax applies to the DISCOUNTED consideration, not the list price: for a
+    // supplier-offered price reduction (which is what a vendor-funded promo is),
+    // GST/HST is owed on what the customer actually pays. A FREE_DELIVERY promo
+    // reduces the delivery fee; every other type reduces the food subtotal.
+    const isFreeDelivery    = promoPreview?.type === "FREE_DELIVERY";
+    const foodDiscount      = isFreeDelivery ? 0 : discountAmount;
+    const deliveryDiscount  = isFreeDelivery ? discountAmount : 0;
+    const effectiveSubtotal = Math.max(0, cartTotal - foodDiscount);
+    const effectiveDelivery = Math.max(0, deliveryFee - deliveryDiscount);
+    // Rounded to cents the same way the backend does (HALF_UP at 2dp), so float
+    // arithmetic here can't drift a cent away from the amount actually charged.
+    const taxAmount         = Math.round((effectiveSubtotal + effectiveDelivery) * taxInfo.rate * 100) / 100;
+    const total             = effectiveSubtotal + effectiveDelivery + taxAmount;
 
     const belowMinimum = fulfillment === "delivery" &&
         vendorData?.minimumOrderAmount > 0 &&

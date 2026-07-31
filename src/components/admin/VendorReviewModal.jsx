@@ -178,9 +178,21 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setLinkingStripe(true);
         setStripeError(null);
         try {
-            await AdminVendorsAPI.linkStripeAccount(vendor.publicVendorId, id);
-            toast.success("Stripe account linked");
-            setDetail(prev => ({ ...prev, stripeAccountId: id, stripeOnboardingComplete: true }));
+            const res = await AdminVendorsAPI.linkStripeAccount(vendor.publicVendorId, id);
+            // Trust the server's view of onboarding, don't assume true. The backend
+            // derives it from Stripe's details_submitted, and linking an account whose
+            // onboarding is unfinished is a normal outcome. Showing "fully onboarded"
+            // regardless hid the one condition that now blocks the vendor from taking
+            // orders at all.
+            const onboardingComplete = res?.data?.stripeOnboardingComplete ?? false;
+            toast.success(onboardingComplete
+                ? "Stripe account linked"
+                : "Stripe account linked — onboarding not yet complete on Stripe");
+            setDetail(prev => ({
+                ...prev,
+                stripeAccountId: id,
+                stripeOnboardingComplete: onboardingComplete,
+            }));
             setStripeInput("");
         } catch (e) {
             setStripeError(e.message || "Failed to link Stripe account");

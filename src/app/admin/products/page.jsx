@@ -71,7 +71,14 @@ function ProductRow({ product, onToggle, toggling }) {
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-1">
-                    <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
+                        {product.isSeedData === true && (
+                            <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                                DEMO
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-gray-400 font-mono">{id?.slice(-8).toUpperCase()}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
                         {product.vendorName && (
@@ -121,7 +128,15 @@ function ProductRow({ product, onToggle, toggling }) {
                         </div>
                     )}
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+                            {/* Demo/showroom catalogue item, not something a real vendor added */}
+                            {product.isSeedData === true && (
+                                <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+                                    DEMO
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs text-gray-400 font-mono">{id?.slice(-8).toUpperCase()}</p>
                     </div>
                 </div>
@@ -478,7 +493,7 @@ export default function AdminProductsPage() {
                             {filterTab === 'not_featured' ? 'not featured' : filterTab}
                         </span> filter active</span>
                     )}
-                    {debouncedQ && <span> matching "<span className="font-semibold text-gray-600">{debouncedQ}</span>"</span>}
+                    {debouncedQ && <span> matching &quot;<span className="font-semibold text-gray-600">{debouncedQ}</span>&quot;</span>}
                 </p>
             )}
 

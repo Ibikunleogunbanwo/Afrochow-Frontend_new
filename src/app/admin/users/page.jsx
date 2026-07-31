@@ -63,6 +63,19 @@ const PAGE_SIZE = 15;
 
 const ROLES = ['ALL', 'CUSTOMER', 'VENDOR', 'ADMIN', 'SUPERADMIN'];
 
+/**
+ * Marks demo/showroom accounts so they can't be mistaken for real sign-ups.
+ * Renders nothing for genuine registrations, which is the common case.
+ */
+const DemoChip = ({ user }) => {
+    if (user?.isSeedData !== true) return null;
+    return (
+        <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+            DEMO
+        </span>
+    );
+};
+
 const RoleBadge = ({ role }) => {
     const map = {
         SUPERADMIN: 'bg-gray-900 text-white ring-2 ring-gray-400',
@@ -183,6 +196,11 @@ export default function AdminUsersPage() {
         // active flag
         if (statusFilter === 'active')   params.active = true;
         if (statusFilter === 'inactive') params.active = false;
+        // Sent to the server, not filtered in the browser: the list is paginated, so a
+        // client-side filter would leave the total count and page numbers describing the
+        // unfiltered set.
+        if (statusFilter === 'real')     params.seedData = false;
+        if (statusFilter === 'seed')     params.seedData = true;
         // search
         if (search.trim()) params.q = search.trim();
         // date-joined range — pushed to the server so the count and
@@ -291,6 +309,11 @@ export default function AdminUsersPage() {
         { key: 'VENDOR',     label: 'Vendors',       value: stats.totalVendors    ?? 0 },
         { key: 'ADMIN',      label: 'Admins',        value: stats.totalAdmins     ?? 0 },
         { key: 'SUPERADMIN', label: 'Super Admins',  value: stats.totalSuperAdmins ?? 0 },
+        // Real sign-ups, excluding the seeded showroom catalogue. "Total Users" counts
+        // demo accounts too, so it can't tell you whether anyone has actually joined —
+        // this is the number to watch at launch.
+        { key: 'real',       label: 'Real Sign-ups', value: stats.realUsers       ?? 0 },
+        { key: 'seed',       label: 'Demo Accounts', value: stats.seedUsers       ?? 0 },
     ] : [];
 
     // A user is fully protected if they are SUPERADMIN
@@ -573,13 +596,19 @@ export default function AdminUsersPage() {
                                         {/* Vendors: show store name as primary, owner name as subtitle */}
                                         {u.role === 'VENDOR' && u.restaurantName ? (
                                             <>
-                                                <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.restaurantName}</p>
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.restaurantName}</p>
+                                                    <DemoChip user={u} />
+                                                </div>
                                                 <p className="text-xs text-gray-500 truncate">{u.fullName || 'No name'}</p>
                                                 <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                             </>
                                         ) : (
                                             <>
-                                                <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.fullName || 'No name'}</p>
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <p className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{u.fullName || 'No name'}</p>
+                                                    <DemoChip user={u} />
+                                                </div>
                                                 <p className="text-xs text-gray-400 truncate">{u.email}</p>
                                             </>
                                         )}

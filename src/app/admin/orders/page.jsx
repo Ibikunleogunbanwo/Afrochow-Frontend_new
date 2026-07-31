@@ -657,6 +657,14 @@ export default function AdminOrdersPage() {
                                                 <span className="truncate">{vendor}</span>
                                             </span>
                                         ) : '—'}
+                                        {/* Nothing seeds orders, so every order here is real. A DEMO vendor
+                                            means a genuine customer ordered from showroom data that has a
+                                            placeholder owner and cannot be fulfilled — worth flagging. */}
+                                        {o.vendorIsSeedData === true && (
+                                            <span className="block text-[10px] font-semibold text-amber-600 mt-0.5">
+                                                ⚠ demo vendor
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Status + Amount — always visible, inline on mobile */}
