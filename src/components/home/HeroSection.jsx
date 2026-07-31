@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, MapPin, ArrowRight, Loader2, Flame, Navigation, X } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Loader2, Navigation, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SearchAPI } from '@/lib/api/search.api';
 import { DotGlobeHero } from '@/components/ui/globe-hero';
 import { useLocation } from '@/contexts/LocationContext';
 
-// ── Nominatim forward geocode (Canadian results only) ────────────────────────
+// Nominatim forward geocode (Canadian results only)
 const searchNominatim = async (query) => {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=ca&addressdetails=1&limit=5`;
     const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
@@ -38,7 +38,7 @@ const HeroSection = () => {
     const [stats, setStats]               = useState(null);
     const [activeTag, setActiveTag]       = useState(null);
 
-    // ── location state ──────────────────────────────────────────────────────
+    // Location state
     const { city: contextCity, isDetecting, locationSource, requestPreciseLocation, updateCityWithCoordinates } = useLocation();
     const [locationInput, setLocationInput]     = useState('');
     const [selectedCity, setSelectedCity]       = useState('');
@@ -79,7 +79,7 @@ const HeroSection = () => {
         void fetchStats();
     }, []);
 
-    // ── Nominatim search with 350 ms debounce ────────────────────────────────
+    // Nominatim search with 350 ms debounce
     const searchLocation = useCallback(async (q) => {
         if (!q || q.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
         setLocSearching(true);
@@ -261,10 +261,8 @@ const HeroSection = () => {
                 <div className="flex flex-col items-center text-center space-y-8">
 
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md shadow-lg">
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
-                        <Flame className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm font-bold text-emerald-200 tracking-wide">
+                    <div className="inline-flex max-w-[min(100%,22rem)] items-center justify-center px-5 py-2.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md shadow-lg text-center">
+                        <span className="block text-sm font-bold text-emerald-200 tracking-wide leading-snug">
                             🌍 Canada&#39;s #1 African Food Platform
                         </span>
                     </div>

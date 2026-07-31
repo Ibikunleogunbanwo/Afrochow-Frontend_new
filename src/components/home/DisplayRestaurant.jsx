@@ -410,7 +410,7 @@ const DisplayRestaurant = () => {
                                 {getResultsLabel()}
                             </span>
                             {totalPages > 1 && (
-                                <span>— Page {currentPage + 1} of {totalPages}</span>
+                                <span>Page {currentPage + 1} of {totalPages}</span>
                             )}
                         </div>
                     )}
