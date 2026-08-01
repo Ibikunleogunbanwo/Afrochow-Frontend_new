@@ -69,6 +69,16 @@ const NO_SPIN =
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const getPayoutSetupState = (profile) => {
+    if (!profile) return null;
+    if (profile.stripeOnboardingComplete) return 'CONNECTED';
+    if (profile.vendorStatus === 'PENDING_PROFILE') return 'COMPLETE_PROFILE';
+    if (profile.vendorStatus === 'PENDING_REVIEW') return 'AWAITING_APPROVAL';
+    if (profile.vendorStatus === 'REJECTED') return 'RESUBMIT_REQUIRED';
+    if (profile.vendorStatus === 'SUSPENDED') return 'SUSPENDED';
+    return 'READY_TO_CONNECT';
+};
+
 const buildDefaultHours = () =>
     Object.fromEntries(
         DAYS.map(d => [d.key, { isOpen: false, openTime: '09:00', closeTime: '22:00' }])
@@ -336,6 +346,7 @@ export default function VendorProfilePage() {
         stripeParam ? 'payout' : (tabParam ?? 'info')
     );
     const [storeCategorys, setStoreCategories] = useState(STORE_CATEGORY_FALLBACK);
+    const payoutSetupState = getPayoutSetupState(profile);
 
     // Stripe payout state
     const [stripeConnecting,       setStripeConnecting]       = useState(false);
@@ -1209,7 +1220,7 @@ export default function VendorProfilePage() {
                                     Payout Account
                                 </h3>
 
-                                {profile?.stripeOnboardingComplete ? (
+                                {payoutSetupState === 'CONNECTED' ? (
                                     <div className="bg-white p-4 rounded-xl flex flex-col gap-4">
                                         <div className="flex items-center gap-3">
                                             <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
@@ -1232,6 +1243,54 @@ export default function VendorProfilePage() {
                                                 : <><ExternalLink className="w-4 h-4" /> Stripe Dashboard</>
                                             }
                                         </button>
+                                    </div>
+                                ) : payoutSetupState === 'COMPLETE_PROFILE' ? (
+                                    <div className="bg-white p-4 rounded-xl flex items-start gap-3">
+                                        <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
+                                            <AlertCircle className="h-5 w-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 text-sm">Set up payments after verification</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Verify your email and complete your store profile first. Once your store is ready for review, you&apos;ll be prompted here to connect Stripe so payouts can be sent to you.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : payoutSetupState === 'AWAITING_APPROVAL' ? (
+                                    <div className="bg-white p-4 rounded-xl flex items-start gap-3">
+                                        <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
+                                            <Clock className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 text-sm">Payment setup comes after approval</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Your store is pending admin review. After approval, connect your Stripe payout account here before accepting paid orders.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : payoutSetupState === 'REJECTED' ? (
+                                    <div className="bg-white p-4 rounded-xl flex items-start gap-3">
+                                        <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
+                                            <AlertCircle className="h-5 w-5 text-red-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 text-sm">Resubmit your store first</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Update the items requested by Afrochow and resubmit your store. Payment setup will be available after approval.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : payoutSetupState === 'SUSPENDED' ? (
+                                    <div className="bg-white p-4 rounded-xl flex items-start gap-3">
+                                        <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
+                                            <ShieldCheck className="h-5 w-5 text-red-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 text-sm">Payout setup paused</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Your store is currently suspended. Contact Afrochow support before making payout account changes.
+                                            </p>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="bg-white p-4 rounded-xl flex flex-col gap-4">
