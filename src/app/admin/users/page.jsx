@@ -119,7 +119,7 @@ const VENDOR_STATUS_META = {
 
 /** Avatar ring colour: vendor workflow state takes priority for vendors. */
 const statusColor = (u) => {
-    if (u.role === 'VENDOR' && u.vendorStatus) {
+    if (u.role === 'VENDOR' && resolveUserStatus(u) === 'ACTIVE' && u.vendorStatus) {
         return { VERIFIED: '#22c55e', PROVISIONAL: '#3b82f6', PENDING_REVIEW: '#f59e0b',
                  PENDING_PROFILE: '#9ca3af', SUSPENDED: '#ef4444', REJECTED: '#b91c1c' }[u.vendorStatus] ?? '#9ca3af';
     }
@@ -137,8 +137,9 @@ const UserStatusBadge = ({ user }) => {
     );
 };
 
-const VendorStatusBadge = ({ vendorStatus }) => {
-    if (!vendorStatus) return null;
+const VendorStatusBadge = ({ user }) => {
+    if (!user?.vendorStatus || resolveUserStatus(user) !== 'ACTIVE') return null;
+    const { vendorStatus } = user;
     const meta = VENDOR_STATUS_META[vendorStatus] ?? { label: vendorStatus, dot: 'bg-gray-400', pill: 'bg-gray-100 text-gray-600 border-gray-300' };
     return (
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${meta.pill}`}>
@@ -163,7 +164,7 @@ export default function AdminUsersPage() {
     const [searchInput, setSearchInput]   = useState('');
     const [loading, setLoading]           = useState(true);
     const [error, setError]               = useState(null);
-    const [statusFilter, setStatusFilter] = useState('all'); // 'all'|'active'|'inactive'|role string
+    const [statusFilter, setStatusFilter] = useState('real'); // 'all'|'real'|'seed'|'active'|'inactive'|role string
     const [accountStatusFilter, setAccountStatusFilter] = useState('ALL');
     const [vendorStatusFilter, setVendorStatusFilter]   = useState('ALL');
     const [actionLoading, setActionLoading] = useState({});
@@ -302,18 +303,17 @@ export default function AdminUsersPage() {
     const formatDate = (d) => fmtLocal(d);
 
     const statsCards = stats ? [
-        { key: 'all',        label: 'Total Users',  value: stats.totalUsers      ?? 0 },
+        // Real sign-ups exclude the seeded showroom catalogue and are the default
+        // operational view for launch.
+        { key: 'real',       label: 'Real Sign-ups', value: stats.realUsers       ?? 0 },
         { key: 'active',     label: 'Active',        value: stats.activeUsers     ?? 0 },
         { key: 'inactive',   label: 'Suspended',     value: stats.inactiveUsers   ?? 0 },
         { key: 'CUSTOMER',   label: 'Customers',     value: stats.totalCustomers  ?? 0 },
         { key: 'VENDOR',     label: 'Vendors',       value: stats.totalVendors    ?? 0 },
         { key: 'ADMIN',      label: 'Admins',        value: stats.totalAdmins     ?? 0 },
         { key: 'SUPERADMIN', label: 'Super Admins',  value: stats.totalSuperAdmins ?? 0 },
-        // Real sign-ups, excluding the seeded showroom catalogue. "Total Users" counts
-        // demo accounts too, so it can't tell you whether anyone has actually joined —
-        // this is the number to watch at launch.
-        { key: 'real',       label: 'Real Sign-ups', value: stats.realUsers       ?? 0 },
         { key: 'seed',       label: 'Demo Accounts', value: stats.seedUsers       ?? 0 },
+        { key: 'all',        label: 'All Accounts',  value: stats.totalUsers      ?? 0 },
     ] : [];
 
     // A user is fully protected if they are SUPERADMIN
@@ -329,7 +329,8 @@ export default function AdminUsersPage() {
     // account-level status (derived field, not a column) and vendor workflow status.
     const displayedUsers = users
         .filter(u => accountStatusFilter === 'ALL' || resolveUserStatus(u) === accountStatusFilter)
-        .filter(u => !isVendorView || vendorStatusFilter === 'ALL' || u.vendorStatus === vendorStatusFilter);
+        .filter(u => !isVendorView || vendorStatusFilter === 'ALL'
+            || (resolveUserStatus(u) === 'ACTIVE' && u.vendorStatus === vendorStatusFilter));
 
     const dateLabel = (() => {
         if (!dateFilter) return null;
@@ -363,7 +364,7 @@ export default function AdminUsersPage() {
 
             {/* Stats */}
             {statsCards.length > 0 && (
-                <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-7 gap-3">
+                <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-6 xl:grid-cols-9 gap-3">
                     {statsCards.map(s => (
                         <button
                             key={s.key}
@@ -616,7 +617,7 @@ export default function AdminUsersPage() {
                                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 md:hidden">
                                             <RoleBadge role={u.role} />
                                             <UserStatusBadge user={u} />
-                                            {u.role === 'VENDOR' && <VendorStatusBadge vendorStatus={u.vendorStatus} />}
+                                            {u.role === 'VENDOR' && <VendorStatusBadge user={u} />}
                                             <span className="text-[11px] text-gray-400">{formatDate(u.createdAt)}</span>
                                         </div>
                                     </div>
@@ -630,7 +631,7 @@ export default function AdminUsersPage() {
                                 {/* Status col — desktop only */}
                                 <div className="hidden md:flex md:flex-col w-28 shrink-0 gap-1">
                                     <UserStatusBadge user={u} />
-                                    {u.role === 'VENDOR' && <VendorStatusBadge vendorStatus={u.vendorStatus} />}
+                                    {u.role === 'VENDOR' && <VendorStatusBadge user={u} />}
                                 </div>
 
                                 {/* Joined col — desktop only */}
