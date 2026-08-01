@@ -149,6 +149,7 @@ const AdminDashboardContent = () => {
         const usersInPeriodReq = wantPeriodCounts
             ? AdminUsersAPI.getAll({
                   size: 1,
+                  seedData: false,
                   createdAfter:  dateParams.startDate,
                   createdBefore: dateParams.endDate,
               })
@@ -157,6 +158,7 @@ const AdminDashboardContent = () => {
             ? AdminUsersAPI.getAll({
                   size: 1,
                   role: 'VENDOR',
+                  seedData: false,
                   createdAfter:  dateParams.startDate,
                   createdBefore: dateParams.endDate,
               })
@@ -254,12 +256,10 @@ const AdminDashboardContent = () => {
         p?.totalOrders  ?? p?.orders  ?? p?.orderCount    ?? p?.totalOrderCount    ?? p?.ordersTotal   ?? null;
 
     const resolveActiveVendors = (p, u) =>
-        // confirmed: totalVendors in platform analytics
-        p?.totalVendors ?? p?.activeVendors ?? p?.verifiedVendors ?? p?.vendorCount ?? u?.totalVendors ?? u?.vendorCount ?? null;
+        u?.realVendors ?? u?.totalVendors ?? p?.totalVendors ?? p?.activeVendors ?? p?.verifiedVendors ?? p?.vendorCount ?? null;
 
     const resolveTotalUsers = (p, u) =>
-        // confirmed: totalUsers in platform analytics
-        p?.totalUsers ?? p?.totalCustomers ?? u?.totalUsers ?? u?.total ?? u?.userCount ?? null;
+        u?.realUsers ?? u?.totalUsers ?? p?.totalUsers ?? p?.totalCustomers ?? u?.total ?? u?.userCount ?? null;
 
     // Revenue comparison bars (always 2 standard + optional "Selected" bucket)
     const revenueData = trendObj ? [
@@ -282,7 +282,7 @@ const AdminDashboardContent = () => {
     // Stat cards — Revenue & Orders show filtered values when date range applied
     const stats = [
         {
-            name:      isFiltered ? 'New Users' : 'Total Users',
+            name:      isFiltered ? 'Real New Users' : 'Real Users',
             value:     loadingAnalytics ? null : fmtN(
                 isFiltered && usersInPeriod !== null
                     ? usersInPeriod
@@ -295,7 +295,7 @@ const AdminDashboardContent = () => {
             trend:     null,
         },
         {
-            name:      isFiltered ? 'New Vendors' : 'Total Vendors',
+            name:      isFiltered ? 'Real New Vendors' : 'Real Vendors',
             value:     loadingAnalytics ? null : fmtN(
                 isFiltered && vendorsInPeriod !== null
                     ? vendorsInPeriod
