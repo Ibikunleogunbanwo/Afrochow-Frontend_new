@@ -148,7 +148,7 @@ export default function AdminVendorsPage() {
     const router       = useRouter();
     const searchParams = useSearchParams();
     const [vendors, setVendors]       = useState([]);
-    const [filter, setFilter]         = useState('all');
+    const [filter, setFilter]         = useState('real');
     const [search, setSearch]         = useState('');
     const [loading, setLoading]       = useState(true);
     const [error, setError]           = useState(null);
@@ -293,20 +293,21 @@ export default function AdminVendorsPage() {
                         .some(s => s?.toLowerCase().includes(search.toLowerCase()))) return false;
                     return true;
                 });
-                // Every VENDOR_STATUS value gets a card — Total previously counted
-                // REJECTED and PENDING_PROFILE vendors with no card (or, for
-                // PENDING_PROFILE, no filter tab at all) to see them broken out.
+                // Lead with real sign-ups so seeded showroom vendors do not make the
+                // admin view look like live marketplace traction.
                 const statCards = [
-                    { key: 'all',              label: 'Total',          value: pool.length },
-                    { key: 'VERIFIED',         label: 'Verified',       value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
-                    { key: 'PROVISIONAL',      label: 'Provisional',    value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
-                    { key: 'PENDING_REVIEW',   label: 'Pending',        value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
-                    { key: 'PENDING_PROFILE',  label: 'Profile Setup',  value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.PENDING_PROFILE).length },
-                    { key: 'SUSPENDED',        label: 'Suspended',      value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
-                    { key: 'REJECTED',         label: 'Rejected',       value: pool.filter(v => resolveStatus(v) === VENDOR_STATUS.REJECTED).length },
+                    { key: 'real',             label: 'Real Vendors',   value: pool.filter(v => v.isSeedData !== true).length },
+                    { key: 'seed',             label: 'Demo Vendors',   value: pool.filter(v => v.isSeedData === true).length },
+                    { key: 'all',              label: 'All Vendors',    value: pool.length },
+                    { key: 'VERIFIED',         label: 'Verified',       value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
+                    { key: 'PROVISIONAL',      label: 'Provisional',    value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
+                    { key: 'PENDING_REVIEW',   label: 'Pending',        value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
+                    { key: 'PENDING_PROFILE',  label: 'Profile Setup',  value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PENDING_PROFILE).length },
+                    { key: 'SUSPENDED',        label: 'Suspended',      value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
+                    { key: 'REJECTED',         label: 'Rejected',       value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.REJECTED).length },
                 ];
                 return (
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-9 gap-4">
                 {statCards.map(s => (
                     <button
                         key={s.key}
