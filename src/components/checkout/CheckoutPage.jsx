@@ -51,6 +51,15 @@ const PROVINCES = [
     { value: "YT", label: "Yukon" },
 ];
 
+const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "afrochow.checkout.idempotencyKey";
+
+const createCheckoutIdempotencyKey = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 export default function CheckoutPage() {
     const { isAuthenticated, isLoading: authLoading } = useAuth();
     const { cartItems, cartTotal, vendorId, clearCart } = useCart();
@@ -104,6 +113,21 @@ export default function CheckoutPage() {
     const [stripeFieldComplete, setStripeFieldComplete] = useState({
         number: false, expiry: false, cvc: false,
     });
+
+    const getCheckoutIdempotencyKey = () => {
+        if (typeof window === "undefined") return createCheckoutIdempotencyKey();
+        const existing = sessionStorage.getItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
+        if (existing) return existing;
+        const fresh = createCheckoutIdempotencyKey();
+        sessionStorage.setItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY, fresh);
+        return fresh;
+    };
+
+    const clearCheckoutIdempotencyKey = () => {
+        if (typeof window !== "undefined") {
+            sessionStorage.removeItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
+        }
+    };
 
     // ── Data loader ───────────────────────────────────────────────────────────
     const loadData = useCallback(async () => {
@@ -368,7 +392,8 @@ export default function CheckoutPage() {
             };
 
             // 7 — POST /customer/orders  →  ApiResponse<OrderResponseDto>
-            const orderRes = await OrderAPI.createOrder(orderPayload);
+            const checkoutIdempotencyKey = getCheckoutIdempotencyKey();
+            const orderRes = await OrderAPI.createOrder(orderPayload, checkoutIdempotencyKey);
 
             if (!orderRes?.data?.publicOrderId) {
                 throw new Error("Order was not created. Please try again.");
@@ -391,6 +416,7 @@ export default function CheckoutPage() {
                         description: confirmError.message || "You can try again from your order page.",
                     });
                     clearCart();
+                    clearCheckoutIdempotencyKey();
                     router.push(`/order-confirmation/${publicOrderId}`);
                     return;
                 }
@@ -399,6 +425,7 @@ export default function CheckoutPage() {
                 const finalStatus = confirmRes?.data?.status;
 
                 clearCart();
+                clearCheckoutIdempotencyKey();
                 if (finalStatus === "AUTHORIZED" || finalStatus === "COMPLETED") {
                     toast.success("Order placed!", {
                         description: "Your order has been received by the vendor.",
@@ -416,6 +443,7 @@ export default function CheckoutPage() {
 
             // 9 — Happy path — payment already authorized, no 3DS needed
             clearCart();
+            clearCheckoutIdempotencyKey();
             toast.success("Order placed!", {
                 description: "Your order has been received by the vendor.",
             });

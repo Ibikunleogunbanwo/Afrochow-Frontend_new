@@ -32,9 +32,9 @@ export default function TermsOfServicePage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
 
                     <p className="text-slate-600 text-sm leading-relaxed mb-8">
-                        These Terms of Service ("Terms") govern your access to and use of the Afrochow platform,
+                        These Terms of Service (&quot;Terms&quot;) govern your access to and use of the Afrochow platform,
                         including the website at <span className="text-emerald-600 font-medium">www.afrochow.ca</span> and
-                        any associated mobile applications (collectively, the "Platform"). By creating an account or
+                        any associated mobile applications (collectively, the &quot;Platform&quot;). By creating an account or
                         placing an order, you agree to be bound by these Terms. If you do not agree, please do not use
                         our Platform.
                     </p>
@@ -53,7 +53,7 @@ export default function TermsOfServicePage() {
                     <Section title="3. Orders and Payments">
                         <p><strong className="text-slate-800">Placing Orders:</strong> When you place an order through Afrochow, you are making a purchase offer to the restaurant partner. Orders are confirmed once you receive an order confirmation notification.</p>
                         <p><strong className="text-slate-800">Pricing:</strong> All prices displayed on the Platform are in Canadian dollars (CAD) and include applicable taxes unless stated otherwise. Prices are set by restaurant partners and may change without notice.</p>
-                        <p><strong className="text-slate-800">Payment:</strong> Payment is collected at the time of order placement. We accept major credit and debit cards through our secure payment processor. By submitting payment information, you authorize us to charge the applicable amount.</p>
+                        <p><strong className="text-slate-800">Payment:</strong> Your card may be authorized when you place an order, and the charge is captured when the restaurant accepts it. We accept major credit and debit cards through our secure payment processor. By submitting payment information, you authorize us to charge the applicable amount.</p>
                         <p><strong className="text-slate-800">Cancellations & Refunds:</strong> Once an order is accepted by a restaurant, cancellation may not be possible. Refund eligibility is determined on a case-by-case basis. Please contact our support team within 24 hours for order issues.</p>
                     </Section>
 
@@ -88,7 +88,7 @@ export default function TermsOfServicePage() {
                     </Section>
 
                     <Section title="8. Disclaimers and Limitation of Liability">
-                        <p>THE PLATFORM IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT PERMITTED BY LAW, AFROCHOW DISCLAIMS ALL WARRANTIES, INCLUDING FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.</p>
+                        <p>THE PLATFORM IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT PERMITTED BY LAW, AFROCHOW DISCLAIMS ALL WARRANTIES, INCLUDING FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.</p>
                         <p>AFROCHOW SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OF THE PLATFORM, INCLUDING BUT NOT LIMITED TO FOOD QUALITY ISSUES, DELIVERY DELAYS, OR DATA LOSS.</p>
                         <p>Our total liability to you for any claim arising from these Terms or your use of the Platform shall not exceed the amount you paid for the order giving rise to the claim.</p>
                     </Section>
@@ -99,7 +99,7 @@ export default function TermsOfServicePage() {
                     </Section>
 
                     <Section title="10. Changes to These Terms">
-                        <p>We reserve the right to modify these Terms at any time. We will notify you of significant changes by updating the "Last updated" date and, where appropriate, by sending an email notification. Your continued use of the Platform after changes are posted constitutes your acceptance of the updated Terms.</p>
+                        <p>We reserve the right to modify these Terms at any time. We will notify you of significant changes by updating the &quot;Last updated&quot; date and, where appropriate, by sending an email notification. Your continued use of the Platform after changes are posted constitutes your acceptance of the updated Terms.</p>
                     </Section>
 
                     <Section title="11. Contact Us">

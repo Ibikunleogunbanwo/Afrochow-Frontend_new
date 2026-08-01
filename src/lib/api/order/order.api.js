@@ -28,10 +28,13 @@ export const OrderAPI = {
      *
      * @returns {Promise<ApiResponse<OrderResponseDto>>}  response.data.publicOrderId
      */
-    createOrder: async (payload) => {
+    createOrder: async (payload, idempotencyKey) => {
         return fetchWithCredentials(`${API_BASE_URL}/customer/orders`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+            },
             body:    JSON.stringify(payload),
         });
     },
