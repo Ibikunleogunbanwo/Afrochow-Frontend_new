@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm as useReactForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { businessSchema } from "@/lib/schemas/businessSchema";
@@ -23,6 +23,52 @@ import {
 import { CANADIAN_PROVINCES } from "@/lib/schemas/addressSchema";
 
 const step3Schema = businessSchema.merge(addressSchema);
+
+const PROVINCE_NAME_TO_CODE = {
+  "Alberta": "AB",
+  "British Columbia": "BC",
+  "Manitoba": "MB",
+  "New Brunswick": "NB",
+  "Newfoundland and Labrador": "NL",
+  "Northwest Territories": "NT",
+  "Nova Scotia": "NS",
+  "Nunavut": "NU",
+  "Ontario": "ON",
+  "Prince Edward Island": "PE",
+  "Quebec": "QC",
+  "Québec": "QC",
+  "Saskatchewan": "SK",
+  "Yukon": "YT",
+};
+
+const extractCity = (addr = {}) =>
+    addr.city || addr.town || addr.village || addr.municipality || addr.county || "";
+
+const normalizePostalCode = (value = "") =>
+    value.replace(/\s+/g, "").toUpperCase().replace(/^(.{3})(.{1,3})$/, "$1 $2").trim();
+
+const searchCanadianAddresses = async (query) => {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=ca&addressdetails=1&limit=5`;
+  const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+  if (!res.ok) throw new Error("Address lookup failed");
+  return res.json();
+};
+
+const buildStreetLine = (addr = {}, fallback = "") => {
+  const houseAndRoad = [addr.house_number, addr.road].filter(Boolean).join(" ");
+  return houseAndRoad || addr.amenity || addr.shop || addr.building || fallback.split(",")[0] || "";
+};
+
+const buildAddressLabel = (result) => {
+  const addr = result.address || {};
+  const parts = [
+    buildStreetLine(addr, result.display_name),
+    extractCity(addr),
+    addr.state,
+    addr.postcode,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : result.display_name;
+};
 
 // ── Banner uploader ───────────────────────────────────────────────────────
 function BannerUploader({ onChange, error, initialUrl, uploading }) {
@@ -281,6 +327,147 @@ function AddressField({ id, label, icon: Icon, value, onChange, error, placehold
   );
 }
 
+function AddressAutocompleteField({ value, error, onManualChange, onSelectAddress }) {
+  const [query, setQuery] = useState(value || "");
+  const [suggestions, setSuggestions] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [lookupError, setLookupError] = useState("");
+  const debounceRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    setQuery(value || "");
+  }, [value]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (wrapRef.current && !wrapRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const search = useCallback(async (nextQuery) => {
+    if (!nextQuery || nextQuery.trim().length < 3) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+
+    setLoading(true);
+    setLookupError("");
+    try {
+      const results = await searchCanadianAddresses(nextQuery);
+      setSuggestions(Array.isArray(results) ? results : []);
+      setOpen(true);
+    } catch {
+      setSuggestions([]);
+      setLookupError("Address lookup is unavailable. You can still enter the address manually.");
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleChange = (event) => {
+    const nextValue = event.target.value;
+    setQuery(nextValue);
+    onManualChange(nextValue);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(nextValue), 350);
+  };
+
+  const handleSelect = (result) => {
+    const addr = result.address || {};
+    const selected = {
+      addressLine: buildStreetLine(addr, result.display_name),
+      city: extractCity(addr),
+      province: PROVINCE_NAME_TO_CODE[addr.state] || "",
+      postalCode: normalizePostalCode(addr.postcode || ""),
+      country: "Canada",
+    };
+
+    setQuery(buildAddressLabel(result));
+    setSuggestions([]);
+    setOpen(false);
+    setLookupError("");
+    onSelectAddress(selected);
+  };
+
+  const displayError = error || lookupError;
+
+  return (
+      <div className="space-y-1.5" ref={wrapRef}>
+        <Label htmlFor="addressLine" className="text-gray-700 font-medium flex items-center gap-2 text-sm">
+          <MapPin className="h-4 w-4" />
+          Street Address
+          {value && !error && <span className="text-green-600 text-xs font-semibold">✓</span>}
+        </Label>
+        <div className="relative">
+          {loading ? (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 animate-spin" />
+          ) : (
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          )}
+          <Input
+              id="addressLine"
+              placeholder="Start typing your business address"
+              value={query}
+              onChange={handleChange}
+              onFocus={() => suggestions.length > 0 && setOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setOpen(false);
+              }}
+              autoComplete="off"
+              className={`pl-9 h-11 ${value && !error ? "pr-10" : ""} ${
+                  error ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300 focus-visible:ring-emerald-500"
+              }`}
+          />
+          {!error && value && !loading && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+          )}
+
+          {open && suggestions.length > 0 && (
+              <ul className="absolute z-50 left-0 right-0 top-full mt-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
+                {suggestions.map((result, index) => (
+                    <li key={result.place_id || index}>
+                      <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleSelect(result)}
+                          className="flex w-full items-start gap-3 border-b border-gray-50 px-4 py-3 text-left transition-colors hover:bg-emerald-50 last:border-0"
+                      >
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-gray-800">
+                            {buildAddressLabel(result)}
+                          </span>
+                          <span className="block truncate text-xs text-gray-500">
+                            {result.display_name}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                ))}
+              </ul>
+          )}
+        </div>
+        {displayError && (
+            <div className={`flex items-start gap-1.5 ${error ? "text-red-600" : "text-amber-600"}`}>
+              <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <p className="text-xs">{displayError}</p>
+            </div>
+        )}
+      </div>
+  );
+}
+
 // ── Main Step 3 ───────────────────────────────────────────────────────────
 export default function Step3() {
   const {
@@ -330,6 +517,28 @@ export default function Step3() {
     dispatch({
       type: "UPDATE",
       payload: { address: { ...addr, ...watch(), [field]: value } },
+    });
+  };
+
+  const applySelectedAddress = (selectedAddress) => {
+    const currentValues = watch();
+    const nextAddress = {
+      ...addr,
+      ...currentValues,
+      ...Object.fromEntries(
+          Object.entries(selectedAddress).filter(([, selectedValue]) => selectedValue)
+      ),
+    };
+
+    Object.entries(nextAddress).forEach(([field, nextValue]) => {
+      if (["addressLine", "city", "province", "postalCode", "country", "defaultAddress"].includes(field)) {
+        setValue(field, nextValue, { shouldValidate: true, shouldDirty: true });
+      }
+    });
+
+    dispatch({
+      type: "UPDATE",
+      payload: { address: nextAddress },
     });
   };
 
@@ -511,7 +720,6 @@ export default function Step3() {
               icon={FileText}
               error={errors.taxId?.message}
               value={watch("taxId")}
-              helpText="Required before receiving payouts. You can add this later."
               labelExtra={<span className="text-gray-400 font-normal text-xs">(Optional)</span>}
               inputProps={{ type: "text", placeholder: "123-456-789", ...register("taxId") }}
           />
@@ -529,16 +737,15 @@ export default function Step3() {
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 mb-4">Your Location</p>
 
             <div className="space-y-4">
-              <AddressField
-                  id="addressLine" label="Street Address" icon={MapPin}
+              <AddressAutocompleteField
                   value={watch("addressLine")} error={errors.addressLine?.message}
-                  placeholder="123 Main Street"
-                  onChange={(v) => updateAddress("addressLine", v)}
+                  onManualChange={(v) => updateAddress("addressLine", v)}
+                  onSelectAddress={applySelectedAddress}
               />
               <AddressField
                   id="city" label="City" icon={Building2}
                   value={watch("city")} error={errors.city?.message}
-                  placeholder="Calgary"
+                  placeholder="City"
                   onChange={(v) => updateAddress("city", v)}
               />
               <div className="grid grid-cols-2 gap-3">
@@ -577,7 +784,7 @@ export default function Step3() {
                 <AddressField
                     id="postalCode" label="Postal Code" icon={Mail}
                     value={watch("postalCode")} error={errors.postalCode?.message}
-                    placeholder="T3P 2L8" maxLength={7}
+                    placeholder="A1A 1A1" maxLength={7}
                     transform={(v) => v.toUpperCase()}
                     onChange={(v) => updateAddress("postalCode", v)}
                 />
