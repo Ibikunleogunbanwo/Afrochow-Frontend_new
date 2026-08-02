@@ -71,11 +71,12 @@ const NO_SPIN =
 
 const getPayoutSetupState = (profile) => {
     if (!profile) return null;
-    if (profile.stripeOnboardingComplete) return 'CONNECTED';
+    if (profile.payoutReady) return 'CONNECTED';
     if (profile.vendorStatus === 'PENDING_PROFILE') return 'COMPLETE_PROFILE';
     if (profile.vendorStatus === 'PENDING_REVIEW') return 'AWAITING_APPROVAL';
     if (profile.vendorStatus === 'REJECTED') return 'RESUBMIT_REQUIRED';
     if (profile.vendorStatus === 'SUSPENDED') return 'SUSPENDED';
+    if (profile.stripeAccountId || profile.stripeOnboardingComplete) return 'STRIPE_REVIEW';
     return 'READY_TO_CONNECT';
 };
 
@@ -1241,6 +1242,35 @@ export default function VendorProfilePage() {
                                             {stripeDashboardLoading
                                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
                                                 : <><ExternalLink className="w-4 h-4" /> Stripe Dashboard</>
+                                            }
+                                        </button>
+                                    </div>
+                                ) : payoutSetupState === 'STRIPE_REVIEW' ? (
+                                    <div className="bg-white p-4 rounded-xl flex flex-col gap-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
+                                                <AlertCircle className="h-5 w-5 text-amber-600" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 text-sm">Stripe is still reviewing your payout account</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    You can manage your Stripe details, but your store cannot accept paid orders until Stripe enables both charges and payouts.
+                                                </p>
+                                                {profile.stripeRequirementsDisabledReason && (
+                                                    <p className="text-xs font-mono text-amber-700 mt-1">
+                                                        {profile.stripeRequirementsDisabledReason}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleStripeDashboard}
+                                            disabled={stripeDashboardLoading}
+                                            className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2.5 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-60"
+                                        >
+                                            {stripeDashboardLoading
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
+                                                : <><ExternalLink className="w-4 h-4" /> Open Stripe Dashboard</>
                                             }
                                         </button>
                                     </div>

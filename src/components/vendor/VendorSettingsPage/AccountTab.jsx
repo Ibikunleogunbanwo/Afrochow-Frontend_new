@@ -172,14 +172,14 @@ const AccountTab = ({ profile }) => {
                         Payout Account
                     </h3>
 
-                    {profile.stripeOnboardingComplete ? (
+                    {profile.payoutReady ? (
                         <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
                             <div className="flex items-center gap-3 flex-1">
                                 <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
                                     <CheckCircle className="h-5 w-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-900 text-sm">Stripe payout account connected</p>
+                                    <p className="font-semibold text-gray-900 text-sm">Stripe payout account ready</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         You&apos;re set up to receive payouts. Manage your banking details and view payout history in your Stripe dashboard.
                                     </p>
@@ -193,6 +193,35 @@ const AccountTab = ({ profile }) => {
                                 {stripeDashboardLoading
                                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening…</>
                                     : <><ExternalLink className="w-4 h-4" /> Stripe Dashboard</>
+                                }
+                            </button>
+                        </div>
+                    ) : profile.stripeAccountId || profile.stripeOnboardingComplete ? (
+                        <div className="bg-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="bg-amber-100 p-2.5 rounded-lg shrink-0">
+                                    <CreditCard className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-sm">Stripe payout setup incomplete</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Stripe still needs information before your store can accept paid orders.
+                                    </p>
+                                    {profile.stripeRequirementsDisabledReason && (
+                                        <p className="text-xs font-mono text-amber-700 mt-1">
+                                            {profile.stripeRequirementsDisabledReason}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleStripeConnect}
+                                disabled={stripeConnecting}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-60 shrink-0"
+                            >
+                                {stripeConnecting
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>
+                                    : <><ExternalLink className="w-4 h-4" /> Resume Stripe Setup</>
                                 }
                             </button>
                         </div>
@@ -392,6 +421,8 @@ AccountTab.propTypes = {
         createdAt: PropTypes.string,
         stripeAccountId: PropTypes.string,
         stripeOnboardingComplete: PropTypes.bool,
+        stripeRequirementsDisabledReason: PropTypes.string,
+        payoutReady: PropTypes.bool,
         totalOrdersCompleted: PropTypes.number,
         totalRevenue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         averageRating: PropTypes.number,

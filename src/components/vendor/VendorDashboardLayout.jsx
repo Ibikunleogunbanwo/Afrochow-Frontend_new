@@ -401,16 +401,19 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 )}
 
-                {/* ── Stripe Connect: live vendor (PROVISIONAL or VERIFIED) but payout account not connected ── */}
-                {(vendorStatus === 'VERIFIED' || vendorStatus === 'PROVISIONAL') && profile && !profile.stripeOnboardingComplete && (
+                {/* ── Stripe Connect: live vendor (PROVISIONAL or VERIFIED) but payout account not ready ── */}
+                {(vendorStatus === 'VERIFIED' || vendorStatus === 'PROVISIONAL') && profile && !profile.payoutReady && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-purple-200 bg-purple-50 p-4">
                         <div className="flex items-start gap-3">
                             <CreditCard className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
                             <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-purple-800 text-sm">Connect your payout account</p>
+                                <p className="font-semibold text-purple-800 text-sm">
+                                    {profile.stripeAccountId ? 'Finish payout setup' : 'Connect your payout account'}
+                                </p>
                                 <p className="text-purple-700 text-sm mt-0.5">
-                                    Set up your Stripe payout account to receive payments from orders.
-                                    It only takes a few minutes and is required before you can receive payouts.
+                                    {profile.stripeAccountId
+                                        ? 'Stripe still needs information before your store can accept paid orders.'
+                                        : 'Set up your Stripe payout account before your store can accept paid orders.'}
                                 </p>
                                 <button
                                     onClick={handleStripeConnect}
@@ -419,7 +422,7 @@ const VendorDashboardLayout = ({ children }) => {
                                 >
                                     {stripeConnecting
                                         ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Connecting…</>
-                                        : <><ExternalLink className="w-3.5 h-3.5" /> Connect Payout Account</>
+                                        : <><ExternalLink className="w-3.5 h-3.5" /> {profile.stripeAccountId ? 'Resume Stripe Setup' : 'Connect Payout Account'}</>
                                     }
                                 </button>
                             </div>
