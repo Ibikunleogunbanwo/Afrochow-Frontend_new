@@ -7,6 +7,7 @@ import {
     Store, CheckCircle2, XCircle, ShieldCheck, ShieldOff,
     LayoutDashboard, ChevronRight, Search, Filter,
     RefreshCw, ChevronDown, Eye, Calendar, X, Clock,
+    AlertTriangle,
 } from 'lucide-react';
 
 // ── Date filter helpers ────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ const FILTERS = [
     { key: 'all',              label: 'All' },
     { key: 'PENDING_PROFILE',  label: 'Pending Profile' },
     { key: 'PENDING_REVIEW',   label: 'Pending Review' },
-    { key: 'PROVISIONAL',      label: 'Provisional' },
+    { key: 'PROVISIONAL',      label: 'Live - Docs Pending' },
     { key: 'VERIFIED',         label: 'Verified' },
     { key: 'SUSPENDED',        label: 'Suspended' },
     { key: 'REJECTED',         label: 'Rejected' },
@@ -104,7 +105,7 @@ const StatusBadge = ({ status }) => {
             return (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
                     <Clock className="w-3 h-3" />
-                    Provisional
+                    Live - Docs Pending
                 </span>
             );
         case VENDOR_STATUS.PENDING_REVIEW:
@@ -193,8 +194,8 @@ export default function AdminVendorsPage() {
     const VENDOR_ACTION_LABELS = {
         suspend:           'Vendor Suspended',
         reinstate:         'Vendor Reinstated',
-        approveProvisional: 'Vendor Provisionally Approved',
-        verifyCert:        'Certificate Verified: Vendor Fully Verified',
+        approveProvisional: 'Vendor Activated',
+        verifyCert:        'Documents Verified: Vendor Fully Verified',
         verify:            'Vendor Fully Verified',
         reject:            'Vendor Rejected',
     };
@@ -300,7 +301,7 @@ export default function AdminVendorsPage() {
                     { key: 'seed',             label: 'Demo Vendors',   value: pool.filter(v => v.isSeedData === true).length },
                     { key: 'all',              label: 'All Vendors',    value: pool.length },
                     { key: 'VERIFIED',         label: 'Verified',       value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.VERIFIED).length },
-                    { key: 'PROVISIONAL',      label: 'Provisional',    value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
+                    { key: 'PROVISIONAL',      label: 'Live - Docs',    value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PROVISIONAL).length },
                     { key: 'PENDING_REVIEW',   label: 'Pending',        value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PENDING_REVIEW).length },
                     { key: 'PENDING_PROFILE',  label: 'Profile Setup',  value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.PENDING_PROFILE).length },
                     { key: 'SUSPENDED',        label: 'Suspended',      value: pool.filter(v => v.isSeedData !== true && resolveStatus(v) === VENDOR_STATUS.SUSPENDED).length },
@@ -523,15 +524,23 @@ export default function AdminVendorsPage() {
                                     onClick={e => e.stopPropagation()}
                                 >
                                     {(() => {
-                                        // PENDING_REVIEW — primary action is to review
+                                        // PENDING_REVIEW — activate only after Stripe payout readiness
                                         if (status === VENDOR_STATUS.PENDING_REVIEW) {
                                             return (
                                                 <button
                                                     onClick={() => setReviewVendor(v)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-colors ${
+                                                        v.payoutReady
+                                                            ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
+                                                            : 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200'
+                                                    }`}
                                                 >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                    Review & Decide
+                                                    {v.payoutReady ? (
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    ) : (
+                                                        <AlertTriangle className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {v.payoutReady ? 'Ready to Activate' : 'Awaiting Stripe'}
                                                 </button>
                                             );
                                         }
@@ -546,7 +555,7 @@ export default function AdminVendorsPage() {
                                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
                                                     >
                                                         <ShieldCheck className="w-3.5 h-3.5" />
-                                                        Verify Cert
+                                                        Verify Documents
                                                     </button>
                                                 )}
                                                 <button

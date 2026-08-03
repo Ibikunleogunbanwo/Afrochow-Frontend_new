@@ -126,9 +126,13 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
     const stripeStarted = Boolean(d.stripeAccountId);
     const stripeNeedsMoreInfo = stripeStarted && !payoutReady;
 
-    // "Approve" for pending → moves to PROVISIONAL; for rejected → re-approve to PROVISIONAL
-    const approveLabel        = isRejected ? "Re-approve Vendor" : "Approve Provisionally";
-    const approveConfirmLabel = isRejected ? "Confirm Re-approve" : "Confirm Provisional Approval";
+    // Activation moves a payout-ready vendor into PROVISIONAL: live while documents are collected.
+    const approveLabel        = isRejected ? "Reactivate Vendor" : "Activate Vendor";
+    const approveConfirmLabel = isRejected ? "Confirm Reactivation" : "Confirm Activation";
+    const approveDisabled     = !payoutReady;
+    const approveDisabledReason = stripeStarted
+        ? "Stripe setup is incomplete. The vendor cannot go live until charges and payouts are enabled."
+        : "Vendor must connect Stripe before going live.";
 
     // Operating hours: from detail endpoint it's a flat map on `d.operatingHours`
     const ops = d.operatingHours ?? {};
@@ -138,10 +142,10 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
         setApproving(true);
         setActionError(null);
         try {
-            // approveProvisional: PENDING_REVIEW → PROVISIONAL (live with order cap; cert still required)
+            // approveProvisional: PENDING_REVIEW → PROVISIONAL (live; documents still required)
             await AdminVendorsAPI.approveProvisional(vendor.publicVendorId);
-            toast.success('Vendor Approved Provisionally', {
-                description: `${d.restaurantName || 'Vendor'} is now live with an order cap. Full verification requires food handling cert upload.`,
+            toast.success('Vendor Activated', {
+                description: `${d.restaurantName || 'Vendor'} is now live. Full verification requires compliance document upload.`,
             });
             // Clear the confirm step first so there's no flicker back to the
             // action buttons before the parent unmounts this modal.
@@ -249,7 +253,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 {resolvedStatus === 'PROVISIONAL' && (
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
                                         <Clock className="w-3 h-3" />
-                                        Provisional — Cert Pending
+                                        Live — Documents Pending
                                     </span>
                                 )}
                                 {(resolvedStatus === 'PENDING_REVIEW' || resolvedStatus === 'PENDING_PROFILE') && (
@@ -426,7 +430,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                                     className="w-full h-10 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors"
                                                 >
                                                     <ShieldCheck className="w-4 h-4" />
-                                                    Verify Certificate &amp; Fully Approve
+                                                    Verify Documents &amp; Fully Approve
                                                 </button>
                                             </div>
                                         )}
@@ -489,7 +493,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                         <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5">
                                             <p className="text-xs font-semibold text-blue-900">Vendor action required</p>
                                             <p className="text-xs text-blue-700 mt-0.5">
-                                                After approval, the vendor should connect Stripe from their vendor dashboard. Admins should only link an existing account for manual recovery.
+                                                The vendor must connect Stripe from their vendor dashboard before activation. Admins should only link an existing account for manual recovery.
                                             </p>
                                         </div>
                                     )}
@@ -713,8 +717,8 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                             <p className="text-xs text-gray-500 text-center">
                                 {confirmAction === "approve"
                                     ? isRejected
-                                        ? "The vendor will be moved to PROVISIONAL status, live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent."
-                                        : "The vendor will be moved to PROVISIONAL status, live with an order cap. They must upload a food handling certificate for full verification. A confirmation email will be sent to them."
+                                        ? "The vendor will be reactivated and moved to PROVISIONAL status. They can start receiving orders while compliance documents are collected. A confirmation email will be sent."
+                                        : "The vendor will be activated and moved to PROVISIONAL status. They can start receiving orders while compliance documents are collected. A confirmation email will be sent to them."
                                     : "The vendor's application will be rejected and they will be notified by email."}
                             </p>
 
@@ -776,14 +780,21 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
                                 </button>
                                 {/* Approve button — only for PENDING_REVIEW / REJECTED (moves to PROVISIONAL) */}
                                 {(isPendingReview || isRejected) && (
-                                    <button
-                                        onClick={() => setConfirmAction("approve")}
-                                        disabled={busy || loadingDetail}
-                                        className="flex-1 h-11 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        {approveLabel}
-                                    </button>
+                                    <div className="flex-1">
+                                        <button
+                                            onClick={() => setConfirmAction("approve")}
+                                            disabled={busy || loadingDetail || approveDisabled}
+                                            className="w-full h-11 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:hover:bg-gray-900"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            {approveDisabled ? "Awaiting Stripe Connect" : approveLabel}
+                                        </button>
+                                        {approveDisabled && (
+                                            <p className="mt-1.5 text-[11px] leading-4 text-amber-700 text-center">
+                                                {approveDisabledReason}
+                                            </p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ) : (
