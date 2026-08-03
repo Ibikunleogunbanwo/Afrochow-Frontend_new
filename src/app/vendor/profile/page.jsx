@@ -73,7 +73,6 @@ const getPayoutSetupState = (profile) => {
     if (!profile) return null;
     if (profile.payoutReady) return 'CONNECTED';
     if (profile.vendorStatus === 'PENDING_PROFILE') return 'COMPLETE_PROFILE';
-    if (profile.vendorStatus === 'PENDING_REVIEW') return 'AWAITING_APPROVAL';
     if (profile.vendorStatus === 'REJECTED') return 'RESUBMIT_REQUIRED';
     if (profile.vendorStatus === 'SUSPENDED') return 'SUSPENDED';
     if (profile.stripeAccountId || profile.stripeOnboardingComplete) return 'STRIPE_REVIEW';
@@ -862,11 +861,11 @@ export default function VendorProfilePage() {
                                     Action required: upload your food handling certificate
                                 </p>
                                 <p className="text-xs text-blue-600 mt-0.5">
-                                    Your store is live with a temporary order cap. Upload your certificate in the{' '}
+                                    Your store is live. Upload your certificate in the{' '}
                                     <button onClick={() => setActiveTab('certification')} className="font-bold underline">
                                         Certification tab
                                     </button>{' '}
-                                    to get fully verified and remove the cap.
+                                    to get fully verified.
                                 </p>
                             </div>
                             <button onClick={() => setActiveTab('certification')}
@@ -1254,7 +1253,7 @@ export default function VendorProfilePage() {
                                             <div>
                                                 <p className="font-semibold text-gray-900 text-sm">Stripe is still reviewing your payout account</p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
-                                                    You can manage your Stripe details, but your store cannot accept paid orders until Stripe enables both charges and payouts.
+                                                    Admin can only activate your store after Stripe enables both charges and payouts. Open Stripe to finish any missing business, identity, tax, or bank details.
                                                 </p>
                                                 {profile.stripeRequirementsDisabledReason && (
                                                     <p className="text-xs font-mono text-amber-700 mt-1">
@@ -1280,9 +1279,9 @@ export default function VendorProfilePage() {
                                             <AlertCircle className="h-5 w-5 text-amber-600" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-gray-900 text-sm">Set up payments after verification</p>
+                                            <p className="font-semibold text-gray-900 text-sm">Complete your store profile first</p>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                Verify your email and complete your store profile first. Once your store is ready for review, you&apos;ll be prompted here to connect Stripe so payouts can be sent to you.
+                                                Verify your email and finish your store profile. Once your store is submitted for review, connect Stripe here so admin can activate you.
                                             </p>
                                         </div>
                                     </div>
@@ -1292,9 +1291,9 @@ export default function VendorProfilePage() {
                                             <Clock className="h-5 w-5 text-blue-600" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-gray-900 text-sm">Payment setup comes after approval</p>
+                                            <p className="font-semibold text-gray-900 text-sm">Connect Stripe before activation</p>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                Your store is pending admin review. After approval, connect your Stripe payout account here before accepting paid orders.
+                                                Your store is pending admin review. Connect your Stripe payout account now so admin can activate your store for paid orders.
                                             </p>
                                         </div>
                                     </div>
@@ -1306,7 +1305,7 @@ export default function VendorProfilePage() {
                                         <div>
                                             <p className="font-semibold text-gray-900 text-sm">Resubmit your store first</p>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                Update the items requested by Afrochow and resubmit your store. Payment setup will be available after approval.
+                                                Update the items requested by Afrochow and resubmit your store. Then connect Stripe so admin can activate your store.
                                             </p>
                                         </div>
                                     </div>
@@ -1331,9 +1330,15 @@ export default function VendorProfilePage() {
                                             <div>
                                                 <p className="font-semibold text-gray-900 text-sm">No payout account connected</p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
-                                                    Connect a Stripe payout account to receive earnings from your orders. Takes only a few minutes.
+                                                    Connect Stripe before admin can activate your store. You&apos;ll be sent to Stripe to add your business details, identity information, and payout bank account.
                                                 </p>
                                             </div>
+                                        </div>
+                                        <div className="rounded-lg border border-purple-100 bg-purple-50 px-3 py-2">
+                                            <p className="text-xs font-semibold text-purple-900">What happens next</p>
+                                            <p className="text-xs text-purple-700 mt-0.5">
+                                                Return to Afrochow after Stripe onboarding. Once Stripe marks charges and payouts ready, admin can activate your store for paid orders.
+                                            </p>
                                         </div>
                                         <button
                                             onClick={handleStripeConnect}
@@ -1528,7 +1533,7 @@ export default function VendorProfilePage() {
                                     <div className="flex items-start gap-3 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl">
                                         <Info className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
                                         <p className="text-sm text-gray-500">
-                                            Once your store is provisionally approved, you can upload your food handling certificate here to get fully verified.
+                                            Once your store is activated, you can upload your food handling certificate here to get fully verified.
                                         </p>
                                     </div>
                                 );

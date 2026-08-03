@@ -205,7 +205,7 @@ const AccountTab = ({ profile }) => {
                                 <div>
                                     <p className="font-semibold text-gray-900 text-sm">Stripe payout setup incomplete</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
-                                        Stripe still needs information before your store can accept paid orders.
+                                        Admin can only activate your store after Stripe enables both charges and payouts. Resume setup to finish any missing business, identity, tax, or bank details.
                                     </p>
                                     {profile.stripeRequirementsDisabledReason && (
                                         <p className="text-xs font-mono text-amber-700 mt-1">
@@ -234,10 +234,15 @@ const AccountTab = ({ profile }) => {
                                 <div>
                                     <p className="font-semibold text-gray-900 text-sm">No payout account connected</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
-                                        Connect a Stripe payout account to receive earnings from your orders.
-                                        This takes only a few minutes.
+                                        Connect Stripe before admin can activate your store. You&apos;ll add your business details, identity information, and payout bank account on Stripe.
                                     </p>
                                 </div>
+                            </div>
+                            <div className="rounded-lg border border-purple-100 bg-purple-50 px-3 py-2">
+                                <p className="text-xs font-semibold text-purple-900">What happens next</p>
+                                <p className="text-xs text-purple-700 mt-0.5">
+                                    Return to Afrochow after Stripe onboarding. Once charges and payouts are ready, admin can activate your store for paid orders.
+                                </p>
                             </div>
                             <button
                                 onClick={handleStripeConnect}

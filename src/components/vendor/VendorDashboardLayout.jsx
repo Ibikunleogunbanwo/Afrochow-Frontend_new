@@ -358,7 +358,7 @@ const VendorDashboardLayout = ({ children }) => {
                         <div>
                             <p className="font-semibold text-emerald-800 text-sm">Pending admin approval</p>
                             <p className="text-emerald-700 text-sm mt-0.5">
-                                Your store is under review, this typically takes 24 to 48 hours. You can set up your menu and profile while you wait, but you won&apos;t receive orders until approved.
+                                Your store is under review, this typically takes 24 to 48 hours. Connect your payout account while you wait so admin can activate your store for orders.
                             </p>
                         </div>
                     </div>
@@ -401,8 +401,8 @@ const VendorDashboardLayout = ({ children }) => {
                     </div>
                 )}
 
-                {/* ── Stripe Connect: live vendor (PROVISIONAL or VERIFIED) but payout account not ready ── */}
-                {(vendorStatus === 'VERIFIED' || vendorStatus === 'PROVISIONAL') && profile && !profile.payoutReady && (
+                {/* ── Stripe Connect: required before activation and paid orders ── */}
+                {(['PENDING_REVIEW', 'PROVISIONAL', 'VERIFIED'].includes(vendorStatus)) && profile && !profile.payoutReady && (
                     <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl border border-purple-200 bg-purple-50 p-4">
                         <div className="flex items-start gap-3">
                             <CreditCard className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
