@@ -35,7 +35,7 @@ export default function AboutPage() {
                     </div>
                     <h1 className="text-4xl font-black mb-4">About Afrochow</h1>
                     <p className="text-emerald-100 text-lg leading-relaxed max-w-2xl mx-auto">
-                        We're on a mission to celebrate African cuisine by connecting food lovers with the best
+                        We&apos;re on a mission to celebrate African cuisine by connecting food lovers with the best
                         African restaurants across Canada, one delicious meal at a time.
                     </p>
                 </div>

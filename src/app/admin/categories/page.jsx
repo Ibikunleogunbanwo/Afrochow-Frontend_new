@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     LayoutDashboard, ChevronRight, RefreshCw, Plus, Edit2,
     Trash2, X, AlertCircle, ToggleLeft, ToggleRight, GripVertical,
@@ -344,7 +345,9 @@ export default function AdminCategoriesPage() {
                                     {/* Category name + status */}
                                     <div className="flex items-center gap-3 flex-1 md:min-w-[200px] overflow-hidden">
                                         {c.imageUrl ? (
-                                            <img src={c.imageUrl} alt={c.name} className="w-9 h-9 rounded-lg object-cover shrink-0 border border-gray-100" />
+                                            <div className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-gray-100">
+                                                <Image src={c.imageUrl} alt={c.name} fill sizes="36px" className="object-cover" />
+                                            </div>
                                         ) : (
                                             <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                                 <LayoutGrid className="w-4 h-4 text-gray-400" />

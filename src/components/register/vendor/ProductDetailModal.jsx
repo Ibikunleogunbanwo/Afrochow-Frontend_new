@@ -37,16 +37,22 @@ const ProductDetailModal = ({
     const { coordinates } = useLocation();
 
     // "Also available at" — same dish, other vendors
+    const [similarProductId, setSimilarProductId] = useState(product?.publicProductId);
     const [similarProducts, setSimilarProducts] = useState([]);
-    const [similarLoading, setSimilarLoading]   = useState(false);
+    const [similarLoading, setSimilarLoading]   = useState(true);
+
+    // Reset the rail when the modal opens for a different product (or closes).
+    // Per React docs, adjusting state during render when a prop changes avoids
+    // a synchronous setState cascade inside an effect.
+    if (similarProductId !== product?.publicProductId) {
+        setSimilarProductId(product?.publicProductId);
+        setSimilarProducts([]);
+        setSimilarLoading(Boolean(product?.publicProductId));
+    }
 
     useEffect(() => {
-        if (!product?.publicProductId) {
-            setSimilarProducts([]);
-            return;
-        }
+        if (!product?.publicProductId) return;
         let cancelled = false;
-        setSimilarLoading(true);
         SearchAPI.getSimilarProducts(product.publicProductId, coordinates?.lat, coordinates?.lng)
             .then((res) => {
                 if (cancelled) return;
@@ -56,7 +62,6 @@ const ProductDetailModal = ({
             .catch(() => { if (!cancelled) setSimilarProducts([]); })
             .finally(() => { if (!cancelled) setSimilarLoading(false); });
         return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [product?.publicProductId, coordinates?.lat, coordinates?.lng]);
 
     // Must stay above the `if (!product) return null;` guard below

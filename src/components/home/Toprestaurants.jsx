@@ -125,7 +125,6 @@ const TopStores = () => {
         };
 
         void fetchTopStores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [city, coordinates?.lat, coordinates?.lng, isDetecting, retryCount]);
 
     const handleRetry = () => {

@@ -98,12 +98,10 @@ export default function RootLayout({ children }) {
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <script
             type="application/ld+json"
-            // eslint-disable-next-line react/no-danger -- static JSON, no user-controlled HTML
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <script
             type="application/ld+json"
-            // eslint-disable-next-line react/no-danger -- static JSON, no user-controlled HTML
             dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <ClientProviders>

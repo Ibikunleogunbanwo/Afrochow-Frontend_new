@@ -191,7 +191,7 @@ const DisplayStores = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [urlQuery, urlCity, urlPage, locationCity]);
+    }, [urlQuery, urlPage, effectiveCity]);
 
     useEffect(() => {
         void fetchStores();

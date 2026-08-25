@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import {
@@ -241,12 +242,17 @@ export default function AdminUserDetailPage() {
                             {/* Avatar + name */}
                             <div className="flex flex-col items-center text-center gap-3 pb-5 border-b border-gray-100">
                                 {user.profileImageUrl ? (
-                                    <img
-                                        src={user.profileImageUrl}
-                                        alt={displayName || 'User'}
-                                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-sm"
-                                        referrerPolicy="no-referrer"
-                                    />
+                                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 shadow-sm">
+                                        <Image
+                                            src={user.profileImageUrl}
+                                            alt={displayName || 'User'}
+                                            fill
+                                            sizes="80px"
+                                            unoptimized
+                                            referrerPolicy="no-referrer"
+                                            className="object-cover"
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-amber-100 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-2xl font-black shadow-sm">
                                         {initials}

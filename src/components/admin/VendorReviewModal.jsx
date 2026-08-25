@@ -122,7 +122,7 @@ export default function VendorReviewModal({ vendor, onClose, onApprove, onReject
     const isRejected   = resolvedStatus === 'REJECTED';
     const isProvisional = resolvedStatus === 'PROVISIONAL';
     const isPendingReview = resolvedStatus === 'PENDING_REVIEW';
-    const payoutReady = d.payoutReady === true;
+    const payoutReady = d.payoutReady !== false;
     const stripeStarted = Boolean(d.stripeAccountId);
     const stripeNeedsMoreInfo = stripeStarted && !payoutReady;
 

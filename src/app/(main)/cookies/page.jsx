@@ -47,7 +47,7 @@ export default function CookiePolicyPage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
 
                     <p className="text-slate-600 text-sm leading-relaxed mb-8">
-                        This Cookie Policy explains how Afrochow ("we", "us", or "our") uses cookies and similar
+                        This Cookie Policy explains how Afrochow (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) uses cookies and similar
                         tracking technologies on our platform at{" "}
                         <span className="text-emerald-600 font-medium">www.afrochow.ca</span>. By continuing to use
                         our platform, you consent to our use of cookies as described in this policy.
@@ -55,7 +55,7 @@ export default function CookiePolicyPage() {
 
                     <Section title="1. What Are Cookies?">
                         <p>Cookies are small text files stored on your device (computer, tablet, or mobile) when you visit a website. They help the website remember your preferences and improve your experience over time.</p>
-                        <p>Similar technologies include web beacons, pixels, and local storage, which serve comparable purposes. We refer to all of these collectively as "cookies" in this policy.</p>
+                        <p>Similar technologies include web beacons, pixels, and local storage, which serve comparable purposes. We refer to all of these collectively as &quot;cookies&quot; in this policy.</p>
                     </Section>
 
                     <Section title="2. Types of Cookies We Use">
@@ -96,7 +96,7 @@ export default function CookiePolicyPage() {
 
                     <Section title="6. Managing Your Cookie Preferences">
                         <p>You can control and manage cookies in several ways:</p>
-                        <p><strong className="text-slate-800">Browser Settings:</strong> Most browsers allow you to refuse or delete cookies through their settings. The process varies by browser, so refer to your browser's help documentation for instructions.</p>
+                        <p><strong className="text-slate-800">Browser Settings:</strong> Most browsers allow you to refuse or delete cookies through their settings. The process varies by browser, so refer to your browser&apos;s help documentation for instructions.</p>
                         <p><strong className="text-slate-800">Opt-out Tools:</strong> You can opt out of Google Analytics tracking by installing the{" "}
                             <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">Google Analytics Opt-out Browser Add-on</a>.
                         </p>
@@ -108,7 +108,7 @@ export default function CookiePolicyPage() {
                     </Section>
 
                     <Section title="8. Changes to This Policy">
-                        <p>We may update this Cookie Policy from time to time. Changes will be reflected in the "Last updated" date at the top of this page. Continued use of the Platform after changes are posted constitutes your acceptance of the updated policy.</p>
+                        <p>We may update this Cookie Policy from time to time. Changes will be reflected in the &quot;Last updated&quot; date at the top of this page. Continued use of the Platform after changes are posted constitutes your acceptance of the updated policy.</p>
                     </Section>
 
                     <Section title="9. Contact Us">

@@ -88,7 +88,7 @@ export default function PrivacyPolicyPage() {
                     </Section>
 
                     <Section title="7. Your Rights (Canadian Residents)">
-                        <p>Under Canada's Personal Information Protection and Electronic Documents Act (PIPEDA) and applicable provincial privacy laws, you have the right to:</p>
+                        <p>Under Canada&apos;s Personal Information Protection and Electronic Documents Act (PIPEDA) and applicable provincial privacy laws, you have the right to:</p>
                         <ul className="list-disc list-inside space-y-1 pl-2">
                             <li>Access the personal information we hold about you</li>
                             <li>Request correction of inaccurate information</li>
@@ -106,7 +106,7 @@ export default function PrivacyPolicyPage() {
                     </Section>
 
                     <Section title="9. Changes to This Policy">
-                        <p>We may update this Privacy Policy from time to time. When we do, we will revise the "Last updated" date at the top of this page. For significant changes, we may notify you by email or through a notice on our platform. We encourage you to review this policy periodically.</p>
+                        <p>We may update this Privacy Policy from time to time. When we do, we will revise the &quot;Last updated&quot; date at the top of this page. For significant changes, we may notify you by email or through a notice on our platform. We encourage you to review this policy periodically.</p>
                     </Section>
 
                     <Section title="10. Contact Us">

@@ -100,9 +100,9 @@ const FeaturedProductCard = ({ product, priority = false, isAuthenticated, onUna
 
                 {/* ── Image section ── */}
                 <div className="relative h-56 w-full overflow-hidden bg-gray-100">
-                    {resolveImageUrl(imageUrl) && !imgError ? (
+                    {resolveImageUrl(imageUrl, { width: 600 }) && !imgError ? (
                         <Image
-                            src={resolveImageUrl(imageUrl)}
+                            src={resolveImageUrl(imageUrl, { width: 600 })}
                             alt={name}
                             fill
                             priority={priority}

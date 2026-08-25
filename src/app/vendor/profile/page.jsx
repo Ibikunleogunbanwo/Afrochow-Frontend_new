@@ -73,8 +73,9 @@ const getPayoutSetupState = (profile) => {
     if (!profile) return null;
     if (profile.payoutReady) return 'CONNECTED';
     if (profile.vendorStatus === 'PENDING_PROFILE') return 'COMPLETE_PROFILE';
-    if (profile.vendorStatus === 'REJECTED') return 'RESUBMIT_REQUIRED';
+    if (profile.vendorStatus === 'REJECTED') return 'REJECTED';
     if (profile.vendorStatus === 'SUSPENDED') return 'SUSPENDED';
+    if (profile.vendorStatus === 'PENDING_REVIEW') return 'AWAITING_APPROVAL';
     if (profile.stripeAccountId || profile.stripeOnboardingComplete) return 'STRIPE_REVIEW';
     return 'READY_TO_CONNECT';
 };

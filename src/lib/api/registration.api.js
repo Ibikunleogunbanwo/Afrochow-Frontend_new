@@ -35,4 +35,11 @@ export const RegistrationAPI = {
       body: JSON.stringify({ email }),
     });
   },
+
+  changeVerificationEmail: async (currentEmail, newEmail) => {
+    return fetchWithCredentials(`${API_BASE_URL}/auth/change-verification-email`, {
+      method: 'POST',
+      body: JSON.stringify({ currentEmail, newEmail }),
+    });
+  },
 };

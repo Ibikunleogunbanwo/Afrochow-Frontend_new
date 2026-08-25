@@ -16,6 +16,7 @@ import {
   Users,
   TrendingUp,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 import { useForm } from "../context/Provider";
 import { RegistrationAPI } from "@/lib/api/registration.api";
@@ -30,9 +31,18 @@ export default function RegistrationSuccess() {
   // The review page resets the shared form context (clearing state.email)
   // before navigating here, so the registered address is passed through the
   // URL instead. Fall back to state.email for direct-navigation edge cases.
-  const email = searchParams.get("email") || state.email || "";
+  const initialEmail = searchParams.get("email") || state.email || "";
+  const [email, setEmail] = useState(initialEmail);
+  const [emailDraft, setEmailDraft] = useState(initialEmail);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    setEmail(initialEmail);
+    setEmailDraft(initialEmail);
+  }, [initialEmail]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -55,6 +65,40 @@ export default function RegistrationSuccess() {
       toast.error(err.message || "Failed to resend. Please try again.");
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    const nextEmail = emailDraft.trim().toLowerCase();
+
+    if (!email) {
+      toast.error("We couldn't find the original email address for this registration.");
+      return;
+    }
+
+    if (!nextEmail) {
+      toast.error("Enter the corrected email address.");
+      return;
+    }
+
+    if (nextEmail === email.toLowerCase()) {
+      setEditingEmail(false);
+      return;
+    }
+
+    setChangingEmail(true);
+    try {
+      await RegistrationAPI.changeVerificationEmail(email, nextEmail);
+      setEmail(nextEmail);
+      setEmailDraft(nextEmail);
+      setEditingEmail(false);
+      setCooldown(RESEND_COOLDOWN);
+      router.replace(`/register/vendor/success?email=${encodeURIComponent(nextEmail)}`);
+      toast.success("Email updated. We sent a new verification code.");
+    } catch (err) {
+      toast.error(err.message || "Could not update the email. Please try again.");
+    } finally {
+      setChangingEmail(false);
     }
   };
 
@@ -95,6 +139,54 @@ export default function RegistrationSuccess() {
                     )}
                     . Enter the code to activate your account and unlock your dashboard login. The code is valid for 24 hours.
                   </p>
+                  {editingEmail ? (
+                    <div className="mb-3 rounded-lg border border-emerald-200 bg-white p-3">
+                      <label className="mb-1 block text-xs font-semibold text-gray-700">
+                        Correct email address
+                      </label>
+                      <input
+                        type="email"
+                        value={emailDraft}
+                        onChange={(event) => setEmailDraft(event.target.value)}
+                        className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        placeholder="you@example.com"
+                        disabled={changingEmail}
+                      />
+                      <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEmailDraft(email);
+                            setEditingEmail(false);
+                          }}
+                          disabled={changingEmail}
+                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleChangeEmail}
+                          disabled={changingEmail}
+                          className="bg-emerald-500 text-white hover:bg-emerald-600"
+                        >
+                          {changingEmail ? "Updating..." : "Send New Code"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditingEmail(true)}
+                      className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Wrong email? Change it
+                    </button>
+                  )}
                   <div className="flex flex-col-reverse sm:flex-row gap-2">
                     <Button
                       variant="outline"

@@ -46,6 +46,9 @@ export default function Step1() {
     },
   });
 
+  // react-hook-form's watch() returns an inherently non-memoizable function,
+  // so React Compiler skips memoizing this component — acceptable here.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const password = watch("password");
 
   const onSubmit = handleFormSubmit(

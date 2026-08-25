@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     LayoutDashboard, ChevronRight, RefreshCw,
     Package, Loader2, Store, Search, X, Trash2, Eye, EyeOff,
@@ -61,8 +62,9 @@ function ProductRow({ product, onToggle, toggling }) {
             <div className="flex items-start gap-3 p-4 md:hidden">
                 <div className="shrink-0">
                     {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name}
-                            className="w-14 h-14 rounded-xl object-cover border border-gray-100" />
+                        <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-gray-100">
+                            <Image src={product.imageUrl} alt={product.name} fill sizes="56px" className="object-cover" />
+                        </div>
                     ) : (
                         <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center">
                             <Package className="w-6 h-6 text-gray-400" />
@@ -120,8 +122,9 @@ function ProductRow({ product, onToggle, toggling }) {
 
                 <div className="flex items-center gap-3 min-w-0">
                     {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name}
-                            className="w-9 h-9 rounded-lg object-cover shrink-0 border border-gray-100" />
+                        <div className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-gray-100">
+                            <Image src={product.imageUrl} alt={product.name} fill sizes="36px" className="object-cover" />
+                        </div>
                     ) : (
                         <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                             <Package className="w-4 h-4 text-gray-400" />

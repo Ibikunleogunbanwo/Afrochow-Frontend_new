@@ -19,7 +19,7 @@ const PreviewCard = ({ product }) => (
         <div className="relative w-full aspect-square bg-gray-100">
             {product.imageUrl && (
                 <Image
-                    src={resolveImageUrl(product.imageUrl)}
+                    src={resolveImageUrl(product.imageUrl, { width: 400 })}
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 50vw, 200px"

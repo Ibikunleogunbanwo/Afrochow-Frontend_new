@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { OrderAPI } from "@/lib/api/order/order.api";
 import {
@@ -12,6 +12,9 @@ import Link from "next/link";
 import { toast } from '@/components/ui/toast';
 import { formatDateTime } from '@/lib/utils/dateUtils';
 import PaymentIssuePanel from '@/components/checkout/PaymentIssuePanel';
+
+// ── Terminal order states (polling stops once reached) ───────────────────────
+const FINAL_STATUSES = new Set(["DELIVERED", "CANCELLED", "REFUNDED"]);
 
 // ── Per-status hero config ────────────────────────────────────────────────────
 
@@ -263,10 +266,9 @@ export default function OrderConfirmationPage() {
     const [cancelling, setCancelling] = useState(false);
     const [error,      setError]      = useState(null);
 
-    const FINAL_STATUSES = new Set(["DELIVERED", "CANCELLED", "REFUNDED"]);
     const sessionInvalidRef = useRef(false);
 
-    const fetchOrder = (opts = {}) => {
+    const fetchOrder = useCallback((opts = {}) => {
         const { silent = false } = opts;
         if (silent) setRefreshing(true); else setLoading(true);
         return OrderAPI.getOrder(publicOrderId)
@@ -308,9 +310,9 @@ export default function OrderConfirmationPage() {
                 setError({ message: err.message || "Could not load order details.", status: err.status });
             })
             .finally(() => { setLoading(false); setRefreshing(false); });
-    };
+    }, [publicOrderId, router]);
 
-    useEffect(() => { if (publicOrderId) fetchOrder(); }, [publicOrderId]);
+    useEffect(() => { if (publicOrderId) fetchOrder(); }, [publicOrderId, fetchOrder]);
 
     // Poll every 30 s while order is still active
     useEffect(() => {
@@ -323,7 +325,7 @@ export default function OrderConfirmationPage() {
             fetchOrder({ silent: true });
         }, 30_000);
         return () => clearInterval(id);
-    }, [order?.status]);
+    }, [order?.status, order, fetchOrder]);
 
     const handleCancel = async () => {
         if (!window.confirm("Are you sure you want to cancel this order? Your payment will be refunded.")) return;
