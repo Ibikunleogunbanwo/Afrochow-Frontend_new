@@ -43,7 +43,7 @@ function RemoveButton({ onRemove, removing }) {
 function VendorFavoriteCard({ favorite, onRemove, removing }) {
     const v = favorite.vendor;
     if (!v) return null;
-    const logo = resolveImageUrl(v.logoUrl);
+    const logo = resolveImageUrl(v.logoUrl, { width: 128 });
 
     return (
         <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
@@ -81,7 +81,7 @@ function VendorFavoriteCard({ favorite, onRemove, removing }) {
 function ProductFavoriteCard({ favorite, onRemove, removing }) {
     const p = favorite.product;
     if (!p) return null;
-    const image = resolveImageUrl(p.imageUrl);
+    const image = resolveImageUrl(p.imageUrl, { width: 400 });
 
     return (
         <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">

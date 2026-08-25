@@ -177,7 +177,7 @@ const DisplayRestaurant = () => {
         };
 
         void fetchResults();
-    }, [urlSearchQuery, urlCity, urlCategoryId, urlSchedule, currentPage, locationCity]);
+    }, [urlSearchQuery, urlCity, urlCategoryId, urlSchedule, currentPage, locationCity, effectiveCity]);
 
     // ── Derived display values ────────────────────────────────────────────────
     const decodedQuery    = urlSearchQuery ? decodeURIComponent(urlSearchQuery) : '';

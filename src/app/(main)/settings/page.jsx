@@ -479,7 +479,7 @@ export default function SettingsPage() {
                     />
                     {notifFetchError && (
                         <div className="px-5 py-2 text-[11px] text-amber-800 bg-amber-50 border-b border-amber-200">
-                            We couldn't load your current setting. The toggle below may not reflect the server state until you refresh.
+                            We couldn&apos;t load your current setting. The toggle below may not reflect the server state until you refresh.
                         </div>
                     )}
                     <div className="px-5 py-4 flex items-center justify-between gap-4">
@@ -811,7 +811,7 @@ export default function SettingsPage() {
                             </div>
                             <div>
                                 <p className="font-black text-gray-900">Sign out everywhere?</p>
-                                <p className="text-xs text-gray-500 mt-0.5">You'll be signed out of all active sessions on all devices.</p>
+                                <p className="text-xs text-gray-500 mt-0.5">You&apos;ll be signed out of all active sessions on all devices.</p>
                             </div>
                         </div>
 
@@ -1105,7 +1105,7 @@ export default function SettingsPage() {
                         </div>
                         {confirmDeleteAddr.defaultAddress && (
                             <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                                This is your default delivery address. We'll pick a new default automatically.
+                                This is your default delivery address. We&apos;ll pick a new default automatically.
                             </p>
                         )}
                         <div className="flex gap-3">

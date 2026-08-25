@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     LayoutDashboard, ChevronRight, UserPlus, User, Mail, Phone,
     Lock, Eye, EyeOff, Building2, Shield, AlertCircle, CheckCircle,
@@ -294,8 +295,8 @@ export default function AdminRegisterPage() {
                     </div>
                     <div className="p-5 flex items-center gap-4">
                         {imagePreview ? (
-                            <div className="relative">
-                                <img src={imagePreview} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
+                            <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                <Image src={imagePreview} alt="Preview" fill sizes="64px" unoptimized className="object-cover" />
                                 <button type="button" onClick={clearImage}
                                     className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600">
                                     <X className="w-3 h-3" />

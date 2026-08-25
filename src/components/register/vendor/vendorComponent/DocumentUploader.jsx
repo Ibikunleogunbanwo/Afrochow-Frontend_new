@@ -11,7 +11,7 @@ function DocumentUploader({ label, helpText, value, onChange, error, required = 
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setPreview(value);
         }
-    }, [value]);
+    }, [value, preview]);
 
     const handleFileSelect = (e) => {
         const file = e.target?.files?.[0];

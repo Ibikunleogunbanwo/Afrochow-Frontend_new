@@ -154,7 +154,6 @@ export default async function RestaurantLayout({ children, params }) {
         <>
             <script
                 type="application/ld+json"
-                // eslint-disable-next-line react/no-danger -- static JSON, no user-controlled HTML
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             {children}

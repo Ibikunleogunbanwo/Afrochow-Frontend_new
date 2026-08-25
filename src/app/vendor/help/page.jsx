@@ -332,7 +332,7 @@ export default function VendorHelpPage() {
                 <MessageCircle className="w-10 h-10 text-gray-700 mx-auto mb-3" />
                 <h2 className="text-xl font-black text-gray-900 mb-2">Still need help?</h2>
                 <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
-                    Our vendor support team is here to help. Reach out and we'll get back to you within one business day.
+                    Our vendor support team is here to help. Reach out and we&apos;ll get back to you within one business day.
                 </p>
                 <a
                     href="mailto:support@afrochow.ca"

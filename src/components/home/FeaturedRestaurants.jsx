@@ -179,20 +179,33 @@ const FeaturedRestaurants = () => {
         // Wait for location detection to settle before fetching
         if (isDetecting) return;
 
-        // ── Ready-to-order (SAME_DAY) rail ──
-        if (isCacheValid(cacheKey, 'SAME_DAY')) {
-            const entry = getCacheEntry(cacheKey, 'SAME_DAY');
-            setSameDayProducts(entry.products);
-            setSameDayPromoMap(entry.promoMap);
-            setSameDayFallback(entry.isFallback);
-            setSameDayLoading(false);
-        } else {
-            setSameDayLoading(true);
-            setSameDayError(false);
-            fetchRail('SAME_DAY', city, lat, lng)
+        const loadRail = (scheduleType) => {
+            const setProducts = scheduleType === 'SAME_DAY' ? setSameDayProducts : setAdvanceProducts;
+            const setPromoMap = scheduleType === 'SAME_DAY' ? setSameDayPromoMap : setAdvancePromoMap;
+            const setFallback = scheduleType === 'SAME_DAY' ? setSameDayFallback : setAdvanceFallback;
+            const setLoading  = scheduleType === 'SAME_DAY' ? setSameDayLoading  : setAdvanceLoading;
+            const setError    = scheduleType === 'SAME_DAY' ? setSameDayError    : setAdvanceError;
+
+            // Hydrate from cache. The state write is deferred out of the effect
+            // body (same frame) so we don't trigger the sync setState-in-effect
+            // cascading-render path; on cache hits this just adopts cached data.
+            if (isCacheValid(cacheKey, scheduleType)) {
+                const entry = getCacheEntry(cacheKey, scheduleType);
+                queueMicrotask(() => {
+                    setProducts(entry.products);
+                    setPromoMap(entry.promoMap);
+                    setFallback(entry.isFallback);
+                    setLoading(false);
+                });
+                return;
+            }
+
+            setLoading(true);
+            setError(false);
+            fetchRail(scheduleType, city, lat, lng)
                 .then(({ products, fallback }) => {
-                    setSameDayProducts(products);
-                    setSameDayFallback(fallback);
+                    setProducts(products);
+                    setFallback(fallback);
 
                     PromotionsAPI.getActivePromotions()
                         .then(res => {
@@ -200,52 +213,22 @@ const FeaturedRestaurants = () => {
                                 ? res.data
                                 : Array.isArray(res) ? res : [];
                             const map = buildPromoMap(list);
-                            setCacheEntry(cacheKey, 'SAME_DAY', products, map, fallback);
-                            setSameDayPromoMap(map);
+                            setCacheEntry(cacheKey, scheduleType, products, map, fallback);
+                            setPromoMap(map);
                         })
-                        .catch(() => setCacheEntry(cacheKey, 'SAME_DAY', products, {}, fallback));
+                        .catch(() => setCacheEntry(cacheKey, scheduleType, products, {}, fallback));
                 })
                 .catch((err) => {
-                    console.error("Error fetching ready-to-order products:", err);
-                    setSameDayError(true);
-                    setSameDayProducts([]);
+                    console.error(`Error fetching ${scheduleType} products:`, err);
+                    setError(true);
+                    setProducts([]);
                 })
-                .finally(() => setSameDayLoading(false));
-        }
+                .finally(() => setLoading(false));
+        };
 
-        // ── Pre-order / advance-notice (ADVANCE_ORDER) rail ──
-        if (isCacheValid(cacheKey, 'ADVANCE_ORDER')) {
-            const entry = getCacheEntry(cacheKey, 'ADVANCE_ORDER');
-            setAdvanceProducts(entry.products);
-            setAdvancePromoMap(entry.promoMap);
-            setAdvanceFallback(entry.isFallback);
-            setAdvanceLoading(false);
-        } else {
-            setAdvanceLoading(true);
-            setAdvanceError(false);
-            fetchRail('ADVANCE_ORDER', city, lat, lng)
-                .then(({ products, fallback }) => {
-                    setAdvanceProducts(products);
-                    setAdvanceFallback(fallback);
-
-                    PromotionsAPI.getActivePromotions()
-                        .then(res => {
-                            const list = res?.success && Array.isArray(res.data)
-                                ? res.data
-                                : Array.isArray(res) ? res : [];
-                            const map = buildPromoMap(list);
-                            setCacheEntry(cacheKey, 'ADVANCE_ORDER', products, map, fallback);
-                            setAdvancePromoMap(map);
-                        })
-                        .catch(() => setCacheEntry(cacheKey, 'ADVANCE_ORDER', products, {}, fallback));
-                })
-                .catch((err) => {
-                    console.error("Error fetching pre-order products:", err);
-                    setAdvanceError(true);
-                    setAdvanceProducts([]);
-                })
-                .finally(() => setAdvanceLoading(false));
-        }
+        // ── Ready-to-order (SAME_DAY) and pre-order (ADVANCE_ORDER) rails ──
+        loadRail('SAME_DAY');
+        loadRail('ADVANCE_ORDER');
     }, [cacheKey, isDetecting, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps -- lat/lng folded into cacheKey
 
     const handleRetry = () => {

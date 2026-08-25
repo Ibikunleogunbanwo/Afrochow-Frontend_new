@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { setAuth } from "@/redux-store/authSlice";
 import { AuthAPI } from "@/lib/api/auth.api";
@@ -194,7 +195,7 @@ export default function OnboardingPage() {
                     <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
                         <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                     </div>
-                    <h1 className="text-2xl font-black text-gray-900">You're all set!</h1>
+                    <h1 className="text-2xl font-black text-gray-900">You&apos;re all set!</h1>
                     <p className="text-gray-500 text-sm">Taking you to Afrochow…</p>
                     <Loader2 className="w-5 h-5 animate-spin text-emerald-400 mx-auto" />
                 </div>
@@ -244,12 +245,17 @@ export default function OnboardingPage() {
                                 return (
                                     <div className="flex justify-center">
                                         {photoUrl ? (
-                                            <img
-                                                src={photoUrl}
-                                                alt="Profile"
-                                                className="w-16 h-16 rounded-full object-cover border-2 border-emerald-200 shadow-sm"
-                                                referrerPolicy="no-referrer"
-                                            />
+                                            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-200 shadow-sm">
+                                                <Image
+                                                    src={photoUrl}
+                                                    alt="Profile"
+                                                    fill
+                                                    sizes="64px"
+                                                    unoptimized
+                                                    referrerPolicy="no-referrer"
+                                                    className="object-cover"
+                                                />
+                                            </div>
                                         ) : (
                                             <div className="w-16 h-16 rounded-full bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-xl font-black shadow-sm">
                                                 {initials}

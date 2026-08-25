@@ -81,7 +81,8 @@ const StoreCard = ({ store, isLoading = false, priority = false, promotions = []
     } = store;
 
     const imageUrl = resolveImageUrl(
-        popularItems?.length > 0 ? popularItems[0].imageUrl : null
+        popularItems?.length > 0 ? popularItems[0].imageUrl : null,
+        { width: 600 }
     ) ?? '/image/amala.jpg';
 
     const categoryDisplay = Array.isArray(categories) && categories.length > 0

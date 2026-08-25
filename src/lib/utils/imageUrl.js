@@ -13,8 +13,11 @@
  * We extract that path segment and rebuild the URL with the correct API origin
  * for the current deployment.
  *
- * External images (Cloudinary, S3, etc.) never contain /api/images/, so they
- * pass through completely unchanged.
+ * External images (Cloudinary, S3, etc.) never contain /api/images/. Cloudinary
+ * URLs additionally get on-the-fly transformation params injected
+ * (f_auto,q_auto[,w_xxx]) so the CDN delivers an auto-optimized, correctly-
+ * sized variant instead of the full-size original. Non-Cloudinary external
+ * URLs (S3, etc.) pass through unchanged.
  *
  * Local Next.js public assets (/image/amala.jpg, /icons/…) also pass through
  * unchanged because they don't match the pattern.
@@ -36,11 +39,18 @@ const API_ORIGIN = (() => {
 //   /api/images/products/abc-123.jpg
 const AFROCHOW_IMAGE_PATH_RE = /(\/api\/images\/.+)/;
 
+// Cloudinary upload URLs look like …/image/upload/v<version>/<public_id>.
+// Transformation params go between "/image/upload/" and the version segment.
+const CLOUDINARY_UPLOAD_RE = /(\/image\/upload\/)(v\d+\/.*)/;
+const CLOUDINARY_HOST = 'res.cloudinary.com';
+
 /**
  * @param {string|null|undefined} url  Raw imageUrl from an API response.
- * @returns {string|null}              Absolute URL safe to use in <img src>.
+ * @param {{width?: number}} [opts]   Optional display width for Cloudinary
+ *                                    width-capping (e.g. { width: 600 }).
+ * @returns {string|null}             Absolute URL safe to use in <img src>.
  */
-export function resolveImageUrl(url) {
+export function resolveImageUrl(url, { width } = {}) {
   if (!url) return null;
 
   // Afrochow-hosted image: extract the canonical path and prepend the correct
@@ -50,6 +60,15 @@ export function resolveImageUrl(url) {
     return `${API_ORIGIN}${match[1]}`;
   }
 
-  // Everything else (Cloudinary, S3, Next.js public assets, etc.) — unchanged.
+  // Cloudinary: inject f_auto,q_auto (and optionally a width cap) so the CDN
+  // serves WebP/AVIF at the right size instead of the full original.
+  if (url.includes(CLOUDINARY_HOST) && url.includes('/image/upload/')) {
+    const transform = ['f_auto', 'q_auto', width ? `w_${width}` : null]
+      .filter(Boolean)
+      .join(',');
+    return url.replace(CLOUDINARY_UPLOAD_RE, `$1${transform}/$2`);
+  }
+
+  // Everything else (S3, Next.js public assets, etc.) — unchanged.
   return url;
 }

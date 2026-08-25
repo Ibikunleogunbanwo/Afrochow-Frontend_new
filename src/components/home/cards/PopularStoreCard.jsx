@@ -75,9 +75,9 @@ const PopularStoreCard = ({ product, priority = false, isAuthenticated, onUnauth
 
                 {/* ── Image ── */}
                 <div className="relative w-full h-52 overflow-hidden bg-gray-100">
-                    {resolveImageUrl(product.imageUrl) ? (
+                    {resolveImageUrl(product.imageUrl, { width: 600 }) ? (
                         <Image
-                            src={resolveImageUrl(product.imageUrl)}
+                            src={resolveImageUrl(product.imageUrl, { width: 600 })}
                             alt={product.restaurantName || product.name}
                             fill
                             priority={priority}

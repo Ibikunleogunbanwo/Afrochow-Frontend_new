@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { VendorOrdersAPI } from '@/lib/api/vendor/orders.api';
 import {
@@ -90,9 +90,9 @@ const VendorEarningsPage = () => {
 
     useEffect(() => {
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
-    const fetchAllData = async () => {
+    const fetchAllData = useCallback(async () => {
         try {
             setLoading(true);
             await Promise.all([fetchRevenueToday(), fetchOrders()]);
@@ -101,11 +101,11 @@ const VendorEarningsPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [fetchRevenueToday, fetchOrders]);
 
     // Today's revenue still comes from the dedicated backend endpoint (accurate even if
     // getVendorOrders is paginated or excludes very old records).
-    const fetchRevenueToday = async () => {
+    const fetchRevenueToday = useCallback(async () => {
         try {
             const response = await VendorOrdersAPI.getOrdersRevenue();
             if (response?.success && response.data) {
@@ -114,9 +114,9 @@ const VendorEarningsPage = () => {
         } catch (error) {
             console.error('Error fetching revenue stats:', error);
         }
-    };
+    }, []);
 
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             const response = await VendorOrdersAPI.getVendorOrders();
             if (!response?.success) return;
@@ -159,7 +159,7 @@ const VendorEarningsPage = () => {
         } catch (error) {
             console.error('Error fetching orders:', error);
         }
-    };
+    }, []);
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -369,7 +369,7 @@ const VendorEarningsPage = () => {
                                 </p>
                             </div>
                             <div className="border-l-4 border-gray-300 pl-4">
-                                <p className="text-xs sm:text-sm text-gray-600 mb-1">Today's Revenue</p>
+                                <p className="text-xs sm:text-sm text-gray-600 mb-1">Today&apos;s Revenue</p>
                                 <p className="text-xl sm:text-2xl font-bold text-gray-900 break-all">
                                     {formatCurrency(todayRevenue)}
                                 </p>
