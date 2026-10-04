@@ -44,6 +44,9 @@ yarn-error.log*
 # 🔴 ignore tool workspaces
 .claude/
 .claire/
+.agents/
+.freebuff/
+skills-lock.json
 
 # typescript
 *.tsbuildinfo
